@@ -35,7 +35,10 @@ use egui::{
 };
 use egui_extras::RetainedImage;
 // Logging
-use env_logger::{Builder, WriteStyle};
+use env_logger::{
+    fmt::style::{AnsiColor, Style},
+    Builder, WriteStyle,
+};
 use log::*;
 // Regex
 use ::regex::Regex;
@@ -931,7 +934,6 @@ fn init_text_styles(ctx: &egui::Context, width: f32, pixels_per_point: f32) {
 #[cold]
 #[inline(never)]
 fn init_logger(now: Instant) {
-    use env_logger::fmt::Color;
     let filter_env = std::env::var("RUST_LOG").unwrap_or_else(|_| "INFO".to_string());
     let filter = match filter_env.as_str() {
         "error" | "Error" | "ERROR" => LevelFilter::Error,
@@ -944,42 +946,16 @@ fn init_logger(now: Instant) {
 
     Builder::new()
         .format(move |buf, record| {
-            let mut style = buf.style();
-            let level = match record.level() {
-                Level::Error => {
-                    style.set_color(Color::Red);
-                    "ERROR"
-                }
-                Level::Warn => {
-                    style.set_color(Color::Yellow);
-                    "WARN"
-                }
-                Level::Info => {
-                    style.set_color(Color::White);
-                    "INFO"
-                }
-                Level::Debug => {
-                    style.set_color(Color::Blue);
-                    "DEBUG"
-                }
-                Level::Trace => {
-                    style.set_color(Color::Magenta);
-                    "TRACE"
-                }
-            };
+            let level = record.level();
+            let level_style = buf.default_level_style(level);
+            let dimmed = Style::new().dimmed(); 
             writeln!(
                 buf,
-                "[{}] [{}] [{}:{}] {}",
-                style.set_bold(true).value(level),
-                buf.style()
-                    .set_dimmed(true)
-                    .value(format!("{:.3}", now.elapsed().as_secs_f32())),
-                buf.style()
-                    .set_dimmed(true)
-                    .value(record.file().unwrap_or("???")),
-                buf.style()
-                    .set_dimmed(true)
-                    .value(record.line().unwrap_or(0)),
+                "{level_style}[{}]{level_style:#} [{dimmed}{}{dimmed:#}] [{dimmed}{}{dimmed:#}:{dimmed}{}{dimmed:#}] {}",
+                level,
+                format!("{:.3}", now.elapsed().as_secs_f32()),
+                record.file().unwrap_or("???"),
+                record.line().unwrap_or(0),
                 record.args(),
             )
         })

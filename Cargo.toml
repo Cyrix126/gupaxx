@@ -52,7 +52,7 @@ eframe = { version = "0.24.1", default-features = false, features = ["glow"] }
 #egui_glow = { path = "external/egui/crates/egui_glow"}
 #egui_extras = { path = "external/egui/crates/egui_extras", features = ["image"] }
 #--------------------------------------------------------------------------------
-env_logger = "0.10.2"
+env_logger = "0.11.2"
 figment = { version = "0.10.14", features = ["toml"] }
 hyper = "0.14.28"
 hyper-tls = "0.5.0"
