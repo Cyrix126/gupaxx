@@ -46,8 +46,6 @@ use std::{
     thread,
     time::*,
 };
-use sysinfo::SystemExt;
-use sysinfo::{CpuExt, ProcessExt};
 
 //---------------------------------------------------------------------------------------------------- Constants
 // The max amount of bytes of process output we are willing to

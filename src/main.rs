@@ -50,9 +50,6 @@ use std::{
     sync::{Arc, Mutex},
     time::Instant,
 };
-// Sysinfo
-use sysinfo::CpuExt;
-use sysinfo::SystemExt;
 // Modules
 //mod benchmark;
 mod constants;
@@ -219,7 +216,7 @@ impl App {
             sysinfo::RefreshKind::new()
                 .with_cpu(sysinfo::CpuRefreshKind::everything())
                 .with_processes(sysinfo::ProcessRefreshKind::new().with_cpu())
-                .with_memory(),
+                .with_memory(sysinfo::MemoryRefreshKind::everything()),
         );
         sysinfo.refresh_all();
         let pid = match sysinfo::get_current_pid() {
