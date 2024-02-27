@@ -23,7 +23,7 @@ use crate::{constants::*, disk::Xmrig, macros::*, Helper, ProcessSignal};
 use log::*;
 use std::{
     io::Write,
-    path::PathBuf,
+    path::Path,
     process::*,
     sync::{Arc, Mutex},
     thread,
@@ -111,11 +111,11 @@ impl SudoState {
         state: Arc<Mutex<Self>>,
         helper: &Arc<Mutex<Helper>>,
         xmrig: &Xmrig,
-        path: &PathBuf,
+        path: &Path,
     ) {
         let helper = Arc::clone(helper);
         let xmrig = xmrig.clone();
-        let path = path.clone();
+        let path = path.to_path_buf();
         thread::spawn(move || {
             // Set to testing
             lock!(state).testing = true;

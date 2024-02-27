@@ -521,6 +521,7 @@ impl Update {
     // 3. if current == version, remove from vec
     // 4. loop over vec, download links
     // 5. extract, upgrade
+    #[allow(clippy::await_holding_lock)]
     #[tokio::main]
     pub async fn start(
         update: Arc<Mutex<Self>>,

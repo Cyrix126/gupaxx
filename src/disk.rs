@@ -37,6 +37,7 @@ use log::*;
 use serde::{Deserialize, Serialize};
 #[cfg(target_family = "unix")]
 use std::os::unix::fs::PermissionsExt;
+use std::path::Path;
 use std::{
     fmt::Display,
     fmt::Write,
@@ -179,8 +180,8 @@ pub fn set_unix_660_perms(path: &PathBuf) -> Result<(), TomlError> {
     }
 }
 
-pub fn get_gupax_p2pool_path(os_data_path: &PathBuf) -> PathBuf {
-    let mut gupax_p2pool_dir = os_data_path.clone();
+pub fn get_gupax_p2pool_path(os_data_path: &Path) -> PathBuf {
+    let mut gupax_p2pool_dir = os_data_path.to_path_buf();
     gupax_p2pool_dir.push(GUPAX_P2POOL_API_DIRECTORY);
     gupax_p2pool_dir
 }
@@ -728,10 +729,10 @@ impl GupaxP2poolApi {
         }
     }
 
-    pub fn fill_paths(&mut self, gupax_p2pool_dir: &PathBuf) {
-        let mut path_log = gupax_p2pool_dir.clone();
-        let mut path_payout = gupax_p2pool_dir.clone();
-        let mut path_xmr = gupax_p2pool_dir.clone();
+    pub fn fill_paths(&mut self, gupax_p2pool_dir: &Path) {
+        let mut path_log = gupax_p2pool_dir.to_path_buf();
+        let mut path_payout = gupax_p2pool_dir.to_path_buf();
+        let mut path_xmr = gupax_p2pool_dir.to_path_buf();
         path_log.push(GUPAX_P2POOL_API_LOG);
         path_payout.push(GUPAX_P2POOL_API_PAYOUT);
         path_xmr.push(GUPAX_P2POOL_API_XMR);
@@ -743,10 +744,10 @@ impl GupaxP2poolApi {
         };
     }
 
-    pub fn create_all_files(gupax_p2pool_dir: &PathBuf) -> Result<(), TomlError> {
+    pub fn create_all_files(gupax_p2pool_dir: &Path) -> Result<(), TomlError> {
         use std::io::Write;
         for file in GUPAX_P2POOL_API_FILE_ARRAY {
-            let mut path = gupax_p2pool_dir.clone();
+            let mut path = gupax_p2pool_dir.to_path_buf();
             path.push(file);
             if path.exists() {
                 info!(
@@ -1061,6 +1062,7 @@ impl Display for PayoutView {
 
 //---------------------------------------------------------------------------------------------------- [Hash] enum for [Status/P2Pool]
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Deserialize, Serialize)]
+#[allow(clippy::enum_variant_names)]
 pub enum Hash {
     Hash,
     Kilo,
@@ -1229,8 +1231,7 @@ pub struct Xmrig {
     pub selected_port: String,
 }
 
-#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
-#[derive(Default)]
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
 pub struct Xvb {
     pub token: u32,
 }
@@ -1341,8 +1342,6 @@ impl Default for Xmrig {
         }
     }
 }
-
-
 
 impl Default for Version {
     fn default() -> Self {

@@ -923,9 +923,9 @@ fn init_logger(now: Instant) {
             let dimmed = Style::new().dimmed(); 
             writeln!(
                 buf,
-                "{level_style}[{}]{level_style:#} [{dimmed}{}{dimmed:#}] [{dimmed}{}{dimmed:#}:{dimmed}{}{dimmed:#}] {}",
+                "{level_style}[{}]{level_style:#} [{dimmed}{:.3}{dimmed:#}] [{dimmed}{}{dimmed:#}:{dimmed}{}{dimmed:#}] {}",
                 level,
-                format!("{:.3}", now.elapsed().as_secs_f32()),
+                now.elapsed().as_secs_f32(),
                 record.file().unwrap_or("???"),
                 record.line().unwrap_or(0),
                 record.args(),

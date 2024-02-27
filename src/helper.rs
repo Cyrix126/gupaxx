@@ -38,6 +38,7 @@ use crate::regex::{P2POOL_REGEX, XMRIG_REGEX};
 use crate::{constants::*, human::*, macros::*, xmr::*, GupaxP2poolApi, RemoteNode, SudoState};
 use log::*;
 use serde::{Deserialize, Serialize};
+use std::path::Path;
 use std::{
     fmt::Write,
     path::PathBuf,
@@ -262,6 +263,7 @@ impl std::fmt::Display for ProcessName {
 //---------------------------------------------------------------------------------------------------- [Helper]
 impl Helper {
     //---------------------------------------------------------------------------------------------------- General Functions
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         instant: std::time::Instant,
         pub_sys: Arc<Mutex<Sys>>,
@@ -408,7 +410,7 @@ impl Helper {
 
     // Read P2Pool/XMRig's API file to a [String].
     fn path_to_string(
-        path: &std::path::PathBuf,
+        path: &Path,
         name: ProcessName,
     ) -> std::result::Result<String, std::io::Error> {
         match std::fs::read_to_string(path) {
@@ -437,7 +439,7 @@ impl Helper {
     pub fn restart_p2pool(
         helper: &Arc<Mutex<Self>>,
         state: &crate::disk::P2pool,
-        path: &std::path::PathBuf,
+        path: &Path,
         backup_hosts: Option<Vec<crate::Node>>,
     ) {
         info!("P2Pool | Attempting to restart...");
@@ -446,7 +448,7 @@ impl Helper {
 
         let helper = Arc::clone(helper);
         let state = state.clone();
-        let path = path.clone();
+        let path = path.to_path_buf();
         // This thread lives to wait, start p2pool then die.
         thread::spawn(move || {
             while lock2!(helper, p2pool).is_alive() {
@@ -466,7 +468,7 @@ impl Helper {
     pub fn start_p2pool(
         helper: &Arc<Mutex<Self>>,
         state: &crate::disk::P2pool,
-        path: &std::path::PathBuf,
+        path: &Path,
         backup_hosts: Option<Vec<crate::Node>>,
     ) {
         lock2!(helper, p2pool).state = ProcessState::Middle;
@@ -488,7 +490,7 @@ impl Helper {
         let gui_api = Arc::clone(&lock!(helper).gui_api_p2pool);
         let pub_api = Arc::clone(&lock!(helper).pub_api_p2pool);
         let gupax_p2pool_api = Arc::clone(&lock!(helper).gupax_p2pool_api);
-        let path = path.clone();
+        let path = path.to_path_buf();
         thread::spawn(move || {
             Self::spawn_p2pool_watchdog(
                 process,
@@ -523,11 +525,11 @@ impl Helper {
     pub fn build_p2pool_args_and_mutate_img(
         helper: &Arc<Mutex<Self>>,
         state: &crate::disk::P2pool,
-        path: &std::path::PathBuf,
+        path: &Path,
         backup_hosts: Option<Vec<crate::Node>>,
     ) -> (Vec<String>, PathBuf, PathBuf, PathBuf) {
         let mut args = Vec::with_capacity(500);
-        let path = path.clone();
+        let path = path.to_path_buf();
         let mut api_path = path;
         api_path.pop();
 
@@ -684,6 +686,7 @@ impl Helper {
     #[cold]
     #[inline(never)]
     // The P2Pool watchdog. Spawns 1 OS thread for reading a PTY (STDOUT+STDERR), and combines the [Child] with a PTY so STDIN actually works.
+    #[allow(clippy::too_many_arguments)]
     fn spawn_p2pool_watchdog(
         process: Arc<Mutex<Process>>,
         gui_api: Arc<Mutex<PubP2poolApi>>,
@@ -1039,7 +1042,7 @@ impl Helper {
     pub fn restart_xmrig(
         helper: &Arc<Mutex<Self>>,
         state: &crate::disk::Xmrig,
-        path: &std::path::PathBuf,
+        path: &Path,
         sudo: Arc<Mutex<SudoState>>,
     ) {
         info!("XMRig | Attempting to restart...");
@@ -1048,7 +1051,7 @@ impl Helper {
 
         let helper = Arc::clone(helper);
         let state = state.clone();
-        let path = path.clone();
+        let path = path.to_path_buf();
         // This thread lives to wait, start xmrig then die.
         thread::spawn(move || {
             while lock2!(helper, xmrig).state != ProcessState::Waiting {
@@ -1067,7 +1070,7 @@ impl Helper {
     pub fn start_xmrig(
         helper: &Arc<Mutex<Self>>,
         state: &crate::disk::Xmrig,
-        path: &std::path::PathBuf,
+        path: &Path,
         sudo: Arc<Mutex<SudoState>>,
     ) {
         lock2!(helper, xmrig).state = ProcessState::Middle;
@@ -1082,7 +1085,7 @@ impl Helper {
         let process = Arc::clone(&lock!(helper).xmrig);
         let gui_api = Arc::clone(&lock!(helper).gui_api_xmrig);
         let pub_api = Arc::clone(&lock!(helper).pub_api_xmrig);
-        let path = path.clone();
+        let path = path.to_path_buf();
         thread::spawn(move || {
             Self::spawn_xmrig_watchdog(process, gui_api, pub_api, args, path, sudo, api_ip_port);
         });
@@ -1096,12 +1099,12 @@ impl Helper {
     pub fn build_xmrig_args_and_mutate_img(
         helper: &Arc<Mutex<Self>>,
         state: &crate::disk::Xmrig,
-        path: &std::path::PathBuf,
+        path: &std::path::Path,
     ) -> (Vec<String>, String) {
         let mut args = Vec::with_capacity(500);
         let mut api_ip = String::with_capacity(15);
         let mut api_port = String::with_capacity(5);
-        let path = path.clone();
+        let path = path.to_path_buf();
         // The actual binary we're executing is [sudo], technically
         // the XMRig path is just an argument to sudo, so add it.
         // Before that though, add the ["--prompt"] flag and set it
@@ -1246,6 +1249,7 @@ impl Helper {
     // The XMRig watchdog. Spawns 1 OS thread for reading a PTY (STDOUT+STDERR), and combines the [Child] with a PTY so STDIN actually works.
     // This isn't actually async, a tokio runtime is unfortunately needed because [Hyper] is an async library (HTTP API calls)
     #[tokio::main]
+    #[allow(clippy::await_holding_lock)]
     async fn spawn_xmrig_watchdog(
         process: Arc<Mutex<Process>>,
         gui_api: Arc<Mutex<PubXmrigApi>>,
@@ -1442,39 +1446,39 @@ impl Helper {
             }
 
             // Check vector of user input
-            let mut lock = lock!(process);
-            if !lock.input.is_empty() {
-                let input = std::mem::take(&mut lock.input);
-                for line in input {
-                    if line.is_empty() {
-                        continue;
-                    }
-                    debug!(
-                        "XMRig Watchdog | User input not empty, writing to STDIN: [{}]",
-                        line
-                    );
-                    #[cfg(target_os = "windows")]
-                    if let Err(e) = write!(stdin, "{}\r\n", line) {
-                        error!("XMRig Watchdog | STDIN error: {}", e);
-                    }
-                    #[cfg(target_family = "unix")]
-                    if let Err(e) = writeln!(stdin, "{}", line) {
-                        error!("XMRig Watchdog | STDIN error: {}", e);
-                    }
-                    // Flush.
-                    if let Err(e) = stdin.flush() {
-                        error!("XMRig Watchdog | STDIN flush error: {}", e);
+            {
+                let mut lock = lock!(process);
+                if !lock.input.is_empty() {
+                    let input = std::mem::take(&mut lock.input);
+                    for line in input {
+                        if line.is_empty() {
+                            continue;
+                        }
+                        debug!(
+                            "XMRig Watchdog | User input not empty, writing to STDIN: [{}]",
+                            line
+                        );
+                        #[cfg(target_os = "windows")]
+                        if let Err(e) = write!(stdin, "{}\r\n", line) {
+                            error!("XMRig Watchdog | STDIN error: {}", e);
+                        }
+                        #[cfg(target_family = "unix")]
+                        if let Err(e) = writeln!(stdin, "{}", line) {
+                            error!("XMRig Watchdog | STDIN error: {}", e);
+                        }
+                        // Flush.
+                        if let Err(e) = stdin.flush() {
+                            error!("XMRig Watchdog | STDIN flush error: {}", e);
+                        }
                     }
                 }
             }
-            drop(lock);
-
             // Check if logs need resetting
             debug!("XMRig Watchdog | Attempting GUI log reset check");
-            let mut lock = lock!(gui_api);
-            Self::check_reset_gui_output(&mut lock.output, ProcessName::Xmrig);
-            drop(lock);
-
+            {
+                let mut lock = lock!(gui_api);
+                Self::check_reset_gui_output(&mut lock.output, ProcessName::Xmrig);
+            }
             // Always update from output
             debug!("XMRig Watchdog | Starting [update_from_output()]");
             PubXmrigApi::update_from_output(
@@ -1560,6 +1564,7 @@ impl Helper {
     #[cold]
     #[inline(never)]
     // The "helper" thread. Syncs data between threads here and the GUI.
+    #[allow(clippy::await_holding_lock)]
     pub fn spawn_helper(
         helper: &Arc<Mutex<Self>>,
         mut sysinfo: sysinfo::System,

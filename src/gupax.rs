@@ -71,6 +71,7 @@ pub enum Ratio {
 //---------------------------------------------------------------------------------------------------- Gupax
 impl crate::disk::Gupax {
     #[inline(always)] // called once
+    #[allow(clippy::too_many_arguments)]
     pub fn show(
         &mut self,
         og: &Arc<Mutex<State>>,

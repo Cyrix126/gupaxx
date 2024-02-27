@@ -20,13 +20,15 @@ use crate::{
     ImgXmrig, PayoutView, PubP2poolApi, PubXmrigApi, Submenu, Sys,
 };
 use egui::{
-    Hyperlink, Label, ProgressBar, RichText, SelectableLabel, Slider, Spinner, TextEdit, TextStyle, TextStyle::Name,
+    Hyperlink, Label, ProgressBar, RichText, SelectableLabel, Slider, Spinner, TextEdit, TextStyle,
+    TextStyle::Name,
 };
 use log::*;
 use std::sync::{Arc, Mutex};
 
 impl crate::disk::Status {
     #[inline(always)] // called once
+    #[allow(clippy::too_many_arguments)]
     pub fn show(
         &mut self,
         sys: &Arc<Mutex<Sys>>,

@@ -81,16 +81,16 @@ impl AtomicUnit {
         Self((f * 1_000_000_000_000.0) as u64)
     }
 
-    pub fn to_f64(&self) -> f64 {
+    pub fn f64(&self) -> f64 {
         self.0 as f64 / 1_000_000_000_000.0
     }
 
-    pub fn to_human_number_12_point(&self) -> HumanNumber {
+    pub fn human_number_12_point(&self) -> HumanNumber {
         let f = self.0 as f64 / 1_000_000_000_000.0;
         HumanNumber::from_f64_12_point(f)
     }
 
-    pub fn to_human_number_no_fmt(&self) -> HumanNumber {
+    pub fn human_number_no_fmt(&self) -> HumanNumber {
         let f = self.0 as f64 / 1_000_000_000_000.0;
         HumanNumber::from_f64_no_fmt(f)
     }
@@ -99,7 +99,7 @@ impl AtomicUnit {
 // Displays AtomicUnit as a real XMR floating point.
 impl std::fmt::Display for AtomicUnit {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{}", Self::to_human_number_12_point(self))
+        write!(f, "{}", Self::human_number_12_point(self))
     }
 }
 
@@ -136,8 +136,7 @@ impl PayoutOrd {
         if a.0.len() != b.0.len() {
             return false;
         }
-        let mut n = 0;
-        for (date, atomic_unit, block) in &a.0 {
+        for (n, (date, atomic_unit, block)) in a.0.iter().enumerate() {
             if *date != b.0[n].0 {
                 return false;
             }
@@ -147,7 +146,6 @@ impl PayoutOrd {
             if *block != b.0[n].2 {
                 return false;
             }
-            n += 1;
         }
         true
     }

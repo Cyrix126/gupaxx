@@ -27,6 +27,7 @@ use std::sync::{Arc, Mutex};
 
 impl crate::disk::P2pool {
     #[inline(always)] // called once
+    #[allow(clippy::too_many_arguments)]
     pub fn show(
         &mut self,
         node_vec: &mut Vec<(String, Node)>,
@@ -424,8 +425,7 @@ impl crate::disk::P2pool {
 			debug!("P2Pool Tab | Rendering [Node List]");
 			let text = RichText::new(format!("{}. {}", self.selected_index+1, self.selected_name));
 			ComboBox::from_id_source("manual_nodes").selected_text(text).width(width).show_ui(ui, |ui| {
-				let mut n = 0;
-				for (name, node) in node_vec.iter() {
+				for (n, (name, node)) in node_vec.iter().enumerate() {
 					let text = RichText::new(format!("{}. {}\n     IP: {}\n    RPC: {}\n    ZMQ: {}", n+1, name, node.ip, node.rpc, node.zmq));
 					if ui.add(SelectableLabel::new(self.selected_name == *name, text)).clicked() {
 						self.selected_index = n;
@@ -439,7 +439,6 @@ impl crate::disk::P2pool {
 						self.rpc = node.rpc;
 						self.zmq = node.zmq;
 					}
-					n += 1;
 				}
 			});
 			// [Add/Save]
