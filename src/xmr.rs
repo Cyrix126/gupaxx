@@ -340,8 +340,6 @@ mod test {
 
     #[test]
     fn push_to_payout_ord() {
-        use crate::human::HumanNumber;
-        use crate::xmr::AtomicUnit;
         use crate::xmr::PayoutOrd;
         let mut payout_ord = PayoutOrd::from_vec(vec![]);
         let should_be = "2022-09-08 18:42:55.4636 | 0.000000000001 XMR | Block 2,654,321\n";
@@ -357,7 +355,7 @@ mod test {
         use crate::human::HumanNumber;
         use crate::xmr::AtomicUnit;
         use crate::xmr::PayoutOrd;
-        let mut payout_ord = PayoutOrd::from_vec(vec![
+        let payout_ord = PayoutOrd::from_vec(vec![
             (
                 "2022-09-08 18:42:55.4636".to_string(),
                 AtomicUnit::from_u64(1),
@@ -453,11 +451,11 @@ mod test {
         println!("1: {:#?}", payout_ord);
         println!("2: {:#?}", payout_ord);
 
-        assert!(PayoutOrd::is_same(&payout_ord, &payout_ord_2) == true);
+        assert!(PayoutOrd::is_same(&payout_ord, &payout_ord_2));
         payout_ord.push_raw("2022-09-08 18:42:55.4636", 1000000000, 2654321);
         println!("1: {:#?}", payout_ord);
         println!("2: {:#?}", payout_ord);
-        assert!(PayoutOrd::is_same(&payout_ord, &payout_ord_2) == false);
+        assert!(!PayoutOrd::is_same(&payout_ord, &payout_ord_2));
     }
 
     #[test]
@@ -465,7 +463,7 @@ mod test {
         use crate::human::HumanNumber;
         use crate::xmr::AtomicUnit;
         use crate::xmr::PayoutOrd;
-        let mut payout_ord = PayoutOrd::from_vec(vec![
+        let payout_ord = PayoutOrd::from_vec(vec![
             (
                 "2022-09-08 18:42:55.4636".to_string(),
                 AtomicUnit::from_u64(1000000000),

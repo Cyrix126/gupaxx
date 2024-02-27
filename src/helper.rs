@@ -316,7 +316,6 @@ impl Helper {
                 i += 1;
             }
         }
-        drop(i);
 
         while let Some(Ok(line)) = stdout.next() {
             //			println!("{}", line); // For debugging.
@@ -356,7 +355,6 @@ impl Helper {
                 i += 1;
             }
         }
-        drop(i);
 
         while let Some(Ok(line)) = stdout.next() {
             //			println!("{}", line); // For debugging.
@@ -2909,7 +2907,7 @@ mod test {
 		    "hugepages": true
 		}"#;
         use crate::helper::PrivXmrigApi;
-        let priv_api = serde_json::from_str::<PrivXmrigApi>(&data).unwrap();
+        let priv_api = serde_json::from_str::<PrivXmrigApi>(data).unwrap();
         let json = serde_json::ser::to_string_pretty(&priv_api).unwrap();
         println!("{}", json);
         let data_after_ser = r#"{

@@ -771,7 +771,7 @@ impl Update {
                     warn!("Update | {} failed, attempt [{}/3]...", pkg.name, i);
                 } else {
                     indexes.push(index);
-                    vec4.push(pkg.clone());
+                    vec4.push(*pkg);
                     *lock2!(update, prog) += (30.0 / pkg_amount).round();
                     info!("Update | {} ... OK", pkg.name);
                 }

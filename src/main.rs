@@ -2541,7 +2541,7 @@ mod test {
         let benchmarks: Vec<Benchmark> = {
             let mut json: Vec<Benchmark> =
                 serde_json::from_slice(include_bytes!("cpu.json")).unwrap();
-            json.sort_by(|a, b| cmp_f64(strsim::jaro(&b.cpu, &cpu), strsim::jaro(&a.cpu, &cpu)));
+            json.sort_by(|a, b| cmp_f64(strsim::jaro(&b.cpu, cpu), strsim::jaro(&a.cpu, cpu)));
             json
         };
 

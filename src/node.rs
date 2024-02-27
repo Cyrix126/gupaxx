@@ -535,7 +535,7 @@ mod test {
     #[ignore]
     async fn full_ping() {
         use crate::{REMOTE_NODES, REMOTE_NODE_LENGTH};
-        use hyper::{client::HttpConnector, Body, Client, Request};
+        use hyper::{client::HttpConnector, Client, Request};
         use serde::{Deserialize, Serialize};
 
         #[derive(Deserialize, Serialize)]
@@ -577,7 +577,7 @@ mod test {
                         println!("{:#?}", e);
                         if i >= 3 {
                             use std::fmt::Write;
-                            writeln!(failures, "Node failure: {ip}:{rpc}:{zmq}");
+                            let _ = writeln!(failures, "Node failure: {ip}:{rpc}:{zmq}");
                             failure_count += 1;
                             continue 'outer;
                         }
