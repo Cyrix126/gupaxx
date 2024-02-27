@@ -21,7 +21,7 @@ use egui::{
     Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, Slider, TextEdit, TextStyle::*,
 };
 use log::*;
-use regex::Regex;
+
 use std::sync::{Arc, Mutex};
 
 impl crate::disk::Xmrig {

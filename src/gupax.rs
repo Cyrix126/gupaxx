@@ -18,8 +18,7 @@
 use crate::State;
 use crate::{constants::*, macros::*, update::*, ErrorState, Restart, Tab};
 use egui::{
-    Button, Checkbox, Label, ProgressBar, RichText, SelectableLabel, Slider, Spinner, TextEdit,
-    TextStyle, TextStyle::Monospace, Vec2,
+    Button, Checkbox, Label, ProgressBar, RichText, SelectableLabel, Slider, Spinner, TextEdit, Vec2,
 };
 use log::*;
 use serde::{Deserialize, Serialize};
@@ -81,7 +80,7 @@ impl crate::disk::Gupax {
         restart: &Arc<Mutex<Restart>>,
         width: f32,
         height: f32,
-        frame: &mut eframe::Frame,
+        _frame: &mut eframe::Frame,
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
     ) {
@@ -512,7 +511,7 @@ impl crate::disk::Gupax {
         lock!(file_window).thread = true;
         thread::spawn(move || {
             match rfd::FileDialog::new()
-                .set_title(&format!("Select {} Binary for Gupax", name))
+                .set_title(format!("Select {} Binary for Gupax", name))
                 .pick_file()
             {
                 Some(path) => {

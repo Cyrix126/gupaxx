@@ -20,8 +20,7 @@ use crate::{
     ImgXmrig, PayoutView, PubP2poolApi, PubXmrigApi, Submenu, Sys,
 };
 use egui::{
-    Hyperlink, Label, ProgressBar, RichText, SelectableLabel, Slider, Spinner, TextEdit, TextStyle,
-    TextStyle::Monospace, TextStyle::Name,
+    Hyperlink, Label, ProgressBar, RichText, SelectableLabel, Slider, Spinner, TextEdit, TextStyle, TextStyle::Name,
 };
 use log::*;
 use std::sync::{Arc, Mutex};

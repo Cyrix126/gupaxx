@@ -22,7 +22,7 @@ use egui::{
     Slider, Spinner, TextEdit, TextStyle::*,
 };
 use log::*;
-use regex::Regex;
+
 use std::sync::{Arc, Mutex};
 
 impl crate::disk::P2pool {

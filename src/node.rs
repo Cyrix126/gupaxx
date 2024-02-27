@@ -20,7 +20,7 @@ use egui::Color32;
 use hyper::{client::HttpConnector, Body, Client, Request};
 use log::*;
 use rand::{thread_rng, Rng};
-use serde::{Deserialize, Serialize};
+
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
@@ -414,7 +414,7 @@ impl Ping {
         let mut handles = Vec::with_capacity(REMOTE_NODE_LENGTH);
         let node_vec = arc_mut!(Vec::with_capacity(REMOTE_NODE_LENGTH));
 
-        for (ip, _, rpc, zmq) in REMOTE_NODES {
+        for (ip, _, rpc, _zmq) in REMOTE_NODES {
             let client = client.clone();
             let ping = Arc::clone(&ping);
             let node_vec = Arc::clone(&node_vec);

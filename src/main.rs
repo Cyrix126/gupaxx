@@ -29,14 +29,14 @@ compile_error!("gupax is only built for windows/macos/linux");
 // egui/eframe
 use eframe::{egui, NativeOptions};
 use egui::{
-    Align, Button, CentralPanel, Color32, FontFamily::Proportional, FontId, Hyperlink, Key, Label,
-    Layout, Modifiers, RichText, SelectableLabel, Spinner, Stroke, TextEdit, TextStyle,
+    Align, Button, CentralPanel, Color32, FontId, Hyperlink, Key, Label,
+    Layout, Modifiers, RichText, SelectableLabel, Spinner, TextEdit, TextStyle,
     TextStyle::*, TopBottomPanel, Vec2,
 };
 use egui_extras::RetainedImage;
 // Logging
 use env_logger::{
-    fmt::style::{AnsiColor, Style},
+    fmt::style::{Style},
     Builder, WriteStyle,
 };
 use log::*;
@@ -237,7 +237,7 @@ impl App {
             let cpu = sysinfo.cpus()[0].brand();
             let mut json: Vec<Benchmark> =
                 serde_json::from_slice(include_bytes!("cpu.json")).unwrap();
-            json.sort_by(|a, b| cmp_f64(strsim::jaro(&b.cpu, &cpu), strsim::jaro(&a.cpu, &cpu)));
+            json.sort_by(|a, b| cmp_f64(strsim::jaro(&b.cpu, cpu), strsim::jaro(&a.cpu, cpu)));
             json
         };
         info!("App Init | Assuming user's CPU is: {}", benchmarks[0].cpu);
@@ -494,7 +494,7 @@ impl App {
                 og.p2pool.selected_index,
                 app.og_node_vec.len()
             );
-            let (name, node) = match app.og_node_vec.get(0) {
+            let (name, node) = match app.og_node_vec.first() {
                 Some(zero) => zero.clone(),
                 None => Node::new_tuple(),
             };
@@ -517,7 +517,7 @@ impl App {
                 og.xmrig.selected_index,
                 app.og_pool_vec.len()
             );
-            let (name, pool) = match app.og_pool_vec.get(0) {
+            let (name, pool) = match app.og_pool_vec.first() {
                 Some(zero) => zero.clone(),
                 None => Pool::new_tuple(),
             };
@@ -627,7 +627,7 @@ impl App {
                     continue;
                 }
 
-                let (ip, rpc, zmq) = RemoteNode::get_ip_rpc_zmq(&pinged_node.ip);
+                let (ip, rpc, zmq) = RemoteNode::get_ip_rpc_zmq(pinged_node.ip);
 
                 let node = Node {
                     ip: ip.into(),
@@ -1868,17 +1868,11 @@ impl eframe::App for App {
         // They don't need to be compared anyway.
         debug!("App | Checking diff between [og] & [state]");
         let og = lock!(self.og);
-        if og.status != self.state.status
+        self.diff = og.status != self.state.status
             || og.gupax != self.state.gupax
             || og.p2pool != self.state.p2pool
             || og.xmrig != self.state.xmrig
-            || self.og_node_vec != self.node_vec
-            || self.og_pool_vec != self.pool_vec
-        {
-            self.diff = true;
-        } else {
-            self.diff = false;
-        }
+            || self.og_node_vec != self.node_vec || self.og_pool_vec != self.pool_vec;
         drop(og);
 
         // Top: Tabs

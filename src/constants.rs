@@ -411,7 +411,7 @@ For more information, see link below:
 //---------------------------------------------------------------------------------------------------- Visuals
 use egui::epaint::{Rounding, Shadow, Stroke};
 
-use egui::{style::Spacing, Color32, Visuals};
+use egui::{Color32, Visuals};
 
 use egui::style::{Selection, WidgetVisuals, Widgets};
 use once_cell::sync::Lazy;

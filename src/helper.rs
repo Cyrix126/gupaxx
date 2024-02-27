@@ -1260,7 +1260,7 @@ impl Helper {
         // 1a. Create PTY
         debug!("XMRig | Creating PTY...");
         let pty = portable_pty::native_pty_system();
-        let mut pair = pty
+        let pair = pty
             .openpty(portable_pty::PtySize {
                 rows: 100,
                 cols: 1000,
@@ -2393,7 +2393,7 @@ impl PubXmrigApi {
     // Formats raw private data into ready-to-print human readable version.
     fn update_from_priv(public: &Arc<Mutex<Self>>, private: PrivXmrigApi) {
         let mut public = lock!(public);
-        let hashrate_raw = match private.hashrate.total.get(0) {
+        let hashrate_raw = match private.hashrate.total.first() {
             Some(Some(h)) => *h,
             _ => 0.0,
         };
