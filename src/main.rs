@@ -31,12 +31,11 @@ use eframe::{egui, NativeOptions};
 use egui::{
     Align, Button, CentralPanel, Color32, FontId, Hyperlink, Key, Label,
     Layout, Modifiers, RichText, SelectableLabel, Spinner, TextEdit, TextStyle,
-    TextStyle::*, TopBottomPanel, Vec2,
+    TextStyle::*, TopBottomPanel, Vec2, Image,
 };
-use egui_extras::RetainedImage;
 // Logging
 use env_logger::{
-    fmt::style::{Style},
+    fmt::style::Style,
     Builder, WriteStyle,
 };
 use log::*;
@@ -163,7 +162,6 @@ pub struct App {
     pool_path: PathBuf,             // Pool file path
     version: &'static str,          // Gupax version
     name_version: String,           // [Gupax vX.X.X]
-    img: Images,                    // Custom Struct holding pre-compiled bytes of [Images]
 }
 
 impl App {
@@ -306,7 +304,6 @@ impl App {
             pool_path: PathBuf::new(),
             version: GUPAX_VERSION,
             name_version: format!("Gupax {}", GUPAX_VERSION),
-            img: Images::new(),
         };
         //---------------------------------------------------------------------------------------------------- App init data that *could* panic
         info!("App Init | Getting EXE path...");
@@ -776,33 +773,6 @@ impl ErrorState {
     }
 }
 
-//---------------------------------------------------------------------------------------------------- [Images] struct
-struct Images {
-    banner: RetainedImage,
-    happy: RetainedImage,
-    cute: RetainedImage,
-    oops: RetainedImage,
-    error: RetainedImage,
-    panic: RetainedImage,
-    sudo: RetainedImage,
-}
-
-impl Images {
-    #[cold]
-    #[inline(never)]
-    fn new() -> Self {
-        Self {
-            banner: RetainedImage::from_image_bytes("banner.png", BYTES_BANNER).unwrap(),
-            happy: RetainedImage::from_image_bytes("happy.png", FERRIS_HAPPY).unwrap(),
-            cute: RetainedImage::from_image_bytes("cute.png", FERRIS_CUTE).unwrap(),
-            oops: RetainedImage::from_image_bytes("oops.png", FERRIS_OOPS).unwrap(),
-            error: RetainedImage::from_image_bytes("error.png", FERRIS_ERROR).unwrap(),
-            panic: RetainedImage::from_image_bytes("panic.png", FERRIS_PANIC).unwrap(),
-            sudo: RetainedImage::from_image_bytes("panic.png", FERRIS_SUDO).unwrap(),
-        }
-    }
-}
-
 //---------------------------------------------------------------------------------------------------- [Pressed] enum
 // These represent the keys pressed during the frame.
 // I could use egui's [Key] but there is no option for
@@ -872,10 +842,10 @@ impl KeyPressed {
     fn is_v(&self) -> bool {
         *self == Self::V
     }
-    #[inline]
-    fn is_none(&self) -> bool {
-        *self == Self::None
-    }
+    // #[inline]
+    // fn is_none(&self) -> bool {
+    //     *self == Self::None
+    // }
 }
 
 //---------------------------------------------------------------------------------------------------- Init functions
@@ -1448,10 +1418,10 @@ fn main() {
 
     // Run Gupax.
     info!("/*************************************/ Init ... OK /*************************************/");
-    eframe::run_native(
+    let _  = eframe::run_native(
         &app.name_version.clone(),
         options,
-        Box::new(move |cc| Box::new(App::cc(cc, resolution, app))),
+        Box::new(move |cc| {egui_extras::install_image_loaders(&cc.egui_ctx); Box::new(App::cc(cc, resolution, app))}),
     );
 }
 
@@ -1697,16 +1667,19 @@ impl eframe::App for App {
 				use ErrorFerris::*;
 				use ErrorButtons::*;
 				let ferris = match self.error_state.ferris {
-					Happy => &self.img.happy,
-					Cute => &self.img.cute,
-					Oops  => &self.img.oops,
-					Error => &self.img.error,
-					Panic => &self.img.panic,
-					ErrorFerris::Sudo => &self.img.sudo,
+				Happy => Image::from_bytes("bytes://happy.png", FERRIS_HAPPY),
+					Cute => Image::from_bytes("bytes://cute.png", FERRIS_CUTE),
+					Oops  => Image::from_bytes("bytes://oops.png", FERRIS_OOPS),
+					Error => Image::from_bytes("bytes://error.png", FERRIS_ERROR),
+					Panic => Image::from_bytes("bytes://panic.png", FERRIS_PANIC),
+					ErrorFerris::Sudo => Image::from_bytes("bytes://panic.png", FERRIS_SUDO), 
 				};
+
+             
+            
 				match self.error_state.buttons {
 					Debug => ui.add_sized([width, height/4.0], Label::new("--- Debug Info ---\n\nPress [ESC] to quit")),
-					    _ => ferris.show_max_size(ui, Vec2::new(width, height)),
+					    _ => ui.add_sized(Vec2::new(width, height), ferris),
 				};
 
 				// Error/Quit screen
@@ -2220,8 +2193,8 @@ impl eframe::App for App {
                                             .on_hover_text("Restart P2Pool")
                                             .clicked()
                                     {
-                                        lock!(self.og).update_absolute_path();
-                                        self.state.update_absolute_path();
+                                        let _ = lock!(self.og).update_absolute_path();
+                                        let _ = self.state.update_absolute_path();
                                         Helper::restart_p2pool(
                                             &self.helper,
                                             &self.state.p2pool,
@@ -2275,8 +2248,8 @@ impl eframe::App for App {
                                             .on_disabled_hover_text(text)
                                             .clicked()
                                     {
-                                        lock!(self.og).update_absolute_path();
-                                        self.state.update_absolute_path();
+                                        let _ = lock!(self.og).update_absolute_path();
+                                        let _ = self.state.update_absolute_path();
                                         Helper::start_p2pool(
                                             &self.helper,
                                             &self.state.p2pool,
@@ -2330,8 +2303,8 @@ impl eframe::App for App {
                                             .on_hover_text("Restart XMRig")
                                             .clicked()
                                     {
-                                        lock!(self.og).update_absolute_path();
-                                        self.state.update_absolute_path();
+                                        let _ = lock!(self.og).update_absolute_path();
+                                        let _ = self.state.update_absolute_path();
                                         if cfg!(windows) {
                                             Helper::restart_xmrig(
                                                 &self.helper,
@@ -2391,8 +2364,8 @@ impl eframe::App for App {
                                             .on_disabled_hover_text(text)
                                             .clicked()
                                     {
-                                        lock!(self.og).update_absolute_path();
-                                        self.state.update_absolute_path();
+                                        let _ = lock!(self.og).update_absolute_path();
+                                        let _ = self.state.update_absolute_path();
                                         if cfg!(windows) {
                                             Helper::start_xmrig(
                                                 &self.helper,
@@ -2519,7 +2492,7 @@ path_xmr: {:#?}\n
 						ui.set_max_height(max_height);
 						// Display [Gupax] banner
 						let link_width = width/14.0;
-						self.img.banner.show_max_size(ui, Vec2::new(width, height*3.0));
+                        ui.add_sized(Vec2::new(width, height*3.0), Image::from_bytes("bytes:/banner.png", BYTES_BANNER));
 						ui.add_sized([width, height], Label::new("is a GUI for mining"));
 						ui.add_sized([link_width, height], Hyperlink::from_label_and_url("[Monero]", "https://www.github.com/monero-project/monero"));
 						ui.add_sized([width, height], Label::new("on"));
