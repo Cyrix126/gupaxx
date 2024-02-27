@@ -52,6 +52,7 @@ pub const DISTRO_NO_UPDATE: &str = r#"This [Gupax] was compiled for use as a Lin
 pub const BYTES_ICON: &[u8] = include_bytes!("../images/icons/icon@2x.png");
 #[cfg(not(target_os = "macos"))]
 pub const BYTES_ICON: &[u8] = include_bytes!("../images/icons/icon.png");
+pub const BYTES_XVB: &[u8] = include_bytes!("../images/xvb.png");
 pub const BYTES_BANNER: &[u8] = include_bytes!("../images/banner.png");
 pub const HORIZONTAL: &str = "--------------------------------------------";
 pub const HORI_CONSOLE: &str = "---------------------------------------------------------------------------------------------------------------------------";

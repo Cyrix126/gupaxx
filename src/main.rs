@@ -2507,7 +2507,7 @@ path_xmr: {:#?}\n
 						ui.set_max_height(max_height);
 						// Display [Gupax] banner
 						let link_width = width/14.0;
-                        ui.add_sized(Vec2::new(width, height*3.0), Image::from_bytes("bytes:/banner.png", BYTES_BANNER));
+                        ui.add_sized(Vec2::new(width, height*3.0), Image::from_bytes("bytes://banner.png", BYTES_BANNER));
 						ui.add_sized([width, height], Label::new("is a GUI for mining"));
 						ui.add_sized([link_width, height], Hyperlink::from_label_and_url("[Monero]", "https://www.github.com/monero-project/monero"));
 						ui.add_sized([width, height], Label::new("on"));
