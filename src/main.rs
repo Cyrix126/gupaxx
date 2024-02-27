@@ -70,6 +70,7 @@ mod status;
 mod update;
 mod xmr;
 mod xmrig;
+mod xvb;
 use {
     crate::regex::*, constants::*, disk::*, ferris::*, gupax::*, helper::*, macros::*, node::*,
     update::*,
@@ -657,6 +658,7 @@ pub enum Tab {
     Gupax,
     P2pool,
     Xmrig,
+    Xvb
 }
 
 impl Default for Tab {
@@ -1510,11 +1512,12 @@ impl eframe::App for App {
         // Change Tabs LEFT
         } else if key.is_z() && !wants_input {
             match self.tab {
-                Tab::About => self.tab = Tab::Xmrig,
+                Tab::About => self.tab = Tab::Xvb,
                 Tab::Status => self.tab = Tab::About,
                 Tab::Gupax => self.tab = Tab::Status,
                 Tab::P2pool => self.tab = Tab::Gupax,
                 Tab::Xmrig => self.tab = Tab::P2pool,
+                Tab::Xvb => self.tab = Tab::Xmrig
             };
         // Change Tabs RIGHT
         } else if key.is_x() && !wants_input {
@@ -1523,7 +1526,8 @@ impl eframe::App for App {
                 Tab::Status => self.tab = Tab::Gupax,
                 Tab::Gupax => self.tab = Tab::P2pool,
                 Tab::P2pool => self.tab = Tab::Xmrig,
-                Tab::Xmrig => self.tab = Tab::About,
+                Tab::Xmrig => self.tab = Tab::Xvb,
+                Tab::Xvb => self.tab = Tab::About
             };
         // Change Submenu LEFT
         } else if key.is_c() && !wants_input {
@@ -1845,13 +1849,14 @@ impl eframe::App for App {
             || og.gupax != self.state.gupax
             || og.p2pool != self.state.p2pool
             || og.xmrig != self.state.xmrig
+            || og.xvb != self.state.xvb
             || self.og_node_vec != self.node_vec || self.og_pool_vec != self.pool_vec;
         drop(og);
 
         // Top: Tabs
         debug!("App | Rendering TOP tabs");
         TopBottomPanel::top("top").show(ctx, |ui| {
-            let width = (self.width - (SPACE * 10.0)) / 5.0;
+            let width = (self.width - (SPACE * 12.0)) / 6.0;
             let height = self.height / 15.0;
             ui.add_space(4.0);
             ui.horizontal(|ui| {
@@ -1905,7 +1910,17 @@ impl eframe::App for App {
                 {
                     self.tab = Tab::Xmrig;
                 }
-            });
+                ui.separator();
+                if ui
+                    .add_sized(
+                        [width, height],
+                        SelectableLabel::new(self.tab == Tab::Xvb, "XvB"),
+                    )
+                    .clicked()
+                {
+                    self.tab = Tab::Xvb;
+                }
+            }); 
             ui.add_space(4.0);
         });
 
@@ -2523,6 +2538,10 @@ path_xmr: {:#?}\n
 				Tab::Xmrig => {
 					debug!("App | Entering [XMRig] Tab");
 					crate::disk::Xmrig::show(&mut self.state.xmrig, &mut self.pool_vec, &self.xmrig, &self.xmrig_api, &mut self.xmrig_stdin, self.width, self.height, ctx, ui);
+				}
+				Tab::Xvb => {
+					debug!("App | Entering [XvB] Tab");
+					crate::disk::Xvb::show(self.width, self.height, ctx, ui);
 				}
 			}
 		});

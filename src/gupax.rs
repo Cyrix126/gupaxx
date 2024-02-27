@@ -18,7 +18,8 @@
 use crate::State;
 use crate::{constants::*, macros::*, update::*, ErrorState, Restart, Tab};
 use egui::{
-    Button, Checkbox, Label, ProgressBar, RichText, SelectableLabel, Slider, Spinner, TextEdit, Vec2,
+    Button, Checkbox, Label, ProgressBar, RichText, SelectableLabel, Slider, Spinner, TextEdit,
+    Vec2,
 };
 use log::*;
 use serde::{Deserialize, Serialize};

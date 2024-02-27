@@ -270,6 +270,7 @@ impl State {
             gupax: Gupax::default(),
             p2pool: P2pool::default(),
             xmrig: Xmrig::with_threads(max_threads, current_threads),
+            xvb: Xvb::default(),
             version: arc_mut!(Version::default()),
         }
     }
@@ -1145,6 +1146,7 @@ pub struct State {
     pub gupax: Gupax,
     pub p2pool: P2pool,
     pub xmrig: Xmrig,
+    pub xvb: Xvb,
     pub version: Arc<Mutex<Version>>,
 }
 
@@ -1225,6 +1227,12 @@ pub struct Xmrig {
     pub selected_rig: String,
     pub selected_ip: String,
     pub selected_port: String,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Default)]
+pub struct Xvb {
+    pub token: u32,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -1333,6 +1341,9 @@ impl Default for Xmrig {
         }
     }
 }
+
+
+
 impl Default for Version {
     fn default() -> Self {
         Self {
@@ -1438,6 +1449,8 @@ mod test {
 			selected_ip = "192.168.1.122"
 			selected_port = "3333"
 
+            [xvb]
+            token = 0
 			[version]
 			gupax = "v1.3.0"
 			p2pool = "v2.5"
@@ -1559,6 +1572,8 @@ mod test {
 			selected_ip = "localhost"
 			selected_port = "3333"
 
+            [xvb]
+            token = 0
 			[version]
 			gupax = "v1.0.0"
 			p2pool = "v2.5"
