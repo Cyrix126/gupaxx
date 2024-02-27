@@ -1856,7 +1856,7 @@ impl eframe::App for App {
         // Top: Tabs
         debug!("App | Rendering TOP tabs");
         TopBottomPanel::top("top").show(ctx, |ui| {
-            let width = (self.width - (SPACE * 12.0)) / 6.0;
+            let width = (self.width - (SPACE * 11.0)) / 6.0;
             let height = self.height / 15.0;
             ui.add_space(4.0);
             ui.horizontal(|ui| {
