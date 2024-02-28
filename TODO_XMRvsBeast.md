@@ -11,7 +11,7 @@
   - [x] link to website
   - [ ] message overing explaining registration and needs to read the rules.
   - [ ] token input
-  - [ ] informations
+  - [ ] information
     - [ ] status of h/s received by the raffle, authenfication by token.
     - [ ] status of 1h and 24h average h/s sent to raffle from this instance
     - [ ] number of failures
@@ -20,10 +20,10 @@
       - [ ] round in
   - [ ] hero checkbox
 - [ ] status process XvB
-  - [ ] public informations from [API](https://xmrvsbeast.com/p2pool/stats)
+  - [ ] public information from [API](https://xmrvsbeast.com/p2pool/stats)
 - [ ] if not enough hashrate for min round and share acquirement OR no share acquired, node destination for xmrig is only p2pool.
-- [ ] if share acquired and enough hashrate to keep up round min hashrate and share acquirement, switch node destination for xmrig beetween p2pool and raffle giving raffle minimum round requirement + buffer.
+- [ ] if share acquired and enough hashrate to keep up round min hashrate and share acquirement, switch node destination for xmrig between p2pool and raffle giving raffle minimum round requirement + buffer.
 - [ ] if hero checked, give maximum hasrate to raffle while keeping enough for p2pool.
-- [ ] edit metada of project
+- [ ] edit metadata of project
   - [ ] cargo package metadata
   - [ ] pgp signatures
