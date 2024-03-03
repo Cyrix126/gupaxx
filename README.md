@@ -1,5 +1,5 @@
 <div align="center">
-	<img src="images/banner.png" width="50%"/>
+	<img src="assets/images/banner.png" width="50%"/>
 
 Gupax is a GUI for mining [**Monero**](https://github.com/monero-project/monero) on [**P2Pool**](https://github.com/SChernykh/p2pool), using [**XMRig**](https://github.com/xmrig/xmrig).
 
@@ -79,7 +79,7 @@ Both Monero and P2Pool have built in miners but XMRig is quite faster than both 
 
 [**`Gupax`**](https://github.com/hinto-janai/gupax) is a GUI that helps manage P2Pool & XMRig (both originally CLI-only).
 
-<img src="images/local.png" align="left" width="50%"/>
+<img src="assets/images/local.png" align="left" width="50%"/>
 
 **`XMRig`** mines to **`P2Pool`**
 
@@ -93,7 +93,7 @@ Both Monero and P2Pool have built in miners but XMRig is quite faster than both 
 
 ---
 
-<img src="images/remote.png" align="left" width="50%"/>
+<img src="assets/images/remote.png" align="left" width="50%"/>
 
 By default, Gupax will use a [Remote Monero Node](#remote-monero-nodes) so you don't have to run [your own Monero node](#running-a-local-monero-node) to start mining on P2Pool.
 
@@ -127,7 +127,7 @@ The `Gupax/P2Pool/XMRig` tabs have two versions, `Simple` & `Advanced`.
 ### Status
 This tab has 3 submenus.
 
-<img src="images/processes.png" align="left" width="50%"/>
+<img src="assets/images/processes.png" align="left" width="50%"/>
 
 **Processes:**  
 This submenu shows:
@@ -137,7 +137,7 @@ This submenu shows:
 
 <br clear="left"/>
 
-<img src="images/payouts.png" align="left" width="50%"/>
+<img src="assets/images/payouts.png" align="left" width="50%"/>
 
 **P2Pool:**  
 This submenu shows:
@@ -147,7 +147,7 @@ This submenu shows:
 
 <br clear="left"/>
 
-<img src="images/benchmarks.png" align="left" width="50%"/>
+<img src="assets/images/benchmarks.png" align="left" width="50%"/>
 
 **Benchmarks:**  
 This submenu shows:
@@ -228,7 +228,7 @@ Running and using your own local Monero node improves privacy and security. It a
 If you'd like to run and use your own local Monero node for P2Pool, follow these steps:
 
 <div align="center">
-	<img src="images/local_node.png" width="66%"/>
+	<img src="assets/images/local_node.png" width="66%"/>
 
 1. In the Monero GUI, go to `Settings`
 2. Go to the `Node` tab
