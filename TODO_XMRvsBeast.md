@@ -6,6 +6,7 @@
 
 - [x] upgrade deps
 - [x] fix clippy
+- [x] separate logic in smaller modules
 - [x] new tab XvB
   - [x] logo
   - [x] link to website
