@@ -19,7 +19,12 @@
 // [zeroize] is used to wipe the memory after use.
 // Only gets imported in [main.rs] for Unix.
 
-use crate::{constants::*, disk::Xmrig, macros::*, Helper, ProcessSignal};
+use crate::{
+    constants::*,
+    disk::state::Xmrig,
+    helper::{Helper, ProcessSignal},
+    macros::*,
+};
 use log::*;
 use std::{
     io::Write,

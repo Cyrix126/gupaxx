@@ -2,7 +2,7 @@ use egui::{Hyperlink, Image};
 
 use crate::constants::{BYTES_XVB, SPACE};
 
-impl crate::disk::Xvb {
+impl crate::disk::state::Xvb {
     #[inline(always)] // called once
     pub fn show(width: f32, height: f32, _ctx: &egui::Context, ui: &mut egui::Ui) {
         let website_height = height / 10.0;

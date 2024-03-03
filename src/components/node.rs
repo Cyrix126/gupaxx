@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::components::update::Pkg;
 use crate::{constants::*, macros::*};
 use egui::Color32;
 use hyper::{client::HttpConnector, Body, Client, Request};
@@ -409,7 +410,7 @@ impl Ping {
         let client: Client<HttpConnector> = Client::builder().build(HttpConnector::new());
 
         // Random User Agent
-        let rand_user_agent = crate::Pkg::get_user_agent();
+        let rand_user_agent = Pkg::get_user_agent();
         // Handle vector
         let mut handles = Vec::with_capacity(REMOTE_NODE_LENGTH);
         let node_vec = arc_mut!(Vec::with_capacity(REMOTE_NODE_LENGTH));
@@ -506,13 +507,17 @@ impl Ping {
         lock!(node_vec).push(NodeData { ip, ms, color });
     }
 }
-
-//---------------------------------------------------------------------------------------------------- TESTS
+//---------------------------------------------------------------------------------------------------- NODE
 #[cfg(test)]
 mod test {
+    use crate::components::node::{
+        format_ip, REMOTE_NODES, REMOTE_NODE_LENGTH, REMOTE_NODE_MAX_CHARS,
+    };
+    use crate::components::update::Pkg;
+
     #[test]
     fn validate_node_ips() {
-        for (ip, location, rpc, zmq) in crate::REMOTE_NODES {
+        for (ip, location, rpc, zmq) in REMOTE_NODES {
             assert!(ip.len() < 255);
             assert!(ip.is_ascii());
             assert!(!location.is_empty());
@@ -524,8 +529,8 @@ mod test {
 
     #[test]
     fn spacing() {
-        for (ip, _, _, _) in crate::REMOTE_NODES {
-            assert!(crate::format_ip(ip).len() <= crate::REMOTE_NODE_MAX_CHARS);
+        for (ip, _, _, _) in REMOTE_NODES {
+            assert!(format_ip(ip).len() <= REMOTE_NODE_MAX_CHARS);
         }
     }
 
@@ -534,7 +539,6 @@ mod test {
     #[tokio::test]
     #[ignore]
     async fn full_ping() {
-        use crate::{REMOTE_NODES, REMOTE_NODE_LENGTH};
         use hyper::{client::HttpConnector, Client, Request};
         use serde::{Deserialize, Serialize};
 
@@ -548,7 +552,7 @@ mod test {
         let client: Client<HttpConnector> = Client::builder().build(HttpConnector::new());
 
         // Random User Agent
-        let rand_user_agent = crate::Pkg::get_user_agent();
+        let rand_user_agent = Pkg::get_user_agent();
 
         // Only fail this test if >50% of nodes fail.
         const HALF_REMOTE_NODES: usize = REMOTE_NODE_LENGTH / 2;

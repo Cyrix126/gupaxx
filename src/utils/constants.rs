@@ -49,11 +49,11 @@ pub const DISTRO_NO_UPDATE: &str = r#"This [Gupax] was compiled for use as a Lin
 
 // Use macOS shaped icon for macOS
 #[cfg(target_os = "macos")]
-pub const BYTES_ICON: &[u8] = include_bytes!("../images/icons/icon@2x.png");
+pub const BYTES_ICON: &[u8] = include_bytes!("../../assets/images/icons/icon@2x.png");
 #[cfg(not(target_os = "macos"))]
-pub const BYTES_ICON: &[u8] = include_bytes!("../images/icons/icon.png");
-pub const BYTES_XVB: &[u8] = include_bytes!("../images/xvb.png");
-pub const BYTES_BANNER: &[u8] = include_bytes!("../images/banner.png");
+pub const BYTES_ICON: &[u8] = include_bytes!("../../assets/images/icons/icon.png");
+pub const BYTES_XVB: &[u8] = include_bytes!("../../assets/images/xvb.png");
+pub const BYTES_BANNER: &[u8] = include_bytes!("../../assets/images/banner.png");
 pub const HORIZONTAL: &str = "--------------------------------------------";
 pub const HORI_CONSOLE: &str = "---------------------------------------------------------------------------------------------------------------------------";
 
@@ -387,6 +387,10 @@ pub const XMRIG_PATH_NOT_VALID: &str = "XMRig binary at the given PATH in the Gu
 pub const XMRIG_PATH_OK: &str = "XMRig was found at the given PATH";
 pub const XMRIG_PATH_EMPTY:     &str = "XMRig PATH is empty! To fix: goto the [Gupax Advanced] tab, select [Open] and specify where XMRig is located.";
 
+// XvB
+pub const XVB_HELP: &str = "You need to register an account by clicking on the link above to get your token with the same p2pool XMR address you use for payment.";
+pub const XVB_URL: &str = "https://xmrvsbeast.com";
+
 // CLI argument messages
 pub const ARG_HELP: &str = r#"USAGE: ./gupax [--flag]
 
@@ -488,8 +492,7 @@ pub static VISUALS: Lazy<Visuals> = Lazy::new(|| {
         ..Visuals::dark()
     }
 });
-
-//---------------------------------------------------------------------------------------------------- TESTS
+//---------------------------------------------------------------------------------------------------- CONSTANTS
 #[cfg(test)]
 mod test {
     #[test]

@@ -17,12 +17,12 @@
 
 // Some images of ferris in byte form for error messages, etc
 
-pub const FERRIS_HAPPY: &[u8] = include_bytes!("../images/ferris/happy.png");
-pub const FERRIS_CUTE: &[u8] = include_bytes!("../images/ferris/cute.png");
-pub const FERRIS_OOPS: &[u8] = include_bytes!("../images/ferris/oops.png");
-pub const FERRIS_ERROR: &[u8] = include_bytes!("../images/ferris/error.png");
-pub const FERRIS_PANIC: &[u8] = include_bytes!("../images/ferris/panic.png"); // This isnt technically ferris but its ok since its spooky
-pub const FERRIS_SUDO: &[u8] = include_bytes!("../images/ferris/sudo.png");
+pub const FERRIS_HAPPY: &[u8] = include_bytes!("../../assets/images/ferris/happy.png");
+pub const FERRIS_CUTE: &[u8] = include_bytes!("../../assets/images/ferris/cute.png");
+pub const FERRIS_OOPS: &[u8] = include_bytes!("../../assets/images/ferris/oops.png");
+pub const FERRIS_ERROR: &[u8] = include_bytes!("../../assets/images/ferris/error.png");
+pub const FERRIS_PANIC: &[u8] = include_bytes!("../../assets/images/ferris/panic.png"); // This isnt technically ferris but its ok since its spooky
+pub const FERRIS_SUDO: &[u8] = include_bytes!("../../assets/images/ferris/sudo.png");
 
 // This is the ANSI representation of Ferris in string form.
 // Calling [println!] on this straight up prints a 256-bit color Ferris to the terminal.

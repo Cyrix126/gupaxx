@@ -15,8 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::disk::pool::Pool;
+use crate::disk::state::Xmrig;
+use crate::helper::xmrig::PubXmrigApi;
+use crate::helper::Process;
 use crate::regex::REGEXES;
-use crate::{constants::*, disk::*, macros::*, Process, PubXmrigApi, Regexes};
+use crate::utils::regex::Regexes;
+use crate::{constants::*, macros::*};
 use egui::{
     Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, Slider, TextEdit, TextStyle::*,
 };
@@ -24,7 +29,7 @@ use log::*;
 
 use std::sync::{Arc, Mutex};
 
-impl crate::disk::Xmrig {
+impl Xmrig {
     #[inline(always)] // called once
     #[allow(clippy::too_many_arguments)]
     pub fn show(

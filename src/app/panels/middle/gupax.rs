@@ -1,75 +1,17 @@
-// Gupax - GUI Uniting P2Pool And XMRig
-//
-// Copyright (c) 2022-2023 hinto-janai
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-use crate::State;
-use crate::{constants::*, macros::*, update::*, ErrorState, Restart, Tab};
-use egui::{
-    Button, Checkbox, Label, ProgressBar, RichText, SelectableLabel, Slider, Spinner, TextEdit,
-    Vec2,
-};
-use log::*;
-use serde::{Deserialize, Serialize};
-use std::{
-    path::Path,
-    sync::{Arc, Mutex},
-    thread,
-};
-
-//---------------------------------------------------------------------------------------------------- FileWindow
-// Struct for writing/reading the path state.
-// The opened file picker is started in a new
-// thread so main() needs to be in sync.
-pub struct FileWindow {
-    thread: bool,        // Is there already a FileWindow thread?
-    picked_p2pool: bool, // Did the user pick a path for p2pool?
-    picked_xmrig: bool,  // Did the user pick a path for xmrig?
-    p2pool_path: String, // The picked p2pool path
-    xmrig_path: String,  // The picked p2pool path
-}
-
-impl FileWindow {
-    pub fn new() -> Arc<Mutex<Self>> {
-        arc_mut!(Self {
-            thread: false,
-            picked_p2pool: false,
-            picked_xmrig: false,
-            p2pool_path: String::new(),
-            xmrig_path: String::new(),
-        })
-    }
-}
-
-#[derive(Debug, Clone)]
-pub enum FileType {
-    P2pool,
-    Xmrig,
-}
-
-//---------------------------------------------------------------------------------------------------- Ratio Lock
-// Enum for the lock ratio in the advanced tab.
-#[derive(Clone, Copy, Eq, PartialEq, Debug, Deserialize, Serialize)]
-pub enum Ratio {
-    Width,
-    Height,
-    None,
-}
-
-//---------------------------------------------------------------------------------------------------- Gupax
-impl crate::disk::Gupax {
+use crate::app::panels::middle::*;
+use crate::app::ErrorState;
+use crate::app::Restart;
+use crate::components::gupax::FileWindow;
+use crate::components::gupax::*;
+use crate::components::update::Update;
+use crate::disk::state::*;
+use crate::macros::lock2;
+use egui::Button;
+use log::debug;
+use std::path::Path;
+use std::sync::Arc;
+use std::sync::Mutex;
+impl Gupax {
     #[inline(always)] // called once
     #[allow(clippy::too_many_arguments)]
     pub fn show(
@@ -218,7 +160,7 @@ impl crate::disk::Gupax {
                         Label::new(RichText::new("P2Pool Binary Path ❌").color(RED)),
                     )
                     .on_hover_text(P2POOL_PATH_NOT_FILE);
-                } else if !crate::update::check_p2pool_path(&self.p2pool_path) {
+                } else if !crate::components::update::check_p2pool_path(&self.p2pool_path) {
                     ui.add_sized(
                         [text_edit, height],
                         Label::new(RichText::new("P2Pool Binary Path ❌").color(RED)),
@@ -255,7 +197,7 @@ impl crate::disk::Gupax {
                         Label::new(RichText::new(" XMRig Binary Path ❌").color(RED)),
                     )
                     .on_hover_text(XMRIG_PATH_NOT_FILE);
-                } else if !crate::update::check_xmrig_path(&self.xmrig_path) {
+                } else if !crate::components::update::check_xmrig_path(&self.xmrig_path) {
                     ui.add_sized(
                         [text_edit, height],
                         Label::new(RichText::new(" XMRig Binary Path ❌").color(RED)),
@@ -489,49 +431,6 @@ impl crate::disk::Gupax {
                         .send_viewport_cmd(egui::viewport::ViewportCommand::InnerSize(size));
                 }
             })
-        });
-    }
-
-    // Checks if a path is a valid path to a file.
-    pub fn path_is_file(path: &str) -> bool {
-        let path = path.to_string();
-        match crate::disk::into_absolute_path(path) {
-            Ok(path) => path.is_file(),
-            _ => false,
-        }
-    }
-
-    #[cold]
-    #[inline(never)]
-    fn spawn_file_window_thread(file_window: &Arc<Mutex<FileWindow>>, file_type: FileType) {
-        use FileType::*;
-        let name = match file_type {
-            P2pool => "P2Pool",
-            Xmrig => "XMRig",
-        };
-        let file_window = file_window.clone();
-        lock!(file_window).thread = true;
-        thread::spawn(move || {
-            match rfd::FileDialog::new()
-                .set_title(format!("Select {} Binary for Gupax", name))
-                .pick_file()
-            {
-                Some(path) => {
-                    info!("Gupax | Path selected for {} ... {}", name, path.display());
-                    match file_type {
-                        P2pool => {
-                            lock!(file_window).p2pool_path = path.display().to_string();
-                            lock!(file_window).picked_p2pool = true;
-                        }
-                        Xmrig => {
-                            lock!(file_window).xmrig_path = path.display().to_string();
-                            lock!(file_window).picked_xmrig = true;
-                        }
-                    };
-                }
-                None => info!("Gupax | No path selected for {}", name),
-            };
-            lock!(file_window).thread = false;
         });
     }
 }

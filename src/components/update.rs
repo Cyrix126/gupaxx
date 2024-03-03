@@ -24,9 +24,17 @@
 //     b. auto-update at startup
 
 //---------------------------------------------------------------------------------------------------- Imports
+use crate::components::update::Name::*;
 use crate::{
-    constants::GUPAX_VERSION, disk::*, macros::*, update::Name::*, ErrorButtons, ErrorFerris,
-    ErrorState, Restart,
+    app::Restart,
+    constants::GUPAX_VERSION,
+    disk::{
+        state::{State, Version},
+        *,
+    },
+    macros::*,
+    miscs::get_exe_dir,
+    utils::errors::{ErrorButtons, ErrorFerris, ErrorState},
 };
 use anyhow::{anyhow, Error};
 use arti_client::TorClient;
@@ -310,7 +318,7 @@ impl Update {
             .take(10)
             .map(char::from)
             .collect();
-        let base = crate::get_exe_dir()?;
+        let base = get_exe_dir()?;
         #[cfg(target_os = "windows")]
         let tmp_dir = format!("{}{}{}{}", base, r"\gupax_update_", rand_string, r"\");
         #[cfg(target_family = "unix")]
@@ -365,7 +373,7 @@ impl Update {
     // code only needs to be edited once, here.
     pub fn spawn_thread(
         og: &Arc<Mutex<State>>,
-        gupax: &crate::disk::Gupax,
+        gupax: &crate::disk::state::Gupax,
         state_path: &Path,
         update: &Arc<Mutex<Update>>,
         error_state: &mut ErrorState,
