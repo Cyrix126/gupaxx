@@ -391,12 +391,12 @@ fn xvb(ui: &mut Ui, min_height: f32, width: f32, height: f32, xvb_api: &Arc<Mute
                 .on_hover_text(STATUS_XVB_TIME_REMAIN);
                 ui.add_sized(
                     [width, height],
-                    Label::new(format!("{} minutes left", api.time_remain)),
+                    Label::new(format!("{} minutes", api.time_remain)),
                 );
                 // Donated Hashrate
                 ui.add_sized(
                     [width, height],
-                    Label::new(RichText::new("Donated Hashrate").underline().color(BONE)),
+                    Label::new(RichText::new("Bonus Hashrate").underline().color(BONE)),
                 )
                 .on_hover_text(STATUS_XVB_DONATED_HR);
                 ui.add_sized(
