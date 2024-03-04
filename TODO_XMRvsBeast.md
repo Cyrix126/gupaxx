@@ -20,8 +20,8 @@
       - [ ] winner of round
       - [ ] round in
   - [ ] hero checkbox
-- [ ] status process XvB
-  - [ ] public information from [API](https://xmrvsbeast.com/p2pool/stats)
+- [x] status process XvB
+  - [x] public information from [API](https://xmrvsbeast.com/p2pool/stats)
 - [ ] if not enough hashrate for min round and share acquirement OR no share acquired, node destination for xmrig is only p2pool.
 - [ ] if share acquired and enough hashrate to keep up round min hashrate and share acquirement, switch node destination for xmrig between p2pool and raffle giving raffle minimum round requirement + buffer.
 - [ ] if hero checked, give maximum hasrate to raffle while keeping enough for p2pool.
