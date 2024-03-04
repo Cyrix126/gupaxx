@@ -94,14 +94,18 @@ pub struct PubXvbApi {
 #[derive(Debug, Clone, Default, Display, Deserialize)]
 pub enum XvbRound {
     #[default]
+    #[display(fmt = "VIP")]
     #[serde(alias = "vip")]
     Vip,
     #[serde(alias = "donor")]
     Donor,
+    #[display(fmt = "VIP Donor")]
     #[serde(alias = "donor_vip")]
     DonorVip,
+    #[display(fmt = "Whale Donor")]
     #[serde(alias = "donor_whale")]
     DonorWhale,
+    #[display(fmt = "Mega Donor")]
     #[serde(alias = "donor_mega")]
     DonorMega,
 }

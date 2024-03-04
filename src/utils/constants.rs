@@ -190,9 +190,7 @@ pub const STATUS_XVB_DONATED_HR: &str = "Hashrate donated to the raffle";
 pub const STATUS_XVB_WINNER: &str = "Current Raffle Winner";
 pub const STATUS_XVB_SHARE: &str = "Share effort";
 pub const STATUS_XVB_BLOCK_REWARD: &str = "Block reward";
-pub const STATUS_XVB_BLOCK_HEIGHT: &str = "height of the current block";
-pub const STATUS_XVB_BLOCK_HASH: &str = "hash of the block that is being worked on";
-pub const STATUS_XVB_YEARLY: &str = "Average yearly reward per round type";
+pub const STATUS_XVB_YEARLY: &str = "Estimated Reward (Yearly)";
 // Status Submenus
 pub const STATUS_SUBMENU_PROCESSES: &str =
     "View the status of process related data for [Gupax|P2Pool|XMRig]";

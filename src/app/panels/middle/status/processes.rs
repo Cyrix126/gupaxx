@@ -365,7 +365,7 @@ fn xvb(ui: &mut Ui, min_height: f32, width: f32, height: f32, xvb_api: &Arc<Mute
                 ui.add_sized(
                     [width, height],
                     Label::new(
-                        RichText::new("[XvB]")
+                        RichText::new("[XvB Raffle]")
                             .color(LIGHT_GRAY)
                             .text_style(TextStyle::Name("MonospaceLarge".into())),
                     ),
@@ -383,7 +383,7 @@ fn xvb(ui: &mut Ui, min_height: f32, width: f32, height: f32, xvb_api: &Arc<Mute
                 ui.add_sized(
                     [width, height],
                     Label::new(
-                        RichText::new("Raffle Round Time Remaining")
+                        RichText::new("Round Time Remaining")
                             .underline()
                             .color(BONE),
                     ),
@@ -402,7 +402,7 @@ fn xvb(ui: &mut Ui, min_height: f32, width: f32, height: f32, xvb_api: &Arc<Mute
                 ui.add_sized(
                     [width, height],
                     Label::new(format!(
-                        "Bonus HR\n{}kH/s\n+\n{}kH/s\ndonated by\n{} donors\n with\n{} miners",
+                        "{}kH/s\n+\n{}kH/s\ndonated by\n{} donors\n with\n{} miners",
                         api.bonus_hr, api.donate_hr, api.donate_miners, api.donate_workers
                     )),
                 );
@@ -440,24 +440,14 @@ fn xvb(ui: &mut Ui, min_height: f32, width: f32, height: f32, xvb_api: &Arc<Mute
                 )
                 .on_hover_text(STATUS_XVB_BLOCK_REWARD);
                 ui.add_sized([width, height], Label::new(format!("{}", api.block_reward)));
-                //block height
-                ui.add_sized(
-                    [width, height],
-                    Label::new(RichText::new("Block Height").underline().color(BONE)),
-                )
-                .on_hover_text(STATUS_XVB_BLOCK_HEIGHT);
-                ui.add_sized([width, height], Label::new(format!("{}", api.block_height)));
-                // block hash
-                ui.add_sized(
-                    [width, height],
-                    Label::new(RichText::new("Block Hash").underline().color(BONE)),
-                )
-                .on_hover_text(STATUS_XVB_BLOCK_HASH);
-                ui.add_sized([width, height], Label::new(format!("{}", api.block_hash)));
                 // reward yearly
                 ui.add_sized(
                     [width, height],
-                    Label::new(RichText::new("Reward Yearly").underline().color(BONE)),
+                    Label::new(
+                        RichText::new("Est. Reward (Yearly)")
+                            .underline()
+                            .color(BONE),
+                    ),
                 )
                 .on_hover_text(STATUS_XVB_YEARLY);
                 if api.reward_yearly.is_empty() {
