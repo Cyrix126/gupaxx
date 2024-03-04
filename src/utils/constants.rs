@@ -185,7 +185,7 @@ pub const STATUS_XMRIG_THREADS: &str = "The amount of threads XMRig is currently
 pub const STATUS_XVB_TIME_REMAIN: &str = "Minutes left before end of round";
 pub const STATUS_XVB_ROUND_TYPE: &str = "The current round type";
 pub const STATUS_XVB_PLAYERS: &str =
-    "Numbers of registred players and currently playing in the round";
+    "Numbers of registered players and currently playing in the round";
 pub const STATUS_XVB_DONATED_HR: &str = "Hashrate donated to the raffle";
 pub const STATUS_XVB_WINNER: &str = "Current Raffle Winner";
 pub const STATUS_XVB_SHARE: &str = "Share effort";
