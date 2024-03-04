@@ -21,6 +21,7 @@ use crate::{
     helper::{
         p2pool::{ImgP2pool, PubP2poolApi},
         xmrig::{ImgXmrig, PubXmrigApi},
+        xvb::PubXvbApi,
         Sys,
     },
 };
@@ -38,6 +39,7 @@ impl Status {
         sys: &Arc<Mutex<Sys>>,
         p2pool_api: &Arc<Mutex<PubP2poolApi>>,
         xmrig_api: &Arc<Mutex<PubXmrigApi>>,
+        xvb_api: &Arc<Mutex<PubXvbApi>>,
         p2pool_img: &Arc<Mutex<ImgP2pool>>,
         xmrig_img: &Arc<Mutex<ImgXmrig>>,
         p2pool_alive: bool,
@@ -59,10 +61,11 @@ impl Status {
                 ui,
                 p2pool_alive,
                 p2pool_api,
+                p2pool_img,
                 xmrig_alive,
                 xmrig_api,
-                p2pool_img,
                 xmrig_img,
+                xvb_api,
                 max_threads,
             );
         //---------------------------------------------------------------------------------------------------- [P2Pool]

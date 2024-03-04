@@ -1,9 +1,10 @@
-use egui::Ui;
+use egui::{ScrollArea, Ui};
 use std::sync::{Arc, Mutex};
 
 use crate::disk::state::Status;
 use crate::helper::p2pool::{ImgP2pool, PubP2poolApi};
 use crate::helper::xmrig::{ImgXmrig, PubXmrigApi};
+use crate::helper::xvb::{PubXvbApi, XvbRound};
 use crate::helper::Sys;
 use crate::utils::macros::lock;
 use egui::TextStyle;
@@ -21,13 +22,14 @@ impl Status {
         ui: &mut egui::Ui,
         p2pool_alive: bool,
         p2pool_api: &Arc<Mutex<PubP2poolApi>>,
+        p2pool_img: &Arc<Mutex<ImgP2pool>>,
         xmrig_alive: bool,
         xmrig_api: &Arc<Mutex<PubXmrigApi>>,
-        p2pool_img: &Arc<Mutex<ImgP2pool>>,
         xmrig_img: &Arc<Mutex<ImgXmrig>>,
+        xvb_api: &Arc<Mutex<PubXvbApi>>,
         max_threads: usize,
     ) {
-        let width = (width / 3.0) - (SPACE * 1.666);
+        let width = (width / 4.0) - (SPACE * 1.7500);
         let min_height = height - SPACE;
         let height = height / 25.0;
         ui.horizontal(|ui| {
@@ -54,6 +56,8 @@ impl Status {
                 xmrig_img,
                 max_threads,
             );
+            // [XvB]
+            xvb(ui, min_height, width, height, xvb_api);
         });
     }
 }
@@ -344,5 +348,141 @@ fn xmrig(
             );
             drop(api);
         })
+    });
+}
+
+fn xvb(ui: &mut Ui, min_height: f32, width: f32, height: f32, xvb_api: &Arc<Mutex<PubXvbApi>>) {
+    //
+    let api = lock!(xvb_api);
+    // if this field is empty, it means nothing was received from the API.
+    let enabled = !api.reward_yearly.is_empty();
+    ScrollArea::vertical().show(ui, |ui| {
+        ui.group(|ui| {
+            ui.vertical(|ui| {
+                debug!("Status Tab | Rendering [XvB]");
+                ui.set_enabled(enabled); // for now there is no API ping or /health, so we verify if the field reward_yearly is empty or not.
+                ui.set_min_height(min_height);
+                ui.add_sized(
+                    [width, height],
+                    Label::new(
+                        RichText::new("[XvB]")
+                            .color(LIGHT_GRAY)
+                            .text_style(TextStyle::Name("MonospaceLarge".into())),
+                    ),
+                )
+                .on_hover_text("XvB API stats")
+                .on_disabled_hover_text("No data received from XvB API");
+                // [Round Type]
+                ui.add_sized(
+                    [width, height],
+                    Label::new(RichText::new("Round Type").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_XVB_ROUND_TYPE);
+                ui.add_sized([width, height], Label::new(api.round_type.to_string()));
+                // [Time Remaining]
+                ui.add_sized(
+                    [width, height],
+                    Label::new(
+                        RichText::new("Raffle Round Time Remaining")
+                            .underline()
+                            .color(BONE),
+                    ),
+                )
+                .on_hover_text(STATUS_XVB_TIME_REMAIN);
+                ui.add_sized(
+                    [width, height],
+                    Label::new(format!("{} minutes left", api.time_remain)),
+                );
+                // Donated Hashrate
+                ui.add_sized(
+                    [width, height],
+                    Label::new(RichText::new("Donated Hashrate").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_XVB_DONATED_HR);
+                ui.add_sized(
+                    [width, height],
+                    Label::new(format!(
+                        "Bonus HR\n{}kH/s\n+\n{}kH/s\ndonated by\n{} donors\n with\n{} miners",
+                        api.bonus_hr, api.donate_hr, api.donate_miners, api.donate_workers
+                    )),
+                );
+                // Players
+                ui.add_sized(
+                    [width, height],
+                    Label::new(RichText::new("Players").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_XVB_PLAYERS);
+                ui.add_sized(
+                    [width, height],
+                    Label::new(format!(
+                        "[Registered: {}]\n[Playing: {}]",
+                        api.players, api.players_round
+                    )),
+                );
+                // Winner
+                ui.add_sized(
+                    [width, height],
+                    Label::new(RichText::new("Winner").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_XVB_WINNER);
+                ui.add_sized([width, height], Label::new(&api.winner));
+                // Share effort
+                ui.add_sized(
+                    [width, height],
+                    Label::new(RichText::new("Share Effort").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_XVB_SHARE);
+                ui.add_sized([width, height], Label::new(format!("{}", api.share_effort)));
+                // Block reward
+                ui.add_sized(
+                    [width, height],
+                    Label::new(RichText::new("Block Reward").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_XVB_BLOCK_REWARD);
+                ui.add_sized([width, height], Label::new(format!("{}", api.block_reward)));
+                //block height
+                ui.add_sized(
+                    [width, height],
+                    Label::new(RichText::new("Block Height").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_XVB_BLOCK_HEIGHT);
+                ui.add_sized([width, height], Label::new(format!("{}", api.block_height)));
+                // block hash
+                ui.add_sized(
+                    [width, height],
+                    Label::new(RichText::new("Block Hash").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_XVB_BLOCK_HASH);
+                ui.add_sized([width, height], Label::new(format!("{}", api.block_hash)));
+                // reward yearly
+                ui.add_sized(
+                    [width, height],
+                    Label::new(RichText::new("Reward Yearly").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_XVB_YEARLY);
+                if api.reward_yearly.is_empty() {
+                    ui.add_sized([width, height], Label::new("No information".to_string()));
+                } else {
+                    ui.add_sized(
+                        [width, height],
+                        Label::new(format!(
+                            "{}: {} XMR\n{}: {} XMR\n{}: {} XMR\n{}: {} XMR\n{}: {} XMR",
+                            XvbRound::Vip,
+                            api.reward_yearly[0],
+                            XvbRound::Donor,
+                            api.reward_yearly[1],
+                            XvbRound::DonorVip,
+                            api.reward_yearly[2],
+                            XvbRound::DonorWhale,
+                            api.reward_yearly[3],
+                            XvbRound::DonorMega,
+                            api.reward_yearly[4]
+                        )),
+                    );
+                }
+                drop(api);
+            });
+            // by round
+        });
     });
 }

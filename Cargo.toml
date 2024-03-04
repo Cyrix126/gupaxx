@@ -75,7 +75,8 @@ walkdir = "2.4.0"
 zeroize = "1.7.0"
 strsim = "0.11.0"
 strip-ansi-escapes = "0.2.0"
-
+derive_more = {version="0.99.17", default-features=false, features=["display"]}
+serde-this-or-that = "0.4.2"
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
 tar = "0.4.40"

@@ -206,4 +206,7 @@ pub fn init_auto(app: &mut App) {
     } else {
         info!("Skipping auto-xmrig...");
     }
+    // [XvB]
+    // For now, the XvB client of the API for receiving public informations is always enabled.
+    Helper::start_xvb(&app.helper);
 }

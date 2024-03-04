@@ -181,6 +181,18 @@ pub const STATUS_XMRIG_DIFFICULTY: &str = "The current difficulty of the job XMR
 pub const STATUS_XMRIG_SHARES: &str = "The amount of accepted and rejected shares";
 pub const STATUS_XMRIG_POOL: &str = "The pool XMRig is currently mining to";
 pub const STATUS_XMRIG_THREADS: &str = "The amount of threads XMRig is currently using";
+//--
+pub const STATUS_XVB_TIME_REMAIN: &str = "Minutes left before end of round";
+pub const STATUS_XVB_ROUND_TYPE: &str = "The current round type";
+pub const STATUS_XVB_PLAYERS: &str =
+    "Numbers of registred players and currently playing in the round";
+pub const STATUS_XVB_DONATED_HR: &str = "Hashrate donated to the raffle";
+pub const STATUS_XVB_WINNER: &str = "Current Raffle Winner";
+pub const STATUS_XVB_SHARE: &str = "Share effort";
+pub const STATUS_XVB_BLOCK_REWARD: &str = "Block reward";
+pub const STATUS_XVB_BLOCK_HEIGHT: &str = "height of the current block";
+pub const STATUS_XVB_BLOCK_HASH: &str = "hash of the block that is being worked on";
+pub const STATUS_XVB_YEARLY: &str = "Average yearly reward per round type";
 // Status Submenus
 pub const STATUS_SUBMENU_PROCESSES: &str =
     "View the status of process related data for [Gupax|P2Pool|XMRig]";
@@ -390,6 +402,7 @@ pub const XMRIG_PATH_EMPTY:     &str = "XMRig PATH is empty! To fix: goto the [G
 // XvB
 pub const XVB_HELP: &str = "You need to register an account by clicking on the link above to get your token with the same p2pool XMR address you use for payment.";
 pub const XVB_URL: &str = "https://xmrvsbeast.com";
+pub const XVB_URL_PUBLIC_API: &str = "https://xmrvsbeast.com/p2pool/stats";
 
 // CLI argument messages
 pub const ARG_HELP: &str = r#"USAGE: ./gupax [--flag]

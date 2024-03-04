@@ -18,6 +18,7 @@ use crate::helper::p2pool::ImgP2pool;
 use crate::helper::p2pool::PubP2poolApi;
 use crate::helper::xmrig::ImgXmrig;
 use crate::helper::xmrig::PubXmrigApi;
+use crate::helper::xvb::PubXvbApi;
 use crate::helper::Helper;
 use crate::helper::Process;
 use crate::helper::ProcessName;
@@ -103,6 +104,7 @@ pub struct App {
     pub xmrig: Arc<Mutex<Process>>, // [XMRig] process state
     pub p2pool_api: Arc<Mutex<PubP2poolApi>>, // Public ready-to-print P2Pool API made by the "helper" thread
     pub xmrig_api: Arc<Mutex<PubXmrigApi>>, // Public ready-to-print XMRig API made by the "helper" thread
+    pub xvb_api: Arc<Mutex<PubXvbApi>>,     // Public XvB API
     pub p2pool_img: Arc<Mutex<ImgP2pool>>,  // A one-time snapshot of what data P2Pool started with
     pub xmrig_img: Arc<Mutex<ImgXmrig>>,    // A one-time snapshot of what data XMRig started with
     // STDIN Buffer
@@ -181,6 +183,7 @@ impl App {
         ));
         let p2pool_api = arc_mut!(PubP2poolApi::new());
         let xmrig_api = arc_mut!(PubXmrigApi::new());
+        let xvb_api = arc_mut!(PubXvbApi::new());
         let p2pool_img = arc_mut!(ImgP2pool::new());
         let xmrig_img = arc_mut!(ImgXmrig::new());
 
@@ -243,6 +246,7 @@ impl App {
                 xmrig.clone(),
                 p2pool_api.clone(),
                 xmrig_api.clone(),
+                xvb_api.clone(),
                 p2pool_img.clone(),
                 xmrig_img.clone(),
                 arc_mut!(GupaxP2poolApi::new())
@@ -250,6 +254,7 @@ impl App {
             p2pool,
             xmrig,
             p2pool_api,
+            xvb_api,
             xmrig_api,
             p2pool_img,
             xmrig_img,

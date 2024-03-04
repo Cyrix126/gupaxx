@@ -2327,6 +2327,7 @@ dependencies = [
  "arti-hyper",
  "benri",
  "bytes",
+ "derive_more",
  "dirs",
  "eframe",
  "egui",
@@ -2348,6 +2349,7 @@ dependencies = [
  "regex",
  "rfd",
  "serde",
+ "serde-this-or-that",
  "serde_json",
  "static_vcruntime",
  "strip-ansi-escapes",
@@ -4163,6 +4165,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "3fb1c873e1b9b056a4dc4c0c198b24c3ffa059243875552b2bd0933b1aee4ce2"
 dependencies = [
  "serde_derive",
+]
+
+[[package]]
+name = "serde-this-or-that"
+version = "0.4.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "634c5a3cb041e56cc2964386151c67d520f845445789da3bd46bfb1c94f5e3bb"
+dependencies = [
+ "serde",
 ]
 
 [[package]]

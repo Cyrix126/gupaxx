@@ -143,7 +143,7 @@ path_xmr: {:#?}\n
 				}
 				Tab::Status => {
 					debug!("App | Entering [Status] Tab");
-					crate::disk::state::Status::show(&mut self.state.status, &self.pub_sys, &self.p2pool_api, &self.xmrig_api, &self.p2pool_img, &self.xmrig_img, p2pool_is_alive, xmrig_is_alive, self.max_threads, &self.gupax_p2pool_api, &self.benchmarks, self.width, self.height, ctx, ui);
+					crate::disk::state::Status::show(&mut self.state.status, &self.pub_sys, &self.p2pool_api, &self.xmrig_api, &self.xvb_api,&self.p2pool_img, &self.xmrig_img, p2pool_is_alive, xmrig_is_alive,  self.max_threads, &self.gupax_p2pool_api, &self.benchmarks, self.width, self.height, ctx, ui);
 				}
 				Tab::Gupax => {
 					debug!("App | Entering [Gupax] Tab");
