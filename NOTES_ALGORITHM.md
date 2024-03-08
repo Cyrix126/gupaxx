@@ -10,7 +10,7 @@ If the Hashrate (HR) is not enough to probably always have at least one share in
 If no share is acquired, all HR will stay on p2pool node until there is one.  
 
 If HR is enough to probably always have at least one share in the (WP), the spare HR will be:  
-**Default mode**: in part given to XvB node to be in the most possible round type and keep in p2pool the rest of HR that will not impact the type of round (sHR for spare HR).  
+**Default mode**: in part given to XvB node to be in the most possible round type and keep in p2pool the rest of HR that will not impact the type of round (sHR for spared HR).  
 **Hero mode**: entirely given to the XvB node regardless of sHR.
 
 ## How
@@ -27,9 +27,7 @@ Every ten minutes, the algorithm will decide how next 10 minutes will be distrib
 
 ## Manage with outside HashRate
 
-Gupaxx will need to know the local hashrate (lHR) it can control and the outside of his control HR (eHR) that contributes to the same payout address on the p2pool network so that it can subtract HR needed to be put on p2pool if there is already eHR given for it.  
-To know the eHR, it can see the global HR on p2pool network and subtract with lHR.
-
+Gupaxx could be connected to a xmrig proxy to control HR of every miners outside local machine.
 
 ## Examples
 
@@ -43,7 +41,7 @@ HR never goes on XvB, because the minimum required to have a share in WP is 4kH/
 
 ### Example 2: the modest
 
-Miner has 10kH/s on Gupaxx
+Miner has 10kH/s on Gupaxx  
 for ten minutes, 4 are required to be put on p2pool.
 
 **Default mode**: 9 minutes are given to p2pool and one for XvB.  
@@ -56,5 +54,5 @@ So 1kH/s is given to XvB node so that the miner participate in the Donor round.
 
 
 
-[^1]: https://p2pool.io/api/pool/stats 
+[^1]: https://p2pool.io/mini/api/pool/stats 
 [^2]: https://github.com/SChernykh/p2pool?tab=readme-ov-file#how-payouts-work-in-p2pool
