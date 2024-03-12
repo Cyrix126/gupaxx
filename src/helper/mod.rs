@@ -72,6 +72,7 @@ pub struct Helper {
     pub pub_sys: Arc<Mutex<Sys>>, // The public API for [sysinfo] that the [Status] tab reads from
     pub p2pool: Arc<Mutex<Process>>, // P2Pool process state
     pub xmrig: Arc<Mutex<Process>>, // XMRig process state
+    pub xvb: Arc<Mutex<Process>>, // XvB process state
     pub gui_api_p2pool: Arc<Mutex<PubP2poolApi>>, // P2Pool API state (for GUI thread)
     pub gui_api_xmrig: Arc<Mutex<PubXmrigApi>>, // XMRig API state (for GUI thread)
     pub gui_api_xvb: Arc<Mutex<PubXvbApi>>, // XMRig API state (for GUI thread)
@@ -246,6 +247,7 @@ impl Default for ProcessSignal {
 pub enum ProcessName {
     P2pool,
     Xmrig,
+    Xvb,
 }
 
 impl std::fmt::Display for ProcessState {
@@ -263,6 +265,7 @@ impl std::fmt::Display for ProcessName {
         match *self {
             ProcessName::P2pool => write!(f, "P2Pool"),
             ProcessName::Xmrig => write!(f, "XMRig"),
+            ProcessName::Xvb => write!(f, "XvB"),
         }
     }
 }
@@ -276,6 +279,7 @@ impl Helper {
         pub_sys: Arc<Mutex<Sys>>,
         p2pool: Arc<Mutex<Process>>,
         xmrig: Arc<Mutex<Process>>,
+        xvb: Arc<Mutex<Process>>,
         gui_api_p2pool: Arc<Mutex<PubP2poolApi>>,
         gui_api_xmrig: Arc<Mutex<PubXmrigApi>>,
         gui_api_xvb: Arc<Mutex<PubXvbApi>>,
@@ -293,6 +297,7 @@ impl Helper {
             // These are created when initializing [App], since it needs a handle to it as well
             p2pool,
             xmrig,
+            xvb,
             gui_api_p2pool,
             gui_api_xmrig,
             gui_api_xvb,

@@ -1,4 +1,4 @@
-use egui::{ScrollArea, Ui};
+use egui::{ScrollArea, Ui, Vec2};
 use std::sync::{Arc, Mutex};
 
 use crate::disk::state::Status;
@@ -17,8 +17,7 @@ impl Status {
     pub(super) fn processes(
         &mut self,
         sys: &Arc<Mutex<Sys>>,
-        width: f32,
-        height: f32,
+        size: Vec2,
         ui: &mut egui::Ui,
         p2pool_alive: bool,
         p2pool_api: &Arc<Mutex<PubP2poolApi>>,
@@ -29,9 +28,9 @@ impl Status {
         xvb_api: &Arc<Mutex<PubXvbApi>>,
         max_threads: usize,
     ) {
-        let width = (width / 4.0) - (SPACE * 1.7500);
-        let min_height = height - SPACE;
-        let height = height / 25.0;
+        let width = (size.x / 4.0) - (SPACE * 1.7500);
+        let min_height = size.y - SPACE;
+        let height = size.y / 25.0;
         ui.horizontal(|ui| {
             // [Gupax]
             gupax(ui, min_height, width, height, sys);
@@ -261,6 +260,7 @@ fn p2pool(
         })
     });
 }
+#[allow(clippy::too_many_arguments)]
 fn xmrig(
     ui: &mut Ui,
     min_height: f32,
@@ -432,14 +432,14 @@ fn xvb(ui: &mut Ui, min_height: f32, width: f32, height: f32, xvb_api: &Arc<Mute
                     Label::new(RichText::new("Share Effort").underline().color(BONE)),
                 )
                 .on_hover_text(STATUS_XVB_SHARE);
-                ui.add_sized([width, height], Label::new(format!("{}", api.share_effort)));
+                ui.add_sized([width, height], Label::new(api.share_effort.to_string()));
                 // Block reward
                 ui.add_sized(
                     [width, height],
                     Label::new(RichText::new("Block Reward").underline().color(BONE)),
                 )
                 .on_hover_text(STATUS_XVB_BLOCK_REWARD);
-                ui.add_sized([width, height], Label::new(format!("{}", api.block_reward)));
+                ui.add_sized([width, height], Label::new(api.block_reward.to_string()));
                 // reward yearly
                 ui.add_sized(
                     [width, height],

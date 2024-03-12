@@ -206,7 +206,11 @@ pub fn init_auto(app: &mut App) {
     } else {
         info!("Skipping auto-xmrig...");
     }
-    // [XvB]
-    // For now, the XvB client of the API for receiving public information is always enabled.
-    Helper::start_xvb(&app.helper);
+    // [Auto-XvB]
+    if app.state.gupax.auto_xvb {
+    Helper::start_xvb(&app.helper, &app.state.xvb, &app.state.p2pool);
+    } else {
+        info!("Skipping auto-xvb...");
+        
+    }
 }

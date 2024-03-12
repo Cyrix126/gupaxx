@@ -50,9 +50,9 @@ impl App {
                         ctx.request_repaint();
                         info!(
                             "App | Resizing frame to match new internal resolution: [{}x{}]",
-                            self.width, self.height
+                            self.size.x, self.size.y
                         );
-                        init_text_styles(ctx, self.width, self.state.gupax.selected_scale);
+                        init_text_styles(ctx, self.size.x, self.state.gupax.selected_scale);
                         self.resizing = false;
                     }
                 });

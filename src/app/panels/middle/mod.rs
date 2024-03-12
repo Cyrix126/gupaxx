@@ -24,8 +24,8 @@ impl crate::app::App {
         debug!("App | Rendering CENTRAL_PANEL (tab contents)");
         CentralPanel::default().show(ctx, |ui| {
 			// This sets the Ui dimensions after Top/Bottom are filled
-			self.width = ui.available_width();
-			self.height = ui.available_height();
+			self.size.x = ui.available_width();
+			self.size.y = ui.available_height();
 			ui.style_mut().override_text_style = Some(TextStyle::Body);
 			match self.tab {
 				Tab::About => {
@@ -85,8 +85,8 @@ path_xmr: {:#?}\n
 							self.now.elapsed().as_secs_f32(),
 							self.state.gupax.selected_width,
 							self.state.gupax.selected_height,
-							self.width,
-							self.height,
+							self.size.x,
+							self.size.y,
 							OS_NAME,
 							self.max_threads,
 							self.pid,
@@ -117,24 +117,25 @@ path_xmr: {:#?}\n
 						);
 						self.error_state.set(debug_info, ErrorFerris::Cute, ErrorButtons::Debug);
 					}
-					let width = self.width;
-					let height = self.height/30.0;
-					let max_height = self.height;
+					let width = self.size.x;
+					let height = self.size.y/30.0;
+					let max_height = self.size.y;
+					let size = vec2(width, height);
 					ui.add_space(10.0);
 					ui.vertical_centered(|ui| {
 						ui.set_max_height(max_height);
 						// Display [Gupax] banner
 						let link_width = width/14.0;
                         ui.add_sized(Vec2::new(width, height*3.0), Image::from_bytes("bytes://banner.png", BYTES_BANNER));
-						ui.add_sized([width, height], Label::new("is a GUI for mining"));
+						ui.add_sized(size, Label::new("is a GUI for mining"));
 						ui.add_sized([link_width, height], Hyperlink::from_label_and_url("[Monero]", "https://www.github.com/monero-project/monero"));
-						ui.add_sized([width, height], Label::new("on"));
+						ui.add_sized(size, Label::new("on"));
 						ui.add_sized([link_width, height], Hyperlink::from_label_and_url("[P2Pool]", "https://www.github.com/SChernykh/p2pool"));
-						ui.add_sized([width, height], Label::new("using"));
+						ui.add_sized(size, Label::new("using"));
 						ui.add_sized([link_width, height], Hyperlink::from_label_and_url("[XMRig]", "https://www.github.com/xmrig/xmrig"));
 
 						ui.add_space(SPACE*2.0);
-						ui.add_sized([width, height], Label::new(KEYBOARD_SHORTCUTS));
+						ui.add_sized(size, Label::new(KEYBOARD_SHORTCUTS));
 						ui.add_space(SPACE*2.0);
 
 						if cfg!(debug_assertions) { ui.label(format!("Gupax is running in debug mode - {}", self.now.elapsed().as_secs_f64())); }
@@ -143,23 +144,23 @@ path_xmr: {:#?}\n
 				}
 				Tab::Status => {
 					debug!("App | Entering [Status] Tab");
-					crate::disk::state::Status::show(&mut self.state.status, &self.pub_sys, &self.p2pool_api, &self.xmrig_api, &self.xvb_api,&self.p2pool_img, &self.xmrig_img, p2pool_is_alive, xmrig_is_alive,  self.max_threads, &self.gupax_p2pool_api, &self.benchmarks, self.width, self.height, ctx, ui);
+					crate::disk::state::Status::show(&mut self.state.status, &self.pub_sys, &self.p2pool_api, &self.xmrig_api, &self.xvb_api,&self.p2pool_img, &self.xmrig_img, p2pool_is_alive, xmrig_is_alive,  self.max_threads, &self.gupax_p2pool_api, &self.benchmarks, self.size, ctx, ui);
 				}
 				Tab::Gupax => {
 					debug!("App | Entering [Gupax] Tab");
-					crate::disk::state::Gupax::show(&mut self.state.gupax, &self.og, &self.state_path, &self.update, &self.file_window, &mut self.error_state, &self.restart, self.width, self.height, frame, ctx, ui);
+					crate::disk::state::Gupax::show(&mut self.state.gupax, &self.og, &self.state_path, &self.update, &self.file_window, &mut self.error_state, &self.restart, self.size,  frame, ctx, ui);
 				}
 				Tab::P2pool => {
 					debug!("App | Entering [P2Pool] Tab");
-					crate::disk::state::P2pool::show(&mut self.state.p2pool, &mut self.node_vec, &self.og, &self.ping, &self.p2pool, &self.p2pool_api, &mut self.p2pool_stdin, self.width, self.height, ctx, ui);
+					crate::disk::state::P2pool::show(&mut self.state.p2pool, &mut self.node_vec, &self.og, &self.ping, &self.p2pool, &self.p2pool_api, &mut self.p2pool_stdin, self.size, ctx, ui);
 				}
 				Tab::Xmrig => {
 					debug!("App | Entering [XMRig] Tab");
-					crate::disk::state::Xmrig::show(&mut self.state.xmrig, &mut self.pool_vec, &self.xmrig, &self.xmrig_api, &mut self.xmrig_stdin, self.width, self.height, ctx, ui);
+					crate::disk::state::Xmrig::show(&mut self.state.xmrig, &mut self.pool_vec, &self.xmrig, &self.xmrig_api, &mut self.xmrig_stdin, self.size, ctx, ui);
 				}
 				Tab::Xvb => {
 					debug!("App | Entering [XvB] Tab");
-					crate::disk::state::Xvb::show(self.width, self.height, ctx, ui);
+					crate::disk::state::Xvb::show(self.size, ctx, ui);
 				}
 			}
 		});

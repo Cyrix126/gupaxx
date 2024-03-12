@@ -101,6 +101,13 @@ pub const XMRIG_FAILED: &str = "XMRig is offline and failed when exiting";
 pub const XMRIG_MIDDLE: &str = "XMRig is in the middle of (re)starting/stopping";
 pub const XMRIG_NOT_MINING: &str = "XMRig is online, but not mining to any pool";
 
+pub const XVB_ALIVE: &str =
+    "XvB process is configured and distributing hashrate, XvB node is online";
+pub const XVB_DEAD: &str = "XvB process is offline";
+pub const XVB_FAILED: &str = "XvB process is misconfigured or the XvB node is offline";
+pub const XVB_MIDDLE: &str = "XvB is in the middle of (re)starting/stopping";
+pub const XVB_NOT_CONFIGURED: &str = "You need to insert an existent token before starting XvB";
+
 // This is the typical space added when using
 // [ui.separator()] or [ui.group()]
 // Used for subtracting the width/height so
@@ -266,6 +273,7 @@ pub const GUPAX_ASK_BEFORE_QUIT: &str = "Ask before quitting Gupax";
 pub const GUPAX_SAVE_BEFORE_QUIT: &str = "Automatically save any changed settings before quitting";
 pub const GUPAX_AUTO_P2POOL:      &str = "Automatically start P2Pool on Gupax startup. If you are using [P2Pool Simple], this will NOT wait for your [Auto-Ping] to finish, it will start P2Pool on the pool you already have selected. This option will fail if your P2Pool settings aren't valid!";
 pub const GUPAX_AUTO_XMRIG:       &str = "Automatically start XMRig on Gupax startup. This option will fail if your XMRig settings aren't valid!";
+pub const GUPAX_AUTO_XVB:       &str = "Automatically start XvB on Gupax startup. This option will fail if your XvB settings aren't valid!";
 pub const GUPAX_ADJUST: &str = "Adjust and set the width/height of the Gupax window";
 pub const GUPAX_WIDTH: &str = "Set the width of the Gupax window";
 pub const GUPAX_HEIGHT: &str = "Set the height of the Gupax window";

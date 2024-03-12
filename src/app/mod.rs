@@ -37,6 +37,7 @@ use crate::APP_DEFAULT_WIDTH;
 use crate::GUPAX_VERSION;
 use crate::OS;
 use eframe::CreationContext;
+use egui::vec2;
 use egui::Vec2;
 use log::debug;
 use log::error;
@@ -61,9 +62,8 @@ pub mod resize;
 // actual inner state of the tab settings.
 pub struct App {
     // Misc state
-    pub tab: Tab,    // What tab are we on?
-    pub width: f32,  // Top-level width
-    pub height: f32, // Top-level height
+    pub tab: Tab,   // What tab are we on?
+    pub size: Vec2, // Top-level width and Top-level height
     // Alpha (transparency)
     // This value is used to incrementally increase/decrease
     // the transparency when resizing. Basically, it fades
@@ -102,6 +102,7 @@ pub struct App {
     pub pub_sys: Arc<Mutex<Sys>>,   // [Sys] state, read by [Status], mutated by [Helper]
     pub p2pool: Arc<Mutex<Process>>, // [P2Pool] process state
     pub xmrig: Arc<Mutex<Process>>, // [XMRig] process state
+    pub xvb: Arc<Mutex<Process>>,   // [Xvb] process state
     pub p2pool_api: Arc<Mutex<PubP2poolApi>>, // Public ready-to-print P2Pool API made by the "helper" thread
     pub xmrig_api: Arc<Mutex<PubXmrigApi>>, // Public ready-to-print XMRig API made by the "helper" thread
     pub xvb_api: Arc<Mutex<PubXvbApi>>,     // Public XvB API
@@ -181,6 +182,11 @@ impl App {
             String::new(),
             PathBuf::new()
         ));
+        let xvb = arc_mut!(Process::new(
+            ProcessName::Xvb,
+            String::new(),
+            PathBuf::new()
+        ));
         let p2pool_api = arc_mut!(PubP2poolApi::new());
         let xmrig_api = arc_mut!(PubXmrigApi::new());
         let xvb_api = arc_mut!(PubXvbApi::new());
@@ -220,8 +226,7 @@ impl App {
         let mut app = Self {
             tab: Tab::default(),
             ping: arc_mut!(Ping::new()),
-            width: APP_DEFAULT_WIDTH,
-            height: APP_DEFAULT_HEIGHT,
+            size: vec2(APP_DEFAULT_WIDTH, APP_DEFAULT_HEIGHT),
             must_resize: false,
             og: arc_mut!(State::new()),
             state: State::new(),
@@ -244,6 +249,7 @@ impl App {
                 pub_sys.clone(),
                 p2pool.clone(),
                 xmrig.clone(),
+                xvb.clone(),
                 p2pool_api.clone(),
                 xmrig_api.clone(),
                 xvb_api.clone(),
@@ -253,6 +259,7 @@ impl App {
             )),
             p2pool,
             xmrig,
+            xvb,
             p2pool_api,
             xvb_api,
             xmrig_api,

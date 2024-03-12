@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 use crate::{
     app::Benchmark, disk::state::Status, helper::xmrig::PubXmrigApi, utils::human::HumanNumber,
 };
-use egui::{Hyperlink, ProgressBar, Spinner};
+use egui::{Hyperlink, ProgressBar, Spinner, Vec2};
 
 use crate::utils::macros::lock;
 
@@ -13,22 +13,23 @@ use log::*;
 impl Status {
     pub(super) fn benchmarks(
         &mut self,
-        width: f32,
-        height: f32,
+        size: Vec2,
         ui: &mut egui::Ui,
         benchmarks: &[Benchmark],
         xmrig_alive: bool,
         xmrig_api: &Arc<Mutex<PubXmrigApi>>,
     ) {
         debug!("Status Tab | Rendering [Benchmarks]");
-        let text = height / 20.0;
+        let text = size.x / 20.0;
         let double = text * 2.0;
-        let log = height / 3.0;
+        let log = size.y / 3.0;
 
+        let width = size.x;
+        let height = size.y;
         // [0], The user's CPU (most likely).
         let cpu = &benchmarks[0];
         ui.horizontal(|ui| {
-            let width = (width / 2.0) - (SPACE * 1.666);
+            let width = (size.x / 2.0) - (SPACE * 1.666);
             let min_height = log;
             ui.group(|ui| {
                 ui.vertical(|ui| {

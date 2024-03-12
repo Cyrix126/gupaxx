@@ -22,8 +22,7 @@ impl Gupax {
         file_window: &Arc<Mutex<FileWindow>>,
         error_state: &mut ErrorState,
         restart: &Arc<Mutex<Restart>>,
-        width: f32,
-        height: f32,
+        size: Vec2,
         _frame: &mut eframe::Frame,
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
@@ -32,16 +31,16 @@ impl Gupax {
         debug!("Gupax Tab | Rendering [Update] button + progress bar");
         ui.group(|ui| {
             let button = if self.simple {
-                height / 5.0
+                size.y / 5.0
             } else {
-                height / 15.0
+                size.y / 15.0
             };
             let height = if self.simple {
-                height / 5.0
+                size.y / 5.0
             } else {
-                height / 10.0
+                size.y / 10.0
             };
-            let width = width - SPACE;
+            let width = size.x - SPACE;
             let updating = *lock2!(update, updating);
             ui.vertical(|ui| {
                 // If [Gupax] is being built for a Linux distro,
@@ -68,60 +67,53 @@ impl Gupax {
                 let msg = format!("{}\n{}{}", *lock2!(update, msg), prog, "%");
                 ui.add_sized([width, height * 1.4], Label::new(RichText::new(msg)));
                 let height = height / 2.0;
+                let size = vec2(width, height);
                 if updating {
-                    ui.add_sized([width, height], Spinner::new().size(height));
+                    ui.add_sized(size, Spinner::new().size(height));
                 } else {
-                    ui.add_sized([width, height], Label::new("..."));
+                    ui.add_sized(size, Label::new("..."));
                 }
-                ui.add_sized(
-                    [width, height],
-                    ProgressBar::new(lock2!(update, prog).round() / 100.0),
-                );
+                ui.add_sized(size, ProgressBar::new(lock2!(update, prog).round() / 100.0));
             });
         });
 
         debug!("Gupax Tab | Rendering bool buttons");
         ui.horizontal(|ui| {
             ui.group(|ui| {
-                let width = (width - SPACE * 12.0) / 6.0;
+                let width = (size.x - SPACE * 12.0) / 6.0;
                 let height = if self.simple {
-                    height / 10.0
+                    size.y / 10.0
                 } else {
-                    height / 15.0
+                    size.y / 15.0
                 };
+                let size = vec2(width, height);
                 ui.style_mut().override_text_style = Some(egui::TextStyle::Small);
                 ui.add_sized(
-                    [width, height],
+                    size,
                     Checkbox::new(&mut self.update_via_tor, "Update via Tor"),
                 )
                 .on_hover_text(GUPAX_UPDATE_VIA_TOR);
                 ui.separator();
-                ui.add_sized(
-                    [width, height],
-                    Checkbox::new(&mut self.auto_update, "Auto-Update"),
-                )
-                .on_hover_text(GUPAX_AUTO_UPDATE);
+                ui.add_sized(size, Checkbox::new(&mut self.auto_update, "Auto-Update"))
+                    .on_hover_text(GUPAX_AUTO_UPDATE);
+                ui.separator();
+                ui.add_sized(size, Checkbox::new(&mut self.auto_p2pool, "Auto-P2Pool"))
+                    .on_hover_text(GUPAX_AUTO_P2POOL);
+                ui.separator();
+                ui.add_sized(size, Checkbox::new(&mut self.auto_xmrig, "Auto-XMRig"))
+                    .on_hover_text(GUPAX_AUTO_XMRIG);
+                ui.separator();
+                ui.add_sized(size, Checkbox::new(&mut self.auto_xvb, "Auto-XvB"))
+                    .on_hover_text(GUPAX_AUTO_XVB);
                 ui.separator();
                 ui.add_sized(
-                    [width, height],
-                    Checkbox::new(&mut self.auto_p2pool, "Auto-P2Pool"),
-                )
-                .on_hover_text(GUPAX_AUTO_P2POOL);
-                ui.separator();
-                ui.add_sized(
-                    [width, height],
-                    Checkbox::new(&mut self.auto_xmrig, "Auto-XMRig"),
-                )
-                .on_hover_text(GUPAX_AUTO_XMRIG);
-                ui.separator();
-                ui.add_sized(
-                    [width, height],
+                    size,
                     Checkbox::new(&mut self.ask_before_quit, "Ask before quit"),
                 )
                 .on_hover_text(GUPAX_ASK_BEFORE_QUIT);
                 ui.separator();
                 ui.add_sized(
-                    [width, height],
+                    size,
                     Checkbox::new(&mut self.save_before_quit, "Save before quit"),
                 )
                 .on_hover_text(GUPAX_SAVE_BEFORE_QUIT);
@@ -134,7 +126,7 @@ impl Gupax {
 
         debug!("Gupax Tab | Rendering P2Pool/XMRig path selection");
         // P2Pool/XMRig binary path selection
-        let height = height / 28.0;
+        let height = size.y / 28.0;
         let text_edit = (ui.available_width() / 10.0) - SPACE;
         ui.group(|ui| {
             ui.add_sized(
@@ -238,7 +230,8 @@ impl Gupax {
         // Saved [Tab]
         debug!("Gupax Tab | Rendering [Tab] selector");
         ui.group(|ui| {
-            let width = (width / 5.0) - (SPACE * 1.93);
+            let width = (size.x / 5.0) - (SPACE * 1.93);
+            let size = vec2(width, height);
             ui.add_sized(
                 [ui.available_width(), height / 2.0],
                 Label::new(RichText::new("Default Tab").underline().color(LIGHT_GRAY)),
@@ -247,10 +240,7 @@ impl Gupax {
             ui.separator();
             ui.horizontal(|ui| {
                 if ui
-                    .add_sized(
-                        [width, height],
-                        SelectableLabel::new(self.tab == Tab::About, "About"),
-                    )
+                    .add_sized(size, SelectableLabel::new(self.tab == Tab::About, "About"))
                     .on_hover_text(GUPAX_TAB_ABOUT)
                     .clicked()
                 {
@@ -259,7 +249,7 @@ impl Gupax {
                 ui.separator();
                 if ui
                     .add_sized(
-                        [width, height],
+                        size,
                         SelectableLabel::new(self.tab == Tab::Status, "Status"),
                     )
                     .on_hover_text(GUPAX_TAB_STATUS)
@@ -269,10 +259,7 @@ impl Gupax {
                 }
                 ui.separator();
                 if ui
-                    .add_sized(
-                        [width, height],
-                        SelectableLabel::new(self.tab == Tab::Gupax, "Gupax"),
-                    )
+                    .add_sized(size, SelectableLabel::new(self.tab == Tab::Gupax, "Gupax"))
                     .on_hover_text(GUPAX_TAB_GUPAX)
                     .clicked()
                 {
@@ -281,7 +268,7 @@ impl Gupax {
                 ui.separator();
                 if ui
                     .add_sized(
-                        [width, height],
+                        size,
                         SelectableLabel::new(self.tab == Tab::P2pool, "P2Pool"),
                     )
                     .on_hover_text(GUPAX_TAB_P2POOL)
@@ -291,10 +278,7 @@ impl Gupax {
                 }
                 ui.separator();
                 if ui
-                    .add_sized(
-                        [width, height],
-                        SelectableLabel::new(self.tab == Tab::Xmrig, "XMRig"),
-                    )
+                    .add_sized(size, SelectableLabel::new(self.tab == Tab::Xmrig, "XMRig"))
                     .on_hover_text(GUPAX_TAB_XMRIG)
                     .clicked()
                 {
@@ -317,7 +301,7 @@ impl Gupax {
             .on_hover_text(GUPAX_ADJUST);
             ui.separator();
             ui.vertical(|ui| {
-                let width = width / 10.0;
+                let width = size.x / 10.0;
                 ui.spacing_mut().icon_width = width / 25.0;
                 ui.spacing_mut().slider_width = width * 7.6;
                 match self.ratio {
@@ -334,17 +318,18 @@ impl Gupax {
                     }
                 }
                 let height = height / 3.5;
+                let size = vec2(width, height);
                 ui.horizontal(|ui| {
                     ui.set_enabled(self.ratio != Ratio::Height);
                     ui.add_sized(
-                        [width, height],
+                        size,
                         Label::new(format!(
                             " Width [{}-{}]:",
                             APP_MIN_WIDTH as u16, APP_MAX_WIDTH as u16
                         )),
                     );
                     ui.add_sized(
-                        [width, height],
+                        size,
                         Slider::new(
                             &mut self.selected_width,
                             APP_MIN_WIDTH as u16..=APP_MAX_WIDTH as u16,
@@ -355,14 +340,14 @@ impl Gupax {
                 ui.horizontal(|ui| {
                     ui.set_enabled(self.ratio != Ratio::Width);
                     ui.add_sized(
-                        [width, height],
+                        size,
                         Label::new(format!(
                             "Height [{}-{}]:",
                             APP_MIN_HEIGHT as u16, APP_MAX_HEIGHT as u16
                         )),
                     );
                     ui.add_sized(
-                        [width, height],
+                        size,
                         Slider::new(
                             &mut self.selected_height,
                             APP_MIN_HEIGHT as u16..=APP_MAX_HEIGHT as u16,
@@ -372,11 +357,11 @@ impl Gupax {
                 });
                 ui.horizontal(|ui| {
                     ui.add_sized(
-                        [width, height],
+                        size,
                         Label::new(format!("Scaling [{APP_MIN_SCALE}..{APP_MAX_SCALE}]:")),
                     );
                     ui.add_sized(
-                        [width, height],
+                        size,
                         Slider::new(&mut self.selected_scale, APP_MIN_SCALE..=APP_MAX_SCALE)
                             .step_by(0.1),
                     )
@@ -388,10 +373,11 @@ impl Gupax {
             // Width/Height locks
             ui.horizontal(|ui| {
                 use Ratio::*;
-                let width = (width / 4.0) - (SPACE * 1.5);
+                let width = (size.x / 4.0) - (SPACE * 1.5);
+                let size = vec2(width, height);
                 if ui
                     .add_sized(
-                        [width, height],
+                        size,
                         SelectableLabel::new(self.ratio == Width, "Lock to width"),
                     )
                     .on_hover_text(GUPAX_LOCK_WIDTH)
@@ -402,7 +388,7 @@ impl Gupax {
                 ui.separator();
                 if ui
                     .add_sized(
-                        [width, height],
+                        size,
                         SelectableLabel::new(self.ratio == Height, "Lock to height"),
                     )
                     .on_hover_text(GUPAX_LOCK_HEIGHT)
@@ -412,17 +398,14 @@ impl Gupax {
                 }
                 ui.separator();
                 if ui
-                    .add_sized(
-                        [width, height],
-                        SelectableLabel::new(self.ratio == None, "No lock"),
-                    )
+                    .add_sized(size, SelectableLabel::new(self.ratio == None, "No lock"))
                     .on_hover_text(GUPAX_NO_LOCK)
                     .clicked()
                 {
                     self.ratio = None;
                 }
                 if ui
-                    .add_sized([width, height], Button::new("Set"))
+                    .add_sized(size, Button::new("Set"))
                     .on_hover_text(GUPAX_SET)
                     .clicked()
                 {

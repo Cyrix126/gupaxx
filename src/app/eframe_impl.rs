@@ -35,19 +35,25 @@ impl eframe::App for App {
         let xmrig_is_waiting = xmrig.is_waiting();
         let xmrig_state = xmrig.state;
         drop(xmrig);
+        debug!("App | Locking and collecting XvB state...");
+        let xvb = lock!(self.xvb);
+        let xvb_is_alive = xvb.is_alive();
+        let xvb_is_waiting = xvb.is_waiting();
+        let xvb_state = xvb.state;
+        drop(xvb);
 
         // This sets the top level Ui dimensions.
         // Used as a reference for other uis.
         debug!("App | Setting width/height");
         CentralPanel::default().show(ctx, |ui| {
             let available_width = ui.available_width();
-            if self.width != available_width {
-                self.width = available_width;
+            if self.size.x != available_width {
+                self.size.x = available_width;
                 if self.now.elapsed().as_secs() > 5 {
                     self.must_resize = true;
                 }
             };
-            self.height = ui.available_height();
+            self.size.y = ui.available_height();
         });
         self.resize(ctx);
 
@@ -77,12 +83,15 @@ impl eframe::App for App {
             ctx,
             p2pool_state,
             xmrig_state,
+            xvb_state,
             &key,
             wants_input,
             p2pool_is_waiting,
             xmrig_is_waiting,
+            xvb_is_waiting,
             p2pool_is_alive,
             xmrig_is_alive,
+            xvb_is_alive,
         );
         self.middle_panel(ctx, frame, key, p2pool_is_alive, xmrig_is_alive);
     }

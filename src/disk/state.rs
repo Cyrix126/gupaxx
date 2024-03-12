@@ -1,3 +1,6 @@
+use anyhow::{bail, Result};
+use hyper::StatusCode;
+
 use super::*;
 use crate::{components::node::RemoteNode, disk::status::*};
 //---------------------------------------------------------------------------------------------------- [State] Impl
@@ -175,6 +178,7 @@ pub struct Gupax {
     pub auto_update: bool,
     pub auto_p2pool: bool,
     pub auto_xmrig: bool,
+    pub auto_xvb: bool,
     //	pub auto_monero: bool,
     pub ask_before_quit: bool,
     pub save_before_quit: bool,
@@ -240,8 +244,15 @@ pub struct Xmrig {
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
 pub struct Xvb {
-    pub token_confirmed: String,
-    pub token_inserted: String,
+    pub token: String,
+    pub node: XvbNode,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
+pub enum XvbNode {
+    NorthAmerica,
+    #[default]
+    Europe,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -272,6 +283,7 @@ impl Default for Gupax {
             auto_update: true,
             auto_p2pool: false,
             auto_xmrig: false,
+            auto_xvb: true,
             ask_before_quit: true,
             save_before_quit: true,
             update_via_tor: true,
@@ -314,6 +326,36 @@ impl Default for P2pool {
         }
     }
 }
+
+impl Xvb {
+    pub async fn is_token_exist(address: String, token: String) -> Result<()> {
+        let client: hyper::Client<hyper::client::HttpConnector> =
+            hyper::Client::builder().build(hyper::client::HttpConnector::new());
+        if let Ok(request) = hyper::Request::builder()
+            .method("GET")
+            .uri(format!(
+                "{}/cgi-bin/p2pool_bonus_history_api.cgi?address={}&token={}",
+                XVB_URL, address, token
+            ))
+            .body(hyper::Body::empty())
+        {
+            if let Ok(resp) = client.request(request).await {
+                match resp.status() {
+                    StatusCode::OK => Ok(()),
+                    StatusCode::UNPROCESSABLE_ENTITY => {
+                        bail!("the token is invalid for this xmr address.")
+                    }
+                    _ => bail!("The status of the response is not expected"),
+                }
+            } else {
+                bail!("error from response")
+            }
+        } else {
+            bail!("request could not be build")
+        }
+    }
+}
+
 impl Xmrig {
     fn with_threads(max_threads: usize, current_threads: usize) -> Self {
         let xmrig = Self::default();

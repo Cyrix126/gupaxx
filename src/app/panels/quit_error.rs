@@ -23,8 +23,8 @@ impl crate::app::App {
         CentralPanel::default().show(ctx, |ui| {
             ui.vertical_centered(|ui| {
                 // Set width/height/font
-                let width = self.width;
-                let height = self.height / 4.0;
+                let width = self.size.x;
+                let height = self.size.y / 4.0;
                 ui.style_mut().override_text_style = Some(Name("MonospaceLarge".into()));
 
                 // Display ferris

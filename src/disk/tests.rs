@@ -31,6 +31,7 @@ mod test {
 			auto_update = true
 			auto_p2pool = false
 			auto_xmrig = false
+            auto_xvb = false
 			ask_before_quit = true
 			save_before_quit = true
 			update_via_tor = true
@@ -97,8 +98,8 @@ mod test {
 			selected_port = "3333"
 
             [xvb]
-            token_confirmed = ""
-            token_inserted = ""
+            token = ""
+            node = "Europe"
 			[version]
 			gupax = "v1.3.0"
 			p2pool = "v2.5"

@@ -8,8 +8,8 @@ impl crate::app::App {
     pub fn top_panel(&mut self, ctx: &egui::Context) {
         debug!("App | Rendering TOP tabs");
         TopBottomPanel::top("top").show(ctx, |ui| {
-            let width = (self.width - (SPACE * 11.0)) / 6.0;
-            let height = self.height / 15.0;
+            let width = (self.size.x - (SPACE * 11.0)) / 6.0;
+            let height = self.size.y / 15.0;
             ui.add_space(4.0);
             ui.horizontal(|ui| {
                 ui.style_mut().override_text_style = Some(Name("Tab".into()));

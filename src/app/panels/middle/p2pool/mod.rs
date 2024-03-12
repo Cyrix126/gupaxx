@@ -18,7 +18,7 @@ use crate::helper::p2pool::PubP2poolApi;
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::{components::node::*, constants::*, helper::*, macros::*, utils::regex::Regexes};
-use egui::{Color32, Label, RichText, TextEdit, TextStyle::*};
+use egui::{Color32, Label, RichText, TextEdit, TextStyle::*, Vec2};
 use log::*;
 
 use std::sync::{Arc, Mutex};
@@ -37,18 +37,19 @@ impl P2pool {
         process: &Arc<Mutex<Process>>,
         api: &Arc<Mutex<PubP2poolApi>>,
         buffer: &mut String,
-        width: f32,
-        height: f32,
+        size: Vec2,
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
     ) {
-        let text_edit = height / 25.0;
+        let height = size.y;
+        let width = size.x;
+        let text_edit = size.y / 25.0;
         //---------------------------------------------------------------------------------------------------- [Simple] Console
         debug!("P2Pool Tab | Rendering [Console]");
         ui.group(|ui| {
             if self.simple {
-                let height = height / 2.8;
-                let width = width - SPACE;
+                let height = size.y / 2.8;
+                let width = size.x - SPACE;
                 egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
                     ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
                     egui::ScrollArea::vertical()

@@ -23,7 +23,8 @@ use crate::regex::REGEXES;
 use crate::utils::regex::Regexes;
 use crate::{constants::*, macros::*};
 use egui::{
-    Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, Slider, TextEdit, TextStyle::*,
+    vec2, Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, Slider, TextEdit,
+    TextStyle::*, Vec2,
 };
 use log::*;
 
@@ -38,18 +39,18 @@ impl Xmrig {
         process: &Arc<Mutex<Process>>,
         api: &Arc<Mutex<PubXmrigApi>>,
         buffer: &mut String,
-        width: f32,
-        height: f32,
+        size: Vec2,
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
     ) {
-        let text_edit = height / 25.0;
+        let text_edit = size.y / 25.0;
         //---------------------------------------------------------------------------------------------------- [Simple] Console
         debug!("XMRig Tab | Rendering [Console]");
         ui.group(|ui| {
             if self.simple {
-                let height = height / 1.5;
-                let width = width - SPACE;
+                let height = size.y / 1.5;
+                let width = size.x - SPACE;
+                let size = vec2(width, height);
                 egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
                     ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
                     egui::ScrollArea::vertical()
@@ -59,15 +60,16 @@ impl Xmrig {
                         .auto_shrink([false; 2])
                         .show_viewport(ui, |ui, _| {
                             ui.add_sized(
-                                [width, height],
+                                size,
                                 TextEdit::multiline(&mut lock!(api).output.as_str()),
                             );
                         });
                 });
             //---------------------------------------------------------------------------------------------------- [Advanced] Console
             } else {
-                let height = height / 2.8;
-                let width = width - SPACE;
+                let height = size.y / 2.8;
+                let width = size.x - SPACE;
+                let size = vec2(width, height);
                 egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
                     ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
                     egui::ScrollArea::vertical()
@@ -77,7 +79,7 @@ impl Xmrig {
                         .auto_shrink([false; 2])
                         .show_viewport(ui, |ui, _| {
                             ui.add_sized(
-                                [width, height],
+                                size,
                                 TextEdit::multiline(&mut lock!(api).output.as_str()),
                             );
                         });
@@ -109,7 +111,7 @@ impl Xmrig {
             debug!("XMRig Tab | Rendering [Arguments]");
             ui.group(|ui| {
                 ui.horizontal(|ui| {
-                    let width = (width / 10.0) - SPACE;
+                    let width = (size.x / 10.0) - SPACE;
                     ui.add_sized([width, text_edit], Label::new("Command arguments:"));
                     ui.add_sized(
                         [ui.available_width(), text_edit],
@@ -126,7 +128,7 @@ impl Xmrig {
             //---------------------------------------------------------------------------------------------------- Address
             debug!("XMRig Tab | Rendering [Address]");
             ui.group(|ui| {
-                let width = width - SPACE;
+                let width = size.x - SPACE;
                 ui.spacing_mut().text_edit_width = (width) - (SPACE * 3.0);
                 let text;
                 let color;
@@ -160,7 +162,7 @@ impl Xmrig {
         }
         debug!("XMRig Tab | Rendering [Threads]");
         ui.vertical(|ui| {
-            let width = width / 10.0;
+            let width = size.x / 10.0;
             let text_width = width * 2.4;
             ui.spacing_mut().slider_width = width * 6.5;
             ui.spacing_mut().icon_width = width / 25.0;
@@ -471,22 +473,17 @@ impl Xmrig {
                         ui.horizontal(|ui| {
                             let width = (ui.available_width() / 2.0) - 11.0;
                             let height = text_edit * 2.0;
+                            let size = vec2(width, height);
                             //				let mut style = (*ctx.style()).clone();
                             //				style.spacing.icon_width_inner = width / 8.0;
                             //				style.spacing.icon_width = width / 6.0;
                             //				style.spacing.icon_spacing = 20.0;
                             //				ctx.set_style(style);
-                            ui.add_sized(
-                                [width, height],
-                                Checkbox::new(&mut self.tls, "TLS Connection"),
-                            )
-                            .on_hover_text(XMRIG_TLS);
+                            ui.add_sized(size, Checkbox::new(&mut self.tls, "TLS Connection"))
+                                .on_hover_text(XMRIG_TLS);
                             ui.separator();
-                            ui.add_sized(
-                                [width, height],
-                                Checkbox::new(&mut self.keepalive, "Keepalive"),
-                            )
-                            .on_hover_text(XMRIG_KEEPALIVE);
+                            ui.add_sized(size, Checkbox::new(&mut self.keepalive, "Keepalive"))
+                                .on_hover_text(XMRIG_KEEPALIVE);
                         });
                     });
                 });

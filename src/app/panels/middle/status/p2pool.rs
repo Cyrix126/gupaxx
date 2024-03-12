@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use egui::{Label, RichText, SelectableLabel, Slider, TextEdit};
+use egui::{Label, RichText, SelectableLabel, Slider, TextEdit, Vec2};
 
 use crate::{
     disk::{
@@ -15,14 +15,15 @@ use crate::{
 impl Status {
     pub fn p2pool(
         &mut self,
-        width: f32,
-        height: f32,
+        size: Vec2,
         ui: &mut egui::Ui,
         gupax_p2pool_api: &Arc<Mutex<GupaxP2poolApi>>,
         p2pool_alive: bool,
         p2pool_api: &Arc<Mutex<PubP2poolApi>>,
     ) {
         let api = lock!(gupax_p2pool_api);
+        let height = size.y;
+        let width = size.x;
         let text = height / 25.0;
         let log = height / 2.8;
         // Payout Text + PayoutView buttons
