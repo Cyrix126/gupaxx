@@ -160,7 +160,7 @@ path_xmr: {:#?}\n
 				}
 				Tab::Xvb => {
 					debug!("App | Entering [XvB] Tab");
-					crate::disk::state::Xvb::show(self.size, ctx, ui);
+					crate::disk::state::Xvb::show(self.size, ctx, ui, &self.xvb_api);
 				}
 			}
 		});
