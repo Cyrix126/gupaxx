@@ -46,6 +46,7 @@ impl Status {
         xmrig_img: &Arc<Mutex<ImgXmrig>>,
         p2pool_alive: bool,
         xmrig_alive: bool,
+        xvb_alive: bool,
         max_threads: usize,
         gupax_p2pool_api: &Arc<Mutex<GupaxP2poolApi>>,
         benchmarks: &[Benchmark],
@@ -65,6 +66,7 @@ impl Status {
                 xmrig_alive,
                 xmrig_api,
                 xmrig_img,
+                xvb_alive,
                 xvb_api,
                 max_threads,
             );

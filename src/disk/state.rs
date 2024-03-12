@@ -1,5 +1,6 @@
 use anyhow::{bail, Result};
 use hyper::StatusCode;
+use hyper_tls::HttpsConnector;
 
 use super::*;
 use crate::{components::node::RemoteNode, disk::status::*};
@@ -329,8 +330,8 @@ impl Default for P2pool {
 
 impl Xvb {
     pub async fn is_token_exist(address: String, token: String) -> Result<()> {
-        let client: hyper::Client<hyper::client::HttpConnector> =
-            hyper::Client::builder().build(hyper::client::HttpConnector::new());
+        let https = HttpsConnector::new();
+        let client = hyper::Client::builder().build(https);
         if let Ok(request) = hyper::Request::builder()
             .method("GET")
             .uri(format!(
@@ -339,16 +340,17 @@ impl Xvb {
             ))
             .body(hyper::Body::empty())
         {
-            if let Ok(resp) = client.request(request).await {
-                match resp.status() {
+            match client.request(request).await {
+                Ok(resp) => match resp.status() {
                     StatusCode::OK => Ok(()),
                     StatusCode::UNPROCESSABLE_ENTITY => {
                         bail!("the token is invalid for this xmr address.")
                     }
                     _ => bail!("The status of the response is not expected"),
+                },
+                Err(err) => {
+                    bail!("error from response: {}", err)
                 }
-            } else {
-                bail!("error from response")
             }
         } else {
             bail!("request could not be build")

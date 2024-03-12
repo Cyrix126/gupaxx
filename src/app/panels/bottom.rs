@@ -342,7 +342,7 @@ impl crate::app::App {
                     ui.add_sized(size, Button::new("⏹"))
                         .on_disabled_hover_text("Stop P2Pool");
                 });
-                // Check if address is okay before allowing to start.
+                // Check if address and path is okay before allowing to start.
                 let mut text = String::new();
                 let mut ui_enabled = true;
                 if !Regexes::addr_ok(&self.state.p2pool.address) {
@@ -556,8 +556,10 @@ impl crate::app::App {
                     ui.add_sized(size, Button::new("⏹"))
                         .on_disabled_hover_text("Stop Xvb");
                 });
-                let ui_enabled =
-                    !self.state.p2pool.address.is_empty() && !self.state.xvb.token.is_empty();
+                // verify that address and token syntaxes are correct
+                let ui_enabled = Regexes::addr_ok(&self.state.p2pool.address)
+                    && self.state.xvb.token.len() == 9
+                    && self.state.xvb.token.parse::<u32>().is_ok();
                 ui.set_enabled(ui_enabled);
                 let color = if ui_enabled { GREEN } else { RED };
                 if (ui_enabled && key.is_up() && !wants_input)
@@ -575,57 +577,86 @@ impl crate::app::App {
 }
 
 fn status_p2pool(state: ProcessState, ui: &mut Ui, size: Vec2) {
-    match state {
-        Alive => ui
-            .add_sized(size, Label::new(RichText::new("P2Pool  ⏺").color(GREEN)))
-            .on_hover_text(P2POOL_ALIVE),
-        Dead => ui
-            .add_sized(size, Label::new(RichText::new("P2Pool  ⏺").color(GRAY)))
-            .on_hover_text(P2POOL_DEAD),
-        Failed => ui
-            .add_sized(size, Label::new(RichText::new("P2Pool  ⏺").color(RED)))
-            .on_hover_text(P2POOL_FAILED),
-        Syncing => ui
-            .add_sized(size, Label::new(RichText::new("P2Pool  ⏺").color(ORANGE)))
-            .on_hover_text(P2POOL_SYNCING),
-        Middle | Waiting | NotMining => ui
-            .add_sized(size, Label::new(RichText::new("P2Pool  ⏺").color(YELLOW)))
-            .on_hover_text(P2POOL_MIDDLE),
+    let color;
+    let hover_text = match state {
+        Alive => {
+            color = GREEN;
+            P2POOL_ALIVE
+        }
+        Dead => {
+            color = GRAY;
+            P2POOL_DEAD
+        }
+        Failed => {
+            color = RED;
+            P2POOL_FAILED
+        }
+        Syncing => {
+            color = ORANGE;
+            P2POOL_SYNCING
+        }
+        Middle | Waiting | NotMining => {
+            color = YELLOW;
+            P2POOL_MIDDLE
+        }
     };
+    status(ui, color, hover_text, size, "P2pool  ⏺");
 }
 
 fn status_xmrig(state: ProcessState, ui: &mut Ui, size: Vec2) {
-    match state {
-        Alive => ui
-            .add_sized(size, Label::new(RichText::new("XMRig  ⏺").color(GREEN)))
-            .on_hover_text(XMRIG_ALIVE),
-        Dead => ui
-            .add_sized(size, Label::new(RichText::new("XMRig  ⏺").color(GRAY)))
-            .on_hover_text(XMRIG_DEAD),
-        Failed => ui
-            .add_sized(size, Label::new(RichText::new("XMRig  ⏺").color(RED)))
-            .on_hover_text(XMRIG_FAILED),
-        NotMining => ui
-            .add_sized(size, Label::new(RichText::new("XMRig  ⏺").color(ORANGE)))
-            .on_hover_text(XMRIG_NOT_MINING),
-        Middle | Waiting | Syncing => ui
-            .add_sized(size, Label::new(RichText::new("XMRig  ⏺").color(YELLOW)))
-            .on_hover_text(XMRIG_MIDDLE),
+    let color;
+    let hover_text = match state {
+        Alive => {
+            color = GREEN;
+            XMRIG_ALIVE
+        }
+        Dead => {
+            color = GRAY;
+            XMRIG_DEAD
+        }
+        Failed => {
+            color = RED;
+            XMRIG_FAILED
+        }
+        NotMining => {
+            color = ORANGE;
+            XMRIG_NOT_MINING
+        }
+        Middle | Waiting | Syncing => {
+            color = YELLOW;
+            XMRIG_MIDDLE
+        }
     };
+    status(ui, color, hover_text, size, "XMRig  ⏺");
 }
 fn status_xvb(state: ProcessState, ui: &mut Ui, size: Vec2) {
-    match state {
-        Alive => ui
-            .add_sized(size, Label::new(RichText::new("XvB  ⏺").color(GREEN)))
-            .on_hover_text(XVB_ALIVE),
-        Dead => ui
-            .add_sized(size, Label::new(RichText::new("XvB  ⏺").color(GRAY)))
-            .on_hover_text(XVB_DEAD),
-        Failed => ui
-            .add_sized(size, Label::new(RichText::new("XvB  ⏺").color(RED)))
-            .on_hover_text(XVB_FAILED),
-        Middle | Waiting | NotMining | Syncing => ui
-            .add_sized(size, Label::new(RichText::new("XvB  ⏺").color(YELLOW)))
-            .on_hover_text(XVB_MIDDLE),
+    let color;
+    let hover_text = match state {
+        Alive => {
+            color = GREEN;
+            XVB_ALIVE
+        }
+        Dead => {
+            color = GRAY;
+            XVB_DEAD
+        }
+        Failed => {
+            color = RED;
+            XVB_FAILED
+        }
+        NotMining => {
+            color = ORANGE;
+            XVB_PUBLIC_ONLY
+        }
+        Middle | Waiting | Syncing => {
+            color = YELLOW;
+            XVB_MIDDLE
+        }
     };
+    status(ui, color, hover_text, size, "XvB  ⏺");
+}
+
+fn status(ui: &mut Ui, color: Color32, hover_text: &str, size: Vec2, text: &str) {
+    ui.add_sized(size, Label::new(RichText::new(text).color(color)))
+        .on_hover_text(hover_text);
 }

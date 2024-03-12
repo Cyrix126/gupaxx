@@ -107,6 +107,7 @@ pub const XVB_DEAD: &str = "XvB process is offline";
 pub const XVB_FAILED: &str = "XvB process is misconfigured or the XvB node is offline";
 pub const XVB_MIDDLE: &str = "XvB is in the middle of (re)starting/stopping";
 pub const XVB_NOT_CONFIGURED: &str = "You need to insert an existent token before starting XvB";
+pub const XVB_PUBLIC_ONLY: &str = "XvB process is started only to get public stats";
 
 // This is the typical space added when using
 // [ui.separator()] or [ui.group()]
@@ -409,6 +410,7 @@ pub const XMRIG_PATH_EMPTY:     &str = "XMRig PATH is empty! To fix: goto the [G
 pub const XVB_HELP: &str = "You need to register an account by clicking on the link above to get your token with the same p2pool XMR address you use for payment.";
 pub const XVB_URL: &str = "https://xmrvsbeast.com";
 pub const XVB_URL_PUBLIC_API: &str = "https://xmrvsbeast.com/p2pool/stats";
+pub const XVB_TOKEN_LEN: usize = 9;
 
 // CLI argument messages
 pub const ARG_HELP: &str = r#"USAGE: ./gupax [--flag]

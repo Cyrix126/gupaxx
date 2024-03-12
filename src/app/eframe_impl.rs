@@ -93,6 +93,13 @@ impl eframe::App for App {
             xmrig_is_alive,
             xvb_is_alive,
         );
-        self.middle_panel(ctx, frame, key, p2pool_is_alive, xmrig_is_alive);
+        self.middle_panel(
+            ctx,
+            frame,
+            key,
+            p2pool_is_alive,
+            xmrig_is_alive,
+            xvb_is_alive,
+        );
     }
 }

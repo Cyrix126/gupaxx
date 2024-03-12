@@ -11,7 +11,7 @@
   - [x] logo
   - [x] link to website
   - [ ] message overing explaining registration and needs to read the rules.
-  - [ ] token input
+  - [x] token input
   - [ ] hero checkbox
   - [ ] log section
     - [ ] status of h/s received by the raffle, authentication by token.
@@ -19,13 +19,14 @@
     - [ ] number of failures
     - [ ] round type in
     - [ ] win or loose
+    - [x] state of XvB process
   - [ ] new process for XvB
     - [x] status process XvB
     - [x] public information from [API](https://xmrvsbeast.com/p2pool/stats)
     - [x] stop, start, restart buttons
     - [x] button to autostart
     - [ ] distribute hashrate conforming to the algorithm.
-    - [ ] output log to console in XvB tab
+    - [x] output log to console in XvB tab
 - [ ] edit metadata of project
   - [ ] cargo package metadata
   - [ ] pgp signatures

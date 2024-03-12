@@ -412,6 +412,7 @@ impl Helper {
         let lock = lock!(helper);
         let p2pool = Arc::clone(&lock.p2pool);
         let xmrig = Arc::clone(&lock.xmrig);
+        let xvb = Arc::clone(&lock.xvb);
         let pub_sys = Arc::clone(&lock.pub_sys);
         let gui_api_p2pool = Arc::clone(&lock.gui_api_p2pool);
         let gui_api_xmrig = Arc::clone(&lock.gui_api_xmrig);
@@ -438,25 +439,27 @@ impl Helper {
 
                 // 2. Lock... EVERYTHING!
                 let mut lock = lock!(helper);
-                debug!("Helper | Locking (1/10) ... [helper]");
+                debug!("Helper | Locking (1/11) ... [helper]");
                 let p2pool = lock!(p2pool);
-                debug!("Helper | Locking (2/10) ... [p2pool]");
+                debug!("Helper | Locking (2/11) ... [p2pool]");
                 let xmrig = lock!(xmrig);
-                debug!("Helper | Locking (3/10) ... [xmrig]");
+                debug!("Helper | Locking (3/11) ... [xmrig]");
+                let xvb = lock!(xvb);
+                debug!("Helper | Locking (4/11) ... [xvb]");
                 let mut lock_pub_sys = lock!(pub_sys);
-                debug!("Helper | Locking (4/10) ... [pub_sys]");
+                debug!("Helper | Locking (5/11) ... [pub_sys]");
                 let mut gui_api_p2pool = lock!(gui_api_p2pool);
-                debug!("Helper | Locking (5/10) ... [gui_api_p2pool]");
+                debug!("Helper | Locking (6/11) ... [gui_api_p2pool]");
                 let mut gui_api_xmrig = lock!(gui_api_xmrig);
-                debug!("Helper | Locking (6/10) ... [gui_api_xmrig]");
+                debug!("Helper | Locking (7/11) ... [gui_api_xmrig]");
                 let mut gui_api_xvb = lock!(gui_api_xvb);
-                debug!("Helper | Locking (7/10) ... [gui_api_xvb]");
+                debug!("Helper | Locking (8/11) ... [gui_api_xvb]");
                 let mut pub_api_p2pool = lock!(pub_api_p2pool);
-                debug!("Helper | Locking (8/10) ... [pub_api_p2pool]");
+                debug!("Helper | Locking (9/11) ... [pub_api_p2pool]");
                 let mut pub_api_xmrig = lock!(pub_api_xmrig);
-                debug!("Helper | Locking (9/10) ... [pub_api_xmrig]");
+                debug!("Helper | Locking (10/11) ... [pub_api_xmrig]");
                 let mut pub_api_xvb = lock!(pub_api_xvb);
-                debug!("Helper | Locking (10/10) ... [pub_api_xvb]");
+                debug!("Helper | Locking (11/11) ... [pub_api_xvb]");
                 // Calculate Gupax's uptime always.
                 lock.uptime = HumanTime::into_human(lock.instant.elapsed());
                 // If [P2Pool] is alive...
@@ -473,9 +476,13 @@ impl Helper {
                 } else {
                     debug!("Helper | XMRig is dead! Skipping...");
                 }
-                // XvB API is considered always available
-                debug!("Helper | XvB is alive! Running [combine_gui_pub_api()]");
-                PubXvbApi::combine_gui_pub_api(&mut gui_api_xvb, &mut pub_api_xvb);
+                // If [XvB] is alive...
+                if xvb.is_alive() {
+                    debug!("Helper | XvB is alive! Running [combine_gui_pub_api()]");
+                    PubXvbApi::combine_gui_pub_api(&mut gui_api_xvb, &mut pub_api_xvb);
+                } else {
+                    debug!("Helper | XvB is dead! Skipping...");
+                }
 
                 // 2. Selectively refresh [sysinfo] for only what we need (better performance).
                 sysinfo.refresh_cpu_specifics(sysinfo_cpu);
@@ -495,25 +502,27 @@ impl Helper {
 
                 // 3. Drop... (almost) EVERYTHING... IN REVERSE!
                 drop(lock_pub_sys);
-                debug!("Helper | Unlocking (1/10) ... [pub_sys]");
+                debug!("Helper | Unlocking (1/11) ... [pub_sys]");
+                drop(xvb);
+                debug!("Helper | Unlocking (2/11) ... [xvb]");
                 drop(xmrig);
-                debug!("Helper | Unlocking (2/10) ... [xmrig]");
+                debug!("Helper | Unlocking (3/11) ... [xmrig]");
                 drop(p2pool);
-                debug!("Helper | Unlocking (3/10) ... [p2pool]");
+                debug!("Helper | Unlocking (4/11) ... [p2pool]");
                 drop(pub_api_xvb);
-                debug!("Helper | Unlocking (4/10) ... [pub_api_xvb]");
+                debug!("Helper | Unlocking (5/11) ... [pub_api_xvb]");
                 drop(pub_api_xmrig);
-                debug!("Helper | Unlocking (5/10) ... [pub_api_xmrig]");
+                debug!("Helper | Unlocking (6/11) ... [pub_api_xmrig]");
                 drop(pub_api_p2pool);
-                debug!("Helper | Unlocking (6/10) ... [pub_api_p2pool]");
+                debug!("Helper | Unlocking (7/11) ... [pub_api_p2pool]");
                 drop(gui_api_xvb);
-                debug!("Helper | Unlocking (7/10) ... [gui_api_xvb]");
+                debug!("Helper | Unlocking (8/11) ... [gui_api_xvb]");
                 drop(gui_api_xmrig);
-                debug!("Helper | Unlocking (8/10) ... [gui_api_xmrig]");
+                debug!("Helper | Unlocking (9/11) ... [gui_api_xmrig]");
                 drop(gui_api_p2pool);
-                debug!("Helper | Unlocking (9/10) ... [gui_api_p2pool]");
+                debug!("Helper | Unlocking (10/11) ... [gui_api_p2pool]");
                 drop(lock);
-                debug!("Helper | Unlocking (10/10) ... [helper]");
+                debug!("Helper | Unlocking (11/11) ... [helper]");
 
                 // 4. Calculate if we should sleep or not.
                 // If we should sleep, how long?

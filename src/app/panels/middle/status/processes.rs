@@ -25,6 +25,7 @@ impl Status {
         xmrig_alive: bool,
         xmrig_api: &Arc<Mutex<PubXmrigApi>>,
         xmrig_img: &Arc<Mutex<ImgXmrig>>,
+        xvb_alive: bool,
         xvb_api: &Arc<Mutex<PubXvbApi>>,
         max_threads: usize,
     ) {
@@ -56,7 +57,7 @@ impl Status {
                 max_threads,
             );
             // [XvB]
-            xvb(ui, min_height, width, height, xvb_api);
+            xvb(ui, min_height, width, height, xvb_alive, xvb_api);
         });
     }
 }
@@ -351,11 +352,17 @@ fn xmrig(
     });
 }
 
-fn xvb(ui: &mut Ui, min_height: f32, width: f32, height: f32, xvb_api: &Arc<Mutex<PubXvbApi>>) {
+fn xvb(
+    ui: &mut Ui,
+    min_height: f32,
+    width: f32,
+    height: f32,
+    xvb_alive: bool,
+    xvb_api: &Arc<Mutex<PubXvbApi>>,
+) {
     //
     let api = lock!(xvb_api);
-    // if this field is empty, it means nothing was received from the API.
-    let enabled = !api.reward_yearly.is_empty();
+    let enabled = xvb_alive;
     ScrollArea::vertical().show(ui, |ui| {
         ui.group(|ui| {
             ui.vertical(|ui| {

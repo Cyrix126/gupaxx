@@ -26,8 +26,13 @@ impl Helper {
     // Just sets some signals for the watchdog thread to pick up on.
     pub fn stop_xvb(helper: &Arc<Mutex<Self>>) {
         info!("XvB | Attempting to stop...");
-        lock2!(helper, p2pool).signal = ProcessSignal::Stop;
-        lock2!(helper, p2pool).state = ProcessState::Middle;
+        lock2!(helper, xvb).signal = ProcessSignal::Stop;
+        lock2!(helper, xvb).state = ProcessState::Middle;
+        // Reset stats
+        let gui_api = Arc::clone(&lock!(helper).gui_api_xvb);
+        let pub_api = Arc::clone(&lock!(helper).pub_api_xvb);
+        *lock!(pub_api) = PubXvbApi::new();
+        *lock!(gui_api) = PubXvbApi::new();
     }
     pub fn restart_xvb(
         helper: &Arc<Mutex<Self>>,
@@ -35,8 +40,8 @@ impl Helper {
         state_p2pool: &crate::disk::state::P2pool,
     ) {
         info!("XvB | Attempting to restart...");
-        lock2!(helper, p2pool).signal = ProcessSignal::Restart;
-        lock2!(helper, p2pool).state = ProcessState::Middle;
+        lock2!(helper, xvb).signal = ProcessSignal::Restart;
+        lock2!(helper, xvb).state = ProcessState::Middle;
         let helper = helper.clone();
         let state_xvb = state_xvb.clone();
         let state_p2pool = state_p2pool.clone();
@@ -66,29 +71,39 @@ impl Helper {
         let process = Arc::clone(&lock!(helper).xvb);
         let state_xvb = state_xvb.clone();
         let state_p2pool = state_p2pool.clone();
-        // two first verifications should be done before starting the process and giving the possibility to start it.
-        // verify if address is inserted
-        // if state_p2pool.address.is_empty() {
-        //     warn!("Xvb | Start ... Failed because payout address is not inserted in P2pool tab");
-        //     lock2!(helper, xvb).state = ProcessState::Failed;
-        //     return;
-        // }
-        // verify if token exist
-        // if state_xvb.token.is_empty() {
-        //     warn!("Xvb | Start ... Failed because valid token is not inserted in XvB tab");
-        //     lock2!(helper, xvb).state = ProcessState::Failed;
-        //     return;
-        // }
+
+        // 2. Set process state
+        debug!("XvB | Setting process state...");
+        {
+            let mut lock = lock!(process);
+            lock.state = ProcessState::Middle;
+            lock.signal = ProcessSignal::None;
+            lock.start = Instant::now();
+        }
         // verify if token and address are existent on XvB server
         let rt = tokio::runtime::Runtime::new().unwrap();
-        if !rt.block_on(async move {
-            Xvb::is_token_exist(state_p2pool.address, state_xvb.token)
-                .await
-                .is_ok()
-        }) {
-            warn!("Xvb | Start ... Failed because token and associated address are not existent on XvB server");
-            lock2!(helper, xvb).state = ProcessState::Failed;
-            return;
+        let resp: anyhow::Result<()> = rt.block_on(async move {
+            Xvb::is_token_exist(state_p2pool.address, state_xvb.token).await?;
+            Ok(())
+        });
+        match resp {
+            Ok(_) => {
+                let mut lock = lock!(process);
+                lock.state = ProcessState::Alive;
+            }
+            Err(err) => {
+                // send to console: token non existent for address on XvB server
+                warn!("Xvb | Start ... Failed because token and associated address are not existent on XvB server: {}", err);
+                // output the error to console
+                if let Err(e) = writeln!(
+                    lock!(gui_api).output,
+                    "Failure to retrieve private stats from XvB server.\nError: {}",
+                    err
+                ) {
+                    error!("XvB Watchdog | GUI status write failed: {}", e);
+                }
+                lock2!(helper, xvb).state = ProcessState::NotMining;
+            }
         }
 
         thread::spawn(move || {
@@ -104,49 +119,67 @@ impl Helper {
     ) {
         info!("XvB started");
 
-        // 2. Set process state
-        debug!("XvB | Setting process state...");
-        {
-            let mut lock = lock!(process);
-            lock.state = ProcessState::Middle;
-            lock.signal = ProcessSignal::None;
-            lock.start = Instant::now();
+        if let Err(e) = writeln!(
+            lock!(gui_api).output,
+            "{}\nXvb started\n{}\n\n",
+            HORI_CONSOLE,
+            HORI_CONSOLE
+        ) {
+            error!("XvB Watchdog | GUI status write failed: {}", e);
         }
-        // Reset stats before loop
-        *lock!(pub_api) = PubXvbApi::new();
-        *lock!(gui_api) = PubXvbApi::new();
-
         let start = lock!(process).start;
         info!("XvB | Entering watchdog mode... woof!");
         loop {
+            debug!("XvB Watchdog | ----------- Start of loop -----------");
             // Set timer
             let now = Instant::now();
             // check signal
+            debug!("XvB | check signal");
             if signal_interrupt(process.clone(), start, gui_api.clone()) {
                 break;
             }
-            debug!("XvB Watchdog | ----------- Start of loop -----------");
-            // Send an HTTP API request
-            debug!("XvB Watchdog | Attempting HTTP API request...");
-            match PubXvbApi::request_xvb_public_api(client.clone(), XVB_URL_PUBLIC_API).await {
-                Ok(new_data) => {
-                    debug!("XvB Watchdog | HTTP API request OK");
-                    let mut data = lock!(&pub_api);
-                    *data = new_data;
-                }
-                Err(err) => {
-                    warn!(
-                        "XvB Watchdog | Could not send HTTP API request to: {}\n:{}",
-                        XVB_URL_PUBLIC_API, err
-                    );
+            // Send an HTTP API request only if one minute is passed since the last.
+            // if since is 0, send request because it's the first time.
+            let since = lock!(gui_api).tick;
+            if since >= 60 || since == 0 {
+                // *lock!(pub_api) = PubXvbApi::new();
+                // *lock!(gui_api) = PubXvbApi::new();
+                debug!("XvB Watchdog | Attempting HTTP API request...");
+                match PubXvbApi::request_xvb_public_api(client.clone(), XVB_URL_PUBLIC_API).await {
+                    Ok(new_data) => {
+                        debug!("XvB Watchdog | HTTP API request OK");
+                        *lock!(&pub_api) = new_data;
+                        lock!(gui_api).tick += 0;
+                    }
+                    Err(err) => {
+                        warn!(
+                            "XvB Watchdog | Could not send HTTP API request to: {}\n:{}",
+                            XVB_URL_PUBLIC_API, err
+                        );
+                        // output the error to console
+                        if let Err(e) = writeln!(
+                            lock!(gui_api).output,
+                            "Failure to retrieve public stats from {}",
+                            XVB_URL_PUBLIC_API
+                        ) {
+                            error!("XvB Watchdog | GUI status write failed: {}", e);
+                        }
+                        lock!(process).state = ProcessState::Failed;
+                        break;
+                    }
                 }
             }
-            // XvB Status do not need to be refreshed like others because combine_with_gui do not refresh if no data is changed.
-            let elapsed = now.elapsed().as_secs();
-            if elapsed < 59 {
-                let sleep = 60 - elapsed;
+
+            lock!(gui_api).tick += 1;
+            // Reset stats before loop
+
+            // Sleep (only if 900ms hasn't passed)
+            let elapsed = now.elapsed().as_millis();
+            // Since logic goes off if less than 1000, casting should be safe
+            if elapsed < 900 {
+                let sleep = (900 - elapsed) as u64;
                 debug!("XvB Watchdog | END OF LOOP - Sleeping for [{}]s...", sleep);
-                std::thread::sleep(std::time::Duration::from_secs(sleep))
+                std::thread::sleep(std::time::Duration::from_millis(sleep))
             } else {
                 debug!("XMRig Watchdog | END OF LOOP - Not sleeping!");
             }
@@ -161,6 +194,8 @@ pub struct PubXvbApi {
     pub output: String,
     #[serde(skip)]
     pub uptime: HumanTime,
+    #[serde(skip)]
+    pub tick: u8,
     pub time_remain: u32, // remaining time of round in minutes
     pub bonus_hr: f64,
     pub donate_hr: f64,      // donated hr from all donors
@@ -205,11 +240,22 @@ impl PubXvbApi {
     pub fn new() -> Self {
         Self::default()
     }
+    // The issue with just doing [gui_api = pub_api] is that values get overwritten.
+    // This doesn't matter for any of the values EXCEPT for the output,  so we must
+    // manually append it instead of overwriting.
+    // This is used in the "helper" thread.
     pub(super) fn combine_gui_pub_api(gui_api: &mut Self, pub_api: &mut Self) {
-        // update only if there is data, if no new data, pub_api fields are on default value.
-        if !pub_api.reward_yearly.is_empty() {
-            *gui_api = std::mem::take(pub_api)
+        let mut output = std::mem::take(&mut gui_api.output);
+        let buf = std::mem::take(&mut pub_api.output);
+        if !buf.is_empty() {
+            output.push_str(&buf);
         }
+        let tick = std::mem::take(&mut gui_api.tick);
+        *gui_api = Self {
+            output,
+            tick,
+            ..pub_api.clone()
+        };
     }
     #[inline]
     // Send an HTTP request to XvB's API, serialize it into [Self] and return it
@@ -258,23 +304,14 @@ fn signal_interrupt(
         }
         debug!("XvB Watchdog | Stop SIGNAL done, breaking");
         lock!(process).signal = ProcessSignal::None;
+        lock!(process).state = ProcessState::Dead;
         return true;
     // Check RESTART
     } else if lock!(process).signal == ProcessSignal::Restart {
         debug!("XvB Watchdog | Restart SIGNAL caught");
         let uptime = HumanTime::into_human(start.elapsed());
         info!("XvB Watchdog | Stopped ... Uptime was: [{}]", uptime);
-        // insert the signal into output of XvB
-        // This is written directly into the GUI API, because sometimes the 900ms event loop can't catch it.
-        if let Err(e) = writeln!(
-            lock!(gui_api).output,
-            "{}\nXvb stopped | Uptime: [{}] | \n{}\n\n\n\n",
-            HORI_CONSOLE,
-            uptime,
-            HORI_CONSOLE
-        ) {
-            error!("XvB Watchdog | GUI Uptime/Exit status write failed: {}", e);
-        }
+        // no output to console because service will be started with fresh output.
         debug!("XvB Watchdog | Restart SIGNAL done, breaking");
         lock!(process).state = ProcessState::Waiting;
         return true;

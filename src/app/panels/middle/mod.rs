@@ -19,6 +19,7 @@ impl crate::app::App {
         key: KeyPressed,
         p2pool_is_alive: bool,
         xmrig_is_alive: bool,
+        xvb_is_alive: bool,
     ) {
         // Middle panel, contents of the [Tab]
         debug!("App | Rendering CENTRAL_PANEL (tab contents)");
@@ -144,7 +145,7 @@ path_xmr: {:#?}\n
 				}
 				Tab::Status => {
 					debug!("App | Entering [Status] Tab");
-					crate::disk::state::Status::show(&mut self.state.status, &self.pub_sys, &self.p2pool_api, &self.xmrig_api, &self.xvb_api,&self.p2pool_img, &self.xmrig_img, p2pool_is_alive, xmrig_is_alive,  self.max_threads, &self.gupax_p2pool_api, &self.benchmarks, self.size, ctx, ui);
+					crate::disk::state::Status::show(&mut self.state.status, &self.pub_sys, &self.p2pool_api, &self.xmrig_api, &self.xvb_api,&self.p2pool_img, &self.xmrig_img, p2pool_is_alive, xmrig_is_alive,  xvb_is_alive, self.max_threads, &self.gupax_p2pool_api, &self.benchmarks, self.size, ctx, ui);
 				}
 				Tab::Gupax => {
 					debug!("App | Entering [Gupax] Tab");
@@ -160,7 +161,7 @@ path_xmr: {:#?}\n
 				}
 				Tab::Xvb => {
 					debug!("App | Entering [XvB] Tab");
-					crate::disk::state::Xvb::show(self.size, ctx, ui, &self.xvb_api);
+					crate::disk::state::Xvb::show(&mut self.state.xvb, self.size, ctx, ui, &self.xvb_api);
 				}
 			}
 		});
