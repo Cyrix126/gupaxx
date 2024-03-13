@@ -5,8 +5,9 @@ use egui::{Hyperlink, Image, Label, RichText, TextEdit, Vec2};
 use log::debug;
 
 use crate::helper::xvb::PubXvbApi;
-use crate::utils::constants::{GREEN, LIGHT_GRAY, RED, XVB_HELP, XVB_TOKEN_LEN};
+use crate::utils::constants::{GREEN, LIGHT_GRAY, ORANGE, RED, XVB_HELP, XVB_TOKEN_LEN};
 use crate::utils::macros::lock;
+use crate::utils::regex::Regexes;
 use crate::{
     constants::{BYTES_XVB, SPACE},
     utils::constants::{DARK_GRAY, XVB_URL},
@@ -17,6 +18,7 @@ impl crate::disk::state::Xvb {
     pub fn show(
         &mut self,
         size: Vec2,
+        address: &str,
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
         api: &Arc<Mutex<PubXvbApi>>,
@@ -82,11 +84,20 @@ impl crate::disk::state::Xvb {
                 ui.add_sized(
                     [width / 8.0, text_edit],
                     TextEdit::singleline(&mut self.token),
-                )
-                .on_hover_text_at_pointer(XVB_HELP);
+                );
+
                 ui.add(Label::new(RichText::new(text_check).color(color)))
             });
-        });
+        })
+        .response
+        .on_hover_text_at_pointer(XVB_HELP);
         // need to warn the user if no address is set in p2pool tab
+        if !Regexes::addr_ok(address) {
+            debug!("XvB Tab | Rendering warning text");
+            ui.label(RichText::new("You don't have any payout address set in the P2pool Tab !\nXvB process needs one to function properly.")
+                        .color(ORANGE));
+        }
+        // hero option
+        // private stats
     }
 }
