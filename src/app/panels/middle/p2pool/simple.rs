@@ -10,18 +10,20 @@ use crate::components::node::Ping;
 use crate::components::node::RemoteNode;
 use crate::disk::state::P2pool;
 use crate::utils::macros::lock;
+use egui::vec2;
 use egui::Button;
 use egui::Checkbox;
+use egui::Vec2;
 
 use crate::constants::*;
 use egui::{Color32, ComboBox, Label, RichText, Ui};
 use log::*;
 impl P2pool {
-    pub(super) fn simple(&mut self, ui: &mut Ui, width: f32, height: f32, ping: &Arc<Mutex<Ping>>) {
+    pub(super) fn simple(&mut self, ui: &mut Ui, size: Vec2, ping: &Arc<Mutex<Ping>>) {
         // [Node]
-        let height = height / 6.5;
-        ui.spacing_mut().slider_width = width - 8.0;
-        ui.spacing_mut().icon_width = width / 25.0;
+        let height = size.y / 6.5;
+        ui.spacing_mut().slider_width = size.x - 8.0;
+        ui.spacing_mut().icon_width = size.x / 25.0;
 
         // [Auto-select] if we haven't already.
         // Using [Arc<Mutex<Ping>>] as an intermediary here
@@ -59,7 +61,7 @@ impl P2pool {
                 let text = RichText::new(format!(" ⏺ {}ms | {}", ms, ip_location)).color(color);
                 ComboBox::from_id_source("remote_nodes")
                     .selected_text(text)
-                    .width(width)
+                    .width(size.x)
                     .show_ui(ui, |ui| {
                         for data in lock!(ping).nodes.iter() {
                             let ms = format_ms(data.ms);
@@ -75,10 +77,11 @@ impl P2pool {
 
             debug!("P2Pool Tab | Rendering [Select fastest ... Ping] buttons");
             ui.horizontal(|ui| {
-                let width = (width / 5.0) - 6.0;
+                let width = (size.x / 5.0) - 6.0;
+                let size = vec2(width, height);
                 // [Select random node]
                 if ui
-                    .add_sized([width, height], Button::new("Select random node"))
+                    .add_sized(size, Button::new("Select random node"))
                     .on_hover_text(P2POOL_SELECT_RANDOM)
                     .clicked()
                 {
@@ -86,7 +89,7 @@ impl P2pool {
                 }
                 // [Select fastest node]
                 if ui
-                    .add_sized([width, height], Button::new("Select fastest node"))
+                    .add_sized(size, Button::new("Select fastest node"))
                     .on_hover_text(P2POOL_SELECT_FASTEST)
                     .clicked()
                     && lock!(ping).pinged
@@ -96,7 +99,7 @@ impl P2pool {
                 // [Ping Button]
                 ui.add_enabled_ui(!lock!(ping).pinging, |ui| {
                     if ui
-                        .add_sized([width, height], Button::new("Ping remote nodes"))
+                        .add_sized(size, Button::new("Ping remote nodes"))
                         .on_hover_text(P2POOL_PING)
                         .clicked()
                     {
@@ -105,7 +108,7 @@ impl P2pool {
                 });
                 // [Last <-]
                 if ui
-                    .add_sized([width, height], Button::new("⬅ Last"))
+                    .add_sized(size, Button::new("⬅ Last"))
                     .on_hover_text(P2POOL_SELECT_LAST)
                     .clicked()
                 {
@@ -118,7 +121,7 @@ impl P2pool {
                 }
                 // [Next ->]
                 if ui
-                    .add_sized([width, height], Button::new("Next ➡"))
+                    .add_sized(size, Button::new("Next ➡"))
                     .on_hover_text(P2POOL_SELECT_NEXT)
                     .clicked()
                 {
@@ -138,15 +141,16 @@ impl P2pool {
                 let prog = lock!(ping).prog.round();
                 let msg = RichText::new(format!("{} ... {}%", lock!(ping).msg, prog));
                 let height = height / 1.25;
+                let size = vec2(size.x, height);
                 ui.add_space(5.0);
-                ui.add_sized([width, height], Label::new(msg));
+                ui.add_sized(size, Label::new(msg));
                 ui.add_space(5.0);
                 if pinging {
-                    ui.add_sized([width, height], Spinner::new().size(height));
+                    ui.add_sized(size, Spinner::new().size(height));
                 } else {
-                    ui.add_sized([width, height], Label::new("..."));
+                    ui.add_sized(size, Label::new("..."));
                 }
-                ui.add_sized([width, height], ProgressBar::new(prog.round() / 100.0));
+                ui.add_sized(size, ProgressBar::new(prog.round() / 100.0));
                 ui.add_space(5.0);
             });
         });
@@ -154,33 +158,25 @@ impl P2pool {
         debug!("P2Pool Tab | Rendering [Auto-*] buttons");
         ui.group(|ui| {
             ui.horizontal(|ui| {
-                let width = (width / 3.0) - (SPACE * 1.75);
+                let width = (size.x / 3.0) - (SPACE * 1.75);
+                let size = vec2(width, height);
                 // [Auto-node]
-                ui.add_sized(
-                    [width, height],
-                    Checkbox::new(&mut self.auto_select, "Auto-select"),
-                )
-                .on_hover_text(P2POOL_AUTO_SELECT);
+                ui.add_sized(size, Checkbox::new(&mut self.auto_select, "Auto-select"))
+                    .on_hover_text(P2POOL_AUTO_SELECT);
                 ui.separator();
                 // [Auto-node]
-                ui.add_sized(
-                    [width, height],
-                    Checkbox::new(&mut self.auto_ping, "Auto-ping"),
-                )
-                .on_hover_text(P2POOL_AUTO_NODE);
+                ui.add_sized(size, Checkbox::new(&mut self.auto_ping, "Auto-ping"))
+                    .on_hover_text(P2POOL_AUTO_NODE);
                 ui.separator();
                 // [Backup host]
-                ui.add_sized(
-                    [width, height],
-                    Checkbox::new(&mut self.backup_host, "Backup host"),
-                )
-                .on_hover_text(P2POOL_BACKUP_HOST_SIMPLE);
+                ui.add_sized(size, Checkbox::new(&mut self.backup_host, "Backup host"))
+                    .on_hover_text(P2POOL_BACKUP_HOST_SIMPLE);
             })
         });
 
         debug!("P2Pool Tab | Rendering warning text");
         ui.add_sized(
-            [width, height / 2.0],
+            [size.x, height / 2.0],
             Hyperlink::from_label_and_url(
                 "WARNING: It is recommended to run/use your own Monero Node (hover for details)",
                 "https://github.com/hinto-janai/gupax#running-a-local-monero-node",

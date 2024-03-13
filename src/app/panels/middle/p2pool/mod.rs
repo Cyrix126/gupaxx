@@ -18,7 +18,7 @@ use crate::helper::p2pool::PubP2poolApi;
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::{components::node::*, constants::*, helper::*, macros::*, utils::regex::Regexes};
-use egui::{Color32, Label, RichText, TextEdit, TextStyle::*, Vec2};
+use egui::{vec2, Color32, Label, RichText, TextEdit, TextStyle::*, Vec2};
 use log::*;
 
 use std::sync::{Arc, Mutex};
@@ -156,12 +156,13 @@ impl P2pool {
         });
 
         let height = ui.available_height();
+        let size = vec2(width, height);
         if self.simple {
             //---------------------------------------------------------------------------------------------------- Simple
-            self.simple(ui, width, height, ping);
+            self.simple(ui, size, ping);
         //---------------------------------------------------------------------------------------------------- Advanced
         } else {
-            self.advanced(ui, width, height, text_edit, node_vec);
+            self.advanced(ui, size, text_edit, node_vec);
         }
     }
 }

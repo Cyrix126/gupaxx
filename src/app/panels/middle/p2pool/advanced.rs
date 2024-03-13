@@ -1,8 +1,8 @@
 use crate::disk::node::Node;
 use crate::{disk::state::P2pool, utils::regex::REGEXES};
-use egui::Button;
 use egui::Checkbox;
 use egui::Slider;
+use egui::{Button, Vec2};
 
 use crate::constants::*;
 use egui::{Color32, ComboBox, Label, RichText, SelectableLabel, TextStyle::*, Ui};
@@ -12,8 +12,7 @@ impl P2pool {
     pub(super) fn advanced(
         &mut self,
         ui: &mut Ui,
-        width: f32,
-        height: f32,
+        size: Vec2,
         text_edit: f32,
         node_vec: &mut Vec<(String, Node)>,
     ) {
@@ -22,7 +21,7 @@ impl P2pool {
                                          // [Monero node IP/RPC/ZMQ]
         ui.horizontal(|ui| {
 		    ui.group(|ui| {
-			let width = width/10.0;
+			let width = size.x/10.0;
 			ui.vertical(|ui| {
 			ui.spacing_mut().text_edit_width = width*3.32;
 			ui.horizontal(|ui| {
@@ -234,10 +233,10 @@ impl P2pool {
         debug!("P2Pool Tab | Rendering [Main/Mini/Peers/Log] elements");
         // [Main/Mini]
         ui.horizontal(|ui| {
-            let height = height / 4.0;
+            let height = size.y / 4.0;
             ui.group(|ui| {
                 ui.horizontal(|ui| {
-                    let width = (width / 4.0) - SPACE;
+                    let width = (size.x / 4.0) - SPACE;
                     let height = height + 6.0;
                     if ui
                         .add_sized(
@@ -292,7 +291,7 @@ impl P2pool {
 
         debug!("P2Pool Tab | Rendering Backup host button");
         ui.group(|ui| {
-            let width = width - SPACE;
+            let width = size.x - SPACE;
             let height = ui.available_height() / 3.0;
             // [Backup host]
             ui.add_sized(
