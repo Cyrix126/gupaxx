@@ -7,7 +7,7 @@ use log::debug;
 use crate::helper::xvb::PubXvbApi;
 use crate::utils::constants::{
     GREEN, LIGHT_GRAY, ORANGE, RED, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD, XVB_FAILURE_FIELD,
-    XVB_HELP, XVB_HERO_SELECT, XVB_TOKEN_FIELD, XVB_TOKEN_LEN,
+    XVB_HELP, XVB_HERO_SELECT, XVB_TOKEN_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES,
 };
 use crate::utils::macros::lock;
 use crate::utils::regex::Regexes;
@@ -162,6 +162,12 @@ impl crate::disk::state::Xvb {
                 })
                 .response
             });
+        });
+        // Rules link help
+        ui.add_space(ui.available_height() / 4.0);
+        ui.vertical_centered(|ui| {
+            ui.hyperlink_to("Rules", XVB_URL_RULES)
+                .on_hover_text("Click here to read the rules and understand how the raffle works.");
         });
     }
 }

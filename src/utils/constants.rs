@@ -411,6 +411,8 @@ pub const XMRIG_PATH_EMPTY:     &str = "XMRig PATH is empty! To fix: goto the [G
 pub const XVB_HELP: &str = "You need to register an account by clicking on the link above to get your token with the same p2pool XMR address you use for payment.";
 pub const XVB_URL: &str = "https://xmrvsbeast.com";
 pub const XVB_URL_PUBLIC_API: &str = "https://xmrvsbeast.com/p2pool/stats";
+pub const XVB_URL_RULES: &str = "https://xmrvsbeast.com/p2pool/rules.html";
+
 pub const XVB_TOKEN_LEN: usize = 9;
 pub const XVB_HERO_SELECT: &str =
     "Donate all spared hashrate to the raffle, even if there is more than enough to be in the most highest round type possible";
