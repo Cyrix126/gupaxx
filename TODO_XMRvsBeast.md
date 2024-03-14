@@ -10,16 +10,14 @@
 - [x] new tab XvB
   - [x] logo
   - [x] link to website
-  - [ ] message overing explaining registration and needs to read the rules.
+  - [x] link and message hovering explaining registration and needs to read the rules.
   - [x] token input
-  - [ ] hero checkbox
+  - [x] hero checkbox
   - [ ] log section
-    - [ ] status of h/s received by the raffle, authentication by token.
-    - [ ] status of 1h and 24h average h/s sent to raffle from this instance
-    - [ ] number of failures
     - [ ] round type in
     - [ ] win or loose
     - [x] state of XvB process
+  - [x] private stats
   - [ ] new process for XvB
     - [x] status process XvB
     - [x] public information from [API](https://xmrvsbeast.com/p2pool/stats)
