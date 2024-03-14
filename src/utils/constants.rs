@@ -292,6 +292,7 @@ pub const GUPAX_TAB_STATUS: &str = "Set the tab Gupax starts on to: Status";
 pub const GUPAX_TAB_GUPAX: &str = "Set the tab Gupax starts on to: Gupax";
 pub const GUPAX_TAB_P2POOL: &str = "Set the tab Gupax starts on to: P2Pool";
 pub const GUPAX_TAB_XMRIG: &str = "Set the tab Gupax starts on to: XMRig";
+pub const GUPAX_TAB_XVB: &str = "Set the tab Gupax starts on to: XvB";
 
 pub const GUPAX_SIMPLE: &str = r#"Use simple Gupax settings:
   - Update button

@@ -230,7 +230,7 @@ impl Gupax {
         // Saved [Tab]
         debug!("Gupax Tab | Rendering [Tab] selector");
         ui.group(|ui| {
-            let width = (size.x / 5.0) - (SPACE * 1.93);
+            let width = (size.x / 6.0) - (SPACE * 1.93);
             let size = vec2(width, height);
             ui.add_sized(
                 [ui.available_width(), height / 2.0],
@@ -283,6 +283,13 @@ impl Gupax {
                     .clicked()
                 {
                     self.tab = Tab::Xmrig;
+                }
+                if ui
+                    .add_sized(size, SelectableLabel::new(self.tab == Tab::Xvb, "XvB"))
+                    .on_hover_text(GUPAX_TAB_XVB)
+                    .clicked()
+                {
+                    self.tab = Tab::Xvb;
                 }
             })
         });
