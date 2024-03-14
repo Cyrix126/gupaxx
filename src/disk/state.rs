@@ -1,6 +1,7 @@
-use anyhow::{bail, Result};
-use hyper::StatusCode;
-use hyper_tls::HttpsConnector;
+use anyhow::{Result};
+
+
+
 
 use super::*;
 use crate::{components::node::RemoteNode, disk::status::*};
@@ -246,6 +247,7 @@ pub struct Xmrig {
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
 pub struct Xvb {
     pub token: String,
+    pub hero: bool,
     pub node: XvbNode,
 }
 
@@ -324,36 +326,6 @@ impl Default for P2pool {
             selected_ip: "localhost".to_string(),
             selected_rpc: "18081".to_string(),
             selected_zmq: "18083".to_string(),
-        }
-    }
-}
-
-impl Xvb {
-    pub async fn is_token_exist(address: String, token: String) -> Result<()> {
-        let https = HttpsConnector::new();
-        let client = hyper::Client::builder().build(https);
-        if let Ok(request) = hyper::Request::builder()
-            .method("GET")
-            .uri(format!(
-                "{}/cgi-bin/p2pool_bonus_history_api.cgi?address={}&token={}",
-                XVB_URL, address, token
-            ))
-            .body(hyper::Body::empty())
-        {
-            match client.request(request).await {
-                Ok(resp) => match resp.status() {
-                    StatusCode::OK => Ok(()),
-                    StatusCode::UNPROCESSABLE_ENTITY => {
-                        bail!("the token is invalid for this xmr address.")
-                    }
-                    _ => bail!("The status of the response is not expected"),
-                },
-                Err(err) => {
-                    bail!("error from response: {}", err)
-                }
-            }
-        } else {
-            bail!("request could not be build")
         }
     }
 }

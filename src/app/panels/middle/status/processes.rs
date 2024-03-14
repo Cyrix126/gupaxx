@@ -361,7 +361,7 @@ fn xvb(
     xvb_api: &Arc<Mutex<PubXvbApi>>,
 ) {
     //
-    let api = lock!(xvb_api);
+    let api = &lock!(xvb_api).stats_pub;
     let enabled = xvb_alive;
     ScrollArea::vertical().show(ui, |ui| {
         ui.group(|ui| {
@@ -477,7 +477,6 @@ fn xvb(
                         )),
                     );
                 }
-                drop(api);
             });
             // by round
         });

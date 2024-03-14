@@ -411,6 +411,12 @@ pub const XVB_HELP: &str = "You need to register an account by clicking on the l
 pub const XVB_URL: &str = "https://xmrvsbeast.com";
 pub const XVB_URL_PUBLIC_API: &str = "https://xmrvsbeast.com/p2pool/stats";
 pub const XVB_TOKEN_LEN: usize = 9;
+pub const XVB_HERO_SELECT: &str =
+    "Donate all spared hashrate to the raffle, even if there is more than enough to be in the most highest round type possible";
+pub const XVB_TOKEN_FIELD: &str = "Token";
+pub const XVB_FAILURE_FIELD: &str = "Failures";
+pub const XVB_DONATED_1H_FIELD: &str = "Donated last hour";
+pub const XVB_DONATED_24H_FIELD: &str = "Donated last 24 hours";
 
 // CLI argument messages
 pub const ARG_HELP: &str = r#"USAGE: ./gupax [--flag]

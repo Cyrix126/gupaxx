@@ -99,6 +99,7 @@ mod test {
 
             [xvb]
             token = ""
+            hero = false
             node = "Europe"
 			[version]
 			gupax = "v1.3.0"

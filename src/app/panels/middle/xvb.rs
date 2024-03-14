@@ -1,11 +1,14 @@
 use std::sync::{Arc, Mutex};
 
 use egui::TextStyle::Name;
-use egui::{Hyperlink, Image, Label, RichText, TextEdit, Vec2};
+use egui::{vec2, Hyperlink, Image, Layout, RichText, TextEdit, Ui, Vec2};
 use log::debug;
 
 use crate::helper::xvb::PubXvbApi;
-use crate::utils::constants::{GREEN, LIGHT_GRAY, ORANGE, RED, XVB_HELP, XVB_TOKEN_LEN};
+use crate::utils::constants::{
+    GREEN, LIGHT_GRAY, ORANGE, RED, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD, XVB_FAILURE_FIELD,
+    XVB_HELP, XVB_HERO_SELECT, XVB_TOKEN_FIELD, XVB_TOKEN_LEN,
+};
 use crate::utils::macros::lock;
 use crate::utils::regex::Regexes;
 use crate::{
@@ -22,12 +25,13 @@ impl crate::disk::state::Xvb {
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
         api: &Arc<Mutex<PubXvbApi>>,
+        xvb_is_alive: bool,
     ) {
+        ui.reset_style();
         let website_height = size.y / 10.0;
         // let width = size.x - SPACE;
         // let height = size.y - SPACE;
         let width = size.x;
-        let text_edit = size.y / 25.0;
         // logo and website link
         ui.vertical_centered(|ui| {
             ui.add_sized(
@@ -61,43 +65,103 @@ impl crate::disk::state::Xvb {
         });
         // input token
         let len_token = format!("{}", self.token.len());
-        let text_check;
-        let color;
-        if self.token.is_empty() {
-            text_check = format!("[{}/{}] ➖", len_token, XVB_TOKEN_LEN);
-            color = LIGHT_GRAY;
+        let (text, color) = if self.token.is_empty() {
+            (
+                format!("{} [{}/{}] ➖", XVB_TOKEN_FIELD, len_token, XVB_TOKEN_LEN),
+                LIGHT_GRAY,
+            )
         } else if self.token.parse::<u32>().is_ok() && self.token.len() < XVB_TOKEN_LEN {
-            text_check = format!("[{}/{}] ", len_token, XVB_TOKEN_LEN);
-            color = GREEN;
+            (
+                format!("{} [{}/{}]", XVB_TOKEN_FIELD, len_token, XVB_TOKEN_LEN),
+                GREEN,
+            )
         } else if self.token.parse::<u32>().is_ok() && self.token.len() == XVB_TOKEN_LEN {
-            text_check = "✔".to_string();
-            color = GREEN;
+            (format!("{} ✔", XVB_TOKEN_FIELD), GREEN)
         } else {
-            text_check = format!("[{}/{}] ❌", len_token, XVB_TOKEN_LEN);
-            color = RED;
-        }
+            (
+                format!("{} [{}/{}] ❌", XVB_TOKEN_FIELD, len_token, XVB_TOKEN_LEN),
+                RED,
+            )
+        };
+        // let width = width - SPACE;
+        // ui.spacing_mut().text_edit_width = (width) - (SPACE * 3.0);
         ui.group(|ui| {
-            let width = width - SPACE;
-            ui.spacing_mut().text_edit_width = (width) - (SPACE * 3.0);
-            ui.label("Your Token:");
             ui.horizontal(|ui| {
-                ui.add_sized(
-                    [width / 8.0, text_edit],
-                    TextEdit::singleline(&mut self.token),
-                );
-
-                ui.add(Label::new(RichText::new(text_check).color(color)))
-            });
-        })
-        .response
-        .on_hover_text_at_pointer(XVB_HELP);
+                // why does this group is not centered into the parent group ?
+                ui.with_layout(Layout::left_to_right(egui::Align::Center), |ui| {
+                    ui.group(|ui| {
+                        ui.colored_label(color, text);
+                        // ui.add_sized(
+                        //     [width / 8.0, text_edit],
+                        //     Label::new(RichText::new(text).color(color)),
+                        // );
+                        ui.add(
+                            TextEdit::singleline(&mut self.token)
+                                .char_limit(XVB_TOKEN_LEN)
+                                .desired_width(width / 8.0)
+                                .vertical_align(egui::Align::Center),
+                        );
+                    })
+                    .response
+                    .on_hover_text_at_pointer(XVB_HELP);
+                    // hero option
+                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                        ui.add_space(width / 24.0);
+                        ui.checkbox(&mut self.hero, "Hero")
+                            .on_hover_text(XVB_HERO_SELECT);
+                    })
+                });
+            })
+        });
         // need to warn the user if no address is set in p2pool tab
         if !Regexes::addr_ok(address) {
             debug!("XvB Tab | Rendering warning text");
             ui.label(RichText::new("You don't have any payout address set in the P2pool Tab !\nXvB process needs one to function properly.")
                         .color(ORANGE));
         }
-        // hero option
         // private stats
+        let priv_stats = &lock!(api).stats_priv;
+        ui.set_enabled(xvb_is_alive);
+        // ui.vertical_centered(|ui| {
+        ui.horizontal(|ui| {
+            // widget takes a third less space for two separator.
+            let width_stat =
+                (ui.available_width() / 3.0) - (12.0 + ui.style().spacing.item_spacing.x) / 3.0;
+            // 0.0 means minimum
+            let height_stat = 0.0;
+            let size_stat = vec2(width_stat, height_stat);
+            ui.add_sized(size_stat, |ui: &mut Ui| {
+                ui.group(|ui| {
+                    let size_stat = vec2(
+                        ui.available_width(),
+                        0.0, // + ui.spacing().item_spacing.y,
+                    );
+                    ui.add_sized(size_stat, |ui: &mut Ui| {
+                        ui.vertical_centered(|ui| {
+                            ui.label(XVB_FAILURE_FIELD);
+                            ui.label(priv_stats.fails.to_string());
+                        })
+                        .response
+                    });
+                    ui.separator();
+                    ui.add_sized(size_stat, |ui: &mut Ui| {
+                        ui.vertical_centered(|ui| {
+                            ui.label(XVB_DONATED_1H_FIELD);
+                            ui.label(priv_stats.donor_1hr_avg.to_string());
+                        })
+                        .response
+                    });
+                    ui.separator();
+                    ui.add_sized(size_stat, |ui: &mut Ui| {
+                        ui.vertical_centered(|ui| {
+                            ui.label(XVB_DONATED_24H_FIELD);
+                            ui.label(priv_stats.donor_24hr_avg.to_string());
+                        })
+                        .response
+                    });
+                })
+                .response
+            });
+        });
     }
 }

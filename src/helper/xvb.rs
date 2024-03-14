@@ -1,5 +1,8 @@
+use anyhow::{bail, Result};
+use bytes::Bytes;
 use derive_more::Display;
 use hyper::client::HttpConnector;
+use hyper::StatusCode;
 use hyper_tls::HttpsConnector;
 use log::{debug, error, info, warn};
 use serde::Deserialize;
@@ -10,8 +13,8 @@ use std::{
     time::Instant,
 };
 
+use crate::utils::constants::XVB_URL;
 use crate::{
-    disk::state::Xvb,
     helper::{ProcessSignal, ProcessState},
     utils::{
         constants::{HORI_CONSOLE, XVB_URL_PUBLIC_API},
@@ -69,8 +72,8 @@ impl Helper {
         let gui_api = Arc::clone(&lock!(helper).gui_api_xvb);
         let pub_api = Arc::clone(&lock!(helper).pub_api_xvb);
         let process = Arc::clone(&lock!(helper).xvb);
-        let state_xvb = state_xvb.clone();
-        let state_p2pool = state_p2pool.clone();
+        let state_xvb_check = state_xvb.clone();
+        let state_p2pool_check = state_p2pool.clone();
 
         // 2. Set process state
         debug!("XvB | Setting process state...");
@@ -83,7 +86,7 @@ impl Helper {
         // verify if token and address are existent on XvB server
         let rt = tokio::runtime::Runtime::new().unwrap();
         let resp: anyhow::Result<()> = rt.block_on(async move {
-            Xvb::is_token_exist(state_p2pool.address, state_xvb.token).await?;
+            XvbPrivStats::request_api(&state_p2pool_check.address, &state_xvb_check.token).await?;
             Ok(())
         });
         match resp {
@@ -105,9 +108,17 @@ impl Helper {
                 lock2!(helper, xvb).state = ProcessState::NotMining;
             }
         }
-
+        let state_xvb_thread = state_xvb.clone();
+        let state_p2pool_thread = state_p2pool.clone();
         thread::spawn(move || {
-            Self::spawn_xvb_watchdog(client, gui_api, pub_api, process);
+            Self::spawn_xvb_watchdog(
+                client,
+                gui_api,
+                pub_api,
+                process,
+                &state_xvb_thread,
+                &state_p2pool_thread,
+            );
         });
     }
     #[tokio::main]
@@ -116,6 +127,8 @@ impl Helper {
         gui_api: Arc<Mutex<PubXvbApi>>,
         pub_api: Arc<Mutex<PubXvbApi>>,
         process: Arc<Mutex<Process>>,
+        state_xvb: &crate::disk::state::Xvb,
+        state_p2pool: &crate::disk::state::P2pool,
     ) {
         info!("XvB started");
 
@@ -142,14 +155,11 @@ impl Helper {
             // if since is 0, send request because it's the first time.
             let since = lock!(gui_api).tick;
             if since >= 60 || since == 0 {
-                // *lock!(pub_api) = PubXvbApi::new();
-                // *lock!(gui_api) = PubXvbApi::new();
-                debug!("XvB Watchdog | Attempting HTTP API request...");
-                match PubXvbApi::request_xvb_public_api(client.clone(), XVB_URL_PUBLIC_API).await {
+                debug!("XvB Watchdog | Attempting HTTP public API request...");
+                match XvbPubStats::request_api(client.clone()).await {
                     Ok(new_data) => {
                         debug!("XvB Watchdog | HTTP API request OK");
-                        *lock!(&pub_api) = new_data;
-                        lock!(gui_api).tick += 0;
+                        lock!(&pub_api).stats_pub = new_data;
                     }
                     Err(err) => {
                         warn!(
@@ -168,6 +178,45 @@ impl Helper {
                         break;
                     }
                 }
+                debug!("XvB Watchdog | Attempting HTTP private API request...");
+                match XvbPrivStats::request_api(&state_p2pool.address, &state_xvb.token).await {
+                    Ok(b) => {
+                        debug!("XvB Watchdog | HTTP API request OK");
+                        let new_data = match serde_json::from_slice::<XvbPrivStats>(&b) {
+                            Ok(data) => data,
+                            Err(e) => {
+                                warn!("XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}", e);
+                                // output the error to console
+                                if let Err(e) = writeln!(
+                            lock!(gui_api).output,
+                            "XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}", e
+                        ) {
+                            error!("XvB Watchdog | GUI status write failed: {}", e);
+                        }
+                                break;
+                            }
+                        };
+                        lock!(&pub_api).stats_priv = new_data;
+                    }
+                    Err(err) => {
+                        warn!(
+                            "XvB Watchdog | Could not send HTTP private API request to: {}\n:{}",
+                            XVB_URL, err
+                        );
+                        // output the error to console
+                        if let Err(e) = writeln!(
+                            lock!(gui_api).output,
+                            "Failure to retrieve private stats from {}",
+                            XVB_URL
+                        ) {
+                            error!("XvB Watchdog | GUI status write failed: {}", e);
+                        }
+                        lock!(process).state = ProcessState::Failed;
+                        break;
+                    }
+                }
+
+                lock!(gui_api).tick += 0;
             }
 
             lock!(gui_api).tick += 1;
@@ -188,14 +237,17 @@ impl Helper {
 }
 //---------------------------------------------------------------------------------------------------- Public XvB API
 use serde_this_or_that::as_u64;
-#[derive(Debug, Clone, Default, Deserialize)]
+#[derive(Debug, Clone, Default)]
 pub struct PubXvbApi {
-    #[serde(skip)]
     pub output: String,
-    #[serde(skip)]
     pub uptime: HumanTime,
-    #[serde(skip)]
     pub tick: u8,
+    pub stats_pub: XvbPubStats,
+    pub stats_priv: XvbPrivStats,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct XvbPubStats {
     pub time_remain: u32, // remaining time of round in minutes
     pub bonus_hr: f64,
     pub donate_hr: f64,      // donated hr from all donors
@@ -215,6 +267,62 @@ pub struct PubXvbApi {
     #[serde(deserialize_with = "as_u64")]
     pub roll_round: u64,
     pub reward_yearly: Vec<f64>,
+}
+
+impl XvbPubStats {
+    #[inline]
+    // Send an HTTP request to XvB's API, serialize it into [Self] and return it
+    async fn request_api(
+        client: hyper::Client<HttpsConnector<HttpConnector>>,
+    ) -> std::result::Result<Self, anyhow::Error> {
+        let request = hyper::Request::builder()
+            .method("GET")
+            .uri(XVB_URL_PUBLIC_API)
+            .body(hyper::Body::empty())?;
+        let response =
+            tokio::time::timeout(std::time::Duration::from_secs(8), client.request(request))
+                .await?;
+        // let response = client.request(request).await;
+
+        let body = hyper::body::to_bytes(response?.body_mut()).await?;
+        Ok(serde_json::from_slice::<Self>(&body)?)
+    }
+}
+impl XvbPrivStats {
+    pub async fn request_api(address: &str, token: &str) -> Result<Bytes> {
+        let https = HttpsConnector::new();
+        let client = hyper::Client::builder().build(https);
+        if let Ok(request) = hyper::Request::builder()
+            .method("GET")
+            .uri(format!(
+                "{}/cgi-bin/p2pool_bonus_history_api.cgi?address={}&token={}",
+                XVB_URL, address, token
+            ))
+            .body(hyper::Body::empty())
+        {
+            match client.request(request).await {
+                Ok(mut resp) => match resp.status() {
+                    StatusCode::OK => Ok(hyper::body::to_bytes(resp.body_mut()).await?),
+                    StatusCode::UNPROCESSABLE_ENTITY => {
+                        bail!("the token is invalid for this xmr address.")
+                    }
+                    _ => bail!("The status of the response is not expected"),
+                },
+                Err(err) => {
+                    bail!("error from response: {}", err)
+                }
+            }
+        } else {
+            bail!("request could not be build")
+        }
+    }
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+pub struct XvbPrivStats {
+    pub fails: u8,
+    pub donor_1hr_avg: f32,
+    pub donor_24hr_avg: f32,
 }
 
 #[derive(Debug, Clone, Default, Display, Deserialize)]
@@ -256,24 +364,6 @@ impl PubXvbApi {
             tick,
             ..pub_api.clone()
         };
-    }
-    #[inline]
-    // Send an HTTP request to XvB's API, serialize it into [Self] and return it
-    async fn request_xvb_public_api(
-        client: hyper::Client<HttpsConnector<HttpConnector>>,
-        api_uri: &str,
-    ) -> std::result::Result<Self, anyhow::Error> {
-        let request = hyper::Request::builder()
-            .method("GET")
-            .uri(api_uri)
-            .body(hyper::Body::empty())?;
-        let response =
-            tokio::time::timeout(std::time::Duration::from_secs(8), client.request(request))
-                .await?;
-        // let response = client.request(request).await;
-
-        let body = hyper::body::to_bytes(response?.body_mut()).await?;
-        Ok(serde_json::from_slice::<Self>(&body)?)
     }
 }
 
@@ -323,8 +413,7 @@ fn signal_interrupt(
 mod test {
     use std::thread;
 
-    use super::PubXvbApi;
-    use crate::utils::constants::XVB_URL_PUBLIC_API;
+    use super::XvbPubStats;
     use hyper::Client;
     use hyper_tls::HttpsConnector;
 
@@ -337,9 +426,7 @@ mod test {
         dbg!(new_data);
     }
     #[tokio::main]
-    async fn corr(client: Client<HttpsConnector<hyper::client::HttpConnector>>) -> PubXvbApi {
-        PubXvbApi::request_xvb_public_api(client, XVB_URL_PUBLIC_API)
-            .await
-            .unwrap()
+    async fn corr(client: Client<HttpsConnector<hyper::client::HttpConnector>>) -> XvbPubStats {
+        XvbPubStats::request_api(client).await.unwrap()
     }
 }
