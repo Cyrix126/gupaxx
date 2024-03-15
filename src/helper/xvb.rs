@@ -61,24 +61,25 @@ impl Helper {
         state_xvb: &crate::disk::state::Xvb,
         state_p2pool: &crate::disk::state::P2pool,
     ) {
+        info!("XvB | setting state to Middle");
         lock2!(helper, xvb).state = ProcessState::Middle;
-
-        let https = HttpsConnector::new();
-        let client = hyper::Client::builder().build(https);
+        info!("XvB | cloning helper arc fields");
         let gui_api = Arc::clone(&lock!(helper).gui_api_xvb);
         let pub_api = Arc::clone(&lock!(helper).pub_api_xvb);
         let process = Arc::clone(&lock!(helper).xvb);
         // needed to see if it is alive. For XvB process to function completely, p2pool node must be alive to check the shares in the pplns window.
         let process_p2pool = Arc::clone(&lock!(helper).p2pool);
         let gui_api_p2pool = Arc::clone(&lock!(helper).gui_api_p2pool);
+        info!("XvB | cloning of state");
         let state_xvb_check = state_xvb.clone();
         let state_p2pool_check = state_p2pool.clone();
         // Reset before printing to output.
         // Need to reset because values of stats would stay otherwise which could bring confusion even if panel is with a disabled theme.
+        info!("XvB | resetting pub and gui");
         *lock!(pub_api) = PubXvbApi::new();
         *lock!(gui_api) = PubXvbApi::new();
         // 2. Set process state
-        debug!("XvB | Setting process state...");
+        info!("XvB | Setting process state...");
         {
             let mut lock = lock!(process);
             lock.state = ProcessState::Middle;
@@ -86,11 +87,23 @@ impl Helper {
             lock.start = Instant::now();
         }
         // verify if token and address are existent on XvB server
+
+        info!("XvB | rt runtime");
         let rt = tokio::runtime::Runtime::new().unwrap();
+        info!("XvB | client");
+        let https = HttpsConnector::new();
+        let client = Arc::new(hyper::Client::builder().build(https));
+        let client_test = client.clone();
         let resp: anyhow::Result<()> = rt.block_on(async move {
-            XvbPrivStats::request_api(&state_p2pool_check.address, &state_xvb_check.token).await?;
+            XvbPrivStats::request_api(
+                &client_test,
+                &state_p2pool_check.address,
+                &state_xvb_check.token,
+            )
+            .await?;
             Ok(())
         });
+        info!("XvB | verify address and token");
         match resp {
             Ok(_) => {
                 let mut lock = lock!(process);
@@ -111,31 +124,35 @@ impl Helper {
                 lock!(process).state = ProcessState::NotMining;
             }
         }
+        info!("XvB | verify p2pool node");
         if !lock!(process_p2pool).is_alive() {
             // send to console: p2pool process is not running
             warn!("Xvb | Start ... Partially failed because P2pool instance is not running.");
             // output the error to console
             if let Err(e) = writeln!(
                 lock!(gui_api).output,
-                "\nFailure to completely start XvB process because p2pool instance is not running.\n",
+                "Failure to completely start XvB process because p2pool instance is not running.\n",
             ) {
                 error!("XvB Watchdog | GUI status write failed: {}", e);
             }
 
             lock!(process).state = ProcessState::Syncing;
         }
+        info!("XvB | print to console state");
         if lock!(process).state != ProcessState::Alive {
-            if let Err(e) = writeln!(lock!(gui_api).output, "\n{}\n", XVB_PUBLIC_ONLY,) {
+            if let Err(e) = writeln!(lock!(gui_api).output, "{}\n", XVB_PUBLIC_ONLY,) {
                 error!("XvB Watchdog | GUI status write failed: {}", e);
             }
         } else {
             info!("XvB started");
-            if let Err(e) = writeln!(lock!(gui_api).output, "\nXvB started\n") {
+            if let Err(e) = writeln!(lock!(gui_api).output, "XvB started\n") {
                 error!("XvB Watchdog | GUI status write failed: {}", e);
             }
         }
+        info!("XvB | clone state for thread");
         let state_xvb_thread = state_xvb.clone();
         let state_p2pool_thread = state_p2pool.clone();
+        info!("XvB | spawn watchdog");
         thread::spawn(move || {
             Self::spawn_xvb_watchdog(
                 client,
@@ -151,7 +168,7 @@ impl Helper {
     }
     #[tokio::main]
     async fn spawn_xvb_watchdog(
-        client: hyper::Client<HttpsConnector<HttpConnector>>,
+        client: Arc<hyper::Client<HttpsConnector<HttpConnector>>>,
         gui_api: Arc<Mutex<PubXvbApi>>,
         pub_api: Arc<Mutex<PubXvbApi>>,
         process: Arc<Mutex<Process>>,
@@ -188,7 +205,7 @@ impl Helper {
                         lock!(process).state = ProcessState::Alive;
                         if let Err(e) = writeln!(
                             lock!(gui_api).output,
-                            "\nXvB is now started because p2pool node came online.\n",
+                            "XvB is now started because p2pool node came online.\n",
                         ) {
                             error!("XvB Watchdog | GUI status write failed: {}", e);
                         }
@@ -200,7 +217,7 @@ impl Helper {
                         lock!(process).state = ProcessState::Alive;
                         if let Err(e) = writeln!(
                             lock!(gui_api).output,
-                            "\nXvB is now partially stopped because p2pool node came offline.\n",
+                            "XvB is now partially stopped because p2pool node came offline.\n",
                         ) {
                             error!("XvB Watchdog | GUI status write failed: {}", e);
                         }
@@ -221,7 +238,7 @@ impl Helper {
             let since = lock!(gui_api).tick;
             if since >= 60 || since == 0 {
                 debug!("XvB Watchdog | Attempting HTTP public API request...");
-                match XvbPubStats::request_api(client.clone()).await {
+                match XvbPubStats::request_api(&client).await {
                     Ok(new_data) => {
                         debug!("XvB Watchdog | HTTP API request OK");
                         lock!(&pub_api).stats_pub = new_data;
@@ -247,7 +264,13 @@ impl Helper {
                 // only if private API is accessible, NotMining here means that the token and address is not registered on the XvB website.
                 if lock!(process).state == ProcessState::Alive {
                     // reload private stats
-                    match XvbPrivStats::request_api(&state_p2pool.address, &state_xvb.token).await {
+                    match XvbPrivStats::request_api(
+                        &client,
+                        &state_p2pool.address,
+                        &state_xvb.token,
+                    )
+                    .await
+                    {
                         Ok(b) => {
                             debug!("XvB Watchdog | HTTP API request OK");
                             let new_data = match serde_json::from_slice::<XvbPrivStats>(&b) {
@@ -380,7 +403,7 @@ impl XvbPubStats {
     #[inline]
     // Send an HTTP request to XvB's API, serialize it into [Self] and return it
     async fn request_api(
-        client: hyper::Client<HttpsConnector<HttpConnector>>,
+        client: &hyper::Client<HttpsConnector<HttpConnector>>,
     ) -> std::result::Result<Self, anyhow::Error> {
         let request = hyper::Request::builder()
             .method("GET")
@@ -396,9 +419,11 @@ impl XvbPubStats {
     }
 }
 impl XvbPrivStats {
-    pub async fn request_api(address: &str, token: &str) -> Result<Bytes> {
-        let https = HttpsConnector::new();
-        let client = hyper::Client::builder().build(https);
+    pub async fn request_api(
+        client: &hyper::Client<HttpsConnector<HttpConnector>>,
+        address: &str,
+        token: &str,
+    ) -> Result<Bytes> {
         if let Ok(request) = hyper::Request::builder()
             .method("GET")
             .uri(format!(
@@ -499,7 +524,7 @@ fn signal_interrupt(
         // This is written directly into the GUI API, because sometimes the 900ms event loop can't catch it.
         if let Err(e) = writeln!(
             lock!(gui_api).output,
-            "{}\nXvb stopped | Uptime: [{}] | \n{}\n\n\n\n",
+            "{}Xvb stopped | Uptime: [{}] | \n{}\n\n\n\n",
             HORI_CONSOLE,
             Uptime::from(uptime),
             HORI_CONSOLE
@@ -541,6 +566,6 @@ mod test {
     }
     #[tokio::main]
     async fn corr(client: Client<HttpsConnector<hyper::client::HttpConnector>>) -> XvbPubStats {
-        XvbPubStats::request_api(client).await.unwrap()
+        XvbPubStats::request_api(&client).await.unwrap()
     }
 }
