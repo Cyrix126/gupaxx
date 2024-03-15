@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
-use egui::TextStyle::Name;
-use egui::{vec2, Hyperlink, Image, Layout, RichText, TextEdit, Ui, Vec2};
+use egui::TextStyle::{self, Name};
+use egui::{vec2, Hyperlink, Image, RichText, TextEdit, Ui, Vec2};
 use log::debug;
 
 use crate::helper::xvb::PubXvbApi;
@@ -28,10 +28,7 @@ impl crate::disk::state::Xvb {
         api: &Arc<Mutex<PubXvbApi>>,
         xvb_is_alive: bool,
     ) {
-        ui.reset_style();
         let website_height = size.y / 10.0;
-        // let width = size.x - SPACE;
-        // let height = size.y - SPACE;
         let width = size.x;
         // logo and website link
         ui.vertical_centered(|ui| {
@@ -84,36 +81,21 @@ impl crate::disk::state::Xvb {
                 RED,
             )
         };
-        // let width = width - SPACE;
-        // ui.spacing_mut().text_edit_width = (width) - (SPACE * 3.0);
+        ui.add_space(SPACE * 2.0);
         ui.group(|ui| {
-            ui.horizontal(|ui| {
-                // why does this group is not centered into the parent group ?
-                ui.with_layout(Layout::left_to_right(egui::Align::Center), |ui| {
-                    ui.group(|ui| {
-                        ui.colored_label(color, text);
-                        // ui.add_sized(
-                        //     [width / 8.0, text_edit],
-                        //     Label::new(RichText::new(text).color(color)),
-                        // );
-                        ui.add(
-                            TextEdit::singleline(&mut self.token)
-                                .char_limit(XVB_TOKEN_LEN)
-                                .desired_width(width / 8.0)
-                                .vertical_align(egui::Align::Center),
-                        );
-                    })
-                    .response
-                    .on_hover_text_at_pointer(XVB_HELP);
-                    // hero option
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        ui.add_space(width / 24.0);
-                        ui.checkbox(&mut self.hero, "Hero")
-                            .on_hover_text(XVB_HERO_SELECT);
-                    })
-                });
-            })
-        });
+            ui.colored_label(color, text);
+            ui.add(
+                TextEdit::singleline(&mut self.token)
+                    .char_limit(XVB_TOKEN_LEN)
+                    .desired_width(ui.text_style_height(&TextStyle::Small) * XVB_TOKEN_LEN as f32)
+                    .vertical_align(egui::Align::Center),
+            );
+        })
+        .response
+        .on_hover_text_at_pointer(XVB_HELP);
+        ui.add_space(SPACE * 2.0);
+        ui.checkbox(&mut self.hero, "Hero")
+            .on_hover_text(XVB_HERO_SELECT);
         // need to warn the user if no address is set in p2pool tab
         if !Regexes::addr_ok(address) {
             debug!("XvB Tab | Rendering warning text");
@@ -124,6 +106,7 @@ impl crate::disk::state::Xvb {
         let priv_stats = &lock!(api).stats_priv;
         ui.set_enabled(xvb_is_alive);
         // ui.vertical_centered(|ui| {
+        ui.add_space(SPACE * 2.0);
         ui.horizontal(|ui| {
             // widget takes a third less space for two separator.
             let width_stat = (ui.available_width() / 5.0)
