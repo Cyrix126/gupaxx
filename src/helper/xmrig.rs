@@ -1,8 +1,11 @@
 use crate::helper::{ProcessName, ProcessSignal, ProcessState};
 use crate::regex::XMRIG_REGEX;
+use crate::utils::human::HumanNumber;
 use crate::utils::sudo::SudoState;
-use crate::{constants::*, human::*, macros::*};
+use crate::{constants::*, macros::*};
 use log::*;
+use readable::num::Unsigned;
+use readable::up::Uptime;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::{
@@ -405,7 +408,7 @@ impl Helper {
                         "Failed"
                     }
                 };
-                let uptime = HumanTime::into_human(start.elapsed());
+                let uptime = Uptime::from(start.elapsed());
                 info!(
                     "XMRig | Stopped ... Uptime was: [{}], Exit status: [{}]",
                     uptime, exit_status
@@ -469,7 +472,7 @@ impl Helper {
                         "Unknown Error"
                     }
                 };
-                let uptime = HumanTime::into_human(start.elapsed());
+                let uptime = Uptime::from(start.elapsed());
                 info!(
                     "XMRig | Stopped ... Uptime was: [{}], Exit status: [{}]",
                     uptime, exit_status
@@ -598,13 +601,13 @@ impl ImgXmrig {
 #[derive(Debug, Clone)]
 pub struct PubXmrigApi {
     pub output: String,
-    pub uptime: HumanTime,
+    pub uptime: Duration,
     pub worker_id: String,
-    pub resources: HumanNumber,
-    pub hashrate: HumanNumber,
-    pub diff: HumanNumber,
-    pub accepted: HumanNumber,
-    pub rejected: HumanNumber,
+    pub resources: String,
+    pub hashrate: String,
+    pub diff: String,
+    pub accepted: String,
+    pub rejected: String,
 
     pub hashrate_raw: f32,
 }
@@ -619,13 +622,13 @@ impl PubXmrigApi {
     pub fn new() -> Self {
         Self {
             output: String::new(),
-            uptime: HumanTime::new(),
-            worker_id: "???".to_string(),
-            resources: HumanNumber::unknown(),
-            hashrate: HumanNumber::unknown(),
-            diff: HumanNumber::unknown(),
-            accepted: HumanNumber::unknown(),
-            rejected: HumanNumber::unknown(),
+            uptime: Duration::from_secs(0),
+            worker_id: UNKNOWN_DATA.to_string(),
+            resources: UNKNOWN_DATA.to_string(),
+            hashrate: UNKNOWN_DATA.to_string(),
+            diff: UNKNOWN_DATA.to_string(),
+            accepted: UNKNOWN_DATA.to_string(),
+            rejected: UNKNOWN_DATA.to_string(),
             hashrate_raw: 0.0,
         }
     }
@@ -661,7 +664,7 @@ impl PubXmrigApi {
                 public.output.push_str(&std::mem::take(&mut *output_pub));
             }
             // Update uptime
-            public.uptime = HumanTime::into_human(elapsed);
+            public.uptime = elapsed;
         }
 
         // 2. Check for "new job"/"no active...".
@@ -687,11 +690,11 @@ impl PubXmrigApi {
 
         *public = Self {
             worker_id: private.worker_id,
-            resources: HumanNumber::from_load(private.resources.load_average),
-            hashrate: HumanNumber::from_hashrate(private.hashrate.total),
-            diff: HumanNumber::from_u128(private.connection.diff),
-            accepted: HumanNumber::from_u128(private.connection.accepted),
-            rejected: HumanNumber::from_u128(private.connection.rejected),
+            resources: HumanNumber::from_load(private.resources.load_average).to_string(),
+            hashrate: HumanNumber::from_hashrate(private.hashrate.total).to_string(),
+            diff: Unsigned::from(private.connection.diff as usize).to_string(),
+            accepted: Unsigned::from(private.connection.accepted as usize).to_string(),
+            rejected: Unsigned::from(private.connection.rejected as usize).to_string(),
             hashrate_raw,
             ..std::mem::take(&mut *public)
         }

@@ -37,7 +37,6 @@ egui = "0.26.2"
 egui_extras = { version = "0.26.2", features = ["image"] }
 ## 2023-12-28: https://github.com/hinto-janai/gupax/issues/68
 eframe = { version = "0.26.2", default-features = false, features = ["glow"] }
-
 ## 2023-02-06: The below gets fixed by using the [wgpu] backend instead of [glow]
 ## It also fixes crashes on CPU-based graphics. Only used for Windows.
 ## Using [wgpu] actually crashes macOS (fixed in 0.20.x though).
@@ -82,7 +81,7 @@ serde-this-or-that = "0.4.2"
 tar = "0.4.40"
 flate2 = "1.0"
 sudo = "0.6.0"
-
+readable = "0.16"
 # macOS
 [target.'cfg(target_os = "macos")'.dependencies]
 # On apple-darwin targets there is an issue with the native and rustls
@@ -97,6 +96,8 @@ openssl = { version = "0.10", features = ["vendored"] }
 # We don't even use `xz` in `flate2` but this gets dynamically
 # linked as well which causes problems, so statically link it.
 lzma-sys = { version = "0.1.20", features = ["static"] }
+[dev-dependencies]
+egui = {version = "0.26.2", features=["callstack"]}
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
 tls-api-native-tls = "0.9.0"

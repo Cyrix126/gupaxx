@@ -107,7 +107,7 @@ pub const XVB_DEAD: &str = "XvB process is offline";
 pub const XVB_FAILED: &str = "XvB process is misconfigured or the XvB node is offline";
 pub const XVB_MIDDLE: &str = "XvB is in the middle of (re)starting/stopping";
 pub const XVB_NOT_CONFIGURED: &str = "You need to insert an existent token before starting XvB";
-pub const XVB_PUBLIC_ONLY: &str = "XvB process is started only to get public stats";
+pub const XVB_PUBLIC_ONLY: &str = "XvB process is started only to get public stats.";
 
 // This is the typical space added when using
 // [ui.separator()] or [ui.group()]
@@ -420,6 +420,8 @@ pub const XVB_TOKEN_FIELD: &str = "Token";
 pub const XVB_FAILURE_FIELD: &str = "Failures";
 pub const XVB_DONATED_1H_FIELD: &str = "Donated last hour";
 pub const XVB_DONATED_24H_FIELD: &str = "Donated last 24 hours";
+pub const XVB_ROUND_TYPE_FIELD: &str = "Round";
+pub const XVB_WINNER_FIELD: &str = "Win";
 
 // CLI argument messages
 pub const ARG_HELP: &str = r#"USAGE: ./gupax [--flag]
@@ -442,6 +444,15 @@ the environment variable [RUST_LOG] set to a log level like so:
 pub const ARG_COPYRIGHT: &str = r#"Gupax is licensed under GPLv3.
 For more information, see link below:
 <https://github.com/hinto-janai/gupax>"#;
+
+// Unknown Data, replace HumanNumlber::unknown()
+pub const UNKNOWN_DATA: &str = "???";
+// Time PPLNS WINDOW in seconds
+// it is an estimation based on number of block in a pplns window and block time (10s). The difficulty of the network should adapt to get close to this value.
+pub const TIME_PPLNS_WINDOW_MINI: Duration = Duration::from_secs(2160 * 10);
+pub const TIME_PPLNS_WINDOW_MAIN: Duration = Duration::from_secs(363 * 10);
+
+use std::time::Duration;
 
 //---------------------------------------------------------------------------------------------------- Visuals
 use egui::epaint::{Rounding, Shadow, Stroke};

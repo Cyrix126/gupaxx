@@ -1,6 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use egui::{Label, RichText, SelectableLabel, Slider, TextEdit, Vec2};
+use readable::num::Unsigned;
 
 use crate::{
     disk::{
@@ -9,7 +10,7 @@ use crate::{
         status::{Hash, PayoutView},
     },
     helper::p2pool::PubP2poolApi,
-    utils::{constants::*, human::HumanNumber, macros::lock},
+    utils::{constants::*, macros::lock},
 };
 
 impl Status {
@@ -267,7 +268,7 @@ impl Status {
                         );
                         ui.add_sized(
                             [width, text],
-                            Label::new(format!("{} H/s", HumanNumber::from_u64(hashrate))),
+                            Label::new(format!("{} H/s", Unsigned::from(hashrate))),
                         );
                         ui.add_sized(
                             [width, text],

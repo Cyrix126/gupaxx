@@ -13,11 +13,11 @@
   - [x] link and message hovering explaining registration and needs to read the rules.
   - [x] token input
   - [x] hero checkbox
-  - [ ] log section
-    - [ ] round type in
-    - [ ] win or loose
+  - [x] log section
     - [x] state of XvB process
   - [x] private stats
+      - [x] round type in
+      - [x] win or loose
   - [ ] new process for XvB
     - [x] status process XvB
     - [x] public information from [API](https://xmrvsbeast.com/p2pool/stats)

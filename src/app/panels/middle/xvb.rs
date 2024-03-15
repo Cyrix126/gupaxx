@@ -7,7 +7,8 @@ use log::debug;
 use crate::helper::xvb::PubXvbApi;
 use crate::utils::constants::{
     GREEN, LIGHT_GRAY, ORANGE, RED, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD, XVB_FAILURE_FIELD,
-    XVB_HELP, XVB_HERO_SELECT, XVB_TOKEN_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES,
+    XVB_HELP, XVB_HERO_SELECT, XVB_ROUND_TYPE_FIELD, XVB_TOKEN_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES,
+    XVB_WINNER_FIELD,
 };
 use crate::utils::macros::lock;
 use crate::utils::regex::Regexes;
@@ -125,11 +126,15 @@ impl crate::disk::state::Xvb {
         // ui.vertical_centered(|ui| {
         ui.horizontal(|ui| {
             // widget takes a third less space for two separator.
-            let width_stat =
-                (ui.available_width() / 3.0) - (12.0 + ui.style().spacing.item_spacing.x) / 3.0;
+            let width_stat = (ui.available_width() / 5.0)
+                - ((24.0 + ui.style().spacing.item_spacing.x + SPACE) / 5.0);
             // 0.0 means minimum
             let height_stat = 0.0;
             let size_stat = vec2(width_stat, height_stat);
+            let round = match &priv_stats.round_participate {
+                Some(r) => r.to_string(),
+                None => "None".to_string(),
+            };
             ui.add_sized(size_stat, |ui: &mut Ui| {
                 ui.group(|ui| {
                     let size_stat = vec2(
@@ -159,12 +164,36 @@ impl crate::disk::state::Xvb {
                         })
                         .response
                     });
+                    ui.separator();
+                    ui.add_enabled_ui(priv_stats.round_participate.is_some(), |ui| {
+                        ui.add_sized(size_stat, |ui: &mut Ui| {
+                            ui.vertical_centered(|ui| {
+                                ui.label(XVB_ROUND_TYPE_FIELD);
+                                ui.label(round);
+                            })
+                            .response
+                        })
+                        .on_disabled_hover_text("You do not yet have a share in the PPLNS Window.");
+                    });
+                    ui.separator();
+                    ui.add_sized(size_stat, |ui: &mut Ui| {
+                        ui.vertical_centered(|ui| {
+                            ui.label(XVB_WINNER_FIELD);
+                            ui.label(
+                                priv_stats
+                                    .win_current
+                                    .then(|| "You are Winning the round !")
+                                    .unwrap_or("You are not the winner"),
+                            );
+                        })
+                        .response
+                    });
                 })
                 .response
             });
         });
         // Rules link help
-        ui.add_space(ui.available_height() / 4.0);
+        ui.add_space(ui.available_height() / 2.0);
         ui.vertical_centered(|ui| {
             ui.hyperlink_to("Rules", XVB_URL_RULES)
                 .on_hover_text("Click here to read the rules and understand how the raffle works.");

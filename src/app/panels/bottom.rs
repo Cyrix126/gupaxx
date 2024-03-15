@@ -644,11 +644,11 @@ fn status_xvb(state: ProcessState, ui: &mut Ui, size: Vec2) {
             color = RED;
             XVB_FAILED
         }
-        NotMining => {
+        NotMining | Syncing => {
             color = ORANGE;
             XVB_PUBLIC_ONLY
         }
-        Middle | Waiting | Syncing => {
+        Middle | Waiting => {
             color = YELLOW;
             XVB_MIDDLE
         }

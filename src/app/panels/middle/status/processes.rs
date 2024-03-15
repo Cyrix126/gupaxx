@@ -1,4 +1,5 @@
 use egui::{ScrollArea, Ui, Vec2};
+use readable::up::UptimeFull;
 use std::sync::{Arc, Mutex};
 
 use crate::disk::state::Status;
@@ -164,7 +165,17 @@ fn p2pool(
                 Label::new(RichText::new("Shares Found").underline().color(BONE)),
             )
             .on_hover_text(STATUS_P2POOL_SHARES);
-            ui.add_sized([width, height], Label::new(format!("{}", api.shares_found)));
+            ui.add_sized(
+                [width, height],
+                Label::new(format!(
+                    "{}",
+                    if let Some(s) = api.shares_found {
+                        s.to_string()
+                    } else {
+                        UNKNOWN_DATA.to_string()
+                    }
+                )),
+            );
             ui.add_sized(
                 [width, height],
                 Label::new(RichText::new("Payouts").underline().color(BONE)),
@@ -293,7 +304,10 @@ fn xmrig(
                 Label::new(RichText::new("Uptime").underline().color(BONE)),
             )
             .on_hover_text(STATUS_XMRIG_UPTIME);
-            ui.add_sized([width, height], Label::new(format!("{}", api.uptime)));
+            ui.add_sized(
+                [width, height],
+                Label::new(UptimeFull::from(api.uptime).as_str()),
+            );
             ui.add_sized(
                 [width, height],
                 Label::new(

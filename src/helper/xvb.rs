@@ -5,6 +5,7 @@ use hyper::client::HttpConnector;
 use hyper::StatusCode;
 use hyper_tls::HttpsConnector;
 use log::{debug, error, info, warn};
+use readable::up::Uptime;
 use serde::Deserialize;
 use std::fmt::Write;
 use std::{
@@ -13,16 +14,16 @@ use std::{
     time::Instant,
 };
 
-use crate::utils::constants::XVB_URL;
+use crate::utils::constants::{XVB_PUBLIC_ONLY, XVB_URL};
 use crate::{
     helper::{ProcessSignal, ProcessState},
     utils::{
         constants::{HORI_CONSOLE, XVB_URL_PUBLIC_API},
-        human::HumanTime,
         macros::{lock, lock2, sleep},
     },
 };
 
+use super::p2pool::PubP2poolApi;
 use super::{Helper, Process};
 
 impl Helper {
@@ -31,11 +32,6 @@ impl Helper {
         info!("XvB | Attempting to stop...");
         lock2!(helper, xvb).signal = ProcessSignal::Stop;
         lock2!(helper, xvb).state = ProcessState::Middle;
-        // Reset stats
-        let gui_api = Arc::clone(&lock!(helper).gui_api_xvb);
-        let pub_api = Arc::clone(&lock!(helper).pub_api_xvb);
-        *lock!(pub_api) = PubXvbApi::new();
-        *lock!(gui_api) = PubXvbApi::new();
     }
     pub fn restart_xvb(
         helper: &Arc<Mutex<Self>>,
@@ -72,9 +68,15 @@ impl Helper {
         let gui_api = Arc::clone(&lock!(helper).gui_api_xvb);
         let pub_api = Arc::clone(&lock!(helper).pub_api_xvb);
         let process = Arc::clone(&lock!(helper).xvb);
+        // needed to see if it is alive. For XvB process to function completely, p2pool node must be alive to check the shares in the pplns window.
+        let process_p2pool = Arc::clone(&lock!(helper).p2pool);
+        let gui_api_p2pool = Arc::clone(&lock!(helper).gui_api_p2pool);
         let state_xvb_check = state_xvb.clone();
         let state_p2pool_check = state_p2pool.clone();
-
+        // Reset before printing to output.
+        // Need to reset because values of stats would stay otherwise which could bring confusion even if panel is with a disabled theme.
+        *lock!(pub_api) = PubXvbApi::new();
+        *lock!(gui_api) = PubXvbApi::new();
         // 2. Set process state
         debug!("XvB | Setting process state...");
         {
@@ -96,16 +98,40 @@ impl Helper {
             }
             Err(err) => {
                 // send to console: token non existent for address on XvB server
-                warn!("Xvb | Start ... Failed because token and associated address are not existent on XvB server: {}", err);
+                warn!("Xvb | Start ... Partially failed because token and associated address are not existent on XvB server: {}\n", err);
                 // output the error to console
                 if let Err(e) = writeln!(
                     lock!(gui_api).output,
-                    "Failure to retrieve private stats from XvB server.\nError: {}",
-                    err
+                    "Failure to retrieve private stats from XvB server.\nError: {}\n{}\n",
+                    err,
+                    XVB_PUBLIC_ONLY
                 ) {
                     error!("XvB Watchdog | GUI status write failed: {}", e);
                 }
-                lock2!(helper, xvb).state = ProcessState::NotMining;
+                lock!(process).state = ProcessState::NotMining;
+            }
+        }
+        if !lock!(process_p2pool).is_alive() {
+            // send to console: p2pool process is not running
+            warn!("Xvb | Start ... Partially failed because P2pool instance is not running.");
+            // output the error to console
+            if let Err(e) = writeln!(
+                lock!(gui_api).output,
+                "\nFailure to completely start XvB process because p2pool instance is not running.\n",
+            ) {
+                error!("XvB Watchdog | GUI status write failed: {}", e);
+            }
+
+            lock!(process).state = ProcessState::Syncing;
+        }
+        if lock!(process).state != ProcessState::Alive {
+            if let Err(e) = writeln!(lock!(gui_api).output, "\n{}\n", XVB_PUBLIC_ONLY,) {
+                error!("XvB Watchdog | GUI status write failed: {}", e);
+            }
+        } else {
+            info!("XvB started");
+            if let Err(e) = writeln!(lock!(gui_api).output, "\nXvB started\n") {
+                error!("XvB Watchdog | GUI status write failed: {}", e);
             }
         }
         let state_xvb_thread = state_xvb.clone();
@@ -118,6 +144,8 @@ impl Helper {
                 process,
                 &state_xvb_thread,
                 &state_p2pool_thread,
+                gui_api_p2pool,
+                process_p2pool,
             );
         });
     }
@@ -129,21 +157,57 @@ impl Helper {
         process: Arc<Mutex<Process>>,
         state_xvb: &crate::disk::state::Xvb,
         state_p2pool: &crate::disk::state::P2pool,
+        gui_api_p2pool: Arc<Mutex<PubP2poolApi>>,
+        process_p2pool: Arc<Mutex<Process>>,
     ) {
-        info!("XvB started");
-
-        if let Err(e) = writeln!(
-            lock!(gui_api).output,
-            "{}\nXvb started\n{}\n\n",
-            HORI_CONSOLE,
-            HORI_CONSOLE
-        ) {
-            error!("XvB Watchdog | GUI status write failed: {}", e);
-        }
+        // see how many shares are found at p2pool node only if XvB is started successfully. If it wasn't, maybe P2pool is node not running.
+        let mut old_shares = if lock!(process).state == ProcessState::Alive {
+            // a loop until the value is some to let p2pool work and get first value.
+            loop {
+                if let Some(s) = lock!(gui_api_p2pool).shares_found {
+                    break s;
+                }
+                std::thread::sleep(std::time::Duration::from_secs(1));
+            }
+        } else {
+            // if Syncing state, this value is not needed
+            0
+        };
+        // let mut old_shares = 0;
+        let mut time_last_share: Option<Instant> = None;
         let start = lock!(process).start;
         info!("XvB | Entering watchdog mode... woof!");
         loop {
             debug!("XvB Watchdog | ----------- Start of loop -----------");
+            // verify if p2pool node is running with correct token.
+            if lock!(process).state != ProcessState::NotMining {
+                if lock!(process_p2pool).is_alive() {
+                    // verify if state is to changed
+                    if lock!(process).state == ProcessState::Syncing {
+                        info!("XvB | started this time with p2pool");
+                        lock!(process).state = ProcessState::Alive;
+                        if let Err(e) = writeln!(
+                            lock!(gui_api).output,
+                            "\nXvB is now started because p2pool node came online.\n",
+                        ) {
+                            error!("XvB Watchdog | GUI status write failed: {}", e);
+                        }
+                    }
+                } else {
+                    // verify if the state is changing because p2pool is not alive anymore.
+                    if lock!(process).state != ProcessState::Syncing {
+                        info!("XvB | stop partially because p2pool is not alive anymore.");
+                        lock!(process).state = ProcessState::Alive;
+                        if let Err(e) = writeln!(
+                            lock!(gui_api).output,
+                            "\nXvB is now partially stopped because p2pool node came offline.\n",
+                        ) {
+                            error!("XvB Watchdog | GUI status write failed: {}", e);
+                        }
+                        lock!(process).state = ProcessState::Syncing
+                    }
+                }
+            }
             // Set timer
             let now = Instant::now();
             // check signal
@@ -151,6 +215,7 @@ impl Helper {
             if signal_interrupt(process.clone(), start, gui_api.clone()) {
                 break;
             }
+            // verify if
             // Send an HTTP API request only if one minute is passed since the last.
             // if since is 0, send request because it's the first time.
             let since = lock!(gui_api).tick;
@@ -179,44 +244,86 @@ impl Helper {
                     }
                 }
                 debug!("XvB Watchdog | Attempting HTTP private API request...");
-                match XvbPrivStats::request_api(&state_p2pool.address, &state_xvb.token).await {
-                    Ok(b) => {
-                        debug!("XvB Watchdog | HTTP API request OK");
-                        let new_data = match serde_json::from_slice::<XvbPrivStats>(&b) {
-                            Ok(data) => data,
-                            Err(e) => {
-                                warn!("XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}", e);
-                                // output the error to console
-                                if let Err(e) = writeln!(
+                // only if private API is accessible, NotMining here means that the token and address is not registered on the XvB website.
+                if lock!(process).state == ProcessState::Alive {
+                    // reload private stats
+                    match XvbPrivStats::request_api(&state_p2pool.address, &state_xvb.token).await {
+                        Ok(b) => {
+                            debug!("XvB Watchdog | HTTP API request OK");
+                            let new_data = match serde_json::from_slice::<XvbPrivStats>(&b) {
+                                Ok(data) => data,
+                                Err(e) => {
+                                    warn!("XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}", e);
+                                    // output the error to console
+                                    if let Err(e) = writeln!(
                             lock!(gui_api).output,
                             "XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}", e
                         ) {
                             error!("XvB Watchdog | GUI status write failed: {}", e);
                         }
-                                break;
-                            }
-                        };
-                        lock!(&pub_api).stats_priv = new_data;
-                    }
-                    Err(err) => {
-                        warn!(
+                                    break;
+                                }
+                            };
+                            lock!(&pub_api).stats_priv = new_data;
+                        }
+                        Err(err) => {
+                            warn!(
                             "XvB Watchdog | Could not send HTTP private API request to: {}\n:{}",
                             XVB_URL, err
                         );
-                        // output the error to console
-                        if let Err(e) = writeln!(
-                            lock!(gui_api).output,
-                            "Failure to retrieve private stats from {}",
-                            XVB_URL
-                        ) {
-                            error!("XvB Watchdog | GUI status write failed: {}", e);
+                            // output the error to console
+                            if let Err(e) = writeln!(
+                                lock!(gui_api).output,
+                                "Failure to retrieve private stats from {}",
+                                XVB_URL
+                            ) {
+                                error!("XvB Watchdog | GUI status write failed: {}", e);
+                            }
+                            lock!(process).state = ProcessState::Failed;
+                            break;
                         }
-                        lock!(process).state = ProcessState::Failed;
-                        break;
+                    }
+                    // check if share is in pplns window
+                    // p2pool local api show only found shares and not current shares. So we need to keep track of the time
+                    // the height of p2pool would be nicer but the p2pool api doesn't show it.
+                    let (share, new_time) = lock!(gui_api_p2pool)
+                        .is_share_present_in_ppplns_window(
+                            &mut old_shares,
+                            time_last_share,
+                            state_p2pool.mini,
+                        );
+                    if let Some(n) = new_time {
+                        time_last_share = Some(n);
+                    }
+
+                    //     // verify in which round type we are
+                    let round = if share {
+                        let stats_priv = &lock!(pub_api).stats_priv;
+                        match (
+                            stats_priv.donor_1hr_avg / 1000.0,
+                            stats_priv.donor_24hr_avg / 1000.0,
+                        ) {
+                            x if x.0 > 1000.0 && x.1 > 1000.0 => Some(XvbRound::DonorMega),
+                            x if x.0 > 100.0 && x.1 > 100.0 => Some(XvbRound::DonorWhale),
+                            x if x.0 > 10.0 && x.1 > 10.0 => Some(XvbRound::DonorVip),
+                            x if x.0 > 1.0 && x.1 > 1.0 => Some(XvbRound::Donor),
+                            (_, _) => Some(XvbRound::Vip),
+                        }
+                    } else {
+                        None
+                    };
+                    // refresh the round we participate
+                    lock!(&pub_api).stats_priv.round_participate = round;
+
+                    // verify if we are the winner of the current round
+                    if &lock!(pub_api).stats_pub.winner
+                        == Helper::head_tail_of_monero_address(&state_p2pool.address).as_str()
+                    {
+                        lock!(pub_api).stats_priv.win_current = true
                     }
                 }
 
-                lock!(gui_api).tick += 0;
+                lock!(gui_api).tick = 0;
             }
 
             lock!(gui_api).tick += 1;
@@ -240,7 +347,7 @@ use serde_this_or_that::as_u64;
 #[derive(Debug, Clone, Default)]
 pub struct PubXvbApi {
     pub output: String,
-    pub uptime: HumanTime,
+    pub uptime: u64,
     pub tick: u8,
     pub stats_pub: XvbPubStats,
     pub stats_priv: XvbPrivStats,
@@ -323,6 +430,10 @@ pub struct XvbPrivStats {
     pub fails: u8,
     pub donor_1hr_avg: f32,
     pub donor_24hr_avg: f32,
+    #[serde(skip)]
+    pub win_current: bool,
+    #[serde(skip)]
+    pub round_participate: Option<XvbRound>,
 }
 
 #[derive(Debug, Clone, Default, Display, Deserialize)]
@@ -379,15 +490,18 @@ fn signal_interrupt(
     if lock!(process).signal == ProcessSignal::Stop {
         debug!("P2Pool Watchdog | Stop SIGNAL caught");
         // Wait to get the exit status
-        let uptime = HumanTime::into_human(start.elapsed());
-        info!("Xvb Watchdog | Stopped ... Uptime was: [{}]", uptime);
+        let uptime = start.elapsed();
+        info!(
+            "Xvb Watchdog | Stopped ... Uptime was: [{}]",
+            Uptime::from(uptime)
+        );
         // insert the signal into output of XvB
         // This is written directly into the GUI API, because sometimes the 900ms event loop can't catch it.
         if let Err(e) = writeln!(
             lock!(gui_api).output,
             "{}\nXvb stopped | Uptime: [{}] | \n{}\n\n\n\n",
             HORI_CONSOLE,
-            uptime,
+            Uptime::from(uptime),
             HORI_CONSOLE
         ) {
             error!("XvB Watchdog | GUI Uptime/Exit status write failed: {}", e);
@@ -399,7 +513,7 @@ fn signal_interrupt(
     // Check RESTART
     } else if lock!(process).signal == ProcessSignal::Restart {
         debug!("XvB Watchdog | Restart SIGNAL caught");
-        let uptime = HumanTime::into_human(start.elapsed());
+        let uptime = Uptime::from(start.elapsed());
         info!("XvB Watchdog | Stopped ... Uptime was: [{}]", uptime);
         // no output to console because service will be started with fresh output.
         debug!("XvB Watchdog | Restart SIGNAL done, breaking");

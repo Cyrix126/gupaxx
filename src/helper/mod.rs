@@ -742,7 +742,10 @@ mod test {
         assert_eq!(p.hashrate_15m.to_string(), "10,000");
         assert_eq!(p.hashrate_1h.to_string(), "20,000");
         assert_eq!(p.hashrate_24h.to_string(), "30,000");
-        assert_eq!(p.shares_found.to_string(), "1,000");
+        assert_eq!(
+            p.shares_found.expect("the value is set").to_string(),
+            "1,000"
+        );
         assert_eq!(p.average_effort.to_string(), "100.00%");
         assert_eq!(p.current_effort.to_string(), "200.00%");
         assert_eq!(p.connections.to_string(), "1,234");

@@ -1,9 +1,8 @@
 use std::sync::{Arc, Mutex};
 
-use crate::{
-    app::Benchmark, disk::state::Status, helper::xmrig::PubXmrigApi, utils::human::HumanNumber,
-};
+use crate::{app::Benchmark, disk::state::Status, helper::xmrig::PubXmrigApi};
 use egui::{Hyperlink, ProgressBar, Spinner, Vec2};
+use readable::num::{Float, Percent, Unsigned};
 
 use crate::utils::macros::lock;
 
@@ -67,7 +66,7 @@ impl Status {
                     .on_hover_text(STATUS_SUBMENU_YOUR_HIGH);
                     ui.add_sized(
                         [width, text],
-                        Label::new(format!("{} H/s", HumanNumber::from_f32(cpu.high))),
+                        Label::new(format!("{} H/s", Float::from_0(cpu.high.into()))),
                     );
                     ui.add_sized(
                         [width, text],
@@ -76,7 +75,7 @@ impl Status {
                     .on_hover_text(STATUS_SUBMENU_YOUR_AVERAGE);
                     ui.add_sized(
                         [width, text],
-                        Label::new(format!("{} H/s", HumanNumber::from_f32(cpu.average))),
+                        Label::new(format!("{} H/s", Float::from_0(cpu.average.into()))),
                     );
                     ui.add_sized(
                         [width, text],
@@ -85,7 +84,7 @@ impl Status {
                     .on_hover_text(STATUS_SUBMENU_YOUR_LOW);
                     ui.add_sized(
                         [width, text],
-                        Label::new(format!("{} H/s", HumanNumber::from_f32(cpu.low))),
+                        Label::new(format!("{} H/s", Float::from_0(cpu.low.into()))),
                     );
                 })
             })
@@ -96,7 +95,7 @@ impl Status {
             if xmrig_alive {
                 let api = lock!(xmrig_api);
                 let percent = (api.hashrate_raw / cpu.high) * 100.0;
-                let human = HumanNumber::to_percent(percent);
+                let human = Percent::from(percent);
                 if percent > 100.0 {
                     ui.add_sized(
                         [width, double],
@@ -188,31 +187,34 @@ impl Status {
                             ui.add_sized([cpu, text], Label::new(benchmark.cpu.as_str()));
                             ui.separator();
                             ui.add_sized([bar, text], ProgressBar::new(benchmark.percent / 100.0))
-                                .on_hover_text(HumanNumber::to_percent(benchmark.percent).as_str());
+                                .on_hover_text(Percent::from(benchmark.percent).as_str());
                             ui.separator();
                             ui.add_sized(
                                 [high, text],
-                                Label::new(HumanNumber::to_hashrate(benchmark.high).as_str()),
+                                Label::new(format!("{} H/s", Float::from_0(benchmark.high.into()))),
                             );
                             ui.separator();
                             ui.add_sized(
                                 [average, text],
-                                Label::new(HumanNumber::to_hashrate(benchmark.average).as_str()),
+                                Label::new(format!(
+                                    "{} H/s",
+                                    Float::from_0(benchmark.average.into())
+                                )),
                             );
                             ui.separator();
                             ui.add_sized(
                                 [low, text],
-                                Label::new(HumanNumber::to_hashrate(benchmark.low).as_str()),
+                                Label::new(format!("{} H/s", Float::from_0(benchmark.low.into()))),
                             );
                             ui.separator();
                             ui.add_sized(
                                 [rank, text],
-                                Label::new(HumanNumber::from_u16(benchmark.rank).as_str()),
+                                Label::new(Float::from(benchmark.low).as_str()),
                             );
                             ui.separator();
                             ui.add_sized(
                                 [bench, text],
-                                Label::new(HumanNumber::from_u16(benchmark.benchmarks).as_str()),
+                                Label::new(Unsigned::from(benchmark.benchmarks).as_str()),
                             );
                         })
                     });

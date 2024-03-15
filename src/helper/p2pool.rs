@@ -167,7 +167,7 @@ impl Helper {
 
     // Takes in a 95-char Monero address, returns the first and last
     // 6 characters separated with dots like so: [4abcde...abcdef]
-    fn head_tail_of_monero_address(address: &str) -> String {
+    pub fn head_tail_of_monero_address(address: &str) -> String {
         if address.len() < 95 {
             return "???".to_string();
         }
@@ -718,7 +718,7 @@ pub struct PubP2poolApi {
     pub hashrate_15m: HumanNumber,
     pub hashrate_1h: HumanNumber,
     pub hashrate_24h: HumanNumber,
-    pub shares_found: HumanNumber,
+    pub shares_found: Option<u64>,
     pub average_effort: HumanNumber,
     pub current_effort: HumanNumber,
     pub connections: HumanNumber,
@@ -775,7 +775,7 @@ impl PubP2poolApi {
             hashrate_15m: HumanNumber::unknown(),
             hashrate_1h: HumanNumber::unknown(),
             hashrate_24h: HumanNumber::unknown(),
-            shares_found: HumanNumber::unknown(),
+            shares_found: None,
             average_effort: HumanNumber::unknown(),
             current_effort: HumanNumber::unknown(),
             connections: HumanNumber::unknown(),
@@ -944,7 +944,7 @@ impl PubP2poolApi {
             hashrate_15m: HumanNumber::from_u64(local.hashrate_15m),
             hashrate_1h: HumanNumber::from_u64(local.hashrate_1h),
             hashrate_24h: HumanNumber::from_u64(local.hashrate_24h),
-            shares_found: HumanNumber::from_u64(local.shares_found),
+            shares_found: Some(local.shares_found),
             average_effort: HumanNumber::to_percent(local.average_effort),
             current_effort: HumanNumber::to_percent(local.current_effort),
             connections: HumanNumber::from_u32(local.connections),
@@ -1112,6 +1112,45 @@ impl PubP2poolApi {
             59 => "[**********************************************************  ]",
             60 => "[*********************************************************** ]",
             _ => "[************************************************************]",
+        }
+    }
+    // function to know if a share is in current window.
+    // If new share found, an instant of when it was found.
+    pub(super) fn is_share_present_in_ppplns_window(
+        &self,
+        old_shares: &mut u64,
+        last_time_found: Option<Instant>,
+        mini: bool,
+    ) -> (bool, Option<Instant>) {
+        if let Some(v) = self.shares_found {
+            if v > *old_shares {
+                // found new share
+                *old_shares = v;
+                return (true, Some(Instant::now()));
+            } else {
+                // no new share found this last minute, check if last share is still valid
+                if let Some(n) = last_time_found {
+                    // a share was found before, is it still valid ?
+                    let time_window = if mini {
+                        TIME_PPLNS_WINDOW_MINI
+                    } else {
+                        TIME_PPLNS_WINDOW_MAIN
+                    };
+                    if n.elapsed() > time_window {
+                        // if time is expired, no share is present in current PW
+                        (false, None)
+                    } else {
+                        // if time is not expired, at least one is present in current PW
+                        (true, None)
+                    }
+                } else {
+                    // no share found before and no new share found, so there is no share in current PW
+                    (false, None)
+                }
+            }
+        } else {
+            // data from p2pool is not ready yet, so no share in pplns window.
+            return (false, None);
         }
     }
 }
