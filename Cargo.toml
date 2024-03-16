@@ -76,12 +76,12 @@ strsim = "0.11.0"
 strip-ansi-escapes = "0.2.0"
 derive_more = {version="0.99.17", default-features=false, features=["display"]}
 serde-this-or-that = "0.4.2"
+readable = "0.16"
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
 tar = "0.4.40"
 flate2 = "1.0"
 sudo = "0.6.0"
-readable = "0.16"
 # macOS
 [target.'cfg(target_os = "macos")'.dependencies]
 # On apple-darwin targets there is an issue with the native and rustls
