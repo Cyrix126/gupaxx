@@ -1,7 +1,5 @@
-use anyhow::{Result};
-
-
-
+use anyhow::Result;
+use rand::{distributions::Alphanumeric, thread_rng, Rng};
 
 use super::*;
 use crate::{components::node::RemoteNode, disk::status::*};
@@ -242,6 +240,7 @@ pub struct Xmrig {
     pub selected_rig: String,
     pub selected_ip: String,
     pub selected_port: String,
+    pub token: String,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
@@ -363,6 +362,11 @@ impl Default for Xmrig {
             keepalive: false,
             current_threads: 1,
             max_threads: 1,
+            token: thread_rng()
+                .sample_iter(Alphanumeric)
+                .take(16)
+                .map(char::from)
+                .collect(),
         }
     }
 }

@@ -141,8 +141,18 @@ impl Helper {
         let gui_api = Arc::clone(&lock!(helper).gui_api_xmrig);
         let pub_api = Arc::clone(&lock!(helper).pub_api_xmrig);
         let path = path.to_path_buf();
+        let token = state.token.clone();
         thread::spawn(move || {
-            Self::spawn_xmrig_watchdog(process, gui_api, pub_api, args, path, sudo, api_ip_port);
+            Self::spawn_xmrig_watchdog(
+                process,
+                gui_api,
+                pub_api,
+                args,
+                path,
+                sudo,
+                api_ip_port,
+                &token,
+            );
         });
     }
 
@@ -189,6 +199,8 @@ impl Helper {
             args.push("127.0.0.1".to_string()); // HTTP API IP
             args.push("--http-port".to_string());
             args.push("18088".to_string()); // HTTP API Port
+            args.push(format!("--http-access-token={}", state.token)); // HTTP API Port
+            args.push("--http-no-restricted".to_string());
             if state.pause != 0 {
                 args.push("--pause-on-active".to_string());
                 args.push(state.pause.to_string());
@@ -313,6 +325,7 @@ impl Helper {
         path: std::path::PathBuf,
         sudo: Arc<Mutex<SudoState>>,
         mut api_ip_port: String,
+        token: &str,
     ) {
         // 1a. Create PTY
         debug!("XMRig | Creating PTY...");
@@ -543,10 +556,11 @@ impl Helper {
                 start.elapsed(),
                 &process,
             );
-
             // Send an HTTP API request
             debug!("XMRig Watchdog | Attempting HTTP API request...");
-            if let Ok(priv_api) = PrivXmrigApi::request_xmrig_api(client.clone(), &api_uri).await {
+            if let Ok(priv_api) =
+                PrivXmrigApi::request_xmrig_api(client.clone(), &api_uri, token).await
+            {
                 debug!("XMRig Watchdog | HTTP API request OK, attempting [update_from_priv()]");
                 PubXmrigApi::update_from_priv(&pub_api, priv_api);
             } else {
@@ -729,9 +743,11 @@ impl PrivXmrigApi {
     async fn request_xmrig_api(
         client: hyper::Client<hyper::client::HttpConnector>,
         api_uri: &str,
+        token: &str,
     ) -> std::result::Result<Self, anyhow::Error> {
         let request = hyper::Request::builder()
             .method("GET")
+            .header("Authorization", ["Bearer ", token].concat())
             .uri(api_uri)
             .body(hyper::Body::empty())?;
         let response = tokio::time::timeout(

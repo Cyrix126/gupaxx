@@ -244,9 +244,9 @@ impl Helper {
                         break;
                     }
                 }
-                debug!("XvB Watchdog | Attempting HTTP private API request...");
-                // only if private API is accessible, NotMining here means that the token and address is not registered on the XvB website.
+                // only if private API is accessible, NotMining here means that the token and address is not registered on the XvB website and Syncing means P2pool node is not running and so that some information for private info are not available.
                 if lock!(process).state == ProcessState::Alive {
+                    debug!("XvB Watchdog | Attempting HTTP private API request...");
                     // reload private stats
                     match XvbPrivStats::request_api(
                         &client,
@@ -328,6 +328,22 @@ impl Helper {
                     {
                         lock!(pub_api).stats_priv.win_current = true
                     }
+                    // if 10 minutes passed since last check
+                    if lock!(gui_api).tick_distribute_hr > (60 * 10) {
+                        // request XMrig to mine on P2pool
+                    }
+                    // if share is in PW,
+                    // check average HR of last 15 minutes from XMrig.
+                    // if HR + buffer >= mHR,
+                    // calculate how much time can be spared
+                    // if not hero option
+                    // calculate how much time needed to be spared to be in most round type minimum HR + buffer
+                    // fi
+                    // sleep 10m less spared time then request XMrig to mine on XvB
+                    // fi
+                    // fi
+                    // instant saved for next check
+                    // fi
                 }
 
                 lock!(gui_api).tick = 0;
@@ -356,6 +372,7 @@ pub struct PubXvbApi {
     pub output: String,
     pub uptime: u64,
     pub tick: u8,
+    pub tick_distribute_hr: u16,
     pub stats_pub: XvbPubStats,
     pub stats_priv: XvbPrivStats,
 }
@@ -479,9 +496,11 @@ impl PubXvbApi {
             output.push_str(&buf);
         }
         let tick = std::mem::take(&mut gui_api.tick);
+        let tick_distribute_hr = std::mem::take(&mut gui_api.tick_distribute_hr);
         *gui_api = Self {
             output,
             tick,
+            tick_distribute_hr,
             ..pub_api.clone()
         };
     }

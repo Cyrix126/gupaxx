@@ -96,6 +96,7 @@ mod test {
 			selected_rig = "Gupax"
 			selected_ip = "192.168.1.122"
 			selected_port = "3333"
+            token = "testtoken"
 
             [xvb]
             token = ""

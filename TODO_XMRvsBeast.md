@@ -26,8 +26,8 @@
     - [ ] distribute hashrate conforming to the algorithm.
       - [x] check every 10 minutes average Xmrig HR of last 15 minutes
       - [ ] ask Xmrig to mine on p2pool
-        - [ ] generate token for xmrig
-        - [ ] enable xmrig with remote access control
+        - [x] generate token for xmrig
+        - [x] enable xmrig with remote access control
       - [x] check if at least a share in pplns Window
       - [ ] calculate spared HR
       - [ ] calculate time to be spared
