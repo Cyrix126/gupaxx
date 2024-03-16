@@ -71,8 +71,6 @@ impl Helper {
         let process_p2pool = Arc::clone(&lock!(helper).p2pool);
         let gui_api_p2pool = Arc::clone(&lock!(helper).gui_api_p2pool);
         info!("XvB | cloning of state");
-        let state_xvb_check = state_xvb.clone();
-        let state_p2pool_check = state_p2pool.clone();
         // Reset before printing to output.
         // Need to reset because values of stats would stay otherwise which could bring confusion even if panel is with a disabled theme.
         info!("XvB | resetting pub and gui");
@@ -87,22 +85,36 @@ impl Helper {
             lock.start = Instant::now();
         }
         // verify if token and address are existent on XvB server
+        let state_xvb = state_xvb.clone();
+        let state_p2pool = state_p2pool.clone();
 
-        info!("XvB | rt runtime");
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        info!("XvB | client");
-        let https = HttpsConnector::new();
-        let client = Arc::new(hyper::Client::builder().build(https));
-        let client_test = client.clone();
-        let resp: anyhow::Result<()> = rt.block_on(async move {
-            XvbPrivStats::request_api(
-                &client_test,
-                &state_p2pool_check.address,
-                &state_xvb_check.token,
-            )
-            .await?;
-            Ok(())
+        info!("XvB | spawn watchdog");
+        thread::spawn(move || {
+            Self::spawn_xvb_watchdog(
+                gui_api,
+                pub_api,
+                process,
+                &state_xvb,
+                &state_p2pool,
+                gui_api_p2pool,
+                process_p2pool,
+            );
         });
+    }
+    #[tokio::main]
+    async fn spawn_xvb_watchdog(
+        gui_api: Arc<Mutex<PubXvbApi>>,
+        pub_api: Arc<Mutex<PubXvbApi>>,
+        process: Arc<Mutex<Process>>,
+        state_xvb: &crate::disk::state::Xvb,
+        state_p2pool: &crate::disk::state::P2pool,
+        gui_api_p2pool: Arc<Mutex<PubP2poolApi>>,
+        process_p2pool: Arc<Mutex<Process>>,
+    ) {
+        let https = HttpsConnector::new();
+        let client = hyper::Client::builder().build(https);
+        let resp =
+            XvbPrivStats::request_api(&client, &state_p2pool.address, &state_xvb.token).await;
         info!("XvB | verify address and token");
         match resp {
             Ok(_) => {
@@ -149,34 +161,6 @@ impl Helper {
                 error!("XvB Watchdog | GUI status write failed: {}", e);
             }
         }
-        info!("XvB | clone state for thread");
-        let state_xvb_thread = state_xvb.clone();
-        let state_p2pool_thread = state_p2pool.clone();
-        info!("XvB | spawn watchdog");
-        thread::spawn(move || {
-            Self::spawn_xvb_watchdog(
-                client,
-                gui_api,
-                pub_api,
-                process,
-                &state_xvb_thread,
-                &state_p2pool_thread,
-                gui_api_p2pool,
-                process_p2pool,
-            );
-        });
-    }
-    #[tokio::main]
-    async fn spawn_xvb_watchdog(
-        client: Arc<hyper::Client<HttpsConnector<HttpConnector>>>,
-        gui_api: Arc<Mutex<PubXvbApi>>,
-        pub_api: Arc<Mutex<PubXvbApi>>,
-        process: Arc<Mutex<Process>>,
-        state_xvb: &crate::disk::state::Xvb,
-        state_p2pool: &crate::disk::state::P2pool,
-        gui_api_p2pool: Arc<Mutex<PubP2poolApi>>,
-        process_p2pool: Arc<Mutex<Process>>,
-    ) {
         // see how many shares are found at p2pool node only if XvB is started successfully. If it wasn't, maybe P2pool is node not running.
         let mut old_shares = if lock!(process).state == ProcessState::Alive {
             // a loop until the value is some to let p2pool work and get first value.
