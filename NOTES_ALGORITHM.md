@@ -71,6 +71,27 @@ The mHR is calculated depending on the sidechain the p2pool is mining on.
 The XvB process will check every ten minutes the last 15 minutes average HR and decide when to switch (in seconds) for the ten next minutes. (first p2pool then XvB).  
 *Need to see the time for Xmrig takes to set the new settings by API.*  
 When the time to switch arrives, XvB process will send a request to Xmrig to change the node used.  
+### Modification of config of xmrig
+
+The following 4 attributes must be applied to xmrig config when mining to XvB node.
+
+```ignore
+             "url": "xvb node:4247"
+             "user": "user id",
+             "keepalive": true,
+             "tls": true,
+```
+Or to return back to p2pool
+
+```ignore
+             "url": "127.0.0.1:3333"
+             "user": "Gupax_v1_3_5",
+             "keepalive": false,
+             "tls": false,
+```
+
+The HTTP API of xmrig requires to give a full config.  
+The current config will be requested, modified and sent back.  
 
 [^1]: https://p2pool.io/mini/api/pool/stats 
 [^2]: https://github.com/SChernykh/p2pool?tab=readme-ov-file#how-payouts-work-in-p2pool

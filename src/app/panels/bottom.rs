@@ -535,7 +535,12 @@ impl crate::app::App {
                         .on_hover_text("Restart Xvb")
                         .clicked()
                 {
-                    Helper::restart_xvb(&self.helper, &self.state.xvb, &self.state.p2pool);
+                    Helper::restart_xvb(
+                        &self.helper,
+                        &self.state.xvb,
+                        &self.state.p2pool,
+                        &self.state.xmrig,
+                    );
                 }
                 if key.is_down() && !wants_input
                     || ui
@@ -569,7 +574,12 @@ impl crate::app::App {
                         .on_disabled_hover_text(XVB_NOT_CONFIGURED)
                         .clicked()
                 {
-                    Helper::start_xvb(&self.helper, &self.state.xvb, &self.state.p2pool);
+                    Helper::start_xvb(
+                        &self.helper,
+                        &self.state.xvb,
+                        &self.state.p2pool,
+                        &self.state.xmrig,
+                    );
                 }
             }
         });

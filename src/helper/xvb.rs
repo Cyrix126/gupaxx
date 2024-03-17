@@ -2,19 +2,28 @@ use anyhow::{bail, Result};
 use bytes::Bytes;
 use derive_more::Display;
 use hyper::client::HttpConnector;
-use hyper::StatusCode;
+use hyper::{Client, StatusCode};
 use hyper_tls::HttpsConnector;
 use log::{debug, error, info, warn};
 use readable::up::Uptime;
 use serde::Deserialize;
 use std::fmt::Write;
+use std::time::Duration;
 use std::{
     sync::{Arc, Mutex},
     thread,
     time::Instant,
 };
+use tokio::spawn;
+use tokio::time::sleep_until;
 
-use crate::utils::constants::{XVB_PUBLIC_ONLY, XVB_URL};
+use crate::disk::state::XvbNode;
+use crate::helper::xmrig::PrivXmrigApi;
+use crate::utils::constants::{
+    BLOCK_PPLNS_WINDOW_MAIN, BLOCK_PPLNS_WINDOW_MINI, SECOND_PER_BLOCK_P2POOL, XMRIG_CONFIG_URI,
+    XVB_BUFFER, XVB_PUBLIC_ONLY, XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR,
+    XVB_ROUND_DONOR_VIP_MIN_HR, XVB_ROUND_DONOR_WHALE_MIN_HR, XVB_TIME_ALGO, XVB_URL,
+};
 use crate::{
     helper::{ProcessSignal, ProcessState},
     utils::{
@@ -24,6 +33,7 @@ use crate::{
 };
 
 use super::p2pool::PubP2poolApi;
+use super::xmrig::PubXmrigApi;
 use super::{Helper, Process};
 
 impl Helper {
@@ -37,6 +47,7 @@ impl Helper {
         helper: &Arc<Mutex<Self>>,
         state_xvb: &crate::disk::state::Xvb,
         state_p2pool: &crate::disk::state::P2pool,
+        state_xmrig: &crate::disk::state::Xmrig,
     ) {
         info!("XvB | Attempting to restart...");
         lock2!(helper, xvb).signal = ProcessSignal::Restart;
@@ -44,6 +55,7 @@ impl Helper {
         let helper = helper.clone();
         let state_xvb = state_xvb.clone();
         let state_p2pool = state_p2pool.clone();
+        let state_xmrig = state_xmrig.clone();
         // This thread lives to wait, start xmrig then die.
         thread::spawn(move || {
             while lock2!(helper, xvb).state != ProcessState::Waiting {
@@ -52,7 +64,7 @@ impl Helper {
             }
             // Ok, process is not alive, start the new one!
             info!("XvB | Old process seems dead, starting new one!");
-            Self::start_xvb(&helper, &state_xvb, &state_p2pool);
+            Self::start_xvb(&helper, &state_xvb, &state_p2pool, &state_xmrig);
         });
         info!("XMRig | Restart ... OK");
     }
@@ -60,6 +72,7 @@ impl Helper {
         helper: &Arc<Mutex<Self>>,
         state_xvb: &crate::disk::state::Xvb,
         state_p2pool: &crate::disk::state::P2pool,
+        state_xmrig: &crate::disk::state::Xmrig,
     ) {
         info!("XvB | setting state to Middle");
         lock2!(helper, xvb).state = ProcessState::Middle;
@@ -70,6 +83,8 @@ impl Helper {
         // needed to see if it is alive. For XvB process to function completely, p2pool node must be alive to check the shares in the pplns window.
         let process_p2pool = Arc::clone(&lock!(helper).p2pool);
         let gui_api_p2pool = Arc::clone(&lock!(helper).gui_api_p2pool);
+        let process_xmrig = Arc::clone(&lock!(helper).xmrig);
+        let gui_api_xmrig = Arc::clone(&lock!(helper).gui_api_xmrig);
         info!("XvB | cloning of state");
         // Reset before printing to output.
         // Need to reset because values of stats would stay otherwise which could bring confusion even if panel is with a disabled theme.
@@ -87,6 +102,7 @@ impl Helper {
         // verify if token and address are existent on XvB server
         let state_xvb = state_xvb.clone();
         let state_p2pool = state_p2pool.clone();
+        let state_xmrig = state_xmrig.clone();
 
         info!("XvB | spawn watchdog");
         thread::spawn(move || {
@@ -96,8 +112,11 @@ impl Helper {
                 process,
                 &state_xvb,
                 &state_p2pool,
+                &state_xmrig,
                 gui_api_p2pool,
                 process_p2pool,
+                gui_api_xmrig,
+                process_xmrig,
             );
         });
     }
@@ -108,33 +127,29 @@ impl Helper {
         process: Arc<Mutex<Process>>,
         state_xvb: &crate::disk::state::Xvb,
         state_p2pool: &crate::disk::state::P2pool,
+        state_xmrig: &crate::disk::state::Xmrig,
         gui_api_p2pool: Arc<Mutex<PubP2poolApi>>,
         process_p2pool: Arc<Mutex<Process>>,
+        gui_api_xmrig: Arc<Mutex<PubXmrigApi>>,
+        process_xmrig: Arc<Mutex<Process>>,
     ) {
         let https = HttpsConnector::new();
         let client = hyper::Client::builder().build(https);
-        let resp =
-            XvbPrivStats::request_api(&client, &state_p2pool.address, &state_xvb.token).await;
         info!("XvB | verify address and token");
-        match resp {
-            Ok(_) => {
-                let mut lock = lock!(process);
-                lock.state = ProcessState::Alive;
-            }
-            Err(err) => {
-                // send to console: token non existent for address on XvB server
-                warn!("Xvb | Start ... Partially failed because token and associated address are not existent on XvB server: {}\n", err);
-                // output the error to console
-                if let Err(e) = writeln!(
+        if let Err(err) =
+            XvbPrivStats::request_api(&client, &state_p2pool.address, &state_xvb.token).await
+        {
+            // send to console: token non existent for address on XvB server
+            warn!("Xvb | Start ... Partially failed because token and associated address are not existent on XvB server: {}\n", err);
+            // output the error to console
+            if let Err(e) = writeln!(
                     lock!(gui_api).output,
-                    "Failure to retrieve private stats from XvB server.\nError: {}\n{}\n",
+                    "Token and associated address are not valid on XvB API.\nCheck if you are registered.\nError: {}\n",
                     err,
-                    XVB_PUBLIC_ONLY
                 ) {
                     error!("XvB Watchdog | GUI status write failed: {}", e);
                 }
-                lock!(process).state = ProcessState::NotMining;
-            }
+            lock!(process).state = ProcessState::NotMining;
         }
         info!("XvB | verify p2pool node");
         if !lock!(process_p2pool).is_alive() {
@@ -143,7 +158,21 @@ impl Helper {
             // output the error to console
             if let Err(e) = writeln!(
                 lock!(gui_api).output,
-                "Failure to completely start XvB process because p2pool instance is not running.\n",
+                "P2pool process is not running.\nCheck the P2pool Tab\n",
+            ) {
+                error!("XvB Watchdog | GUI status write failed: {}", e);
+            }
+
+            lock!(process).state = ProcessState::Syncing;
+        }
+
+        if !lock!(process_xmrig).is_alive() {
+            // send to console: p2pool process is not running
+            warn!("Xvb | Start ... Partially failed because Xmrig instance is not running.");
+            // output the error to console
+            if let Err(e) = writeln!(
+                lock!(gui_api).output,
+                "XMRig process is not running.\nCheck the Xmrig Tab.\n",
             ) {
                 error!("XvB Watchdog | GUI status write failed: {}", e);
             }
@@ -151,12 +180,17 @@ impl Helper {
             lock!(process).state = ProcessState::Syncing;
         }
         info!("XvB | print to console state");
-        if lock!(process).state != ProcessState::Alive {
-            if let Err(e) = writeln!(lock!(gui_api).output, "{}\n", XVB_PUBLIC_ONLY,) {
+        if lock!(process).state != ProcessState::Middle {
+            if let Err(e) = writeln!(
+                lock!(gui_api).output,
+                "XvB partially started.\n{}\n",
+                XVB_PUBLIC_ONLY,
+            ) {
                 error!("XvB Watchdog | GUI status write failed: {}", e);
             }
         } else {
-            info!("XvB started");
+            info!("XvB Fully started");
+            lock!(process).state = ProcessState::Alive;
             if let Err(e) = writeln!(lock!(gui_api).output, "XvB started\n") {
                 error!("XvB Watchdog | GUI status write failed: {}", e);
             }
@@ -177,19 +211,23 @@ impl Helper {
         // let mut old_shares = 0;
         let mut time_last_share: Option<Instant> = None;
         let start = lock!(process).start;
+        let mut start_algorithm = tokio::time::Instant::now();
         info!("XvB | Entering watchdog mode... woof!");
         loop {
             debug!("XvB Watchdog | ----------- Start of loop -----------");
-            // verify if p2pool node is running with correct token.
+            // if address and token valid, verify if p2pool and xmrig are running, else XvBmust be reloaded with another token/address to start verifying the other process.
             if lock!(process).state != ProcessState::NotMining {
-                if lock!(process_p2pool).is_alive() {
+                // verify if p2pool node and xmrig are running
+                if lock!(process_p2pool).is_alive() && lock!(process_xmrig).is_alive() {
                     // verify if state is to changed
                     if lock!(process).state == ProcessState::Syncing {
-                        info!("XvB | started this time with p2pool");
+                        info!("XvB | started this time with p2pool and xmrig");
+                        *lock!(pub_api) = PubXvbApi::new();
+                        *lock!(gui_api) = PubXvbApi::new();
                         lock!(process).state = ProcessState::Alive;
                         if let Err(e) = writeln!(
                             lock!(gui_api).output,
-                            "XvB is now started because p2pool node came online.\n",
+                            "XvB is now started because p2pool and xmrig came online.\n",
                         ) {
                             error!("XvB Watchdog | GUI status write failed: {}", e);
                         }
@@ -198,14 +236,15 @@ impl Helper {
                     // verify if the state is changing because p2pool is not alive anymore.
                     if lock!(process).state != ProcessState::Syncing {
                         info!("XvB | stop partially because p2pool is not alive anymore.");
-                        lock!(process).state = ProcessState::Alive;
+                        *lock!(pub_api) = PubXvbApi::new();
+                        *lock!(gui_api) = PubXvbApi::new();
+                        lock!(process).state = ProcessState::Syncing;
                         if let Err(e) = writeln!(
                             lock!(gui_api).output,
-                            "XvB is now partially stopped because p2pool node came offline.\n",
+                            "XvB is now partially stopped because p2pool node or xmrig came offline.\nCheck P2pool and Xmrig Tabs",
                         ) {
                             error!("XvB Watchdog | GUI status write failed: {}", e);
                         }
-                        lock!(process).state = ProcessState::Syncing
                     }
                 }
             }
@@ -307,13 +346,27 @@ impl Helper {
                     let round = if share {
                         let stats_priv = &lock!(pub_api).stats_priv;
                         match (
-                            stats_priv.donor_1hr_avg / 1000.0,
-                            stats_priv.donor_24hr_avg / 1000.0,
+                            stats_priv.donor_1hr_avg as u32,
+                            stats_priv.donor_24hr_avg as u32,
                         ) {
-                            x if x.0 > 1000.0 && x.1 > 1000.0 => Some(XvbRound::DonorMega),
-                            x if x.0 > 100.0 && x.1 > 100.0 => Some(XvbRound::DonorWhale),
-                            x if x.0 > 10.0 && x.1 > 10.0 => Some(XvbRound::DonorVip),
-                            x if x.0 > 1.0 && x.1 > 1.0 => Some(XvbRound::Donor),
+                            x if x.0 > XVB_ROUND_DONOR_MEGA_MIN_HR
+                                && x.1 > XVB_ROUND_DONOR_MEGA_MIN_HR =>
+                            {
+                                Some(XvbRound::DonorMega)
+                            }
+                            x if x.0 > XVB_ROUND_DONOR_WHALE_MIN_HR
+                                && x.1 > XVB_ROUND_DONOR_WHALE_MIN_HR =>
+                            {
+                                Some(XvbRound::DonorWhale)
+                            }
+                            x if x.0 > XVB_ROUND_DONOR_VIP_MIN_HR
+                                && x.1 > XVB_ROUND_DONOR_VIP_MIN_HR =>
+                            {
+                                Some(XvbRound::DonorVip)
+                            }
+                            x if x.0 > XVB_ROUND_DONOR_MIN_HR && x.1 > XVB_ROUND_DONOR_MIN_HR => {
+                                Some(XvbRound::Donor)
+                            }
                             (_, _) => Some(XvbRound::Vip),
                         }
                     } else {
@@ -328,20 +381,83 @@ impl Helper {
                     {
                         lock!(pub_api).stats_priv.win_current = true
                     }
+
                     // if 10 minutes passed since last check
-                    if lock!(gui_api).tick_distribute_hr > (60 * 10) {
+                    // the first 15 minutes, the HR of xmrig will be 0.0, so xmrig will always mine on p2pool for 15m.
+                    if start_algorithm.elapsed() >= Duration::from_secs(XVB_TIME_ALGO.into()) {
+                        info!("Xvb Process | Algorithm is started");
+                        // the time that takes the algorithm do decide the next ten minutes could means less p2pool mining. It is solved by the buffer.
+                        start_algorithm = tokio::time::Instant::now();
                         // request XMrig to mine on P2pool
+                        info!("Xvb Process | request to mine on p2pool");
+                        let client: hyper::Client<hyper::client::HttpConnector> =
+                            hyper::Client::builder().build(hyper::client::HttpConnector::new());
+                        let api_uri = ["http://127.0.0.1:18088/", XMRIG_CONFIG_URI].concat();
+                        if let Err(err) = PrivXmrigApi::update_xmrig_config(
+                            &client,
+                            &api_uri,
+                            &state_xmrig.token,
+                            XvbNode::P2pool,
+                            &state_p2pool.address,
+                        )
+                        .await
+                        {
+                            // show to console error about updating xmrig config
+                            if let Err(e) = writeln!(
+                                lock!(gui_api).output,
+                                "Failure to update xmrig config with HTTP API.\nError: {}",
+                                err
+                            ) {
+                                error!("XvB Watchdog | GUI status write failed: {}", e);
+                            }
+                        }
+
+                        // if share is in PW,
+                        if share {
+                            info!("Xvb Process | Algorithm share is in current window");
+                            // calcul minimum HR
+
+                            let hr = lock!(gui_api_xmrig).hashrate_raw_15m;
+                            let min_hr = Helper::minimum_hashrate_share(
+                                lock!(gui_api_p2pool).p2pool_difficulty_u64,
+                                state_p2pool.mini,
+                            );
+                            info!("Xvb Process | hr {}, min_hr: {} ", hr, min_hr);
+
+                            // calculate how much time can be spared
+                            let mut spared_time = Helper::time_that_could_be_spared(hr, min_hr);
+                            if spared_time > 0 {
+                                // if not hero option
+                                if !state_xvb.hero {
+                                    // calculate how much time needed to be spared to be in most round type minimum HR + buffer
+                                    spared_time = Helper::minimum_time_for_highest_accessible_round(
+                                        spared_time,
+                                        hr,
+                                    );
+                                }
+                                info!("Xvb Process | spared time {} ", spared_time);
+                                // sleep 10m less spared time then request XMrig to mine on XvB
+                                let was_instant = start_algorithm.clone();
+                                let node = state_xvb.node.clone();
+                                let token = state_xmrig.token.clone();
+                                let address = state_p2pool.address.clone();
+                                let gui_api = gui_api.clone();
+                                spawn(async move {
+                                    Helper::sleep_then_update_node_xmrig(
+                                        was_instant,
+                                        spared_time,
+                                        &client,
+                                        &api_uri,
+                                        &token,
+                                        node,
+                                        &address,
+                                        gui_api,
+                                    )
+                                    .await;
+                                });
+                            }
+                        }
                     }
-                    // if share is in PW,
-                    // check average HR of last 15 minutes from XMrig.
-                    // if HR + buffer >= mHR,
-                    // calculate how much time can be spared
-                    // if not hero option
-                    // calculate how much time needed to be spared to be in most round type minimum HR + buffer
-                    // fi
-                    // sleep 10m less spared time then request XMrig to mine on XvB
-                    // fi
-                    // fi
                     // instant saved for next check
                     // fi
                 }
@@ -362,6 +478,61 @@ impl Helper {
             } else {
                 debug!("XMRig Watchdog | END OF LOOP - Not sleeping!");
             }
+        }
+    }
+    fn minimum_hashrate_share(difficulty: u64, mini: bool) -> f32 {
+        let pws = if mini {
+            BLOCK_PPLNS_WINDOW_MINI
+        } else {
+            BLOCK_PPLNS_WINDOW_MAIN
+        };
+        (difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32 * XVB_BUFFER
+    }
+    fn time_that_could_be_spared(hr: f32, min_hr: f32) -> u32 {
+        // percent of time minimum
+        let minimum_time_required_on_p2pool = XVB_TIME_ALGO as f32 / (hr / min_hr);
+        let spared_time = XVB_TIME_ALGO as f32 - minimum_time_required_on_p2pool;
+        // if less than 10 seconds, XMRig could hardly have the time to mine anything.
+        if spared_time >= 10f32 {
+            return spared_time as u32;
+        }
+        0
+    }
+    fn minimum_time_for_highest_accessible_round(st: u32, hr: f32) -> u32 {
+        let hr_for_xvb = ((st as f32 / XVB_TIME_ALGO as f32) * hr) as u32;
+        match hr_for_xvb {
+            x if x > XVB_ROUND_DONOR_MEGA_MIN_HR => x - XVB_ROUND_DONOR_MEGA_MIN_HR,
+            x if x > XVB_ROUND_DONOR_WHALE_MIN_HR => x - XVB_ROUND_DONOR_WHALE_MIN_HR,
+            x if x > XVB_ROUND_DONOR_VIP_MIN_HR => x - XVB_ROUND_DONOR_VIP_MIN_HR,
+            x if x > XVB_ROUND_DONOR_MIN_HR => x - XVB_ROUND_DONOR_MIN_HR,
+            _ => 0,
+        }
+    }
+    async fn sleep_then_update_node_xmrig(
+        was_instant: tokio::time::Instant,
+        spared_time: u32,
+        client: &Client<HttpConnector>,
+        api_uri: &str,
+        token_xmrig: &str,
+        node: XvbNode,
+        address: &str,
+        gui_api: Arc<Mutex<PubXvbApi>>,
+    ) {
+        info!("Xvb Process | for now mine on p2pol ");
+        sleep_until(was_instant + Duration::from_secs((XVB_TIME_ALGO - spared_time) as u64)).await;
+        if let Err(err) =
+            PrivXmrigApi::update_xmrig_config(client, api_uri, token_xmrig, node, address).await
+        {
+            // show to console error about updating xmrig config
+            if let Err(e) = writeln!(
+                lock!(gui_api).output,
+                "Failure to update xmrig config with HTTP API.\nError: {}",
+                err
+            ) {
+                error!("XvB Watchdog | GUI status write failed: {}", e);
+            }
+        } else {
+            info!("Xvb Process | mining on XvB pool");
         }
     }
 }
@@ -553,6 +724,15 @@ fn signal_interrupt(
 //---------------------------------------------------------------------------------------------------- TEST
 #[cfg(test)]
 mod test {
+    // use std::{sync::Arc, thread, time::Instant};
+
+    // use crate::{
+    //     app::App,
+    //     disk::state::XvbNode,
+    //     helper::{xmrig::PrivXmrigApi, Helper},
+    //     utils::constants::XMRIG_CONFIG_URI,
+    // };
+
     use std::thread;
 
     use super::XvbPubStats;
@@ -571,4 +751,39 @@ mod test {
     async fn corr(client: Client<HttpsConnector<hyper::client::HttpConnector>>) -> XvbPubStats {
         XvbPubStats::request_api(&client).await.unwrap()
     }
+    // #[test]
+    // fn update_xmrig_config() {
+    //     let client: hyper::Client<hyper::client::HttpConnector> =
+    //         hyper::Client::builder().build(hyper::client::HttpConnector::new());
+    //     let node = XvbNode::Europe;
+    //     let api_uri = ["http://127.0.0.1:18088/", XMRIG_CONFIG_URI].concat();
+    //     // start app
+    //     let app = App::new(Instant::now());
+    //     // start xmrig
+
+    //     Helper::start_xmrig(
+    //         &app.helper,
+    //         &app.state.xmrig,
+    //         &app.state.gupax.absolute_xmrig_path,
+    //         Arc::clone(&app.sudo),
+    //     );
+    //     let token = app.state.xmrig.token;
+    //     let address = app.state.p2pool.address;
+    //     // change config
+    //     thread::spawn(move || req_update_config(client, &api_uri, &token, node, &address))
+    //         .join()
+    //         .unwrap();
+    // }
+    // #[tokio::main]
+    // async fn req_update_config(
+    //     client: hyper::Client<hyper::client::HttpConnector>,
+    //     api_uri: &str,
+    //     token: &str,
+    //     node: XvbNode,
+    //     address: &str,
+    // ) {
+    //     PrivXmrigApi::replace_xmrig_config(client, &api_uri, token, node, address)
+    //         .await
+    //         .unwrap()
+    // }
 }

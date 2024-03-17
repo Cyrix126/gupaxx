@@ -208,7 +208,7 @@ pub fn init_auto(app: &mut App) {
     }
     // [Auto-XvB]
     if app.state.gupax.auto_xvb {
-    Helper::start_xvb(&app.helper, &app.state.xvb, &app.state.p2pool);
+    Helper::start_xvb(&app.helper, &app.state.xvb, &app.state.p2pool, &app.state.xmrig);
     } else {
         info!("Skipping auto-xvb...");
         

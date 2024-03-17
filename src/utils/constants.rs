@@ -86,6 +86,7 @@ pub const P2POOL_API_PATH_NETWORK: &str = "network/stats";
 #[cfg(target_family = "unix")]
 pub const P2POOL_API_PATH_POOL: &str = "pool/stats";
 pub const XMRIG_API_URI: &str = "1/summary"; // The default relative URI of XMRig's API
+pub const XMRIG_CONFIG_URI: &str = "1/config"; // The default relative URI of XMRig's API config
 
 // Process state tooltips (online, offline, etc)
 pub const P2POOL_ALIVE: &str = "P2Pool is online and fully synchronized";
@@ -410,9 +411,15 @@ pub const XMRIG_PATH_EMPTY:     &str = "XMRig PATH is empty! To fix: goto the [G
 // XvB
 pub const XVB_HELP: &str = "You need to register an account by clicking on the link above to get your token with the same p2pool XMR address you use for payment.";
 pub const XVB_URL: &str = "https://xmrvsbeast.com";
-pub const XVB_URL_PUBLIC_API: &str = "https://xmrvsbeast.com/p2pool/stats";
-pub const XVB_URL_RULES: &str = "https://xmrvsbeast.com/p2pool/rules.html";
 
+pub const XVB_URL_PUBLIC_API: &str = "https://xmrvsbeast.com/p2pool/stats";
+pub const XVB_NODE_EU: &str = "eu.xmrvsbeast.com:4247";
+pub const XVB_NODE_NA: &str = "na.xmrvsbeast.com:4247";
+pub const XVB_URL_RULES: &str = "https://xmrvsbeast.com/p2pool/rules.html";
+// buffer in percentage of HR to have plus the requirement.
+pub const XVB_BUFFER: f32 = 1.05;
+// time in second the algorithm will distribute the HR
+pub const XVB_TIME_ALGO: u32 = 600;
 pub const XVB_TOKEN_LEN: usize = 9;
 pub const XVB_HERO_SELECT: &str =
     "Donate all spared hashrate to the raffle, even if there is more than enough to be in the most highest round type possible";
@@ -422,6 +429,10 @@ pub const XVB_DONATED_1H_FIELD: &str = "Donated last hour";
 pub const XVB_DONATED_24H_FIELD: &str = "Donated last 24 hours";
 pub const XVB_ROUND_TYPE_FIELD: &str = "Round";
 pub const XVB_WINNER_FIELD: &str = "Win";
+pub const XVB_ROUND_DONOR_MIN_HR: u32 = 1000;
+pub const XVB_ROUND_DONOR_VIP_MIN_HR: u32 = 10000;
+pub const XVB_ROUND_DONOR_WHALE_MIN_HR: u32 = 100000;
+pub const XVB_ROUND_DONOR_MEGA_MIN_HR: u32 = 1000000;
 
 // CLI argument messages
 pub const ARG_HELP: &str = r#"USAGE: ./gupax [--flag]
@@ -449,8 +460,13 @@ For more information, see link below:
 pub const UNKNOWN_DATA: &str = "???";
 // Time PPLNS WINDOW in seconds
 // it is an estimation based on number of block in a pplns window and block time (10s). The difficulty of the network should adapt to get close to this value.
-pub const TIME_PPLNS_WINDOW_MINI: Duration = Duration::from_secs(2160 * 10);
-pub const TIME_PPLNS_WINDOW_MAIN: Duration = Duration::from_secs(363 * 10);
+pub const BLOCK_PPLNS_WINDOW_MINI: u64 = 2160;
+pub const BLOCK_PPLNS_WINDOW_MAIN: u64 = 363;
+pub const SECOND_PER_BLOCK_P2POOL: u64 = 10;
+pub const TIME_PPLNS_WINDOW_MINI: Duration =
+    Duration::from_secs(BLOCK_PPLNS_WINDOW_MINI * SECOND_PER_BLOCK_P2POOL);
+pub const TIME_PPLNS_WINDOW_MAIN: Duration =
+    Duration::from_secs(BLOCK_PPLNS_WINDOW_MAIN * SECOND_PER_BLOCK_P2POOL);
 
 use std::time::Duration;
 

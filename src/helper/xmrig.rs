@@ -1,12 +1,15 @@
+use crate::disk::state::XvbNode;
 use crate::helper::{ProcessName, ProcessSignal, ProcessState};
 use crate::regex::XMRIG_REGEX;
 use crate::utils::human::HumanNumber;
 use crate::utils::sudo::SudoState;
 use crate::{constants::*, macros::*};
+use anyhow::{anyhow, Result};
 use log::*;
 use readable::num::Unsigned;
 use readable::up::Uptime;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::path::Path;
 use std::{
     fmt::Write,
@@ -199,8 +202,6 @@ impl Helper {
             args.push("127.0.0.1".to_string()); // HTTP API IP
             args.push("--http-port".to_string());
             args.push("18088".to_string()); // HTTP API Port
-            args.push(format!("--http-access-token={}", state.token)); // HTTP API Port
-            args.push("--http-no-restricted".to_string());
             if state.pause != 0 {
                 args.push("--pause-on-active".to_string());
                 args.push(state.pause.to_string());
@@ -290,6 +291,8 @@ impl Helper {
                 };
             }
         }
+        args.push(format!("--http-access-token={}", state.token)); // HTTP API Port
+        args.push("--http-no-restricted".to_string());
         (args, format!("{}:{}", api_ip, api_port))
     }
 
@@ -622,8 +625,8 @@ pub struct PubXmrigApi {
     pub diff: String,
     pub accepted: String,
     pub rejected: String,
-
     pub hashrate_raw: f32,
+    pub hashrate_raw_15m: f32,
 }
 
 impl Default for PubXmrigApi {
@@ -644,6 +647,7 @@ impl PubXmrigApi {
             accepted: UNKNOWN_DATA.to_string(),
             rejected: UNKNOWN_DATA.to_string(),
             hashrate_raw: 0.0,
+            hashrate_raw_15m: 0.0,
         }
     }
 
@@ -701,6 +705,10 @@ impl PubXmrigApi {
             Some(Some(h)) => *h,
             _ => 0.0,
         };
+        let hashrate_raw_15m = match private.hashrate.total.last() {
+            Some(Some(h)) => *h,
+            _ => 0.0,
+        };
 
         *public = Self {
             worker_id: private.worker_id,
@@ -710,6 +718,7 @@ impl PubXmrigApi {
             accepted: Unsigned::from(private.connection.accepted as usize).to_string(),
             rejected: Unsigned::from(private.connection.rejected as usize).to_string(),
             hashrate_raw,
+            hashrate_raw_15m,
             ..std::mem::take(&mut *public)
         }
     }
@@ -757,6 +766,61 @@ impl PrivXmrigApi {
         .await?;
         let body = hyper::body::to_bytes(response?.body_mut()).await?;
         Ok(serde_json::from_slice::<Self>(&body)?)
+    }
+    // #[inline]
+    // // Replace config with new node
+    pub async fn update_xmrig_config(
+        client: &hyper::Client<hyper::client::HttpConnector>,
+        api_uri: &str,
+        token: &str,
+        node: XvbNode,
+        address: &str,
+    ) -> Result<()> {
+        // get config
+        let request = hyper::Request::builder()
+            .method("GET")
+            .header("Authorization", ["Bearer ", token].concat())
+            .uri(api_uri)
+            .body(hyper::Body::empty())?;
+        let response = tokio::time::timeout(
+            std::time::Duration::from_millis(500),
+            client.request(request),
+        )
+        .await?;
+        let body = hyper::body::to_bytes(response?.body_mut()).await?;
+        // deserialize to json
+        let mut config = serde_json::from_slice::<Value>(&body)?;
+        // modify node configuration
+        *config
+            .pointer_mut("/pools/0/url")
+            .ok_or_else(|| anyhow!("pools/0/url does not exist in xmrig config"))? =
+            node.url().into();
+        *config
+            .pointer_mut("/pools/0/user")
+            .ok_or_else(|| anyhow!("pools/0/user does not exist in xmrig config"))? =
+            node.user(&address).into();
+        *config
+            .pointer_mut("/pools/0/tls")
+            .ok_or_else(|| anyhow!("pools/0/tls does not exist in xmrig config"))? =
+            node.tls().into();
+        *config
+            .pointer_mut("/pools/0/keepalive")
+            .ok_or_else(|| anyhow!("pools/0/keepalive does not exist in xmrig config"))? =
+            node.keepalive().into();
+        // reconstruct body from new config
+        let body = hyper::body::Body::from(config.to_string());
+        // send new config
+        let request = hyper::Request::builder()
+            .method("PUT")
+            .header("Authorization", ["Bearer ", token].concat())
+            .uri(api_uri)
+            .body(body)?;
+        tokio::time::timeout(
+            std::time::Duration::from_millis(500),
+            client.request(request),
+        )
+        .await??;
+        anyhow::Ok(())
     }
 }
 
