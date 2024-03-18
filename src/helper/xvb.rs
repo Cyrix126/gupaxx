@@ -516,6 +516,13 @@ impl Helper {
                                     .await
                                 });
                             }
+                        } else {
+                            if let Err(e) = writeln!(
+                                lock!(gui_api).output,
+                                "No share in the current PPLNS Window !",
+                            ) {
+                                error!("XvB Watchdog | GUI status write failed: {}", e);
+                            }
                         }
                     }
                     // instant saved for next check
@@ -742,7 +749,7 @@ pub enum XvbNode {
     #[display(fmt = "XvB North America Node")]
     NorthAmerica,
     #[default]
-    #[display(fmt = "XvB North European Node")]
+    #[display(fmt = "XvB European Node")]
     Europe,
     #[display(fmt = "Local P2pool")]
     P2pool,
