@@ -14,12 +14,12 @@
   - [x] hero checkbox
   - [x] log section
     - [x] state of XvB process
-    - [ ] selected XvB node
-    - [ ] algorithm decisions info
+    - [x] selected XvB node
+    - [x] algorithm decisions info
   - [x] private stats
+      - [x] from XvB API (fails, average 1h and 24h)
       - [x] round type in
       - [x] win or loose
-      - [ ] fix: symbol for HR
   - [x] new process for XvB
     - [x] update preferred XvB node based on ping and backup 
       - [x] fix: xmrig will not do anything if node is not responding. Need to parse output of xmrig for error and update nodes.
@@ -46,7 +46,8 @@
   - [ ] cargo package metadata
   - [ ] pgp signatures
 - [ ] fix clippy
-- [ ] better organize some new code
+- [ ] optimizations
+- [ ] better organize new code
 - [ ] merge commits from upstream
 - [ ] tests for new functions
 - [ ] pre-release

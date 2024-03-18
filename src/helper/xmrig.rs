@@ -834,7 +834,7 @@ impl PrivXmrigApi {
         token: &str,
         node: &XvbNode,
         address: &str,
-        gui_api_xmrig: Arc<Mutex<PubXmrigApi>>,
+        gui_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
     ) -> Result<()> {
         // get config
         let request = hyper::Request::builder()

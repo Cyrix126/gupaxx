@@ -196,14 +196,20 @@ impl Helper {
         } else {
             info!("XvB Fully started");
             lock!(process).state = ProcessState::Alive;
+
             let pub_api_c = pub_api.clone();
             let client_http_c = client_http.clone();
             let process_c = process.clone();
+            let gui_api_c = gui_api.clone();
             // will check which pool to use, will send NotMining if
             spawn(async move {
-                XvbNode::update_fastest_node(&client_http_c, &pub_api_c, &process_c).await
+                XvbNode::update_fastest_node(&client_http_c, &pub_api_c, &gui_api_c, &process_c)
+                    .await;
             });
-            if let Err(e) = writeln!(lock!(gui_api).output, "XvB started\n") {
+            if let Err(e) = writeln!(
+                lock!(gui_api).output,
+                "Algorithm of distribution of HR will wait 15 minutes for Xmrig average HR data.\n"
+            ) {
                 error!("XvB Watchdog | GUI status write failed: {}", e);
             }
         }
@@ -269,7 +275,8 @@ impl Helper {
                 process.clone(),
                 start,
                 &client_http,
-                &gui_api.clone(),
+                &pub_api,
+                &gui_api,
                 &gui_api_xmrig,
                 state_p2pool,
                 state_xmrig,
@@ -425,7 +432,7 @@ impl Helper {
                                 &token_xmrig_c,
                                 &XvbNode::P2pool,
                                 &address_c,
-                                gui_api_xmrig_c,
+                                &gui_api_xmrig_c,
                             )
                             .await
                             {
@@ -437,6 +444,13 @@ impl Helper {
                                 ) {
                                     error!("XvB Watchdog | GUI status write failed: {}", e);
                                 }
+                            } else {
+                                if let Err(e) = writeln!(
+                                        lock!(gui_api_c).output,
+                                        "Algorithm of distribution HR started for the next ten minutes.\nMining on local p2pool node.",
+                                    ) {
+                                        error!("XvB Watchdog | GUI status write failed: {}", e);
+                                    }
                             }
                         });
 
@@ -445,12 +459,24 @@ impl Helper {
                             info!("Xvb Process | Algorithm share is in current window");
                             // calcul minimum HR
 
+                            if let Err(e) = writeln!(
+                                lock!(gui_api).output,
+                                "At least one share is in current PPLNS window.",
+                            ) {
+                                error!("XvB Watchdog | GUI status write failed: {}", e);
+                            }
                             let hr = lock!(gui_api_xmrig).hashrate_raw_15m;
                             let min_hr = Helper::minimum_hashrate_share(
                                 lock!(gui_api_p2pool).p2pool_difficulty_u64,
                                 state_p2pool.mini,
                             );
                             info!("Xvb Process | hr {}, min_hr: {} ", hr, min_hr);
+                            if let Err(e) = writeln!(
+                                        lock!(gui_api).output,
+                                        "You'r HR from Xmrig is {}, minimum required HR to keep a share in PPLNS window is {}", hr, min_hr
+                                    ) {
+                                        error!("XvB Watchdog | GUI status write failed: {}", e);
+                                    }
 
                             // calculate how much time can be spared
                             let mut spared_time = Helper::time_that_could_be_spared(hr, min_hr);
@@ -464,6 +490,13 @@ impl Helper {
                                     );
                                 }
                                 info!("Xvb Process | spared time {} ", spared_time);
+                                if let Err(e) = writeln!(
+                                    lock!(gui_api).output,
+                                    "{} seconds of HR will be donated to the raffle.",
+                                    spared_time
+                                ) {
+                                    error!("XvB Watchdog | GUI status write failed: {}", e);
+                                }
                                 // sleep 10m less spared time then request XMrig to mine on XvB
                                 let was_instant = start_algorithm;
                                 let gui_api_c = gui_api.clone();
@@ -542,11 +575,19 @@ impl Helper {
         api_uri: &str,
         token_xmrig: &str,
         address: &str,
-        gui_api: Arc<Mutex<PubXvbApi>>,
+        gui_api_xvb: Arc<Mutex<PubXvbApi>>,
         gui_api_xmrig: Arc<Mutex<PubXmrigApi>>,
     ) {
-        let node = lock!(gui_api).stats_priv.node.clone();
+        let node = lock!(gui_api_xvb).stats_priv.node.clone();
         info!("Xvb Process | for now mine on p2pol ");
+        info!("Xvb Process | spared time {} ", spared_time);
+        if let Err(e) = writeln!(
+            lock!(gui_api_xvb).output,
+            "Still mining on P2pool node for {} seconds",
+            XVB_TIME_ALGO - spared_time
+        ) {
+            error!("XvB Watchdog | GUI status write failed: {}", e);
+        }
         sleep_until(*was_instant + Duration::from_secs((XVB_TIME_ALGO - spared_time) as u64)).await;
         if let Err(err) = PrivXmrigApi::update_xmrig_config(
             client,
@@ -554,13 +595,13 @@ impl Helper {
             token_xmrig,
             &node,
             address,
-            gui_api_xmrig,
+            &gui_api_xmrig,
         )
         .await
         {
             // show to console error about updating xmrig config
             if let Err(e) = writeln!(
-                lock!(gui_api).output,
+                lock!(gui_api_xvb).output,
                 "Failure to update xmrig config with HTTP API.\nError: {}",
                 err
             ) {
@@ -568,6 +609,13 @@ impl Helper {
             }
         } else {
             info!("Xvb Process | mining on XvB pool");
+            if let Err(e) = writeln!(
+                lock!(gui_api_xvb).output,
+                "Now donating to the XvB raffle for the rest of the {} minutes.",
+                XVB_TIME_ALGO / 60
+            ) {
+                error!("XvB Watchdog | GUI status write failed: {}", e);
+            }
         }
     }
 }
@@ -738,6 +786,7 @@ impl XvbNode {
     pub async fn update_fastest_node(
         client: &Arc<Client<HttpConnector>>,
         pub_api_xvb: &Arc<Mutex<PubXvbApi>>,
+        gui_api_xvb: &Arc<Mutex<PubXvbApi>>,
         process_xvb: &Arc<Mutex<Process>>,
     ) {
         let client_eu = client.clone();
@@ -776,11 +825,24 @@ impl XvbNode {
         };
         if node == XvbNode::P2pool {
             // if both nodes are dead, then the state of the process must be NodesOffline
-            info!("XvB node ping, all offline or ping failed, switching back to p2pool",);
+            info!("XvB node ping, all offline or ping failed, switching back to local p2pool",);
+            if let Err(e) = writeln!(
+                lock!(&gui_api_xvb).output,
+                "XvB node ping, all offline or ping failed, switching back to local p2pool",
+            ) {
+                error!("XvB Watchdog | GUI status write failed: {}", e);
+            }
             lock!(process_xvb).state = ProcessState::OfflineNodesAll;
         } else {
             // if node is up and because update_fastest is used only if token/address is valid, it means XvB process is Alive.
             info!("XvB node ping, both online and best is {}", node.url());
+            if let Err(e) = writeln!(
+                lock!(&gui_api_xvb).output,
+                "XvB node ping, {} is selected as the fastest.",
+                node
+            ) {
+                error!("XvB Watchdog | GUI status write failed: {}", e);
+            }
             lock!(process_xvb).state = ProcessState::Alive;
         }
         lock!(pub_api_xvb).stats_priv.node = node;
@@ -850,6 +912,7 @@ fn signal_interrupt(
     process: Arc<Mutex<Process>>,
     start: Instant,
     client_http: &Arc<Client<HttpConnector>>,
+    pub_api: &Arc<Mutex<PubXvbApi>>,
     gui_api: &Arc<Mutex<PubXvbApi>>,
     gui_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
     state_p2pool: &crate::disk::state::P2pool,
@@ -899,6 +962,7 @@ fn signal_interrupt(
         // if signal is waiting, he is restarting or already updating nodes.
         // A signal has been given to ping the nodes and select the fastest.
         let gui_api_c = gui_api.clone();
+        let pub_api_c = pub_api.clone();
         let gui_api_xmrig_c = gui_api_xmrig.clone();
         let client_http_c = client_http.clone();
         let process_c = process.clone();
@@ -907,7 +971,7 @@ fn signal_interrupt(
         lock!(process).state = ProcessState::Waiting;
         let node = lock!(gui_api).stats_priv.node.clone();
         spawn(async move {
-            XvbNode::update_fastest_node(&client_http_c, &gui_api_c, &process_c).await;
+            XvbNode::update_fastest_node(&client_http_c, &gui_api_c, &pub_api_c, &process_c).await;
 
             if let Err(err) = PrivXmrigApi::update_xmrig_config(
                 &client_http_c,
@@ -915,7 +979,7 @@ fn signal_interrupt(
                 &token_xmrig,
                 &node,
                 &address,
-                gui_api_xmrig_c,
+                &gui_api_xmrig_c,
             )
             .await
             {
@@ -924,6 +988,14 @@ fn signal_interrupt(
                     lock!(&gui_api_c).output,
                     "Failure to update xmrig config with HTTP API.\nError: {}",
                     err
+                ) {
+                    error!("XvB Watchdog | GUI status write failed: {}", e);
+                }
+            } else {
+                if let Err(e) = writeln!(
+                    lock!(&gui_api_c).output,
+                    "XvB node failed, falling back to {}",
+                    node
                 ) {
                     error!("XvB Watchdog | GUI status write failed: {}", e);
                 }

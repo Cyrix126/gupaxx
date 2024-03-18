@@ -4,6 +4,7 @@ use egui::TextStyle::{self, Name};
 use egui::{vec2, Hyperlink, Image, RichText, TextEdit, Ui, Vec2};
 use log::debug;
 use readable::byte::Byte;
+use readable::num::Float;
 
 use crate::helper::xvb::PubXvbApi;
 use crate::utils::constants::{
@@ -138,8 +139,8 @@ impl crate::disk::state::Xvb {
                                 ui.label(XVB_DONATED_1H_FIELD);
                                 ui.label(
                                     [
-                                        Byte::from(priv_stats.donor_1hr_avg).to_string(),
-                                        "H/s".to_string(),
+                                        Float::from_3(priv_stats.donor_1hr_avg as f64).to_string(),
+                                        " kH/s".to_string(),
                                     ]
                                     .concat(),
                                 );
@@ -152,8 +153,8 @@ impl crate::disk::state::Xvb {
                                 ui.label(XVB_DONATED_24H_FIELD);
                                 ui.label(
                                     [
-                                        Byte::from(priv_stats.donor_24hr_avg).to_string(),
-                                        "H/s".to_string(),
+                                        Float::from_3(priv_stats.donor_24hr_avg as f64).to_string(),
+                                        " kH/s".to_string(),
                                     ]
                                     .concat(),
                                 );
@@ -177,10 +178,11 @@ impl crate::disk::state::Xvb {
                         ui.add_sized(size_stat, |ui: &mut Ui| {
                             ui.vertical_centered(|ui| {
                                 ui.label(XVB_WINNER_FIELD);
-                                ui.label(
-                                    if priv_stats
-                                        .win_current { "You are Winning the round !" } else { "You are not the winner" },
-                                );
+                                ui.label(if priv_stats.win_current {
+                                    "You are Winning the round !"
+                                } else {
+                                    "You are not the winner"
+                                });
                             })
                             .response
                         });
