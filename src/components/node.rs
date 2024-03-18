@@ -306,16 +306,16 @@ impl NodeData {
 // This struct leaves out most fields on purpose,
 // we only need a few to verify the node is ok.
 #[derive(Debug, serde::Deserialize)]
-struct GetInfo<'a> {
-    id: &'a str,
-    jsonrpc: &'a str,
-    result: GetInfoResult,
+pub struct GetInfo<'a> {
+    pub id: &'a str,
+    pub jsonrpc: &'a str,
+    pub result: GetInfoResult,
 }
 
 #[derive(Debug, serde::Deserialize)]
-struct GetInfoResult {
-    mainnet: bool,
-    synchronized: bool,
+pub struct GetInfoResult {
+    pub mainnet: bool,
+    pub synchronized: bool,
 }
 
 //---------------------------------------------------------------------------------------------------- Ping data

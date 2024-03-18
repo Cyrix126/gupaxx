@@ -86,7 +86,7 @@ pub const P2POOL_API_PATH_NETWORK: &str = "network/stats";
 #[cfg(target_family = "unix")]
 pub const P2POOL_API_PATH_POOL: &str = "pool/stats";
 pub const XMRIG_API_URI: &str = "1/summary"; // The default relative URI of XMRig's API
-pub const XMRIG_CONFIG_URI: &str = "1/config"; // The default relative URI of XMRig's API config
+pub const XMRIG_CONFIG_URI: &str = "http://127.0.0.1:18088/1/config"; // The default relative URI of XMRig's API config
 
 // Process state tooltips (online, offline, etc)
 pub const P2POOL_ALIVE: &str = "P2Pool is online and fully synchronized";
@@ -413,8 +413,10 @@ pub const XVB_HELP: &str = "You need to register an account by clicking on the l
 pub const XVB_URL: &str = "https://xmrvsbeast.com";
 
 pub const XVB_URL_PUBLIC_API: &str = "https://xmrvsbeast.com/p2pool/stats";
-pub const XVB_NODE_EU: &str = "eu.xmrvsbeast.com:4247";
-pub const XVB_NODE_NA: &str = "na.xmrvsbeast.com:4247";
+pub const XVB_NODE_PORT: &str = "4247";
+pub const XVB_NODE_EU: &str = "eu.xmrvsbeast.com";
+pub const XVB_NODE_NA: &str = "na.xmrvsbeast.com";
+pub const XVB_NODE_RPC: &str = "18089";
 pub const XVB_URL_RULES: &str = "https://xmrvsbeast.com/p2pool/rules.html";
 // buffer in percentage of HR to have plus the requirement.
 pub const XVB_BUFFER: f32 = 1.05;

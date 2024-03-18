@@ -247,45 +247,6 @@ pub struct Xmrig {
 pub struct Xvb {
     pub token: String,
     pub hero: bool,
-    pub node: XvbNode,
-}
-
-#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
-pub enum XvbNode {
-    NorthAmerica,
-    #[default]
-    Europe,
-    P2pool,
-}
-impl XvbNode {
-    pub fn url(&self) -> String {
-        match self {
-            Self::NorthAmerica => String::from(XVB_NODE_NA),
-            Self::Europe => String::from(XVB_NODE_EU),
-            Self::P2pool => String::from("127.0.0.1:3333"),
-        }
-    }
-    pub fn user(&self, address: &str) -> String {
-        match self {
-            Self::NorthAmerica => address.chars().take(8).collect(),
-            Self::Europe => address.chars().take(8).collect(),
-            Self::P2pool => GUPAX_VERSION_UNDERSCORE.to_string(),
-        }
-    }
-    pub fn tls(&self) -> bool {
-        match self {
-            Self::NorthAmerica => true,
-            Self::Europe => true,
-            Self::P2pool => false,
-        }
-    }
-    pub fn keepalive(&self) -> bool {
-        match self {
-            Self::NorthAmerica => true,
-            Self::Europe => true,
-            Self::P2pool => false,
-        }
-    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

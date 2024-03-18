@@ -1,4 +1,3 @@
-use crate::disk::state::XvbNode;
 use crate::helper::{ProcessName, ProcessSignal, ProcessState};
 use crate::regex::XMRIG_REGEX;
 use crate::utils::human::HumanNumber;
@@ -19,15 +18,18 @@ use std::{
     thread,
     time::*,
 };
+use tokio::spawn;
 
+use super::xvb::XvbNode;
 use super::{Helper, Process};
 impl Helper {
     #[cold]
     #[inline(never)]
-    fn read_pty_xmrig(
+    async fn read_pty_xmrig(
         output_parse: Arc<Mutex<String>>,
         output_pub: Arc<Mutex<String>>,
         reader: Box<dyn std::io::Read + Send>,
+        process_xvb: Arc<Mutex<Process>>,
     ) {
         use std::io::BufRead;
         let mut stdout = std::io::BufReader::new(reader).lines();
@@ -50,6 +52,50 @@ impl Helper {
         }
 
         while let Some(Ok(line)) = stdout.next() {
+            // need to verify if node still working
+            // for that need to catch "connect error"
+            if line.contains("connect error") {
+                let process_xvb_c = process_xvb.clone();
+                // if waiting, it is restarting or already updating nodes, so do not send signal.
+                if lock!(process_xvb_c).state != ProcessState::Waiting {
+                    info!("node is offline, switching to backup.");
+                    lock!(process_xvb_c).signal = ProcessSignal::UpdateNodes;
+                }
+                // let address = state_p2pool.address.clone();
+                // let token = state_xmrig.token.clone();
+                // let pub_api_xvb_c = pub_api_xvb.clone();
+                // issue because while this future is executing, other connect error could arrive and repeat the process.
+                // spawn(async move {
+                //     // need to create client
+                //     let client_http = Arc::new(
+                //         hyper::Client::builder().build(hyper::client::HttpConnector::new()),
+                //     );
+                //     // need to spawn and wait update fastest node.
+                //     XvbNode::update_fastest_node(&client_http, &pub_api_xvb_c, &process_xvb_c)
+                //         .await;
+                //     // need to check new value of node.
+                //     let node = lock!(pub_api_xvb_c).stats_priv.node.clone();
+                //     // send new value to update config.
+                //     if let Err(err) = PrivXmrigApi::update_xmrig_config(
+                //         &client_http,
+                //         XMRIG_CONFIG_URI,
+                //         &token,
+                //         &node,
+                //         &address,
+                //     )
+                //     .await
+                //     {
+                //         // show to console error about updating xmrig config
+                //         if let Err(e) = writeln!(
+                //             lock!(pub_api_xvb_c).output,
+                //             "Failure to update xmrig config with HTTP API.\nError: {}",
+                //             err
+                //         ) {
+                //             error!("XvB Watchdog | GUI status write failed: {}", e);
+                //         }
+                //     }
+                // });
+            }
             //			println!("{}", line); // For debugging.
             if let Err(e) = writeln!(lock!(output_parse), "{}", line) {
                 error!("XMRig PTY Parse | Output error: {}", e);
@@ -134,7 +180,6 @@ impl Helper {
         lock2!(helper, xmrig).state = ProcessState::Middle;
 
         let (args, api_ip_port) = Self::build_xmrig_args_and_mutate_img(helper, state, path);
-
         // Print arguments & user settings to console
         crate::disk::print_dash(&format!("XMRig | Launch arguments: {:#?}", args));
         info!("XMRig | Using path: [{}]", path.display());
@@ -143,8 +188,10 @@ impl Helper {
         let process = Arc::clone(&lock!(helper).xmrig);
         let gui_api = Arc::clone(&lock!(helper).gui_api_xmrig);
         let pub_api = Arc::clone(&lock!(helper).pub_api_xmrig);
+        let process_xvb = Arc::clone(&lock!(helper).xvb);
         let path = path.to_path_buf();
         let token = state.token.clone();
+        let img_xmrig = Arc::clone(&lock!(helper).img_xmrig);
         thread::spawn(move || {
             Self::spawn_xmrig_watchdog(
                 process,
@@ -155,6 +202,8 @@ impl Helper {
                 sudo,
                 api_ip_port,
                 &token,
+                process_xvb,
+                &img_xmrig,
             );
         });
     }
@@ -210,6 +259,8 @@ impl Helper {
                 threads: state.current_threads.to_string(),
                 url: "127.0.0.1:3333 (Local P2Pool)".to_string(),
             };
+
+            lock2!(helper, pub_api_xmrig).node = "127.0.0.1:3333 (Local P2Pool)".to_string();
             api_ip = "127.0.0.1".to_string();
             api_port = "18088".to_string();
 
@@ -286,9 +337,10 @@ impl Helper {
                     args.push(state.pause.to_string());
                 } // Pause on active
                 *lock2!(helper, img_xmrig) = ImgXmrig {
-                    url,
+                    url: url.clone(),
                     threads: state.current_threads.to_string(),
                 };
+                lock2!(helper, pub_api_xmrig).node = url;
             }
         }
         args.push(format!("--http-access-token={}", state.token)); // HTTP API Port
@@ -329,6 +381,8 @@ impl Helper {
         sudo: Arc<Mutex<SudoState>>,
         mut api_ip_port: String,
         token: &str,
+        process_xvb: Arc<Mutex<Process>>,
+        img_xmrig: &Arc<Mutex<ImgXmrig>>,
     ) {
         // 1a. Create PTY
         debug!("XMRig | Creating PTY...");
@@ -383,8 +437,8 @@ impl Helper {
         debug!("XMRig | Spawning PTY read thread...");
         let output_parse = Arc::clone(&lock!(process).output_parse);
         let output_pub = Arc::clone(&lock!(process).output_pub);
-        thread::spawn(move || {
-            Self::read_pty_xmrig(output_parse, output_pub, reader);
+        spawn(async move {
+            Self::read_pty_xmrig(output_parse, output_pub, reader, process_xvb).await;
         });
         let output_parse = Arc::clone(&lock!(process).output_parse);
         let output_pub = Arc::clone(&lock!(process).output_pub);
@@ -403,7 +457,8 @@ impl Helper {
         // Reset stats before loop
         *lock!(pub_api) = PubXmrigApi::new();
         *lock!(gui_api) = PubXmrigApi::new();
-
+        // node used for process Status tab
+        lock!(gui_api).node = lock!(img_xmrig).url.clone();
         // 5. Loop as watchdog
         info!("XMRig | Entering watchdog mode... woof!");
         loop {
@@ -627,6 +682,7 @@ pub struct PubXmrigApi {
     pub rejected: String,
     pub hashrate_raw: f32,
     pub hashrate_raw_15m: f32,
+    pub node: String,
 }
 
 impl Default for PubXmrigApi {
@@ -648,15 +704,18 @@ impl PubXmrigApi {
             rejected: UNKNOWN_DATA.to_string(),
             hashrate_raw: 0.0,
             hashrate_raw_15m: 0.0,
+            node: UNKNOWN_DATA.to_string(),
         }
     }
 
     #[inline]
     pub(super) fn combine_gui_pub_api(gui_api: &mut Self, pub_api: &mut Self) {
         let output = std::mem::take(&mut gui_api.output);
+        let node = std::mem::take(&mut gui_api.node);
         let buf = std::mem::take(&mut pub_api.output);
         *gui_api = Self {
             output,
+            node,
             ..std::mem::take(pub_api)
         };
         if !buf.is_empty() {
@@ -767,14 +826,15 @@ impl PrivXmrigApi {
         let body = hyper::body::to_bytes(response?.body_mut()).await?;
         Ok(serde_json::from_slice::<Self>(&body)?)
     }
-    // #[inline]
+    #[inline]
     // // Replace config with new node
     pub async fn update_xmrig_config(
         client: &hyper::Client<hyper::client::HttpConnector>,
         api_uri: &str,
         token: &str,
-        node: XvbNode,
+        node: &XvbNode,
         address: &str,
+        gui_api_xmrig: Arc<Mutex<PubXmrigApi>>,
     ) -> Result<()> {
         // get config
         let request = hyper::Request::builder()
@@ -791,14 +851,15 @@ impl PrivXmrigApi {
         // deserialize to json
         let mut config = serde_json::from_slice::<Value>(&body)?;
         // modify node configuration
+        let uri = [node.url(), ":".to_string(), node.port()].concat();
+        info!("replace xmrig config with node {}", uri);
         *config
             .pointer_mut("/pools/0/url")
-            .ok_or_else(|| anyhow!("pools/0/url does not exist in xmrig config"))? =
-            node.url().into();
+            .ok_or_else(|| anyhow!("pools/0/url does not exist in xmrig config"))? = uri.into();
         *config
             .pointer_mut("/pools/0/user")
             .ok_or_else(|| anyhow!("pools/0/user does not exist in xmrig config"))? =
-            node.user(&address).into();
+            node.user(address).into();
         *config
             .pointer_mut("/pools/0/tls")
             .ok_or_else(|| anyhow!("pools/0/tls does not exist in xmrig config"))? =
@@ -813,6 +874,7 @@ impl PrivXmrigApi {
         let request = hyper::Request::builder()
             .method("PUT")
             .header("Authorization", ["Bearer ", token].concat())
+            .header("Content-Type", "application/json")
             .uri(api_uri)
             .body(body)?;
         tokio::time::timeout(
@@ -820,6 +882,8 @@ impl PrivXmrigApi {
             client.request(request),
         )
         .await??;
+        // update process status
+        lock!(gui_api_xmrig).node = node.to_string();
         anyhow::Ok(())
     }
 }

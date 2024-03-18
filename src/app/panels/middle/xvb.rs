@@ -178,10 +178,8 @@ impl crate::disk::state::Xvb {
                             ui.vertical_centered(|ui| {
                                 ui.label(XVB_WINNER_FIELD);
                                 ui.label(
-                                    priv_stats
-                                        .win_current
-                                        .then(|| "You are Winning the round !")
-                                        .unwrap_or("You are not the winner"),
+                                    if priv_stats
+                                        .win_current { "You are Winning the round !" } else { "You are not the winner" },
                                 );
                             })
                             .response

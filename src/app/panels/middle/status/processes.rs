@@ -167,14 +167,11 @@ fn p2pool(
             .on_hover_text(STATUS_P2POOL_SHARES);
             ui.add_sized(
                 [width, height],
-                Label::new(format!(
-                    "{}",
-                    if let Some(s) = api.shares_found {
+                Label::new((if let Some(s) = api.shares_found {
                         s.to_string()
                     } else {
                         UNKNOWN_DATA.to_string()
-                    }
-                )),
+                    }).to_string()),
             );
             ui.add_sized(
                 [width, height],
@@ -317,7 +314,7 @@ fn xmrig(
                 ),
             )
             .on_hover_text(STATUS_XMRIG_CPU);
-            ui.add_sized([width, height], Label::new(format!("{}", api.resources)));
+            ui.add_sized([width, height], Label::new(api.resources.to_string()));
             ui.add_sized(
                 [width, height],
                 Label::new(
@@ -327,13 +324,13 @@ fn xmrig(
                 ),
             )
             .on_hover_text(STATUS_XMRIG_HASHRATE);
-            ui.add_sized([width, height], Label::new(format!("{}", api.hashrate)));
+            ui.add_sized([width, height], Label::new(api.hashrate.to_string()));
             ui.add_sized(
                 [width, height],
                 Label::new(RichText::new("Difficulty").underline().color(BONE)),
             )
             .on_hover_text(STATUS_XMRIG_DIFFICULTY);
-            ui.add_sized([width, height], Label::new(format!("{}", api.diff)));
+            ui.add_sized([width, height], Label::new(api.diff.to_string()));
             ui.add_sized(
                 [width, height],
                 Label::new(RichText::new("Shares").underline().color(BONE)),
@@ -351,7 +348,7 @@ fn xmrig(
                 Label::new(RichText::new("Pool").underline().color(BONE)),
             )
             .on_hover_text(STATUS_XMRIG_POOL);
-            ui.add_sized([width, height], Label::new(&lock!(xmrig_img).url));
+            ui.add_sized([width, height], Label::new(api.node.to_string()));
             ui.add_sized(
                 [width, height],
                 Label::new(RichText::new("Threads").underline().color(BONE)),

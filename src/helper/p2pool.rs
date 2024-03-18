@@ -1126,7 +1126,7 @@ impl PubP2poolApi {
             if v > *old_shares {
                 // found new share
                 *old_shares = v;
-                return (true, Some(Instant::now()));
+                (true, Some(Instant::now()))
             } else {
                 // no new share found this last minute, check if last share is still valid
                 if let Some(n) = last_time_found {
@@ -1150,7 +1150,7 @@ impl PubP2poolApi {
             }
         } else {
             // data from p2pool is not ready yet, so no share in pplns window.
-            return (false, None);
+            (false, None)
         }
     }
 }

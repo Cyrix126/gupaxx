@@ -5,9 +5,6 @@
 [XvB Bounty](https://bounties.monero.social/posts/105)
 
 - [x] upgrade deps
-- [ ] fix clippy
-- [ ] better organize some new code
-- [ ] merge commits from upstream
 - [x] separate logic in smaller modules
 - [x] new tab XvB
   - [x] logo
@@ -17,13 +14,17 @@
   - [x] hero checkbox
   - [x] log section
     - [x] state of XvB process
-    - [ ] algorithm decisions
+    - [ ] selected XvB node
+    - [ ] algorithm decisions info
   - [x] private stats
       - [x] round type in
       - [x] win or loose
-      - [ ] fix: remove B symbol for HR
+      - [ ] fix: symbol for HR
   - [x] new process for XvB
+    - [x] update preferred XvB node based on ping and backup 
+      - [x] fix: xmrig will not do anything if node is not responding. Need to parse output of xmrig for error and update nodes.
     - [x] status process XvB
+    - [x] status process XMRig node in real time.
     - [x] public information from [API](https://xmrvsbeast.com/p2pool/stats)
     - [x] stop, start, restart buttons
     - [x] button to autostart
@@ -44,3 +45,10 @@
   - [ ] adapt doc for new code
   - [ ] cargo package metadata
   - [ ] pgp signatures
+- [ ] fix clippy
+- [ ] better organize some new code
+- [ ] merge commits from upstream
+- [ ] tests for new functions
+- [ ] pre-release
+  - [ ] feedback
+- [ ] release

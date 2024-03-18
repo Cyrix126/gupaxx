@@ -216,11 +216,15 @@ pub enum ProcessState {
     Middle,  // Process is in the middle of something ([re]starting/stopping), YELLOW!
     Waiting, // Process was successfully killed by a restart, and is ready to be started again, YELLOW!
 
-    // Only for P2Pool, ORANGE.
+    // Only for P2Pool and XvB, ORANGE.
+    // XvB: Xmrig or P2pool are not alive
     Syncing,
 
-    // Only for XMRig, ORANGE.
+    // Only for XMRig and XvB, ORANGE.
+    // XvB: token or address are invalid even if syntax correct
     NotMining,
+    // XvB: if node of XvB become unusable (ex: offline).
+    OfflineNodesAll,
 }
 
 impl Default for ProcessState {
@@ -235,6 +239,7 @@ pub enum ProcessSignal {
     Start,
     Stop,
     Restart,
+    UpdateNodes,
 }
 
 impl Default for ProcessSignal {
