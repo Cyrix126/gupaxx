@@ -146,28 +146,17 @@ impl Helper {
         {
             // send to console: token non existent for address on XvB server
             warn!("Xvb | Start ... Partially failed because token and associated address are not existent on XvB server: {}\n", err);
-            // output the error to console
-            if let Err(e) = writeln!(
-                    lock!(gui_api).output,
-                    "Token and associated address are not valid on XvB API.\nCheck if you are registered.\nError: {}\n",
-                    err,
-                ) {
-                    error!("XvB Watchdog | GUI status write failed: {}", e);
-                }
+            output_console(&gui_api, &format!("Token and associated address are not valid on XvB API.\nCheck if you are registered.\nError: {}", err));
             lock!(process).state = ProcessState::NotMining;
         }
         info!("XvB | verify p2pool node");
         if !lock!(process_p2pool).is_alive() {
             // send to console: p2pool process is not running
             warn!("Xvb | Start ... Partially failed because P2pool instance is not running.");
-            // output the error to console
-            if let Err(e) = writeln!(
-                lock!(gui_api).output,
-                "P2pool process is not running.\nCheck the P2pool Tab\n",
-            ) {
-                error!("XvB Watchdog | GUI status write failed: {}", e);
-            }
-
+            output_console(
+                &gui_api,
+                "P2pool process is not running.\nCheck the P2pool Tab",
+            );
             lock!(process).state = ProcessState::Syncing;
         }
 
@@ -175,24 +164,18 @@ impl Helper {
             // send to console: p2pool process is not running
             warn!("Xvb | Start ... Partially failed because Xmrig instance is not running.");
             // output the error to console
-            if let Err(e) = writeln!(
-                lock!(gui_api).output,
-                "XMRig process is not running.\nCheck the Xmrig Tab.\n",
-            ) {
-                error!("XvB Watchdog | GUI status write failed: {}", e);
-            }
-
+            output_console(
+                &gui_api,
+                "XMRig process is not running.\nCheck the Xmrig Tab.",
+            );
             lock!(process).state = ProcessState::Syncing;
         }
         info!("XvB | print to console state");
         if lock!(process).state != ProcessState::Middle {
-            if let Err(e) = writeln!(
-                lock!(gui_api).output,
-                "XvB partially started.\n{}\n",
-                XVB_PUBLIC_ONLY,
-            ) {
-                error!("XvB Watchdog | GUI status write failed: {}", e);
-            }
+            output_console(
+                &gui_api,
+                &["XvB partially started.\n", XVB_PUBLIC_ONLY].concat(),
+            );
         } else {
             info!("XvB Fully started");
             lock!(process).state = ProcessState::Alive;
@@ -206,12 +189,10 @@ impl Helper {
                 XvbNode::update_fastest_node(&client_http_c, &pub_api_c, &gui_api_c, &process_c)
                     .await;
             });
-            if let Err(e) = writeln!(
-                lock!(gui_api).output,
-                "Algorithm of distribution of HR will wait 15 minutes for Xmrig average HR data.\n"
-            ) {
-                error!("XvB Watchdog | GUI status write failed: {}", e);
-            }
+            output_console(
+                &gui_api,
+                "Algorithm of distribution of HR will wait 15 minutes for Xmrig average HR data.",
+            );
         }
         // see how many shares are found at p2pool node only if XvB is started successfully. If it wasn't, maybe P2pool is node not running.
         let mut old_shares = if lock!(process).state == ProcessState::Alive {
@@ -243,12 +224,10 @@ impl Helper {
                         *lock!(pub_api) = PubXvbApi::new();
                         *lock!(gui_api) = PubXvbApi::new();
                         lock!(process).state = ProcessState::Alive;
-                        if let Err(e) = writeln!(
-                            lock!(gui_api).output,
-                            "XvB is now started because p2pool and xmrig came online.\n",
-                        ) {
-                            error!("XvB Watchdog | GUI status write failed: {}", e);
-                        }
+                        output_console(
+                            &gui_api,
+                            "XvB is now started because p2pool and xmrig came online.",
+                        );
                     }
                 } else {
                     // verify if the state is changing because p2pool is not alive anymore.
@@ -257,12 +236,10 @@ impl Helper {
                         *lock!(pub_api) = PubXvbApi::new();
                         *lock!(gui_api) = PubXvbApi::new();
                         lock!(process).state = ProcessState::Syncing;
-                        if let Err(e) = writeln!(
-                            lock!(gui_api).output,
+                        output_console(
+                            &gui_api,
                             "XvB is now partially stopped because p2pool node or xmrig came offline.\nCheck P2pool and Xmrig Tabs",
-                        ) {
-                            error!("XvB Watchdog | GUI status write failed: {}", e);
-                        }
+                        );
                     }
                 }
             }
@@ -300,13 +277,13 @@ impl Helper {
                             XVB_URL_PUBLIC_API, err
                         );
                         // output the error to console
-                        if let Err(e) = writeln!(
-                            lock!(gui_api).output,
-                            "Failure to retrieve public stats from {}",
-                            XVB_URL_PUBLIC_API
-                        ) {
-                            error!("XvB Watchdog | GUI status write failed: {}", e);
-                        }
+                        output_console(
+                            &gui_api,
+                            &format!(
+                                "Failure to retrieve public stats from {}",
+                                XVB_URL_PUBLIC_API
+                            ),
+                        );
                         lock!(process).state = ProcessState::Failed;
                         break;
                     }
@@ -328,13 +305,7 @@ impl Helper {
                                 Ok(data) => data,
                                 Err(e) => {
                                     warn!("XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}", e);
-                                    // output the error to console
-                                    if let Err(e) = writeln!(
-                            lock!(gui_api).output,
-                            "XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}", e
-                        ) {
-                            error!("XvB Watchdog | GUI status write failed: {}", e);
-                        }
+                                    output_console(&gui_api, &format!("XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}", e));
                                     break;
                                 }
                             };
@@ -345,14 +316,10 @@ impl Helper {
                             "XvB Watchdog | Could not send HTTP private API request to: {}\n:{}",
                             XVB_URL, err
                         );
-                            // output the error to console
-                            if let Err(e) = writeln!(
-                                lock!(gui_api).output,
-                                "Failure to retrieve private stats from {}",
-                                XVB_URL
-                            ) {
-                                error!("XvB Watchdog | GUI status write failed: {}", e);
-                            }
+                            output_console(
+                                &gui_api,
+                                &format!("Failure to retrieve private stats from {}", XVB_URL),
+                            );
                             lock!(process).state = ProcessState::Failed;
                             break;
                         }
@@ -436,21 +403,15 @@ impl Helper {
                             )
                             .await
                             {
-                                // show to console error about updating xmrig config
-                                if let Err(e) = writeln!(
-                                    lock!(gui_api_c).output,
-                                    "Failure to update xmrig config with HTTP API.\nError: {}",
-                                    err
-                                ) {
-                                    error!("XvB Watchdog | GUI status write failed: {}", e);
-                                }
+                                output_console(
+                                    &gui_api_c,
+                                    &format!(
+                                        "Failure to update xmrig config with HTTP API.\nError: {}",
+                                        err
+                                    ),
+                                );
                             } else {
-                                if let Err(e) = writeln!(
-                                        lock!(gui_api_c).output,
-                                        "Algorithm of distribution HR started for the next ten minutes.\nMining on local p2pool node.",
-                                    ) {
-                                        error!("XvB Watchdog | GUI status write failed: {}", e);
-                                    }
+                                output_console(&gui_api_c, "Algorithm of distribution HR started for the next ten minutes.\nMining on local p2pool node.");
                             }
                         });
 
@@ -459,24 +420,20 @@ impl Helper {
                             info!("Xvb Process | Algorithm share is in current window");
                             // calcul minimum HR
 
-                            if let Err(e) = writeln!(
-                                lock!(gui_api).output,
+                            output_console(
+                                &gui_api,
                                 "At least one share is in current PPLNS window.",
-                            ) {
-                                error!("XvB Watchdog | GUI status write failed: {}", e);
-                            }
+                            );
                             let hr = lock!(gui_api_xmrig).hashrate_raw_15m;
                             let min_hr = Helper::minimum_hashrate_share(
                                 lock!(gui_api_p2pool).p2pool_difficulty_u64,
                                 state_p2pool.mini,
                             );
                             info!("Xvb Process | hr {}, min_hr: {} ", hr, min_hr);
-                            if let Err(e) = writeln!(
-                                        lock!(gui_api).output,
-                                        "You'r HR from Xmrig is {}, minimum required HR to keep a share in PPLNS window is {}", hr, min_hr
-                                    ) {
-                                        error!("XvB Watchdog | GUI status write failed: {}", e);
-                                    }
+                            output_console(
+                                &gui_api,
+                                &format!("You'r HR from Xmrig is {}, minimum required HR to keep a share in PPLNS window is {}", hr, min_hr),
+                            );
 
                             // calculate how much time can be spared
                             let mut spared_time = Helper::time_that_could_be_spared(hr, min_hr);
@@ -490,13 +447,13 @@ impl Helper {
                                     );
                                 }
                                 info!("Xvb Process | spared time {} ", spared_time);
-                                if let Err(e) = writeln!(
-                                    lock!(gui_api).output,
-                                    "{} seconds of HR will be donated to the raffle.",
-                                    spared_time
-                                ) {
-                                    error!("XvB Watchdog | GUI status write failed: {}", e);
-                                }
+                                output_console(
+                                    &gui_api,
+                                    &format!(
+                                        " {} seconds of HR will be donated to the raffle.",
+                                        spared_time
+                                    ),
+                                );
                                 // sleep 10m less spared time then request XMrig to mine on XvB
                                 let was_instant = start_algorithm;
                                 let gui_api_c = gui_api.clone();
@@ -517,12 +474,7 @@ impl Helper {
                                 });
                             }
                         } else {
-                            if let Err(e) = writeln!(
-                                lock!(gui_api).output,
-                                "No share in the current PPLNS Window !",
-                            ) {
-                                error!("XvB Watchdog | GUI status write failed: {}", e);
-                            }
+                            output_console(&gui_api, "No share in the current PPLNS Window !");
                         }
                     }
                     // instant saved for next check
@@ -588,13 +540,13 @@ impl Helper {
         let node = lock!(gui_api_xvb).stats_priv.node.clone();
         info!("Xvb Process | for now mine on p2pol ");
         info!("Xvb Process | spared time {} ", spared_time);
-        if let Err(e) = writeln!(
-            lock!(gui_api_xvb).output,
-            "Still mining on P2pool node for {} seconds",
-            XVB_TIME_ALGO - spared_time
-        ) {
-            error!("XvB Watchdog | GUI status write failed: {}", e);
-        }
+        output_console(
+            &gui_api_xvb,
+            &format!(
+                "Still mining on P2pool node for {} seconds",
+                XVB_TIME_ALGO - spared_time
+            ),
+        );
         sleep_until(*was_instant + Duration::from_secs((XVB_TIME_ALGO - spared_time) as u64)).await;
         if let Err(err) = PrivXmrigApi::update_xmrig_config(
             client,
@@ -607,22 +559,22 @@ impl Helper {
         .await
         {
             // show to console error about updating xmrig config
-            if let Err(e) = writeln!(
-                lock!(gui_api_xvb).output,
-                "Failure to update xmrig config with HTTP API.\nError: {}",
-                err
-            ) {
-                error!("XvB Watchdog | GUI status write failed: {}", e);
-            }
+            output_console(
+                &gui_api_xvb,
+                &format!(
+                    "Failure to update xmrig config with HTTP API.\nError: {}",
+                    err
+                ),
+            );
         } else {
             info!("Xvb Process | mining on XvB pool");
-            if let Err(e) = writeln!(
-                lock!(gui_api_xvb).output,
-                "Now donating to the XvB raffle for the rest of the {} minutes.",
-                XVB_TIME_ALGO / 60
-            ) {
-                error!("XvB Watchdog | GUI status write failed: {}", e);
-            }
+            output_console(
+                &gui_api_xvb,
+                &format!(
+                    "Now donating to the XvB raffle for the rest of the {} minutes.",
+                    XVB_TIME_ALGO / 60
+                ),
+            );
         }
     }
 }
@@ -833,23 +785,18 @@ impl XvbNode {
         if node == XvbNode::P2pool {
             // if both nodes are dead, then the state of the process must be NodesOffline
             info!("XvB node ping, all offline or ping failed, switching back to local p2pool",);
-            if let Err(e) = writeln!(
-                lock!(&gui_api_xvb).output,
+            output_console(
+                &gui_api_xvb,
                 "XvB node ping, all offline or ping failed, switching back to local p2pool",
-            ) {
-                error!("XvB Watchdog | GUI status write failed: {}", e);
-            }
+            );
             lock!(process_xvb).state = ProcessState::OfflineNodesAll;
         } else {
             // if node is up and because update_fastest is used only if token/address is valid, it means XvB process is Alive.
             info!("XvB node ping, both online and best is {}", node.url());
-            if let Err(e) = writeln!(
-                lock!(&gui_api_xvb).output,
-                "XvB node ping, {} is selected as the fastest.",
-                node
-            ) {
-                error!("XvB Watchdog | GUI status write failed: {}", e);
-            }
+            output_console(
+                &gui_api_xvb,
+                &format!("XvB node ping, {} is selected as the fastest.", node),
+            );
             lock!(process_xvb).state = ProcessState::Alive;
         }
         lock!(pub_api_xvb).stats_priv.node = node;
@@ -939,15 +886,10 @@ fn signal_interrupt(
         );
         // insert the signal into output of XvB
         // This is written directly into the GUI API, because sometimes the 900ms event loop can't catch it.
-        if let Err(e) = writeln!(
-            lock!(gui_api).output,
-            "{}Xvb stopped | Uptime: [{}] | \n{}\n\n\n\n",
-            HORI_CONSOLE,
-            Uptime::from(uptime),
-            HORI_CONSOLE
-        ) {
-            error!("XvB Watchdog | GUI Uptime/Exit status write failed: {}", e);
-        }
+        output_console(
+            &gui_api,
+            &format!("{}XvB stopped\n{}\n", HORI_CONSOLE, HORI_CONSOLE),
+        );
         debug!("XvB Watchdog | Stop SIGNAL done, breaking");
         lock!(process).signal = ProcessSignal::None;
         lock!(process).state = ProcessState::Dead;
@@ -991,27 +933,35 @@ fn signal_interrupt(
             .await
             {
                 // show to console error about updating xmrig config
-                if let Err(e) = writeln!(
-                    lock!(&gui_api_c).output,
-                    "Failure to update xmrig config with HTTP API.\nError: {}",
-                    err
-                ) {
-                    error!("XvB Watchdog | GUI status write failed: {}", e);
-                }
+                output_console(
+                    &gui_api_c,
+                    &format!(
+                        "Failure to update xmrig config with HTTP API.\nError: {}",
+                        err
+                    ),
+                );
             } else {
-                if let Err(e) = writeln!(
-                    lock!(&gui_api_c).output,
-                    "XvB node failed, falling back to {}",
-                    node
-                ) {
-                    error!("XvB Watchdog | GUI status write failed: {}", e);
-                }
+                output_console(
+                    &gui_api_c,
+                    &format!("XvB node failed, falling back to {}", node),
+                );
             }
         });
         lock!(process).signal = ProcessSignal::None;
         // the state will be Offline or Alive after update_fastest_node is done, meanwhile Signal will be None so not re-treated before update_fastest is done.
     }
     false
+}
+
+// print date time to console output in same format than xmrig
+use chrono::Local;
+fn datetime_console() -> String {
+    format!("[{}]  ", Local::now().format("%Y-%m-%d %H:%M:%S%.3f"))
+}
+pub fn output_console(gui_api: &Arc<Mutex<PubXvbApi>>, msg: &str) {
+    if let Err(e) = writeln!(lock!(gui_api).output, "{}{msg}", datetime_console()) {
+        error!("XvB Watchdog | GUI status write failed: {}", e);
+    }
 }
 //---------------------------------------------------------------------------------------------------- TEST
 #[cfg(test)]

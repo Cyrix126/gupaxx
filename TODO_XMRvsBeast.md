@@ -16,6 +16,7 @@
     - [x] state of XvB process
     - [x] selected XvB node
     - [x] algorithm decisions info
+    - [x] timestamp
   - [x] private stats
       - [x] from XvB API (fails, average 1h and 24h)
       - [x] round type in

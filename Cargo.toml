@@ -77,6 +77,7 @@ strip-ansi-escapes = "0.2.0"
 derive_more = {version="0.99.17", default-features=false, features=["display"]}
 serde-this-or-that = "0.4.2"
 readable = "0.16"
+chrono = {version="0.4.35", default-features=false, features=["clock", "std"]}
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
 tar = "0.4.40"
