@@ -1,9 +1,8 @@
 use std::sync::{Arc, Mutex};
 
 use egui::TextStyle::{self, Name};
-use egui::{vec2, Hyperlink, Image, RichText, TextEdit, Ui, Vec2};
+use egui::{vec2,  Image, RichText, TextEdit, Ui, Vec2};
 use log::debug;
-use readable::byte::Byte;
 use readable::num::Float;
 
 use crate::helper::xvb::PubXvbApi;
@@ -32,22 +31,24 @@ impl crate::disk::state::Xvb {
     ) {
         let website_height = size.y / 10.0;
         let width = size.x;
+        let height = size.y;
+        let space_h = height / 48.0;
         // logo and website link
         ui.vertical_centered(|ui| {
             ui.add_sized(
                 [width, website_height],
                 Image::from_bytes("bytes:/xvb.png", BYTES_XVB),
             );
-            ui.add_sized(
-                [width / 8.0, website_height],
-                Hyperlink::from_label_and_url("XMRvsBeast", XVB_URL),
-            );
+            ui.style_mut().override_text_style = Some(TextStyle::Heading);
+            ui.add_space(space_h);
+            ui.hyperlink_to("XMRvsBeast", XVB_URL);
+            ui.add_space(space_h);
         });
         // console output for log
         debug!("XvB Tab | Rendering [Console]");
         ui.group(|ui| {
             let height = size.y / 2.8;
-            let width = size.x - SPACE;
+            let width = size.x - space_h;
             egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
                 ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
                 egui::ScrollArea::vertical()
@@ -83,37 +84,42 @@ impl crate::disk::state::Xvb {
                 RED,
             )
         };
-        ui.add_space(SPACE * 2.0);
-        ui.group(|ui| {
-            ui.colored_label(color, text);
-            ui.add(
-                TextEdit::singleline(&mut self.token)
-                    .char_limit(XVB_TOKEN_LEN)
-                    .desired_width(ui.text_style_height(&TextStyle::Small) * XVB_TOKEN_LEN as f32)
-                    .vertical_align(egui::Align::Center),
-            );
-        })
-        .response
-        .on_hover_text_at_pointer(XVB_HELP);
-        ui.add_space(SPACE * 2.0);
-        ui.checkbox(&mut self.hero, "Hero")
-            .on_hover_text(XVB_HERO_SELECT);
-        // need to warn the user if no address is set in p2pool tab
+        ui.add_space(space_h);
+        ui.horizontal(|ui| {
+                ui.group(|ui| {
+                    ui.colored_label(color, text);
+                    ui.add(
+                        TextEdit::singleline(&mut self.token)
+                            .char_limit(9)
+                            .desired_width(ui.text_style_height(&TextStyle::Body) * 9.0)
+                            .vertical_align(egui::Align::Center),
+                        )
+                .on_hover_text_at_pointer(XVB_HELP)
+            })
+            .response
+            .on_hover_text_at_pointer(XVB_HELP);
+            ui.add_space(height / 48.0);
+    ui.style_mut().spacing.icon_width_inner = width / 45.0;
+    ui.style_mut().spacing.icon_width = width / 35.0;
+    ui.style_mut().spacing.icon_spacing = space_h;
+            ui.checkbox(&mut self.hero, "Hero Mode").on_hover_text(XVB_HERO_SELECT);
+// need to warn the user if no address is set in p2pool tab
         if !Regexes::addr_ok(address) {
+            ui.add_space(width / 16.0);
             debug!("XvB Tab | Rendering warning text");
-            ui.label(RichText::new("You don't have any payout address set in the P2pool Tab !\nXvB process needs one to function properly.")
+                ui.horizontal_wrapped(|ui|{
+            ui.label(RichText::new("You don't have any payout address set in the P2pool Tab ! XvB process needs one to function properly.")
                         .color(ORANGE));
+                    
+                });
         }
+        });
         // private stats
-        let priv_stats = &lock!(api).stats_priv;
-        // ui.vertical_centered(|ui| {
+        ui.add_space(space_h);
         ui.add_enabled_ui(private_stats, |ui| {
-            ui.add_space(SPACE * 2.0);
             ui.horizontal(|ui| {
-                // widget takes a third less space for two separator.
-                let width_stat = (ui.available_width() / 5.0)
-                    - ((24.0 + ui.style().spacing.item_spacing.x + SPACE) / 5.0);
-                // 0.0 means minimum
+                let priv_stats = &lock!(api).stats_priv;
+                let width_stat = (ui.available_width() - SPACE * 4.0) / 5.0;
                 let height_stat = 0.0;
                 let size_stat = vec2(width_stat, height_stat);
                 let round = match &priv_stats.round_participate {
@@ -192,10 +198,12 @@ impl crate::disk::state::Xvb {
             });
         });
         // Rules link help
-        ui.add_space(ui.available_height() / 2.0);
-        ui.vertical_centered(|ui| {
+            ui.horizontal_centered(|ui| {
+            // can't have horizontal and vertical centering work together so fix by this.
+            ui.add_space((width /2.0)-(ui.text_style_height( &TextStyle::Heading) * 1.5 ));
+            ui.style_mut().override_text_style = Some(TextStyle::Heading);
             ui.hyperlink_to("Rules", XVB_URL_RULES)
                 .on_hover_text("Click here to read the rules and understand how the raffle works.");
-        });
+            });
     }
 }
