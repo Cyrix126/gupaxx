@@ -424,7 +424,7 @@ pub const XVB_BUFFER: f32 = 1.05;
 pub const XVB_TIME_ALGO: u32 = 600;
 pub const XVB_TOKEN_LEN: usize = 9;
 pub const XVB_HERO_SELECT: &str =
-    "Donate all spared hashrate to the raffle, even if there is more than enough to be in the most highest round type possible";
+    "This mode will donate all available hashrate while keeping a share in the  p2pool PPLNS window";
 pub const XVB_TOKEN_FIELD: &str = "Token";
 pub const XVB_FAILURE_FIELD: &str = "Failures";
 pub const XVB_DONATED_1H_FIELD: &str = "Donated last hour";
