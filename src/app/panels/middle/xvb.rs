@@ -94,7 +94,6 @@ impl crate::disk::state::Xvb {
                             .desired_width(ui.text_style_height(&TextStyle::Body) * 9.0)
                             .vertical_align(egui::Align::Center),
                         )
-                .on_hover_text_at_pointer(XVB_HELP)
             })
             .response
             .on_hover_text_at_pointer(XVB_HELP);
