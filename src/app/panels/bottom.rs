@@ -14,8 +14,8 @@ use egui::TextStyle::Name;
 use egui::*;
 use log::debug;
 
+use crate::app::Tab;
 use crate::helper::ProcessState::*;
-use crate::{app::Tab, utils::constants::SPACE};
 impl crate::app::App {
     #[allow(clippy::too_many_arguments)]
     pub fn bottom_panel(
@@ -41,8 +41,7 @@ impl crate::app::App {
             ui.style_mut().override_text_style = Some(Name("Bottom".into()));
             ui.horizontal(|ui| {
                 ui.group(|ui| {
-                    let width = ((self.size.x / 2.0) / 4.0) - (SPACE * 2.0);
-                    let size = vec2(width, height);
+                    let size = vec2(0.0, height);
                     // [Gupax Version]
                     // Is yellow if the user updated and should (but isn't required to) restart.
                     match *lock!(self.restart) {
@@ -68,7 +67,8 @@ impl crate::app::App {
                     }
                     #[cfg(target_family = "unix")]
                     // [P2Pool/XMRig/XvB] Status
-                    ui.add_sized(size, Label::new(self.os));
+                    ui.label(self.os);
+                    // ui.add_sized(size, Label::new(self.os));
                     ui.separator();
                     status_p2pool(p2pool_state, ui, size);
                     ui.separator();
@@ -189,9 +189,9 @@ impl crate::app::App {
         });
     }
     fn status_submenu(&mut self, ui: &mut Ui, height: f32) {
+        // ui.style_mut().wrap = Some(true);
         ui.group(|ui| {
-            let width = (ui.available_width() / 3.0) - 14.0;
-            let size = vec2(width, height);
+            let size = vec2(0.0, height);
             if ui
                 .add_sized(
                     size,
@@ -666,7 +666,7 @@ fn status_xvb(state: ProcessState, ui: &mut Ui, size: Vec2) {
     status(ui, color, hover_text, size, "XvB  ⏺");
 }
 
-fn status(ui: &mut Ui, color: Color32, hover_text: &str, size: Vec2, text: &str) {
-    ui.add_sized(size, Label::new(RichText::new(text).color(color)))
+fn status(ui: &mut Ui, color: Color32, hover_text: &str, _size: Vec2, text: &str) {
+    ui.label(RichText::new(text).color(color))
         .on_hover_text(hover_text);
 }
