@@ -167,11 +167,14 @@ fn p2pool(
             .on_hover_text(STATUS_P2POOL_SHARES);
             ui.add_sized(
                 [width, height],
-                Label::new((if let Some(s) = api.shares_found {
+                Label::new(
+                    (if let Some(s) = api.shares_found {
                         s.to_string()
                     } else {
                         UNKNOWN_DATA.to_string()
-                    }).to_string()),
+                    })
+                    .to_string(),
+                ),
             );
             ui.add_sized(
                 [width, height],

@@ -48,7 +48,8 @@ impl P2pool {
         debug!("P2Pool Tab | Rendering [Console]");
         ui.group(|ui| {
             if self.simple {
-                let height = size.y / 2.8;
+                // height of console = height - address - simple(dropmenu, select_bar, buttons, warning)
+                let height = (size.y * 0.38) - SPACE;
                 let width = size.x - SPACE;
                 egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
                     ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
@@ -66,7 +67,12 @@ impl P2pool {
                 });
             //---------------------------------------------------------------------------------------------------- [Advanced] Console
             } else {
-                let height = height / 2.8;
+                // fix for advanced submenu overlap on bottom when small window
+                let height = if size.y < 600.0 {
+                    size.y * 0.22 - SPACE
+                } else {
+                    size.y * 0.36 - SPACE
+                };
                 let width = width - SPACE;
                 egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
                     ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
@@ -155,7 +161,7 @@ impl P2pool {
             self.address.truncate(95);
         });
 
-        let height = ui.available_height();
+        // let height = ui.available_height();
         let size = vec2(width, height);
         if self.simple {
             //---------------------------------------------------------------------------------------------------- Simple

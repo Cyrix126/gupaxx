@@ -1,22 +1,24 @@
-use std::io::Write;
 use crate::components::update::Update;
 use crate::helper::{Helper, ProcessSignal};
-use crate::utils::constants::{APP_MIN_WIDTH, APP_MIN_HEIGHT, APP_MAX_WIDTH, APP_MAX_HEIGHT, BYTES_ICON};
+use crate::utils::constants::{
+    APP_MAX_HEIGHT, APP_MAX_WIDTH, APP_MIN_HEIGHT, APP_MIN_WIDTH, BYTES_ICON,
+};
 use crate::utils::regex::Regexes;
+use std::io::Write;
 //---------------------------------------------------------------------------------------------------- Init functions
-use crate::{components::node::Ping, miscs::clamp_scale};
 use crate::app::App;
-use std::sync::Arc;
-use std::time::Instant;
+use crate::{components::node::Ping, miscs::clamp_scale};
+use crate::{disk::state::*, utils::macros::lock};
+use crate::{info, warn};
 use eframe::NativeOptions;
+use egui::TextStyle::Small;
+use egui::TextStyle::{Body, Button, Heading, Monospace, Name};
+use egui::*;
 use env_logger::fmt::style::Style;
 use env_logger::{Builder, WriteStyle};
 use log::LevelFilter;
-use egui::TextStyle::{Body, Button, Monospace, Heading, Name};
-use crate::{disk::state::*, utils::macros::lock};
-use egui::TextStyle::Small;
-use crate::{info, warn};
-use egui::*;
+use std::sync::Arc;
+use std::time::Instant;
 
 #[cold]
 #[inline(never)]
@@ -87,7 +89,7 @@ pub fn init_logger(now: Instant) {
         .format(move |buf, record| {
             let level = record.level();
             let level_style = buf.default_level_style(level);
-            let dimmed = Style::new().dimmed(); 
+            let dimmed = Style::new().dimmed();
             writeln!(
                 buf,
                 "{level_style}[{}]{level_style:#} [{dimmed}{:.3}{dimmed:#}] [{dimmed}{}{dimmed:#}:{dimmed}{}{dimmed:#}] {}",
@@ -208,9 +210,13 @@ pub fn init_auto(app: &mut App) {
     }
     // [Auto-XvB]
     if app.state.gupax.auto_xvb {
-    Helper::start_xvb(&app.helper, &app.state.xvb, &app.state.p2pool, &app.state.xmrig);
+        Helper::start_xvb(
+            &app.helper,
+            &app.state.xvb,
+            &app.state.p2pool,
+            &app.state.xmrig,
+        );
     } else {
         info!("Skipping auto-xvb...");
-        
     }
 }

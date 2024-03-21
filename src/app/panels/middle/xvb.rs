@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use egui::TextStyle::{self, Name};
-use egui::{vec2,  Image, RichText, TextEdit, Ui, Vec2};
+use egui::{vec2, Image, RichText, TextEdit, Ui, Vec2};
 use log::debug;
 use readable::num::Float;
 
@@ -48,7 +48,7 @@ impl crate::disk::state::Xvb {
         debug!("XvB Tab | Rendering [Console]");
         ui.group(|ui| {
             let height = size.y / 2.8;
-            let width = size.x - space_h;
+            let width = size.x - (space_h / 2.0);
             egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
                 ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
                 egui::ScrollArea::vertical()
@@ -109,7 +109,7 @@ impl crate::disk::state::Xvb {
                 ui.horizontal_wrapped(|ui|{
             ui.label(RichText::new("You don't have any payout address set in the P2pool Tab ! XvB process needs one to function properly.")
                         .color(ORANGE));
-                    
+
                 });
         }
         });
@@ -197,12 +197,12 @@ impl crate::disk::state::Xvb {
             });
         });
         // Rules link help
-            ui.horizontal_centered(|ui| {
+        ui.horizontal_centered(|ui| {
             // can't have horizontal and vertical centering work together so fix by this.
-            ui.add_space((width /2.0)-(ui.text_style_height( &TextStyle::Heading) * 1.5 ));
+            ui.add_space((width / 2.0) - (ui.text_style_height(&TextStyle::Heading) * 1.5));
             ui.style_mut().override_text_style = Some(TextStyle::Heading);
             ui.hyperlink_to("Rules", XVB_URL_RULES)
                 .on_hover_text("Click here to read the rules and understand how the raffle works.");
-            });
+        });
     }
 }

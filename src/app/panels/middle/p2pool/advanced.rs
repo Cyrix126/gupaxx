@@ -16,6 +16,8 @@ impl P2pool {
         text_edit: f32,
         node_vec: &mut Vec<(String, Node)>,
     ) {
+        let height = size.y / 16.0;
+        let space_h = size.y / 128.0;
         debug!("P2Pool Tab | Rendering [Node List] elements");
         let mut incorrect_input = false; // This will disable [Add/Delete] on bad input
                                          // [Monero node IP/RPC/ZMQ]
@@ -228,16 +230,16 @@ impl P2pool {
 		});
 		});
 		});
-        ui.add_space(5.0);
+        // ui.add_space(space_h);
 
         debug!("P2Pool Tab | Rendering [Main/Mini/Peers/Log] elements");
         // [Main/Mini]
         ui.horizontal(|ui| {
-            let height = size.y / 4.0;
+            let height = height / 4.0;
             ui.group(|ui| {
                 ui.horizontal(|ui| {
                     let width = (size.x / 4.0) - SPACE;
-                    let height = height + 6.0;
+                    let height = height + space_h;
                     if ui
                         .add_sized(
                             [width, height],
@@ -292,7 +294,9 @@ impl P2pool {
         debug!("P2Pool Tab | Rendering Backup host button");
         ui.group(|ui| {
             let width = size.x - SPACE;
-            let height = ui.available_height() / 3.0;
+            let height = ui.available_height();
+            ui.style_mut().spacing.icon_width = height;
+            ui.style_mut().spacing.icon_width_inner = height * 0.9;
             // [Backup host]
             ui.add_sized(
                 [width, height],

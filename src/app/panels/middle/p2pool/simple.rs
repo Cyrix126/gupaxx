@@ -21,8 +21,9 @@ use log::*;
 impl P2pool {
     pub(super) fn simple(&mut self, ui: &mut Ui, size: Vec2, ping: &Arc<Mutex<Ping>>) {
         // [Node]
-        let height = size.y / 6.5;
-        ui.spacing_mut().slider_width = size.x - 8.0;
+        let height = size.y / 13.0;
+        let space_h = size.y / 96.0;
+        ui.spacing_mut().slider_width = size.x - 16.0;
         ui.spacing_mut().icon_width = size.x / 25.0;
 
         // [Auto-select] if we haven't already.
@@ -73,7 +74,7 @@ impl P2pool {
                     });
             });
 
-            ui.add_space(5.0);
+            ui.add_space(space_h);
 
             debug!("P2Pool Tab | Rendering [Select fastest ... Ping] buttons");
             ui.horizontal(|ui| {
@@ -142,16 +143,16 @@ impl P2pool {
                 let msg = RichText::new(format!("{} ... {}%", lock!(ping).msg, prog));
                 let height = height / 1.25;
                 let size = vec2(size.x, height);
-                ui.add_space(5.0);
+                ui.add_space(space_h);
                 ui.add_sized(size, Label::new(msg));
-                ui.add_space(5.0);
+                ui.add_space(space_h);
                 if pinging {
                     ui.add_sized(size, Spinner::new().size(height));
                 } else {
                     ui.add_sized(size, Label::new("..."));
                 }
                 ui.add_sized(size, ProgressBar::new(prog.round() / 100.0));
-                ui.add_space(5.0);
+                ui.add_space(space_h);
             });
         });
 

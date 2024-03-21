@@ -41,6 +41,7 @@
         - [x] without hero option, to give minimum to be in most accessible round type
       - [x] sleep 10mn less time to spare then ask Xmrig to mine on XvB node
     - [x] output log to console in XvB tab
+- [x] fix some overlapping from upstream
 - [ ] edit metadata of project
   - [ ] adapt README for XvB
   - [ ] adapt doc for new code
