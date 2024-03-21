@@ -176,12 +176,6 @@ impl Process {
         }
     }
 
-    // Borrow a [&str], return an owned split collection
-    #[inline]
-    pub fn parse_args(args: &str) -> Vec<String> {
-        args.split_whitespace().map(|s| s.to_owned()).collect()
-    }
-
     #[inline]
     // Convenience functions
     pub fn is_alive(&self) -> bool {

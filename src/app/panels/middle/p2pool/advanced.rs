@@ -123,11 +123,11 @@ impl P2pool {
 					if ui.add(SelectableLabel::new(self.selected_name == *name, text)).clicked() {
 						self.selected_index = n;
 						let node = node.clone();
-						self.selected_name = name.clone();
-						self.selected_ip = node.ip.clone();
-						self.selected_rpc = node.rpc.clone();
-						self.selected_zmq = node.zmq.clone();
-						self.name = name.clone();
+						self.selected_name.clone_from(name);
+						self.selected_ip.clone_from(&node.ip);
+						self.selected_rpc.clone_from(&node.rpc);
+						self.selected_zmq.clone_from(&node.zmq);
+						self.name.clone_from(name);
 						self.ip = node.ip;
 						self.rpc = node.rpc;
 						self.zmq = node.zmq;
@@ -163,9 +163,9 @@ impl P2pool {
 						};
 						node_vec[existing_index].1 = node;
 						self.selected_index = existing_index;
-						self.selected_ip = self.ip.clone();
-						self.selected_rpc = self.rpc.clone();
-						self.selected_zmq = self.zmq.clone();
+						self.selected_ip.clone_from(&self.ip);
+						self.selected_rpc.clone_from(&self.rpc);
+						self.selected_zmq.clone_from(&self.zmq);
 						info!("Node | S | [index: {}, name: \"{}\", ip: \"{}\", rpc: {}, zmq: {}]", existing_index+1, self.name, self.ip, self.rpc, self.zmq);
 					}
 				// Else, add to the list
@@ -179,10 +179,10 @@ impl P2pool {
 						};
 						node_vec.push((self.name.clone(), node));
 						self.selected_index = node_vec_len;
-						self.selected_name = self.name.clone();
-						self.selected_ip = self.ip.clone();
-						self.selected_rpc = self.rpc.clone();
-						self.selected_zmq = self.zmq.clone();
+						self.selected_name.clone_from(&self.name);
+						self.selected_ip.clone_from(&self.ip);
+						self.selected_rpc.clone_from(&self.rpc);
+						self.selected_zmq.clone_from(&self.zmq);
 						info!("Node | A | [index: {}, name: \"{}\", ip: \"{}\", rpc: {}, zmq: {}]", node_vec_len, self.name, self.ip, self.rpc, self.zmq);
 					}
 				}
@@ -207,10 +207,10 @@ impl P2pool {
 							new_node = node_vec[self.selected_index].1.clone();
 						}
 					};
-					self.selected_name = new_name.clone();
-					self.selected_ip = new_node.ip.clone();
-					self.selected_rpc = new_node.rpc.clone();
-					self.selected_zmq = new_node.zmq.clone();
+					self.selected_name.clone_from(&new_name);
+					self.selected_ip.clone_from(&new_node.ip);
+					self.selected_rpc.clone_from(&new_node.rpc);
+					self.selected_zmq.clone_from(&new_node.zmq);
 					self.name = new_name;
 					self.ip = new_node.ip;
 					self.rpc = new_node.rpc;

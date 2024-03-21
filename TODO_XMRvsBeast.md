@@ -47,7 +47,7 @@
   - [ ] adapt doc for new code
   - [ ] cargo package metadata
   - [ ] pgp signatures
-- [ ] fix clippy
+- [x] fix clippy
 - [ ] optimizations
 - [ ] better organize new code
 - [ ] merge commits from upstream

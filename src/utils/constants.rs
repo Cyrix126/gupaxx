@@ -119,12 +119,11 @@ pub const SPACE: f32 = 10.0;
 // Some colors
 pub const RED: egui::Color32 = egui::Color32::from_rgb(230, 50, 50);
 pub const GREEN: egui::Color32 = egui::Color32::from_rgb(100, 230, 100);
-pub const BLUE: egui::Color32 = egui::Color32::from_rgb(100, 175, 255);
+// pub const BLUE: egui::Color32 = egui::Color32::from_rgb(100, 175, 255);
 pub const ORANGE: egui::Color32 = egui::Color32::from_rgb(255, 120, 40);
 pub const YELLOW: egui::Color32 = egui::Color32::from_rgb(230, 230, 100);
 pub const BRIGHT_YELLOW: egui::Color32 = egui::Color32::from_rgb(250, 250, 100);
 pub const BONE: egui::Color32 = egui::Color32::from_rgb(190, 190, 190); // In between LIGHT_GRAY <-> GRAY
-pub const WHITE: egui::Color32 = egui::Color32::WHITE;
 pub const GRAY: egui::Color32 = egui::Color32::GRAY;
 pub const LIGHT_GRAY: egui::Color32 = egui::Color32::LIGHT_GRAY;
 pub const BLACK: egui::Color32 = egui::Color32::BLACK;
@@ -266,7 +265,6 @@ pub const GUPAX_UPDATE: &str =
 pub const GUPAX_AUTO_UPDATE: &str = "Automatically check for updates at startup";
 pub const GUPAX_SHOULD_RESTART: &str =
     "Gupax was updated. A restart is recommended but not required";
-pub const GUPAX_UP_TO_DATE: &str = "Gupax is up-to-date";
 #[cfg(not(target_os = "macos"))]
 pub const GUPAX_UPDATE_VIA_TOR:   &str = "Update through the Tor network. Tor is embedded within Gupax; a Tor system proxy is not required";
 #[cfg(target_os = "macos")] // Arti library has issues on macOS
@@ -305,7 +303,6 @@ pub const GUPAX_ADVANCED: &str = r#"Use advanced Gupax settings:
   - Gupax resolution sliders
   - Gupax start-up tab selector"#;
 pub const GUPAX_SELECT: &str = "Open a file explorer to select a file";
-pub const GUPAX_PATH: &str = "Use custom PATHs when looking for P2Pool/XMRig";
 pub const GUPAX_PATH_P2POOL: &str = "The location of the P2Pool binary: Both absolute and relative paths are accepted; A red [X] will appear if there is no file found at the given path";
 pub const GUPAX_PATH_XMRIG: &str = "The location of the XMRig binary: Both absolute and relative paths are accepted; A red [X] will appear if there is no file found at the given path";
 

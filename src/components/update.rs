@@ -94,9 +94,9 @@ const GUPAX_SUFFIX: &str = "/gupax-";
 const P2POOL_SUFFIX: &str = "/p2pool-";
 const XMRIG_SUFFIX: &str = "/xmrig-";
 
-const GUPAX_HASH: &str = "SHA256SUMS";
-const P2POOL_HASH: &str = "sha256sums.txt.asc";
-const XMRIG_HASH: &str = "SHA256SUMS";
+// const GUPAX_HASH: &str = "SHA256SUMS";
+// const P2POOL_HASH: &str = "sha256sums.txt.asc";
+// const XMRIG_HASH: &str = "SHA256SUMS";
 
 #[cfg(target_os = "windows")]
 mod impl_platform {
@@ -122,8 +122,8 @@ mod impl_platform {
 #[cfg(target_family = "unix")]
 mod impl_unix {
     pub(super) const GUPAX_BINARY: &str = "gupax";
-    pub(super) const P2POOL_BINARY: &str = "p2pool";
-    pub(super) const XMRIG_BINARY: &str = "xmrig";
+    // pub(super) const P2POOL_BINARY: &str = "p2pool";
+    // pub(super) const XMRIG_BINARY: &str = "xmrig";
     pub(super) const VALID_GUPAX_1: &str = "GUPAX";
     pub(super) const VALID_GUPAX_2: &str = "Gupax";
     pub(super) const VALID_GUPAX_3: &str = "gupax";
@@ -168,7 +168,7 @@ mod impl_platform {
 
 use impl_platform::*;
 
-const VALID_GUPAX: [&str; 3] = [VALID_GUPAX_1, VALID_GUPAX_2, VALID_GUPAX_3];
+// const VALID_GUPAX: [&str; 3] = [VALID_GUPAX_1, VALID_GUPAX_2, VALID_GUPAX_3];
 const VALID_XMRIG: [&str; 4] = [VALID_XMRIG_1, VALID_XMRIG_2, VALID_XMRIG_3, VALID_XMRIG_4];
 const VALID_P2POOL: [&str; 4] = [
     VALID_P2POOL_1,

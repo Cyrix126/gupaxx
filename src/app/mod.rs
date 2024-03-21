@@ -326,11 +326,11 @@ impl App {
 
         info!("App Init | Setting TOML path...");
         // Set [*.toml] path
-        app.state_path = app.os_data_path.clone();
+        app.state_path.clone_from(&app.os_data_path);
         app.state_path.push(STATE_TOML);
-        app.node_path = app.os_data_path.clone();
+        app.node_path.clone_from(&app.os_data_path);
         app.node_path.push(NODE_TOML);
-        app.pool_path = app.os_data_path.clone();
+        app.pool_path.clone_from(&app.os_data_path);
         app.pool_path.push(POOL_TOML);
         // Set GupaxP2poolApi path
         app.gupax_p2pool_api_path = crate::disk::get_gupax_p2pool_path(&app.os_data_path);
@@ -388,7 +388,7 @@ impl App {
                 Node::new_vec()
             }
         };
-        app.og_node_vec = app.node_vec.clone();
+        app.og_node_vec.clone_from(&app.node_vec);
         debug!("Node Vec:");
         debug!("{:#?}", app.node_vec);
         // Read pool list
@@ -410,7 +410,7 @@ impl App {
                 Pool::new_vec()
             }
         };
-        app.og_pool_vec = app.pool_vec.clone();
+        app.og_pool_vec.clone_from(&app.pool_vec);
         debug!("Pool Vec:");
         debug!("{:#?}", app.pool_vec);
 
@@ -481,10 +481,10 @@ impl App {
                 None => Node::new_tuple(),
             };
             og.p2pool.selected_index = 0;
-            og.p2pool.selected_name = name.clone();
-            og.p2pool.selected_ip = node.ip.clone();
-            og.p2pool.selected_rpc = node.rpc.clone();
-            og.p2pool.selected_zmq = node.zmq.clone();
+            og.p2pool.selected_name.clone_from(&name);
+            og.p2pool.selected_ip.clone_from(&node.ip);
+            og.p2pool.selected_rpc.clone_from(&node.rpc);
+            og.p2pool.selected_zmq.clone_from(&node.zmq);
             app.state.p2pool.selected_index = 0;
             app.state.p2pool.selected_name = name;
             app.state.p2pool.selected_ip = node.ip;
@@ -504,9 +504,9 @@ impl App {
                 None => Pool::new_tuple(),
             };
             og.xmrig.selected_index = 0;
-            og.xmrig.selected_name = name.clone();
-            og.xmrig.selected_ip = pool.ip.clone();
-            og.xmrig.selected_port = pool.port.clone();
+            og.xmrig.selected_name.clone_from(&name);
+            og.xmrig.selected_ip.clone_from(&pool.ip);
+            og.xmrig.selected_port.clone_from(&pool.port);
             app.state.xmrig.selected_index = 0;
             app.state.xmrig.selected_name = name;
             app.state.xmrig.selected_ip = pool.ip;

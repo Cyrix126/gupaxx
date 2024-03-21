@@ -54,7 +54,7 @@ pub const REMOTE_NODES: [(&str, &str, &str, &str); 19] = [
 pub const REMOTE_NODE_LENGTH: usize = REMOTE_NODES.len();
 
 // Iterate through all nodes, find the longest domain.
-pub const REMOTE_NODE_MAX_CHARS: usize = {
+const REMOTE_NODE_MAX_CHARS: usize = {
     let mut len = 0;
     let mut index = 0;
 
@@ -103,21 +103,6 @@ impl RemoteNode {
         ip
     }
 
-    // Returns a default if IP is not found.
-    pub fn from_ip(from_ip: &str) -> Self {
-        for (ip, location, rpc, zmq) in REMOTE_NODES {
-            if from_ip == ip {
-                return Self {
-                    ip,
-                    location,
-                    rpc,
-                    zmq,
-                };
-            }
-        }
-        Self::new()
-    }
-
     // Returns a default if index is not found in the const array.
     pub fn from_index(index: usize) -> Self {
         if index > REMOTE_NODE_LENGTH {
@@ -130,16 +115,6 @@ impl RemoteNode {
                 rpc,
                 zmq,
             }
-        }
-    }
-
-    pub fn from_tuple(t: (&'static str, &'static str, &'static str, &'static str)) -> Self {
-        let (ip, location, rpc, zmq) = (t.0, t.1, t.2, t.3);
-        Self {
-            ip,
-            location,
-            rpc,
-            zmq,
         }
     }
 
@@ -266,7 +241,7 @@ pub fn format_ip_location(og_ip: &str, extra_space: bool) -> String {
 }
 
 pub fn format_ip(ip: &str) -> String {
-    const _: () = if 23 != REMOTE_NODE_MAX_CHARS {
+    if 23 != REMOTE_NODE_MAX_CHARS {
         panic!();
     };
     format!("{ip: >23}")

@@ -76,7 +76,7 @@ impl Hash {
             Self::Giga => f * 1_000_000_000.0,
         }
     }
-
+    #[cfg(test)]
     pub fn convert(f: f64, og: Self, new: Self) -> f64 {
         match og {
             Self::Hash => match new {

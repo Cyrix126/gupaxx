@@ -372,6 +372,7 @@ impl Helper {
     // This isn't actually async, a tokio runtime is unfortunately needed because [Hyper] is an async library (HTTP API calls)
     #[tokio::main]
     #[allow(clippy::await_holding_lock)]
+    #[allow(clippy::too_many_arguments)]
     async fn spawn_xmrig_watchdog(
         process: Arc<Mutex<Process>>,
         gui_api: Arc<Mutex<PubXmrigApi>>,
@@ -458,7 +459,7 @@ impl Helper {
         *lock!(pub_api) = PubXmrigApi::new();
         *lock!(gui_api) = PubXmrigApi::new();
         // node used for process Status tab
-        lock!(gui_api).node = lock!(img_xmrig).url.clone();
+        lock!(gui_api).node.clone_from(&lock!(img_xmrig).url);
         // 5. Loop as watchdog
         info!("XMRig | Entering watchdog mode... woof!");
         loop {
@@ -797,15 +798,6 @@ pub(super) struct PrivXmrigApi {
 }
 
 impl PrivXmrigApi {
-    fn new() -> Self {
-        Self {
-            worker_id: String::new(),
-            resources: Resources::new(),
-            connection: Connection::new(),
-            hashrate: Hashrate::new(),
-        }
-    }
-
     #[inline]
     // Send an HTTP request to XMRig's API, serialize it into [Self] and return it
     async fn request_xmrig_api(
@@ -892,13 +884,6 @@ impl PrivXmrigApi {
 struct Resources {
     load_average: [Option<f32>; 3],
 }
-impl Resources {
-    fn new() -> Self {
-        Self {
-            load_average: [Some(0.0), Some(0.0), Some(0.0)],
-        }
-    }
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 struct Connection {
@@ -906,24 +891,8 @@ struct Connection {
     accepted: u128,
     rejected: u128,
 }
-impl Connection {
-    fn new() -> Self {
-        Self {
-            diff: 0,
-            accepted: 0,
-            rejected: 0,
-        }
-    }
-}
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 struct Hashrate {
     total: [Option<f32>; 3],
-}
-impl Hashrate {
-    fn new() -> Self {
-        Self {
-            total: [Some(0.0), Some(0.0), Some(0.0)],
-        }
-    }
 }

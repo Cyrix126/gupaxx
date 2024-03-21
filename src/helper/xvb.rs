@@ -121,6 +121,7 @@ impl Helper {
             );
         });
     }
+    #[allow(clippy::too_many_arguments)]
     #[tokio::main]
     async fn spawn_xvb_watchdog(
         gui_api: Arc<Mutex<PubXvbApi>>,
@@ -371,7 +372,7 @@ impl Helper {
                     lock!(&pub_api).stats_priv.round_participate = round;
 
                     // verify if we are the winner of the current round
-                    if &lock!(pub_api).stats_pub.winner
+                    if lock!(pub_api).stats_pub.winner
                         == Helper::head_tail_of_monero_address(&state_p2pool.address).as_str()
                     {
                         lock!(pub_api).stats_priv.win_current = true
@@ -527,6 +528,7 @@ impl Helper {
             _ => 0,
         }
     }
+    #[allow(clippy::too_many_arguments)]
     async fn sleep_then_update_node_xmrig(
         was_instant: &tokio::time::Instant,
         spared_time: u32,
@@ -762,13 +764,11 @@ impl XvbNode {
                     } else {
                         XvbNode::Europe
                     }
-                } else
-                // if only na is online, return it.
-                if ms_na != TIMEOUT_NODE_PING && ms_eu == TIMEOUT_NODE_PING {
+                } else if ms_na != TIMEOUT_NODE_PING && ms_eu == TIMEOUT_NODE_PING {
+                    // if only na is online, return it.
                     XvbNode::NorthAmerica
-                } else
-                // if only eu is online, return it.
-                if ms_na == TIMEOUT_NODE_PING && ms_eu != TIMEOUT_NODE_PING {
+                } else if ms_na == TIMEOUT_NODE_PING && ms_eu != TIMEOUT_NODE_PING {
+                    // if only eu is online, return it.
                     XvbNode::Europe
                 } else {
                     // if P2pool is returned, it means none of the two nodes are available.
@@ -786,7 +786,7 @@ impl XvbNode {
             // if both nodes are dead, then the state of the process must be NodesOffline
             info!("XvB node ping, all offline or ping failed, switching back to local p2pool",);
             output_console(
-                &gui_api_xvb,
+                gui_api_xvb,
                 "XvB node ping, all offline or ping failed, switching back to local p2pool",
             );
             lock!(process_xvb).state = ProcessState::OfflineNodesAll;
@@ -794,7 +794,7 @@ impl XvbNode {
             // if node is up and because update_fastest is used only if token/address is valid, it means XvB process is Alive.
             info!("XvB node ping, both online and best is {}", node.url());
             output_console(
-                &gui_api_xvb,
+                gui_api_xvb,
                 &format!("XvB node ping, {} is selected as the fastest.", node),
             );
             lock!(process_xvb).state = ProcessState::Alive;
@@ -861,7 +861,7 @@ impl PubXvbApi {
         };
     }
 }
-
+#[allow(clippy::too_many_arguments)]
 fn signal_interrupt(
     process: Arc<Mutex<Process>>,
     start: Instant,
@@ -887,7 +887,7 @@ fn signal_interrupt(
         // insert the signal into output of XvB
         // This is written directly into the GUI API, because sometimes the 900ms event loop can't catch it.
         output_console(
-            &gui_api,
+            gui_api,
             &format!("{}XvB stopped\n{}\n", HORI_CONSOLE, HORI_CONSOLE),
         );
         debug!("XvB Watchdog | Stop SIGNAL done, breaking");

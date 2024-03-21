@@ -246,7 +246,7 @@ impl crate::app::App {
                                 Ok(_) => match Node::get(&self.node_path) {
                                     Ok(s) => {
                                         self.node_vec = s;
-                                        self.og_node_vec = self.node_vec.clone();
+                                        self.og_node_vec.clone_from(&self.node_vec);
                                         self.error_state.set(
                                             "Node read OK",
                                             ErrorFerris::Happy,

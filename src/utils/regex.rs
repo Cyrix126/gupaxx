@@ -127,7 +127,6 @@ impl XmrigRegex {
 #[cfg(test)]
 mod test {
     use super::*;
-    use regex::Regex;
 
     #[test]
     fn build_regexes() {

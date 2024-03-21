@@ -127,10 +127,6 @@ impl HumanNumber {
         Self(s.to_string())
     }
     #[inline]
-    pub fn to_hashrate(f: f32) -> Self {
-        Self(format!("{} H/s", Self::from_f32(f)))
-    }
-    #[inline]
     pub fn to_percent(f: f32) -> Self {
         if f < 0.01 {
             Self("0%".to_string())
@@ -139,15 +135,8 @@ impl HumanNumber {
         }
     }
     #[inline]
+    #[cfg(test)]
     pub fn to_percent_3_point(f: f32) -> Self {
-        Self(format!("{:.3}%", f))
-    }
-    #[inline]
-    pub fn to_percent_no_fmt(f: f32) -> Self {
-        Self(format!("{}%", f))
-    }
-    #[inline]
-    pub fn from_f64_to_percent_3_point(f: f64) -> Self {
         Self(format!("{:.3}%", f))
     }
     #[inline]
@@ -155,26 +144,21 @@ impl HumanNumber {
         Self(format!("{:.6}%", f))
     }
     #[inline]
-    pub fn from_f64_to_percent_9_point(f: f64) -> Self {
-        Self(format!("{:.9}%", f))
-    }
-    #[inline]
-    pub fn from_f64_to_percent_no_fmt(f: f64) -> Self {
-        Self(format!("{}%", f))
-    }
-    #[inline]
+    #[cfg(test)]
     pub fn from_f32(f: f32) -> Self {
         let mut buf = num_format::Buffer::new();
         buf.write_formatted(&(f as u64), &LOCALE);
         Self(buf.as_str().to_string())
     }
     #[inline]
+    #[cfg(test)]
     pub fn from_f64(f: f64) -> Self {
         let mut buf = num_format::Buffer::new();
         buf.write_formatted(&(f as u128), &LOCALE);
         Self(buf.as_str().to_string())
     }
     #[inline]
+    #[cfg(test)]
     pub fn from_u16(u: u16) -> Self {
         let mut buf = num_format::Buffer::new();
         buf.write_formatted(&u, &LOCALE);
@@ -193,6 +177,7 @@ impl HumanNumber {
         Self(buf.as_str().to_string())
     }
     #[inline]
+    #[cfg(test)]
     pub fn from_u128(u: u128) -> Self {
         let mut buf = num_format::Buffer::new();
         buf.write_formatted(&u, &LOCALE);
@@ -261,11 +246,6 @@ impl HumanNumber {
     #[inline]
     pub fn from_f64_12_point(f: f64) -> Self {
         let f = format!("{:.12}", f);
-        Self(f)
-    }
-    #[inline]
-    pub fn from_f64_no_fmt(f: f64) -> Self {
-        let f = format!("{}", f);
         Self(f)
     }
     #[inline]

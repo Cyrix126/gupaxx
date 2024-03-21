@@ -1,12 +1,10 @@
 use crate::app::panels::middle::*;
 use crate::app::ErrorState;
 use crate::app::Restart;
-use crate::components::gupax::FileWindow;
 use crate::components::gupax::*;
 use crate::components::update::Update;
 use crate::disk::state::*;
 use crate::macros::lock2;
-use egui::Button;
 use log::debug;
 use std::path::Path;
 use std::sync::Arc;
@@ -216,11 +214,11 @@ impl Gupax {
         });
         let mut guard = lock!(file_window);
         if guard.picked_p2pool {
-            self.p2pool_path = guard.p2pool_path.clone();
+            self.p2pool_path.clone_from(&guard.p2pool_path);
             guard.picked_p2pool = false;
         }
         if guard.picked_xmrig {
-            self.xmrig_path = guard.xmrig_path.clone();
+            self.xmrig_path.clone_from(&guard.xmrig_path);
             guard.picked_xmrig = false;
         }
         drop(guard);

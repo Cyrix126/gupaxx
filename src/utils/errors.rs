@@ -4,6 +4,7 @@ use super::sudo::SudoState;
 
 //---------------------------------------------------------------------------------------------------- [ErrorState] struct
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[allow(dead_code)]
 pub enum ErrorButtons {
     YesNo,
     StayQuit,

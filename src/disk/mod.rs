@@ -109,29 +109,6 @@ pub fn set_unix_750_perms(path: &PathBuf) -> Result<(), TomlError> {
     }
 }
 
-pub fn set_unix_660_perms(path: &PathBuf) -> Result<(), TomlError> {
-    #[cfg(target_os = "windows")]
-    return Ok(());
-    #[cfg(target_family = "unix")]
-    match fs::set_permissions(path, fs::Permissions::from_mode(0o660)) {
-        Ok(_) => {
-            info!(
-                "OS | Unix 660 permissions on path [{}] ... OK",
-                path.display()
-            );
-            Ok(())
-        }
-        Err(e) => {
-            error!(
-                "OS | Unix 660 permissions on path [{}] ... FAIL ... {}",
-                path.display(),
-                e
-            );
-            Err(TomlError::Io(e))
-        }
-    }
-}
-
 pub fn get_gupax_p2pool_path(os_data_path: &Path) -> PathBuf {
     let mut gupax_p2pool_dir = os_data_path.to_path_buf();
     gupax_p2pool_dir.push(GUPAX_P2POOL_API_DIRECTORY);

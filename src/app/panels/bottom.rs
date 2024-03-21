@@ -143,8 +143,8 @@ impl crate::app::App {
                 self.state.p2pool = og.p2pool;
                 self.state.xmrig = og.xmrig;
                 self.state.xvb = og.xvb;
-                self.node_vec = self.og_node_vec.clone();
-                self.pool_vec = self.og_pool_vec.clone();
+                self.node_vec.clone_from(&self.og_node_vec);
+                self.pool_vec.clone_from(&self.og_pool_vec);
             }
             if key.is_s() && !wants_input && self.diff
                 || ui
@@ -170,7 +170,7 @@ impl crate::app::App {
                     }
                 };
                 match Node::save(&self.node_vec, &self.node_path) {
-                    Ok(_) => self.og_node_vec = self.node_vec.clone(),
+                    Ok(_) => self.og_node_vec.clone_from(&self.node_vec),
                     Err(e) => self.error_state.set(
                         format!("Node list: {}", e),
                         ErrorFerris::Error,
@@ -178,7 +178,7 @@ impl crate::app::App {
                     ),
                 };
                 match Pool::save(&self.pool_vec, &self.pool_path) {
-                    Ok(_) => self.og_pool_vec = self.pool_vec.clone(),
+                    Ok(_) => self.og_pool_vec.clone_from(&self.pool_vec),
                     Err(e) => self.error_state.set(
                         format!("Pool list: {}", e),
                         ErrorFerris::Error,

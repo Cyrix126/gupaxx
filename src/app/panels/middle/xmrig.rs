@@ -295,11 +295,11 @@ impl Xmrig {
 					if ui.add(SelectableLabel::new(self.selected_name == *name, text)).clicked() {
 						self.selected_index = n;
 						let pool = pool.clone();
-						self.selected_name = name.clone();
-						self.selected_rig = pool.rig.clone();
-						self.selected_ip = pool.ip.clone();
-						self.selected_port = pool.port.clone();
-						self.name = name.clone();
+						self.selected_name.clone_from(name);
+						self.selected_rig.clone_from(&pool.rig);
+						self.selected_ip.clone_from(&pool.ip);
+						self.selected_port.clone_from(&pool.port);
+						self.name.clone_from(name);
 						self.rig = pool.rig;
 						self.ip = pool.ip;
 						self.port = pool.port;
@@ -334,10 +334,10 @@ impl Xmrig {
 							port: self.port.clone(),
 						};
 						pool_vec[existing_index].1 = pool;
-						self.selected_name = self.name.clone();
-						self.selected_rig = self.rig.clone();
-						self.selected_ip = self.ip.clone();
-						self.selected_port = self.port.clone();
+						self.selected_name.clone_from(&self.name);
+						self.selected_rig.clone_from(&self.rig);
+						self.selected_ip.clone_from(&self.ip);
+						self.selected_port.clone_from(&self.port);
 						info!("Node | S | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig: \"{}\"]", existing_index+1, self.name, self.ip, self.port, self.rig);
 					}
 				// Else, add to the list
@@ -351,10 +351,10 @@ impl Xmrig {
 						};
 						pool_vec.push((self.name.clone(), pool));
 						self.selected_index = pool_vec_len;
-						self.selected_name = self.name.clone();
-						self.selected_rig = self.rig.clone();
-						self.selected_ip = self.ip.clone();
-						self.selected_port = self.port.clone();
+						self.selected_name.clone_from(&self.name);
+						self.selected_rig.clone_from(&self.rig);
+						self.selected_ip.clone_from(&self.ip);
+						self.selected_port.clone_from(&self.port);
 						info!("Node | A | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig: \"{}\"]", pool_vec_len, self.name, self.ip, self.port, self.rig);
 					}
 				}
@@ -379,10 +379,10 @@ impl Xmrig {
 							new_pool = pool_vec[self.selected_index].1.clone();
 						}
 					};
-					self.selected_name = new_name.clone();
-					self.selected_rig = new_pool.rig.clone();
-					self.selected_ip = new_pool.ip.clone();
-					self.selected_port = new_pool.port.clone();
+					self.selected_name.clone_from(&new_name);
+					self.selected_rig.clone_from(&new_pool.rig);
+					self.selected_ip.clone_from(&new_pool.ip);
+					self.selected_port.clone_from(&new_pool.port);
 					self.name = new_name;
 					self.rig = new_pool.rig;
 					self.ip = new_pool.ip;

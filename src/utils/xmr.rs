@@ -49,9 +49,9 @@ impl AtomicUnit {
         Self(u)
     }
 
-    pub const fn add_u64(self, u: u64) -> Self {
-        Self(self.0 + u)
-    }
+    // pub const fn add_u64(self, u: u64) -> Self {
+    //     Self(self.0 + u)
+    // }
 
     pub const fn add_self(self, atomic_unit: Self) -> Self {
         Self(self.0 + atomic_unit.0)
@@ -69,31 +69,31 @@ impl AtomicUnit {
         self.0.to_string()
     }
 
-    pub fn sum_vec(vec: &Vec<Self>) -> Self {
-        let mut sum = 0;
-        for int in vec {
-            sum += int.0;
-        }
-        Self(sum)
-    }
+    // pub fn sum_vec(vec: &Vec<Self>) -> Self {
+    //     let mut sum = 0;
+    //     for int in vec {
+    //         sum += int.0;
+    //     }
+    //     Self(sum)
+    // }
 
     pub fn from_f64(f: f64) -> Self {
         Self((f * 1_000_000_000_000.0) as u64)
     }
 
-    pub fn f64(&self) -> f64 {
-        self.0 as f64 / 1_000_000_000_000.0
-    }
+    // pub fn f64(&self) -> f64 {
+    //     self.0 as f64 / 1_000_000_000_000.0
+    // }
 
     pub fn human_number_12_point(&self) -> HumanNumber {
         let f = self.0 as f64 / 1_000_000_000_000.0;
         HumanNumber::from_f64_12_point(f)
     }
 
-    pub fn human_number_no_fmt(&self) -> HumanNumber {
-        let f = self.0 as f64 / 1_000_000_000_000.0;
-        HumanNumber::from_f64_no_fmt(f)
-    }
+    // pub fn human_number_no_fmt(&self) -> HumanNumber {
+    //     let f = self.0 as f64 / 1_000_000_000_000.0;
+    //     HumanNumber::from_f64_no_fmt(f)
+    // }
 }
 
 // Displays AtomicUnit as a real XMR floating point.
@@ -124,11 +124,11 @@ impl PayoutOrd {
             HumanNumber::unknown(),
         )])
     }
-
+    #[cfg(test)]
     pub const fn from_vec(vec: Vec<(String, AtomicUnit, HumanNumber)>) -> Self {
         Self(vec)
     }
-
+    #[cfg(test)]
     pub fn is_same(a: &Self, b: &Self) -> bool {
         if a.0.is_empty() && b.0.is_empty() {
             return true;
@@ -149,7 +149,7 @@ impl PayoutOrd {
         }
         true
     }
-
+    #[cfg(test)]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -263,12 +263,13 @@ impl PayoutOrd {
     }
 
     // Takes the raw components (no wrapper types), convert them and pushes to existing [Self]
+    #[cfg(test)]
     pub fn push_raw(&mut self, date: &str, atomic_unit: u64, block: u64) {
         let atomic_unit = AtomicUnit(atomic_unit);
         let block = HumanNumber::from_u64(block);
         self.0.push((date.to_string(), atomic_unit, block));
     }
-
+    #[cfg(test)]
     pub fn atomic_unit_sum(&self) -> AtomicUnit {
         let mut sum: u64 = 0;
         for (_, atomic_unit, _) in &self.0 {
@@ -294,6 +295,7 @@ impl PayoutOrd {
 
     // Returns a reversed [Iter] of the [PayoutOrd]
     // This is obviously faster than actually reordering the Vec.
+    #[cfg(test)]
     pub fn rev_iter(
         &self,
     ) -> std::iter::Rev<std::slice::Iter<'_, (String, AtomicUnit, HumanNumber)>> {
