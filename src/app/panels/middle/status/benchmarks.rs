@@ -19,7 +19,7 @@ impl Status {
         xmrig_api: &Arc<Mutex<PubXmrigApi>>,
     ) {
         debug!("Status Tab | Rendering [Benchmarks]");
-        let text = size.x / 20.0;
+        let text = size.y / 20.0;
         let double = text * 2.0;
         let log = size.y / 3.0;
 
@@ -28,7 +28,7 @@ impl Status {
         // [0], The user's CPU (most likely).
         let cpu = &benchmarks[0];
         ui.horizontal(|ui| {
-            let width = (size.x / 2.0) - (SPACE * 1.666);
+            let width = (width / 2.0) - (SPACE * 1.666);
             let min_height = log;
             ui.group(|ui| {
                 ui.vertical(|ui| {
@@ -145,7 +145,7 @@ impl Status {
             .max_width(width)
             .max_height(height)
             .auto_shrink([false; 2])
-            .show_viewport(ui, |ui, _| {
+            .show_rows(ui, text, benchmarks.len(), |ui, row_range| {
                 let width = width / 20.0;
                 let (cpu, bar, high, average, low, rank, bench) = (
                     width * 10.0,
@@ -180,8 +180,8 @@ impl Status {
                             .on_hover_text(STATUS_SUBMENU_OTHER_BENCHMARKS);
                     });
                 });
-
-                for benchmark in benchmarks[1..].iter() {
+                for row in row_range {
+                    let benchmark = &benchmarks[row];
                     ui.group(|ui| {
                         ui.horizontal(|ui| {
                             ui.add_sized([cpu, text], Label::new(benchmark.cpu.as_str()));
@@ -191,20 +191,25 @@ impl Status {
                             ui.separator();
                             ui.add_sized(
                                 [high, text],
-                                Label::new(format!("{} H/s", Float::from_0(benchmark.high.into()))),
+                                Label::new(
+                                    [Float::from_0(benchmark.high.into()).as_str(), " H/s"]
+                                        .concat(),
+                                ),
                             );
                             ui.separator();
                             ui.add_sized(
                                 [average, text],
-                                Label::new(format!(
-                                    "{} H/s",
-                                    Float::from_0(benchmark.average.into())
-                                )),
+                                Label::new(
+                                    [Float::from_0(benchmark.average.into()).as_str(), " H/s"]
+                                        .concat(),
+                                ),
                             );
                             ui.separator();
                             ui.add_sized(
                                 [low, text],
-                                Label::new(format!("{} H/s", Float::from_0(benchmark.low.into()))),
+                                Label::new(
+                                    [Float::from_0(benchmark.low.into()).as_str(), " H/s"].concat(),
+                                ),
                             );
                             ui.separator();
                             ui.add_sized(
