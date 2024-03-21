@@ -377,8 +377,8 @@ fn xvb(
     //
     let api = &lock!(xvb_api).stats_pub;
     let enabled = xvb_alive;
-    ScrollArea::vertical().show(ui, |ui| {
-        ui.group(|ui| {
+    ui.group(|ui| {
+        ScrollArea::vertical().show(ui, |ui| {
             ui.vertical(|ui| {
                 debug!("Status Tab | Rendering [XvB]");
                 ui.set_enabled(enabled); // for now there is no API ping or /health, so we verify if the field reward_yearly is empty or not.
