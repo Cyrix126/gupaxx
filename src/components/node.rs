@@ -29,7 +29,7 @@ use std::time::{Duration, Instant};
 // Remote Monero Nodes with ZMQ enabled.
 // The format is an array of tuples consisting of: (IP, LOCATION, RPC_PORT, ZMQ_PORT)
 
-pub const REMOTE_NODES: [(&str, &str, &str, &str); 19] = [
+pub const REMOTE_NODES: [(&str, &str, &str, &str); 18] = [
     ("monero.10z.com.ar", "Argentina", "18089", "18084"),
     ("monero1.heitechsoft.com", "Canada", "18081", "18084"),
     ("node.monerodevs.org", "Canada", "18089", "18084"),
@@ -47,7 +47,6 @@ pub const REMOTE_NODES: [(&str, &str, &str, &str); 19] = [
     ("xmrbandwagon.hopto.org", "United States", "18081", "18084"),
     ("xmr.spotlightsound.com", "United States", "18081", "18084"),
     ("xmrnode.facspro.net", "United States", "18089", "18084"),
-    ("moneronode.ddns.net", "United States", "18089", "18084"),
     ("node.richfowler.net", "United States", "18089", "18084"),
 ];
 
@@ -412,7 +411,8 @@ impl Ping {
             handle.await?;
         }
 
-        let node_vec = std::mem::take(&mut *lock!(node_vec));
+        let mut node_vec = std::mem::take(&mut *lock!(node_vec));
+        node_vec.sort_by(|a, b| a.ms.cmp(&b.ms));
         let fastest_info = format!("Fastest node: {}ms ... {}", node_vec[0].ms, node_vec[0].ip);
 
         let info = "Cleaning up connections".to_string();
