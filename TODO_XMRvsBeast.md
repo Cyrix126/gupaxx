@@ -51,7 +51,7 @@
 - [ ] optimizations
   - [x] benchmarks table render only what is visible
 - [ ] better organize new code
-- [ ] merge commits from upstream
+- [x] merge commits from upstream
 - [ ] tests for new functions
 - [ ] pre-release
   - [ ] feedback
