@@ -1,7 +1,8 @@
 use std::sync::{Arc, Mutex};
 
 use crate::{app::Benchmark, disk::state::Status, helper::xmrig::PubXmrigApi};
-use egui::{Hyperlink, ProgressBar, Spinner, Vec2};
+use egui::{Hyperlink, ProgressBar, ScrollArea, Spinner, Vec2};
+use egui_extras::{Column, TableBuilder};
 use readable::num::{Float, Percent, Unsigned};
 
 use crate::utils::macros::lock;
@@ -24,7 +25,6 @@ impl Status {
         let log = size.y / 3.0;
 
         let width = size.x;
-        let height = size.y;
         // [0], The user's CPU (most likely).
         let cpu = &benchmarks[0];
         ui.horizontal(|ui| {
@@ -137,58 +137,60 @@ impl Status {
             )
             .on_hover_text(STATUS_SUBMENU_OTHER_CPUS);
         });
-
-        egui::ScrollArea::both()
-            .scroll_bar_visibility(
-                egui::containers::scroll_area::ScrollBarVisibility::AlwaysVisible,
-            )
-            .max_width(width)
-            .max_height(height)
-            .auto_shrink([false; 2])
-            .show_rows(ui, text, benchmarks.len(), |ui, row_range| {
-                let width = width / 20.0;
-                let (cpu, bar, high, average, low, rank, bench) = (
-                    width * 10.0,
-                    width * 3.0,
-                    width * 2.0,
-                    width * 2.0,
-                    width * 2.0,
-                    width,
-                    width * 2.0,
-                );
-                ui.group(|ui| {
-                    ui.horizontal(|ui| {
-                        ui.add_sized([cpu, double], Label::new("CPU"))
+        let width_column = width / 20.0;
+        let (cpu, bar, high, average, low, rank, bench) = (
+            width_column * 10.0,
+            width_column * 3.0,
+            width_column * 2.0,
+            width_column * 2.0,
+            width_column * 2.0,
+            width_column,
+            width_column * 2.0,
+        );
+        ScrollArea::horizontal().show(ui, |ui| {
+            TableBuilder::new(ui)
+                .columns(Column::auto(), 7)
+                .header(double, |mut header| {
+                    header.col(|ui| {
+                        ui.add_sized([bar, text], Label::new("CPU"))
                             .on_hover_text(STATUS_SUBMENU_OTHER_CPU);
-                        ui.separator();
-                        ui.add_sized([bar, double], Label::new("Relative"))
+                    });
+                    header.col(|ui| {
+                        ui.add_sized([bar, text], Label::new("Relative"))
                             .on_hover_text(STATUS_SUBMENU_OTHER_RELATIVE);
-                        ui.separator();
-                        ui.add_sized([high, double], Label::new("High"))
+                    });
+                    header.col(|ui| {
+                        ui.add_sized([high, text], Label::new("High"))
                             .on_hover_text(STATUS_SUBMENU_OTHER_HIGH);
-                        ui.separator();
-                        ui.add_sized([average, double], Label::new("Average"))
+                    });
+                    header.col(|ui| {
+                        ui.add_sized([average, text], Label::new("Average"))
                             .on_hover_text(STATUS_SUBMENU_OTHER_AVERAGE);
-                        ui.separator();
-                        ui.add_sized([low, double], Label::new("Low"))
+                    });
+                    header.col(|ui| {
+                        ui.add_sized([low, text], Label::new("Low"))
                             .on_hover_text(STATUS_SUBMENU_OTHER_LOW);
-                        ui.separator();
-                        ui.add_sized([rank, double], Label::new("Rank"))
+                    });
+                    header.col(|ui| {
+                        ui.add_sized([rank, text], Label::new("Rank"))
                             .on_hover_text(STATUS_SUBMENU_OTHER_RANK);
-                        ui.separator();
-                        ui.add_sized([bench, double], Label::new("Benchmarks"))
+                    });
+                    header.col(|ui| {
+                        ui.add_sized([bench, text], Label::new("Benchmarks"))
                             .on_hover_text(STATUS_SUBMENU_OTHER_BENCHMARKS);
                     });
-                });
-                for row in row_range {
-                    let benchmark = &benchmarks[row];
-                    ui.group(|ui| {
-                        ui.horizontal(|ui| {
+                })
+                .body(|body| {
+                    body.rows(text, benchmarks.len(), |mut row| {
+                        let benchmark = &benchmarks[row.index()];
+                        row.col(|ui| {
                             ui.add_sized([cpu, text], Label::new(benchmark.cpu.as_str()));
-                            ui.separator();
+                        });
+                        row.col(|ui| {
                             ui.add_sized([bar, text], ProgressBar::new(benchmark.percent / 100.0))
                                 .on_hover_text(Percent::from(benchmark.percent).as_str());
-                            ui.separator();
+                        });
+                        row.col(|ui| {
                             ui.add_sized(
                                 [high, text],
                                 Label::new(
@@ -196,7 +198,8 @@ impl Status {
                                         .concat(),
                                 ),
                             );
-                            ui.separator();
+                        });
+                        row.col(|ui| {
                             ui.add_sized(
                                 [average, text],
                                 Label::new(
@@ -204,26 +207,29 @@ impl Status {
                                         .concat(),
                                 ),
                             );
-                            ui.separator();
+                        });
+                        row.col(|ui| {
                             ui.add_sized(
                                 [low, text],
                                 Label::new(
                                     [Float::from_0(benchmark.low.into()).as_str(), " H/s"].concat(),
                                 ),
                             );
-                            ui.separator();
+                        });
+                        row.col(|ui| {
                             ui.add_sized(
                                 [rank, text],
-                                Label::new(Float::from(benchmark.low).as_str()),
+                                Label::new(Unsigned::from(benchmark.rank).as_str()),
                             );
-                            ui.separator();
+                        });
+                        row.col(|ui| {
                             ui.add_sized(
                                 [bench, text],
                                 Label::new(Unsigned::from(benchmark.benchmarks).as_str()),
                             );
-                        })
+                        });
                     });
-                }
-            });
+                });
+        });
     }
 }

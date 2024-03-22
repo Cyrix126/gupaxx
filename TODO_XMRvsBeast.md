@@ -49,6 +49,7 @@
   - [ ] pgp signatures
 - [x] fix clippy
 - [ ] optimizations
+  - [x] benchmarks table render only what is visible
 - [ ] better organize new code
 - [ ] merge commits from upstream
 - [ ] tests for new functions
