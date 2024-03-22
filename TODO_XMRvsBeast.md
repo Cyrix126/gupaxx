@@ -4,6 +4,8 @@
 
 [XvB Bounty](https://bounties.monero.social/posts/105)
 
+*These todos are not all part of the bounty.*
+
 - [x] upgrade deps
 - [x] separate logic in smaller modules
 - [x] new tab XvB
@@ -50,6 +52,8 @@
 - [x] fix clippy
 - [ ] optimizations
   - [x] benchmarks table render only what is visible
+  - [ ] migrate to hyper stable
+  - [ ] use tor socks proxy instead of creating one
 - [ ] better organize new code
 - [x] merge commits from upstream
 - [ ] tests for new functions
