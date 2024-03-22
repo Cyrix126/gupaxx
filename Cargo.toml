@@ -8,10 +8,11 @@ edition = "2021"
 
 [profile.release]
 panic = "abort"
-debug = false
-strip = "symbols"
+lto = "fat"
 codegen-units = 1
-lto = true
+incremental = false
+strip = "symbols"
+rustflags = ["-Zlocation-detail=none"]
 
 [profile.dev]
 opt-level = 1
