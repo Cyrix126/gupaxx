@@ -12,10 +12,9 @@ use std::time::Duration;
 use std::{
     sync::{Arc, Mutex},
     thread,
-    time::Instant,
 };
 use tokio::spawn;
-use tokio::time::sleep_until;
+use tokio::time::{sleep_until, Instant};
 
 use crate::components::node::{GetInfo, TIMEOUT_NODE_PING};
 use crate::helper::xmrig::PrivXmrigApi;
@@ -98,7 +97,7 @@ impl Helper {
             let mut lock = lock!(process);
             lock.state = ProcessState::Middle;
             lock.signal = ProcessSignal::None;
-            lock.start = Instant::now();
+            lock.start = std::time::Instant::now();
         }
         // verify if token and address are existent on XvB server
         let state_xvb = state_xvb.clone();
@@ -190,10 +189,6 @@ impl Helper {
                 XvbNode::update_fastest_node(&client_http_c, &pub_api_c, &gui_api_c, &process_c)
                     .await;
             });
-            output_console(
-                &gui_api,
-                "Algorithm of distribution of HR will wait 15 minutes for Xmrig average HR data.",
-            );
         }
         // see how many shares are found at p2pool node only if XvB is started successfully. If it wasn't, maybe P2pool is node not running.
         let mut old_shares = if lock!(process).state == ProcessState::Alive {
@@ -209,12 +204,16 @@ impl Helper {
             0
         };
         // let mut old_shares = 0;
-        let mut time_last_share: Option<Instant> = None;
         let start = lock!(process).start;
-        let mut start_algorithm = tokio::time::Instant::now();
+        let mut last_share = None;
+        let mut last_algorithm = tokio::time::Instant::now();
+        let mut last_request = tokio::time::Instant::now();
+        let mut first_loop = true;
         info!("XvB | Entering watchdog mode... woof!");
         loop {
             debug!("XvB Watchdog | ----------- Start of loop -----------");
+            // Set timer
+            let start_loop = Instant::now();
             // if address and token valid, verify if p2pool and xmrig are running, else XvBmust be reloaded with another token/address to start verifying the other process.
             if lock!(process).state != ProcessState::NotMining {
                 // verify if p2pool node and xmrig are running
@@ -225,6 +224,8 @@ impl Helper {
                         *lock!(pub_api) = PubXvbApi::new();
                         *lock!(gui_api) = PubXvbApi::new();
                         lock!(process).state = ProcessState::Alive;
+                        // to request be made immediately, we consider it is the first iteration.
+                        first_loop = true;
                         output_console(
                             &gui_api,
                             "XvB is now started because p2pool and xmrig came online.",
@@ -245,13 +246,11 @@ impl Helper {
                 }
             }
 
-            // Set timer
-            let now = Instant::now();
             // check signal
             debug!("XvB | check signal");
             if signal_interrupt(
                 process.clone(),
-                start,
+                start.into(),
                 &client_http,
                 &pub_api,
                 &gui_api,
@@ -262,80 +261,94 @@ impl Helper {
                 break;
             }
             // verify if
-            // Send an HTTP API request only if one minute is passed since the last.
-            // if since is 0, send request because it's the first time.
-            let since = lock!(gui_api).tick;
-            if since >= 60 || since == 0 {
-                debug!("XvB Watchdog | Attempting HTTP public API request...");
-                match XvbPubStats::request_api(&client_https).await {
-                    Ok(new_data) => {
-                        debug!("XvB Watchdog | HTTP API request OK");
-                        lock!(&pub_api).stats_pub = new_data;
-                    }
-                    Err(err) => {
-                        warn!(
-                            "XvB Watchdog | Could not send HTTP API request to: {}\n:{}",
-                            XVB_URL_PUBLIC_API, err
-                        );
-                        // output the error to console
-                        output_console(
-                            &gui_api,
-                            &format!(
-                                "Failure to retrieve public stats from {}",
-                                XVB_URL_PUBLIC_API
-                            ),
-                        );
-                        lock!(process).state = ProcessState::Failed;
-                        break;
-                    }
-                }
-                // only if private API is accessible, NotMining here means that the token and address is not registered on the XvB website and Syncing means P2pool node is not running and so that some information for private info are not available.
-                if lock!(process).state == ProcessState::Alive {
-                    debug!("XvB Watchdog | Attempting HTTP private API request...");
-                    // reload private stats
-                    match XvbPrivStats::request_api(
-                        &client_https,
-                        &state_p2pool.address,
-                        &state_xvb.token,
-                    )
-                    .await
-                    {
-                        Ok(b) => {
+            // Send an HTTP API request only if one minute is passed since the last or if first loop
+            if last_request.elapsed() >= Duration::from_secs(60) || first_loop {
+                // do not wait for the request to finish so that they are retrieved at exactly one minute interval.
+                // Private API will also use this instant if XvB is Alive.
+                last_request = tokio::time::Instant::now();
+                let client_https_c = client_https.clone();
+                let pub_api_c = pub_api.clone();
+                let gui_api_c = gui_api.clone();
+                let process_c = process.clone();
+                // will send a stop signal if it failed or update data with new one.
+                spawn(async move {
+                    debug!("XvB Watchdog | Attempting HTTP public API request...");
+                    match XvbPubStats::request_api(&client_https_c).await {
+                        Ok(new_data) => {
                             debug!("XvB Watchdog | HTTP API request OK");
-                            let new_data = match serde_json::from_slice::<XvbPrivStats>(&b) {
-                                Ok(data) => data,
-                                Err(e) => {
-                                    warn!("XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}", e);
-                                    output_console(&gui_api, &format!("XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}", e));
-                                    break;
-                                }
-                            };
-                            lock!(&pub_api).stats_priv = new_data;
+                            lock!(&pub_api_c).stats_pub = new_data;
                         }
                         Err(err) => {
                             warn!(
+                                "XvB Watchdog | Could not send HTTP API request to: {}\n:{}",
+                                XVB_URL_PUBLIC_API, err
+                            );
+                            // output the error to console
+                            output_console(
+                                &gui_api_c,
+                                &format!(
+                                    "Failure to retrieve public stats from {}",
+                                    XVB_URL_PUBLIC_API
+                                ),
+                            );
+                            lock!(process_c).state = ProcessState::Failed;
+                            lock!(process_c).signal = ProcessSignal::Stop;
+                        }
+                    }
+                });
+                // only if private API is accessible, NotMining here means that the token and address is not registered on the XvB website and Syncing means P2pool node is not running and so that some information for private info are not available.
+                if lock!(process).state == ProcessState::Alive {
+                    debug!("XvB Watchdog | Attempting HTTP private API request...");
+                    // reload private stats, send signal if error
+                    let client_https_c = client_https.clone();
+                    let pub_api_c = pub_api.clone();
+                    let gui_api_c = gui_api.clone();
+                    let process_c = process.clone();
+                    let address = state_p2pool.address.clone();
+                    let token = state_xvb.token.clone();
+                    spawn(async move {
+                        match XvbPrivStats::request_api(&client_https_c, &address, &token).await {
+                            Ok(b) => {
+                                debug!("XvB Watchdog | HTTP API request OK");
+                                let new_data = match serde_json::from_slice::<XvbPrivStats>(&b) {
+                                    Ok(data) => Some(data),
+                                    Err(e) => {
+                                        warn!("XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}", e);
+                                        output_console(&gui_api_c, &format!("XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}", e));
+                                        lock!(process_c).state = ProcessState::Failed;
+                                        lock!(process_c).signal = ProcessSignal::Stop;
+                                        None
+                                    }
+                                };
+                                if let Some(new_data) = new_data {
+                                    lock!(&pub_api_c).stats_priv = new_data;
+                                }
+                            }
+                            Err(err) => {
+                                warn!(
                             "XvB Watchdog | Could not send HTTP private API request to: {}\n:{}",
                             XVB_URL, err
                         );
-                            output_console(
-                                &gui_api,
-                                &format!("Failure to retrieve private stats from {}", XVB_URL),
-                            );
-                            lock!(process).state = ProcessState::Failed;
-                            break;
+                                output_console(
+                                    &gui_api_c,
+                                    &format!("Failure to retrieve private stats from {}", XVB_URL),
+                                );
+                                lock!(process_c).state = ProcessState::Failed;
+                                lock!(process_c).signal = ProcessSignal::Stop;
+                            }
                         }
-                    }
+                    });
                     // check if share is in pplns window
                     // p2pool local api show only found shares and not current shares. So we need to keep track of the time
                     // the height of p2pool would be nicer but the p2pool api doesn't show it.
                     let (share, new_time) = lock!(gui_api_p2pool)
                         .is_share_present_in_ppplns_window(
                             &mut old_shares,
-                            time_last_share,
+                            last_share,
                             state_p2pool.mini,
                         );
                     if let Some(n) = new_time {
-                        time_last_share = Some(n);
+                        last_share = Some(n);
                     }
 
                     //     // verify in which round type we are
@@ -380,12 +393,17 @@ impl Helper {
 
                     // if 10 minutes passed since last check
                     // the first 15 minutes, the HR of xmrig will be 0.0, so xmrig will always mine on p2pool for 15m.
-                    if start_algorithm.elapsed() >= Duration::from_secs(XVB_TIME_ALGO.into()) {
-                        info!("Xvb Process | Algorithm is started");
+                    if last_algorithm.elapsed() >= Duration::from_secs(XVB_TIME_ALGO.into())
+                        || first_loop
+                    {
+                        debug!("Xvb Process | Algorithm is started");
+                        output_console(
+                            &gui_api,
+                            "Algorithm of distribution HR started for the next ten minutes.",
+                        );
                         // the time that takes the algorithm do decide the next ten minutes could means less p2pool mining. It is solved by the buffer and spawning requests.
-                        start_algorithm = tokio::time::Instant::now();
+                        last_algorithm = tokio::time::Instant::now();
                         // request XMrig to mine on P2pool
-                        info!("Xvb Process | request to mine on p2pool");
                         let client_http_c = client_http.clone();
                         let gui_api_c = gui_api.clone();
                         let token_xmrig = Arc::new(state_xmrig.token.clone());
@@ -394,6 +412,7 @@ impl Helper {
                         let address_c = address.clone();
                         let gui_api_xmrig_c = gui_api_xmrig.clone();
                         spawn(async move {
+                            debug!("Xvb Process | request xmrig to mine on p2pool");
                             if let Err(err) = PrivXmrigApi::update_xmrig_config(
                                 &client_http_c,
                                 XMRIG_CONFIG_URI,
@@ -404,6 +423,7 @@ impl Helper {
                             )
                             .await
                             {
+                                warn!("Xvb Process | Failed request HTTP API Xmrig");
                                 output_console(
                                     &gui_api_c,
                                     &format!(
@@ -411,14 +431,12 @@ impl Helper {
                                         err
                                     ),
                                 );
-                            } else {
-                                output_console(&gui_api_c, "Algorithm of distribution HR started for the next ten minutes.\nMining on local p2pool node.");
                             }
                         });
 
                         // if share is in PW,
                         if share {
-                            info!("Xvb Process | Algorithm share is in current window");
+                            debug!("Xvb Process | Algorithm share is in current window");
                             // calcul minimum HR
 
                             output_console(
@@ -430,10 +448,10 @@ impl Helper {
                                 lock!(gui_api_p2pool).p2pool_difficulty_u64,
                                 state_p2pool.mini,
                             );
-                            info!("Xvb Process | hr {}, min_hr: {} ", hr, min_hr);
+                            debug!("Xvb Process | hr {}, min_hr: {} ", hr, min_hr);
                             output_console(
                                 &gui_api,
-                                &format!("You'r HR from Xmrig is {}, minimum required HR to keep a share in PPLNS window is {}", hr, min_hr),
+                                &format!("The average 15 minutes HR from Xmrig is {} H/s, minimum required HR to keep a share in PPLNS window is {}", hr, min_hr),
                             );
 
                             // calculate how much time can be spared
@@ -447,16 +465,16 @@ impl Helper {
                                         hr,
                                     );
                                 }
-                                info!("Xvb Process | spared time {} ", spared_time);
+                                debug!("Xvb Process | spared time {} ", spared_time);
                                 output_console(
                                     &gui_api,
                                     &format!(
-                                        " {} seconds of HR will be donated to the raffle.",
-                                        spared_time
-                                    ),
+                "Mining on P2pool node for {} seconds then on XvB for {} seconds.",
+                XVB_TIME_ALGO - spared_time, spared_time
+            ),
                                 );
                                 // sleep 10m less spared time then request XMrig to mine on XvB
-                                let was_instant = start_algorithm;
+                                let was_instant = last_algorithm;
                                 let gui_api_c = gui_api.clone();
                                 let client_http_c = client_http.clone();
                                 let gui_api_xmrig_c = gui_api_xmrig.clone();
@@ -476,20 +494,19 @@ impl Helper {
                             }
                         } else {
                             output_console(&gui_api, "No share in the current PPLNS Window !");
+                            output_console(&gui_api, "Mining on P2pool for the next ten minutes.");
                         }
                     }
-                    // instant saved for next check
-                    // fi
                 }
-
-                lock!(gui_api).tick = 0;
             }
 
-            lock!(gui_api).tick += 1;
             // Reset stats before loop
 
             // Sleep (only if 900ms hasn't passed)
-            let elapsed = now.elapsed().as_millis();
+            if first_loop {
+                first_loop = false;
+            }
+            let elapsed = start_loop.elapsed().as_millis();
             // Since logic goes off if less than 1000, casting should be safe
             if elapsed < 900 {
                 let sleep = (900 - elapsed) as u64;
@@ -540,14 +557,9 @@ impl Helper {
         gui_api_xmrig: Arc<Mutex<PubXmrigApi>>,
     ) {
         let node = lock!(gui_api_xvb).stats_priv.node.clone();
-        info!("Xvb Process | for now mine on p2pol ");
-        info!("Xvb Process | spared time {} ", spared_time);
-        output_console(
-            &gui_api_xvb,
-            &format!(
-                "Still mining on P2pool node for {} seconds",
-                XVB_TIME_ALGO - spared_time
-            ),
+        debug!(
+            "Xvb Process | algo sleep for {} while mining on P2pool",
+            XVB_TIME_ALGO - spared_time
         );
         sleep_until(*was_instant + Duration::from_secs((XVB_TIME_ALGO - spared_time) as u64)).await;
         if let Err(err) = PrivXmrigApi::update_xmrig_config(
@@ -561,6 +573,7 @@ impl Helper {
         .await
         {
             // show to console error about updating xmrig config
+            warn!("Xvb Process | Failed request HTTP API Xmrig");
             output_console(
                 &gui_api_xvb,
                 &format!(
@@ -569,14 +582,7 @@ impl Helper {
                 ),
             );
         } else {
-            info!("Xvb Process | mining on XvB pool");
-            output_console(
-                &gui_api_xvb,
-                &format!(
-                    "Now donating to the XvB raffle for the rest of the {} minutes.",
-                    XVB_TIME_ALGO / 60
-                ),
-            );
+            debug!("Xvb Process | mining on XvB pool");
         }
     }
 }
@@ -586,8 +592,6 @@ use serde_this_or_that::as_u64;
 pub struct PubXvbApi {
     pub output: String,
     pub uptime: u64,
-    pub tick: u8,
-    pub tick_distribute_hr: u16,
     pub stats_pub: XvbPubStats,
     pub stats_priv: XvbPrivStats,
 }
@@ -639,7 +643,7 @@ impl XvbPubStats {
             .uri(XVB_URL_PUBLIC_API)
             .body(hyper::Body::empty())?;
         let response =
-            tokio::time::timeout(std::time::Duration::from_secs(8), client.request(request))
+            tokio::time::timeout(std::time::Duration::from_secs(10), client.request(request))
                 .await?;
         // let response = client.request(request).await;
 
@@ -811,7 +815,7 @@ impl XvbNode {
             .expect("hyper request should build.");
         let ms;
         let now = Instant::now();
-        match tokio::time::timeout(Duration::from_secs(5), client.request(request)).await {
+        match tokio::time::timeout(Duration::from_secs(8), client.request(request)).await {
             Ok(Ok(json_rpc)) => {
                 // Attempt to convert to JSON-RPC.
                 match hyper::body::to_bytes(json_rpc.into_body()).await {
@@ -851,12 +855,8 @@ impl PubXvbApi {
         if !buf.is_empty() {
             output.push_str(&buf);
         }
-        let tick = std::mem::take(&mut gui_api.tick);
-        let tick_distribute_hr = std::mem::take(&mut gui_api.tick_distribute_hr);
         *gui_api = Self {
             output,
-            tick,
-            tick_distribute_hr,
             ..pub_api.clone()
         };
     }
@@ -992,6 +992,15 @@ mod test {
     async fn corr(client: Client<HttpsConnector<hyper::client::HttpConnector>>) -> XvbPubStats {
         XvbPubStats::request_api(&client).await.unwrap()
     }
+    // #[test]
+    // fn algorithm_no_share() {
+    //     let share = false;
+    //     let xvb_time_algo = 6;
+    // }
+    // #[tokio::main]
+    // async fn algo(share: bool, xvb_time_algo: u32) -> XvbPubStats {
+    //     XvbPubStats::request_api(&client).await.unwrap()
+    // }
     // #[test]
     // fn update_xmrig_config() {
     //     let client: hyper::Client<hyper::client::HttpConnector> =
