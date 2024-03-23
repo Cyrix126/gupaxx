@@ -50,7 +50,7 @@
     - [ ] stable release
   - [ ] video tutorial to set up XvB Tab
   - [ ] adapt doc for new code
-  - [ ] cargo package metadata
+  - [x] cargo package metadata
   - [ ] pgp signatures
 - [x] fix clippy
 - [ ] optimizations
