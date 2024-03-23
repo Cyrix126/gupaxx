@@ -230,12 +230,7 @@ impl App {
             must_resize: false,
             og: arc_mut!(State::new()),
             state: State::new(),
-            update: arc_mut!(Update::new(
-                String::new(),
-                PathBuf::new(),
-                PathBuf::new(),
-                true
-            )),
+            update: arc_mut!(Update::new(String::new(), PathBuf::new(), PathBuf::new(),)),
             file_window: FileWindow::new(),
             og_node_vec: Node::new_vec(),
             node_vec: Node::new_vec(),
@@ -517,8 +512,7 @@ impl App {
         info!("App Init | Applying TOML values to [Update]...");
         let p2pool_path = og.gupax.absolute_p2pool_path.clone();
         let xmrig_path = og.gupax.absolute_xmrig_path.clone();
-        let tor = og.gupax.update_via_tor;
-        app.update = arc_mut!(Update::new(app.exe.clone(), p2pool_path, xmrig_path, tor));
+        app.update = arc_mut!(Update::new(app.exe.clone(), p2pool_path, xmrig_path));
 
         // Set state version as compiled in version
         info!("App Init | Setting state Gupax version...");

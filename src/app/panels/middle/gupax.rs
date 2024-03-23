@@ -86,12 +86,6 @@ impl Gupax {
                 };
                 let size = vec2(width, height);
                 ui.style_mut().override_text_style = Some(egui::TextStyle::Small);
-                ui.add_sized(
-                    size,
-                    Checkbox::new(&mut self.update_via_tor, "Update via Tor"),
-                )
-                .on_hover_text(GUPAX_UPDATE_VIA_TOR);
-                ui.separator();
                 ui.add_sized(size, Checkbox::new(&mut self.auto_update, "Auto-Update"))
                     .on_hover_text(GUPAX_AUTO_UPDATE);
                 ui.separator();

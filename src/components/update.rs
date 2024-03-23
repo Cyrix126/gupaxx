@@ -37,8 +37,6 @@ use crate::{
     utils::errors::{ErrorButtons, ErrorFerris, ErrorState},
 };
 use anyhow::{anyhow, Error};
-use arti_client::TorClient;
-use arti_hyper::*;
 use hyper::{
     header::{HeaderValue, LOCATION},
     Body, Client, Request,
@@ -56,12 +54,12 @@ use walkdir::WalkDir;
 // tls implementation so this makes it fall back to the openssl variant.
 //
 // https://gitlab.torproject.org/tpo/core/arti/-/issues/715
-#[cfg(not(target_os = "macos"))]
-use tls_api_native_tls::TlsConnector;
-#[cfg(target_os = "macos")]
-use tls_api_openssl::TlsConnector;
+// #[cfg(not(target_os = "macos"))]
+// use tls_api_native_tls::TlsConnector;
+// #[cfg(target_os = "macos")]
+// use tls_api_openssl::TlsConnector;
 
-use tls_api::{TlsConnector as TlsConnectorTrait, TlsConnectorBuilder};
+// use tls_api::{TlsConnector as TlsConnectorTrait, TlsConnectorBuilder};
 
 #[cfg(target_os = "windows")]
 use zip::ZipArchive;
@@ -210,7 +208,7 @@ const FAKE_USER_AGENT: [&str; 25] = [
 const MSG_NONE: &str = "No update in progress";
 const MSG_START: &str = "Starting update";
 const MSG_TMP: &str = "Creating temporary directory";
-const MSG_TOR: &str = "Creating Tor+HTTPS client";
+// const MSG_TOR: &str = "Creating Tor+HTTPS client";
 const MSG_HTTPS: &str = "Creating HTTPS client";
 const MSG_METADATA: &str = "Fetching package metadata";
 const MSG_METADATA_RETRY: &str = "Fetching package metadata failed, attempt";
@@ -290,12 +288,11 @@ pub struct Update {
     pub updating: Arc<Mutex<bool>>, // Is an update in progress?
     pub prog: Arc<Mutex<f32>>,      // Holds the 0-100% progress bar number
     pub msg: Arc<Mutex<String>>,    // Message to display on [Gupax] tab while updating
-    pub tor: bool,                  // Is Tor enabled or not?
 }
 
 impl Update {
     // Takes in current paths from [State]
-    pub fn new(path_gupax: String, path_p2pool: PathBuf, path_xmrig: PathBuf, tor: bool) -> Self {
+    pub fn new(path_gupax: String, path_p2pool: PathBuf, path_xmrig: PathBuf) -> Self {
         Self {
             path_gupax,
             path_p2pool: path_p2pool.display().to_string(),
@@ -304,7 +301,6 @@ impl Update {
             updating: arc_mut!(false),
             prog: arc_mut!(0.0),
             msg: arc_mut!(MSG_NONE.to_string()),
-            tor,
         }
     }
 
@@ -342,26 +338,11 @@ impl Update {
     //     ClientEnum::Tor(T)   => get_response(... T ...)
     //     ClientEnum::Https(H) => get_response(... H ...)
     //
-    pub fn get_client(tor: bool) -> Result<ClientEnum, anyhow::Error> {
-        if tor {
-            // Below is async, bootstraps immediately but has issues when recreating the circuit
-            // let tor = TorClient::create_bootstrapped(TorClientConfig::default()).await?;
-            // This one below is non-async, and doesn't bootstrap immediately.
-            let tor = TorClient::builder()
-                .bootstrap_behavior(arti_client::BootstrapBehavior::OnDemand)
-                .create_unbootstrapped()?;
-            // This makes sure the Tor circuit is different each time
-            let tor = TorClient::isolated_client(&tor);
-            let tls = TlsConnector::builder()?.build()?;
-            let connector = ArtiHttpConnector::new(tor, tls);
-            let client = ClientEnum::Tor(Client::builder().build(connector));
-            Ok(client)
-        } else {
-            let mut connector = hyper_tls::HttpsConnector::new();
-            connector.https_only(true);
-            let client = ClientEnum::Https(Client::builder().build(connector));
-            Ok(client)
-        }
+    pub fn get_client() -> Result<ClientEnum, anyhow::Error> {
+        let mut connector = hyper_tls::HttpsConnector::new();
+        connector.https_only(true);
+        let client = ClientEnum::Https(Client::builder().build(connector));
+        Ok(client)
     }
 
     #[cold]
@@ -486,7 +467,6 @@ impl Update {
 
         lock!(update).path_p2pool = p2pool_path.display().to_string();
         lock!(update).path_xmrig = xmrig_path.display().to_string();
-        lock!(update).tor = gupax.update_via_tor;
 
         // Clone before thread spawn
         let og = Arc::clone(og);
@@ -570,18 +550,11 @@ impl Update {
 
         // Create Tor/HTTPS client
         let lock = lock!(update);
-        let tor = lock.tor;
-        if tor {
-            let msg = MSG_TOR.to_string();
-            info!("Update | {}", msg);
-            *lock!(lock.msg) = msg;
-        } else {
-            let msg = MSG_HTTPS.to_string();
-            info!("Update | {}", msg);
-            *lock!(lock.msg) = msg;
-        }
+        let msg = MSG_HTTPS.to_string();
+        info!("Update | {}", msg);
+        *lock!(lock.msg) = msg;
         drop(lock);
-        let mut client = Self::get_client(tor)?;
+        let client = Self::get_client()?;
         *lock2!(update, prog) += 5.0;
         info!("Update | Init ... OK ... {}%", lock2!(update, prog));
 
@@ -613,7 +586,6 @@ impl Update {
                 // Send to async
                 let handle: JoinHandle<Result<(), anyhow::Error>> = tokio::spawn(async move {
                     match client {
-                        ClientEnum::Tor(t) => Pkg::get_metadata(new_ver, t, link, user_agent).await,
                         ClientEnum::Https(h) => {
                             Pkg::get_metadata(new_ver, h, link, user_agent).await
                         }
@@ -654,10 +626,6 @@ impl Update {
             }
             // Some Tor exit nodes seem to be blocked by GitHub's API,
             // so recreate the circuit every loop.
-            if tor {
-                info!("Update | Recreating Tor client...");
-                client = Self::get_client(tor)?;
-            }
         }
         if vec.is_empty() {
             info!("Update | Metadata ... OK ... {}%", lock2!(update, prog));
@@ -761,7 +729,6 @@ impl Update {
                 info!("Update | {} ... {}", pkg.name, link);
                 let handle: JoinHandle<Result<(), anyhow::Error>> = tokio::spawn(async move {
                     match client {
-                        ClientEnum::Tor(t) => Pkg::get_bytes(bytes, t, link, user_agent).await,
                         ClientEnum::Https(h) => Pkg::get_bytes(bytes, h, link, user_agent).await,
                     }
                 });
@@ -942,7 +909,6 @@ impl Update {
 
 #[derive(Debug, Clone)]
 pub enum ClientEnum {
-    Tor(hyper::Client<ArtiHttpConnector<tor_rtcompat::PreferredRuntime, TlsConnector>>),
     Https(hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>),
 }
 

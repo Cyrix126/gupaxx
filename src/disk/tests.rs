@@ -34,7 +34,6 @@ mod test {
             auto_xvb = false
 			ask_before_quit = true
 			save_before_quit = true
-			update_via_tor = true
 			p2pool_path = "p2pool/p2pool"
 			xmrig_path = "xmrig/xmrig"
 			absolute_p2pool_path = "/home/hinto/p2pool/p2pool"
@@ -168,7 +167,6 @@ mod test {
 			auto_xmrig = false
 			ask_before_quit = true
 			save_before_quit = true
-			update_via_tor = true
 			p2pool_path = "p2pool/p2pool"
 			xmrig_path = "xmrig/xmrig"
 			absolute_p2pool_path = ""

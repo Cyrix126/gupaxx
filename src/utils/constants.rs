@@ -265,10 +265,10 @@ pub const GUPAX_UPDATE: &str =
 pub const GUPAX_AUTO_UPDATE: &str = "Automatically check for updates at startup";
 pub const GUPAX_SHOULD_RESTART: &str =
     "Gupax was updated. A restart is recommended but not required";
-#[cfg(not(target_os = "macos"))]
-pub const GUPAX_UPDATE_VIA_TOR:   &str = "Update through the Tor network. Tor is embedded within Gupax; a Tor system proxy is not required";
-#[cfg(target_os = "macos")] // Arti library has issues on macOS
-pub const GUPAX_UPDATE_VIA_TOR:   &str = "WARNING: This option is unstable on macOS. Update through the Tor network. Tor is embedded within Gupax; a Tor system proxy is not required";
+// #[cfg(not(target_os = "macos"))]
+// pub const GUPAX_UPDATE_VIA_TOR:   &str = "Update through the Tor network. Tor is embedded within Gupax; a Tor system proxy is not required";
+// #[cfg(target_os = "macos")] // Arti library has issues on macOS
+// pub const GUPAX_UPDATE_VIA_TOR:   &str = "WARNING: This option is unstable on macOS. Update through the Tor network. Tor is embedded within Gupax; a Tor system proxy is not required";
 pub const GUPAX_ASK_BEFORE_QUIT: &str = "Ask before quitting Gupax";
 pub const GUPAX_SAVE_BEFORE_QUIT: &str = "Automatically save any changed settings before quitting";
 pub const GUPAX_AUTO_P2POOL:      &str = "Automatically start P2Pool on Gupax startup. If you are using [P2Pool Simple], this will NOT wait for your [Auto-Ping] to finish, it will start P2Pool on the pool you already have selected. This option will fail if your P2Pool settings aren't valid!";
@@ -334,7 +334,7 @@ You may encounter connection issues with remote nodes which may cause mining per
 
 Running and using your own local Monero node improves privacy and ensures your connection is as stable as your own internet connection. This comes at the cost of downloading and syncing Monero's blockchain yourself (currently 170GB). If you have the disk space, consider using the [Advanced] tab and connecting to your own Monero node.
 
-For a simple guide, see the [Running a Local Monero Node] section on Gupax's GitHub by clicking this message."#;
+For a simple guide, see the [Running a Local Monero Node] section on Gupax s GitHub by clicking this message."#;
 
 pub const P2POOL_INPUT: &str = "Send a command to P2Pool";
 pub const P2POOL_ARGUMENTS: &str = r#"WARNING: Use [--no-color] and make sure to set [--data-api <PATH>] & [--local-api] so that the [Status] tab can work!
@@ -417,8 +417,11 @@ pub const XVB_NODE_RPC: &str = "18089";
 pub const XVB_URL_RULES: &str = "https://xmrvsbeast.com/p2pool/rules.html";
 // buffer in percentage of HR to have plus the requirement.
 pub const XVB_BUFFER: f32 = 1.05;
-// time in second the algorithm will distribute the HR
+// time in second the algorithm will distribute the HR, 10 minutes for release and 30 seconds for debug.
+#[cfg(not(debug_assertions))]
 pub const XVB_TIME_ALGO: u32 = 600;
+#[cfg(debug_assertions)]
+pub const XVB_TIME_ALGO: u32 = 60;
 pub const XVB_TOKEN_LEN: usize = 9;
 pub const XVB_HERO_SELECT: &str =
     "This mode will donate all available hashrate while keeping a share in the  p2pool PPLNS window";
@@ -453,7 +456,7 @@ the environment variable [RUST_LOG] set to a log level like so:
     RUST_LOG=(trace|debug|info|warn|error) ./gupax"#;
 pub const ARG_COPYRIGHT: &str = r#"Gupax is licensed under GPLv3.
 For more information, see link below:
-<https://github.com/hinto-janai/gupax>"#;
+<https://github.com/Cyrix126/gupax>"#;
 
 // Unknown Data, replace HumanNumlber::unknown()
 pub const UNKNOWN_DATA: &str = "???";

@@ -56,8 +56,11 @@
 - [ ] optimizations
   - [x] benchmarks table render only what is visible
   - [x] console output render only what is visible
-  - [ ] migrate to hyper stable
   - [ ] use tor socks proxy instead of creating one
+    - [x] remove arti
+    - [ ] bundle arti cmd binary
+    - [ ] upgrade to hyper stable
+    - [ ] use hyper with socks proxy
 - [ ] better organize new code
 - [x] merge commits from upstream
 - [ ] tests for new functions
