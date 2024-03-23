@@ -19,12 +19,13 @@ use crate::disk::pool::Pool;
 use crate::disk::state::Xmrig;
 use crate::helper::xmrig::PubXmrigApi;
 use crate::helper::Process;
-use crate::regex::REGEXES;
+use crate::regex::{num_lines, REGEXES};
 use crate::utils::regex::Regexes;
 use crate::{constants::*, macros::*};
 use egui::{
     vec2, Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, Slider, TextEdit,
-    TextStyle::*, Vec2,
+    TextStyle::{self, *},
+    Vec2,
 };
 use log::*;
 
@@ -47,43 +48,36 @@ impl Xmrig {
         //---------------------------------------------------------------------------------------------------- [Simple] Console
         debug!("XMRig Tab | Rendering [Console]");
         ui.group(|ui| {
-            if self.simple {
-                let height = size.y / 1.5;
-                let width = size.x - SPACE;
-                let size = vec2(width, height);
-                egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
-                    ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
-                    egui::ScrollArea::vertical()
-                        .stick_to_bottom(true)
-                        .max_width(width)
-                        .max_height(height)
-                        .auto_shrink([false; 2])
-                        .show_viewport(ui, |ui, _| {
-                            ui.add_sized(
-                                size,
-                                TextEdit::multiline(&mut lock!(api).output.as_str()),
-                            );
-                        });
-                });
-            //---------------------------------------------------------------------------------------------------- [Advanced] Console
+            let text = &lock!(api).output;
+            let nb_lines = num_lines(text);
+            let (height, width) = if self.simple {
+                (size.y / 1.5, size.x - SPACE)
             } else {
-                let height = size.y / 2.8;
-                let width = size.x - SPACE;
-                let size = vec2(width, height);
-                egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
-                    ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
-                    egui::ScrollArea::vertical()
-                        .stick_to_bottom(true)
-                        .max_width(width)
-                        .max_height(height)
-                        .auto_shrink([false; 2])
-                        .show_viewport(ui, |ui, _| {
-                            ui.add_sized(
-                                size,
-                                TextEdit::multiline(&mut lock!(api).output.as_str()),
-                            );
-                        });
-                });
+                (size.y / 2.8, size.x - SPACE)
+            };
+            egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
+                ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
+                egui::ScrollArea::vertical()
+                    .stick_to_bottom(true)
+                    .max_width(width)
+                    .max_height(height)
+                    .auto_shrink([false; 2])
+                    // .show_viewport(ui, |ui, _| {
+                    .show_rows(
+                        ui,
+                        ui.text_style_height(&TextStyle::Name("MonospaceSmall".into())),
+                        nb_lines,
+                        |ui, row_range| {
+                            for i in row_range {
+                                if let Some(line) = text.lines().nth(i) {
+                                    ui.label(line);
+                                }
+                            }
+                        },
+                    );
+            });
+            //---------------------------------------------------------------------------------------------------- [Advanced] Console
+            if !self.simple {
                 ui.separator();
                 let response = ui
                     .add_sized(

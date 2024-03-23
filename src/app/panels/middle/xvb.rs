@@ -6,6 +6,7 @@ use log::debug;
 use readable::num::Float;
 
 use crate::helper::xvb::PubXvbApi;
+use crate::regex::num_lines;
 use crate::utils::constants::{
     GREEN, LIGHT_GRAY, ORANGE, RED, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD, XVB_FAILURE_FIELD,
     XVB_HELP, XVB_HERO_SELECT, XVB_ROUND_TYPE_FIELD, XVB_TOKEN_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES,
@@ -47,6 +48,8 @@ impl crate::disk::state::Xvb {
         // console output for log
         debug!("XvB Tab | Rendering [Console]");
         ui.group(|ui| {
+            let text = &lock!(api).output;
+            let nb_lines = num_lines(text);
             let height = size.y / 2.8;
             let width = size.x - (space_h / 2.0);
             egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
@@ -56,12 +59,19 @@ impl crate::disk::state::Xvb {
                     .max_width(width)
                     .max_height(height)
                     .auto_shrink([false; 2])
-                    .show_viewport(ui, |ui, _| {
-                        ui.add_sized(
-                            [width, height],
-                            TextEdit::multiline(&mut lock!(api).output.as_str()),
-                        );
-                    });
+                    // .show_viewport(ui, |ui, _| {
+                    .show_rows(
+                        ui,
+                        ui.text_style_height(&TextStyle::Name("MonospaceSmall".into())),
+                        nb_lines,
+                        |ui, row_range| {
+                            for i in row_range {
+                                if let Some(line) = text.lines().nth(i) {
+                                    ui.label(line);
+                                }
+                            }
+                        },
+                    );
             });
         });
         // input token

@@ -45,13 +45,17 @@
     - [x] output log to console in XvB tab
 - [x] fix some overlapping from upstream
 - [ ] edit metadata of project
-  - [ ] adapt README for XvB
+  - [ ] adapt README for XvB 
+    - [ ] beta release
+    - [ ] stable release
+  - [ ] video tutorial to set up XvB Tab
   - [ ] adapt doc for new code
   - [ ] cargo package metadata
   - [ ] pgp signatures
 - [x] fix clippy
 - [ ] optimizations
   - [x] benchmarks table render only what is visible
+  - [x] console output render only what is visible
   - [ ] migrate to hyper stable
   - [ ] use tor socks proxy instead of creating one
 - [ ] better organize new code

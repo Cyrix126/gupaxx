@@ -1,6 +1,7 @@
 use crate::disk::node::Node;
 use crate::disk::state::{P2pool, State};
 use crate::helper::p2pool::PubP2poolApi;
+use crate::regex::num_lines;
 // Gupax - GUI Uniting P2Pool And XMRig
 //
 // Copyright (c) 2022-2023 hinto-janai
@@ -18,7 +19,11 @@ use crate::helper::p2pool::PubP2poolApi;
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::{components::node::*, constants::*, helper::*, macros::*, utils::regex::Regexes};
-use egui::{vec2, Color32, Label, RichText, TextEdit, TextStyle::*, Vec2};
+use egui::{
+    vec2, Color32, Label, RichText, TextEdit,
+    TextStyle::{self, *},
+    Vec2,
+};
 use log::*;
 
 use std::sync::{Arc, Mutex};
@@ -45,49 +50,45 @@ impl P2pool {
         let width = size.x;
         let text_edit = size.y / 25.0;
         //---------------------------------------------------------------------------------------------------- [Simple] Console
-        debug!("P2Pool Tab | Rendering [Console]");
+        // debug!("P2Pool Tab | Rendering [Console]");
         ui.group(|ui| {
-            if self.simple {
-                // height of console = height - address - simple(dropmenu, select_bar, buttons, warning)
-                let height = (size.y * 0.38) - SPACE;
-                let width = size.x - SPACE;
-                egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
-                    ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
-                    egui::ScrollArea::vertical()
-                        .stick_to_bottom(true)
-                        .max_width(width)
-                        .max_height(height)
-                        .auto_shrink([false; 2])
-                        .show_viewport(ui, |ui, _| {
-                            ui.add_sized(
-                                [width, height],
-                                TextEdit::multiline(&mut lock!(api).output.as_str()),
-                            );
-                        });
-                });
-            //---------------------------------------------------------------------------------------------------- [Advanced] Console
+            let text = &lock!(api).output;
+            let nb_lines = num_lines(text);
+            let (height, width) = if self.simple {
+                ((size.y * 0.38) - SPACE, size.x - SPACE)
             } else {
-                // fix for advanced submenu overlap on bottom when small window
-                let height = if size.y < 600.0 {
-                    size.y * 0.22 - SPACE
-                } else {
-                    size.y * 0.36 - SPACE
-                };
-                let width = width - SPACE;
-                egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
-                    ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
-                    egui::ScrollArea::vertical()
-                        .stick_to_bottom(true)
-                        .max_width(width)
-                        .max_height(height)
-                        .auto_shrink([false; 2])
-                        .show_viewport(ui, |ui, _| {
-                            ui.add_sized(
-                                [width, height],
-                                TextEdit::multiline(&mut lock!(api).output.as_str()),
-                            );
-                        });
-                });
+                (
+                    if size.y < 600.0 {
+                        size.y * 0.22 - SPACE
+                    } else {
+                        size.y * 0.36 - SPACE
+                    },
+                    width - SPACE,
+                )
+            };
+            egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
+                ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
+                egui::ScrollArea::vertical()
+                    .stick_to_bottom(true)
+                    .max_width(width)
+                    .max_height(height)
+                    .auto_shrink([false; 2])
+                    // .show_viewport(ui, |ui, _| {
+                    .show_rows(
+                        ui,
+                        ui.text_style_height(&TextStyle::Name("MonospaceSmall".into())),
+                        nb_lines,
+                        |ui, row_range| {
+                            for i in row_range {
+                                if let Some(line) = text.lines().nth(i) {
+                                    ui.label(line);
+                                }
+                            }
+                        },
+                    );
+            });
+            if !self.simple {
+                //---------------------------------------------------------------------------------------------------- [Advanced] Console
                 ui.separator();
                 let response = ui
                     .add_sized(

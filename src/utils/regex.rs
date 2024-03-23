@@ -123,6 +123,12 @@ impl XmrigRegex {
         }
     }
 }
+
+// count the lines without consuming.
+pub fn num_lines(s: &str) -> usize {
+    static LINE_BREAKS: Lazy<Regex> = Lazy::new(|| Regex::new(r"\r?\n").unwrap());
+    LINE_BREAKS.captures_iter(s).count() + 1
+}
 //---------------------------------------------------------------------------------------------------- TEST
 #[cfg(test)]
 mod test {
