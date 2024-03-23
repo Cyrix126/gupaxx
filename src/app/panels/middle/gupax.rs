@@ -26,7 +26,7 @@ impl Gupax {
         ui: &mut egui::Ui,
     ) {
         // Update button + Progress bar
-        debug!("Gupax Tab | Rendering [Update] button + progress bar");
+        debug!("Gupaxx Tab | Rendering [Update] button + progress bar");
         ui.group(|ui| {
             let button = if self.simple {
                 size.y / 5.0
@@ -75,7 +75,7 @@ impl Gupax {
             });
         });
 
-        debug!("Gupax Tab | Rendering bool buttons");
+        debug!("Gupaxx Tab | Rendering bool buttons");
         ui.horizontal(|ui| {
             ui.group(|ui| {
                 let width = (size.x - SPACE * 12.0) / 6.0;
@@ -116,7 +116,7 @@ impl Gupax {
             return;
         }
 
-        debug!("Gupax Tab | Rendering P2Pool/XMRig path selection");
+        debug!("Gupaxx Tab | Rendering P2Pool/XMRig path selection");
         // P2Pool/XMRig binary path selection
         let height = size.y / 28.0;
         let text_edit = (ui.available_width() / 10.0) - SPACE;
@@ -129,7 +129,7 @@ impl Gupax {
                         .color(LIGHT_GRAY),
                 ),
             )
-            .on_hover_text("Gupax is online");
+            .on_hover_text("Gupaxx is online");
             ui.separator();
             ui.horizontal(|ui| {
                 if self.p2pool_path.is_empty() {
@@ -220,7 +220,7 @@ impl Gupax {
         let height = ui.available_height() / 6.0;
 
         // Saved [Tab]
-        debug!("Gupax Tab | Rendering [Tab] selector");
+        debug!("Gupaxx Tab | Rendering [Tab] selector");
         ui.group(|ui| {
             let width = (size.x / 6.0) - (SPACE * 1.93);
             let size = vec2(width, height);
@@ -251,7 +251,7 @@ impl Gupax {
                 }
                 ui.separator();
                 if ui
-                    .add_sized(size, SelectableLabel::new(self.tab == Tab::Gupax, "Gupax"))
+                    .add_sized(size, SelectableLabel::new(self.tab == Tab::Gupax, "Gupaxx"))
                     .on_hover_text(GUPAX_TAB_GUPAX)
                     .clicked()
                 {
@@ -287,7 +287,7 @@ impl Gupax {
         });
 
         // Gupax App resolution sliders
-        debug!("Gupax Tab | Rendering resolution sliders");
+        debug!("Gupaxx Tab | Rendering resolution sliders");
         ui.group(|ui| {
             ui.add_sized(
                 [ui.available_width(), height / 2.0],

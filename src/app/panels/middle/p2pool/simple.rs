@@ -180,7 +180,7 @@ impl P2pool {
             [size.x, height / 2.0],
             Hyperlink::from_label_and_url(
                 "WARNING: It is recommended to run/use your own Monero Node (hover for details)",
-                "https://github.com/hinto-janai/gupax#running-a-local-monero-node",
+                "https://github.com/Cyrix126/gupaxx#running-a-local-monero-node",
             ),
         )
         .on_hover_text(P2POOL_COMMUNITY_NODE_WARNING);

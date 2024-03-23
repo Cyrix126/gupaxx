@@ -2,13 +2,13 @@
 
 # Sets up a packaging environment in [/tmp]
 
-# Make sure we're in the [gupax/utils] directory
+# Make sure we're in the [gupaxx/utils] directory
 set -ex
-[[ $PWD = */gupax ]]
+[[ $PWD = */gupaxx ]]
 
 # Make sure the folder doesn't already exist
 GIT_COMMIT=$(cat .git/refs/heads/main)
-FOLDER="gupax_${GIT_COMMIT}"
+FOLDER="gupaxx_${GIT_COMMIT}"
 [[ ! -e /tmp/${FOLDER} ]]
 
 mkdir /tmp/${FOLDER}

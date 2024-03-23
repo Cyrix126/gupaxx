@@ -19,7 +19,7 @@ pub fn parse_args<S: Into<String>>(mut app: App, panic: S) -> App {
                 exit(0);
             }
             "--version" => {
-                println!("Gupax {} [OS: {}, Commit: {}]\nThis Gupax was originally bundled with:\n    - P2Pool {}\n    - XMRig {}\n\n{}", GUPAX_VERSION, OS_NAME, &COMMIT[..40], P2POOL_VERSION, XMRIG_VERSION, ARG_COPYRIGHT);
+                println!("Gupaxx {} [OS: {}, Commit: {}]\nThis Gupax was originally bundled with:\n    - P2Pool {}\n    - XMRig {}\n\n{}", GUPAX_VERSION, OS_NAME, &COMMIT[..40], P2POOL_VERSION, XMRIG_VERSION, ARG_COPYRIGHT);
                 exit(0);
             }
             "--ferris" => {

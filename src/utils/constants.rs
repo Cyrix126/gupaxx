@@ -1,4 +1,4 @@
-// Gupax - GUI Uniting P2Pool And XMRig
+// Gupaxx - GUI Uniting P2Pool And XMRig
 //
 // Copyright (c) 2022-2023 hinto-janai
 //
@@ -22,7 +22,7 @@ pub const COMMIT: &str = env!("COMMIT"); // set in build.rs
                                          // e.g: Gupax_v1_0_0
                                          // Would have been [Gupax_v1.0.0] but P2Pool truncates everything after [.]
 pub const GUPAX_VERSION_UNDERSCORE: &str = concat!(
-    "Gupax_v",
+    "Gupaxx_v",
     env!("CARGO_PKG_VERSION_MAJOR"),
     "_",
     env!("CARGO_PKG_VERSION_MINOR"),
@@ -45,7 +45,7 @@ pub const APP_DEFAULT_SCALE: f32 = 1.0;
 
 // Constants specific for Linux distro packaging of Gupax
 #[cfg(feature = "distro")]
-pub const DISTRO_NO_UPDATE: &str = r#"This [Gupax] was compiled for use as a Linux distro package. Built-in updates are disabled. The below settings [Update-via-Tor] & [Auto-Update] will not do anything. Please use your package manager to update [Gupax/P2Pool/XMRig]."#;
+pub const DISTRO_NO_UPDATE: &str = r#"This [Gupaxx] was compiled for use as a Linux distro package. Built-in updates are disabled. The below settings [Update-via-Tor] & [Auto-Update] will not do anything. Please use your package manager to update [Gupaxx/P2Pool/XMRig]."#;
 
 // Use macOS shaped icon for macOS
 #[cfg(target_os = "macos")]
@@ -146,7 +146,7 @@ pub const OS: &str = " Windows";
 #[cfg(target_os = "windows")]
 pub const OS_NAME: &str = "Windows";
 #[cfg(target_os = "windows")]
-pub const WINDOWS_NOT_ADMIN: &str = "XMRig will most likely mine slower than normal without Administrator permissions. Please consider restarting Gupax as an Administrator.";
+pub const WINDOWS_NOT_ADMIN: &str = "XMRig will most likely mine slower than normal without Administrator permissions. Please consider restarting Gupaxx as an Administrator.";
 
 #[cfg(target_os = "macos")]
 pub const OS: &str = " macOS";
@@ -160,10 +160,11 @@ pub const OS_NAME: &str = "Linux";
 
 // Tooltips
 // Status
-pub const STATUS_GUPAX_UPTIME: &str = "How long Gupax has been online";
+pub const STATUS_GUPAX_UPTIME: &str = "How long Gupaxx has been online";
 pub const STATUS_GUPAX_CPU_USAGE: &str =
-    "How much CPU Gupax is currently using. This accounts for all your threads (it is out of 100%)";
-pub const STATUS_GUPAX_MEMORY_USAGE: &str = "How much memory Gupax is currently using in Megabytes";
+    "How much CPU Gupaxx is currently using. This accounts for all your threads (it is out of 100%)";
+pub const STATUS_GUPAX_MEMORY_USAGE: &str =
+    "How much memory Gupaxx is currently using in Megabytes";
 pub const STATUS_GUPAX_SYSTEM_CPU_USAGE: &str = "How much CPU your entire system is currently using. This accounts for all your threads (it is out of 100%)";
 pub const STATUS_GUPAX_SYSTEM_MEMORY: &str =
     "How much memory your entire system has (including swap) and is currently using in Gigabytes";
@@ -201,12 +202,12 @@ pub const STATUS_XVB_BLOCK_REWARD: &str = "Block reward";
 pub const STATUS_XVB_YEARLY: &str = "Estimated Reward (Yearly)";
 // Status Submenus
 pub const STATUS_SUBMENU_PROCESSES: &str =
-    "View the status of process related data for [Gupax|P2Pool|XMRig]";
+    "View the status of process related data for [Gupaxx|P2Pool|XMRig]";
 pub const STATUS_SUBMENU_P2POOL: &str = "View P2Pool specific data";
 pub const STATUS_SUBMENU_HASHRATE: &str = "Compare your CPU hashrate with others";
 //-- P2Pool
-pub const STATUS_SUBMENU_PAYOUT:    &str = "The total amount of payouts received via P2Pool across all time. This includes all payouts you have ever received using Gupax and P2Pool.";
-pub const STATUS_SUBMENU_XMR:       &str = "The total of XMR mined via P2Pool across all time. This includes all the XMR you have ever mined using Gupax and P2Pool.";
+pub const STATUS_SUBMENU_PAYOUT:    &str = "The total amount of payouts received via P2Pool across all time. This includes all payouts you have ever received using Gupaxx and P2Pool.";
+pub const STATUS_SUBMENU_XMR:       &str = "The total of XMR mined via P2Pool across all time. This includes all the XMR you have ever mined using Gupaxx and P2Pool.";
 pub const STATUS_SUBMENU_LATEST: &str = "Sort the payouts from latest to oldest";
 pub const STATUS_SUBMENU_OLDEST: &str = "Sort the payouts from oldest to latest";
 pub const STATUS_SUBMENU_BIGGEST: &str = "Sort the payouts from biggest to smallest";
@@ -236,9 +237,9 @@ pub const STATUS_SUBMENU_YOUR_P2POOL_DOMINANCE: &str =
     "The percent of hashrate you account for in P2Pool";
 pub const STATUS_SUBMENU_YOUR_MONERO_DOMINANCE: &str =
     "The percent of hashrate you account for in the entire Monero network";
-pub const STATUS_SUBMENU_PROGRESS_BAR:          &str = "The next time Gupax will update P2Pool stats. Each [*] is 900ms (updates roughly every 54 seconds)";
+pub const STATUS_SUBMENU_PROGRESS_BAR:          &str = "The next time Gupaxx will update P2Pool stats. Each [*] is 900ms (updates roughly every 54 seconds)";
 //-- Benchmarks
-pub const STATUS_SUBMENU_YOUR_CPU: &str = "The CPU detected by Gupax";
+pub const STATUS_SUBMENU_YOUR_CPU: &str = "The CPU detected by Gupaxx";
 pub const STATUS_SUBMENU_YOUR_BENCHMARKS: &str =
     "How many benchmarks your CPU has had uploaded to [https://xmrig.com/benchmark] ";
 pub const STATUS_SUBMENU_YOUR_RANK: &str =
@@ -259,49 +260,49 @@ pub const STATUS_SUBMENU_OTHER_RANK: &str = "The rank of this CPU out of [1567] 
 pub const STATUS_SUBMENU_OTHER_BENCHMARKS: &str =
     "How many benchmarks this CPU has had posted to [https://xmrig.com/benchmark]";
 
-// Gupax
+// Gupaxx
 pub const GUPAX_UPDATE: &str =
-    "Check for updates on Gupax, P2Pool, and XMRig via GitHub's API and upgrade automatically";
+    "Check for updates on Gupaxx, P2Pool, and XMRig via GitHub's API and upgrade automatically";
 pub const GUPAX_AUTO_UPDATE: &str = "Automatically check for updates at startup";
 pub const GUPAX_SHOULD_RESTART: &str =
-    "Gupax was updated. A restart is recommended but not required";
+    "Gupaxx was updated. A restart is recommended but not required";
 // #[cfg(not(target_os = "macos"))]
 // pub const GUPAX_UPDATE_VIA_TOR:   &str = "Update through the Tor network. Tor is embedded within Gupax; a Tor system proxy is not required";
 // #[cfg(target_os = "macos")] // Arti library has issues on macOS
 // pub const GUPAX_UPDATE_VIA_TOR:   &str = "WARNING: This option is unstable on macOS. Update through the Tor network. Tor is embedded within Gupax; a Tor system proxy is not required";
-pub const GUPAX_ASK_BEFORE_QUIT: &str = "Ask before quitting Gupax";
+pub const GUPAX_ASK_BEFORE_QUIT: &str = "Ask before quitting Gupaxx";
 pub const GUPAX_SAVE_BEFORE_QUIT: &str = "Automatically save any changed settings before quitting";
-pub const GUPAX_AUTO_P2POOL:      &str = "Automatically start P2Pool on Gupax startup. If you are using [P2Pool Simple], this will NOT wait for your [Auto-Ping] to finish, it will start P2Pool on the pool you already have selected. This option will fail if your P2Pool settings aren't valid!";
-pub const GUPAX_AUTO_XMRIG:       &str = "Automatically start XMRig on Gupax startup. This option will fail if your XMRig settings aren't valid!";
-pub const GUPAX_AUTO_XVB:       &str = "Automatically start XvB on Gupax startup. This option will fail if your XvB settings aren't valid!";
-pub const GUPAX_ADJUST: &str = "Adjust and set the width/height of the Gupax window";
-pub const GUPAX_WIDTH: &str = "Set the width of the Gupax window";
-pub const GUPAX_HEIGHT: &str = "Set the height of the Gupax window";
+pub const GUPAX_AUTO_P2POOL:      &str = "Automatically start P2Pool on Gupaxx startup. If you are using [P2Pool Simple], this will NOT wait for your [Auto-Ping] to finish, it will start P2Pool on the pool you already have selected. This option will fail if your P2Pool settings aren't valid!";
+pub const GUPAX_AUTO_XMRIG:       &str = "Automatically start XMRig on Gupaxx startup. This option will fail if your XMRig settings aren't valid!";
+pub const GUPAX_AUTO_XVB:       &str = "Automatically start XvB on Gupaxx startup. This option will fail if your XvB settings aren't valid!";
+pub const GUPAX_ADJUST: &str = "Adjust and set the width/height of the Gupaxx window";
+pub const GUPAX_WIDTH: &str = "Set the width of the Gupaxx window";
+pub const GUPAX_HEIGHT: &str = "Set the height of the Gupaxx window";
 pub const GUPAX_SCALE: &str =
-    "Set the resolution scaling of the Gupax window (resize window to re-apply scaling)";
+    "Set the resolution scaling of the Gupaxx window (resize window to re-apply scaling)";
 pub const GUPAX_LOCK_WIDTH: &str =
     "Automatically match the HEIGHT against the WIDTH in a 4:3 ratio";
 pub const GUPAX_LOCK_HEIGHT: &str =
     "Automatically match the WIDTH against the HEIGHT in a 4:3 ratio";
 pub const GUPAX_NO_LOCK: &str = "Allow individual selection of width and height";
-pub const GUPAX_SET: &str = "Set the width/height of the Gupax window to the current values";
-pub const GUPAX_TAB: &str = "Set the default tab Gupax starts on";
-pub const GUPAX_TAB_ABOUT: &str = "Set the tab Gupax starts on to: About";
-pub const GUPAX_TAB_STATUS: &str = "Set the tab Gupax starts on to: Status";
-pub const GUPAX_TAB_GUPAX: &str = "Set the tab Gupax starts on to: Gupax";
-pub const GUPAX_TAB_P2POOL: &str = "Set the tab Gupax starts on to: P2Pool";
-pub const GUPAX_TAB_XMRIG: &str = "Set the tab Gupax starts on to: XMRig";
-pub const GUPAX_TAB_XVB: &str = "Set the tab Gupax starts on to: XvB";
+pub const GUPAX_SET: &str = "Set the width/height of the Gupaxx window to the current values";
+pub const GUPAX_TAB: &str = "Set the default tab Gupaxx starts on";
+pub const GUPAX_TAB_ABOUT: &str = "Set the tab Gupaxx starts on to: About";
+pub const GUPAX_TAB_STATUS: &str = "Set the tab Gupaxx starts on to: Status";
+pub const GUPAX_TAB_GUPAX: &str = "Set the tab Gupaxx starts on to: Gupaxx";
+pub const GUPAX_TAB_P2POOL: &str = "Set the tab Gupaxx starts on to: P2Pool";
+pub const GUPAX_TAB_XMRIG: &str = "Set the tab Gupaxx starts on to: XMRig";
+pub const GUPAX_TAB_XVB: &str = "Set the tab Gupaxx starts on to: XvB";
 
-pub const GUPAX_SIMPLE: &str = r#"Use simple Gupax settings:
+pub const GUPAX_SIMPLE: &str = r#"Use simple Gupaxx settings:
   - Update button
   - Basic toggles"#;
-pub const GUPAX_ADVANCED: &str = r#"Use advanced Gupax settings:
+pub const GUPAX_ADVANCED: &str = r#"Use advanced Gupaxx settings:
   - Update button
   - Basic toggles
   - P2Pool/XMRig binary path selector
-  - Gupax resolution sliders
-  - Gupax start-up tab selector"#;
+  - Gupaxx resolution sliders
+  - Gupaxx start-up tab selector"#;
 pub const GUPAX_SELECT: &str = "Open a file explorer to select a file";
 pub const GUPAX_PATH_P2POOL: &str = "The location of the P2Pool binary: Both absolute and relative paths are accepted; A red [X] will appear if there is no file found at the given path";
 pub const GUPAX_PATH_XMRIG: &str = "The location of the XMRig binary: Both absolute and relative paths are accepted; A red [X] will appear if there is no file found at the given path";
@@ -312,7 +313,7 @@ pub const P2POOL_MINI:                   &str = "Use the P2Pool mini-chain. This
 pub const P2POOL_OUT: &str = "How many out-bound peers to connect to? (you connecting to others)";
 pub const P2POOL_IN: &str = "How many in-bound peers to allow? (others connecting to you)";
 pub const P2POOL_LOG: &str = "Verbosity of the console log";
-pub const P2POOL_AUTO_NODE: &str = "Automatically ping the remote Monero nodes at Gupax startup";
+pub const P2POOL_AUTO_NODE: &str = "Automatically ping the remote Monero nodes at Gupaxx startup";
 pub const P2POOL_AUTO_SELECT: &str =
     "Automatically select the fastest remote Monero node after pinging";
 pub const P2POOL_BACKUP_HOST_SIMPLE: &str = r#"Automatically switch to the other nodes listed if the current one is down.
@@ -334,7 +335,7 @@ You may encounter connection issues with remote nodes which may cause mining per
 
 Running and using your own local Monero node improves privacy and ensures your connection is as stable as your own internet connection. This comes at the cost of downloading and syncing Monero's blockchain yourself (currently 170GB). If you have the disk space, consider using the [Advanced] tab and connecting to your own Monero node.
 
-For a simple guide, see the [Running a Local Monero Node] section on Gupax s GitHub by clicking this message."#;
+For a simple guide, see the [Running a Local Monero Node] section on Gupaxx s GitHub by clicking this message."#;
 
 pub const P2POOL_INPUT: &str = "Send a command to P2Pool";
 pub const P2POOL_ARGUMENTS: &str = r#"WARNING: Use [--no-color] and make sure to set [--data-api <PATH>] & [--local-api] so that the [Status] tab can work!
@@ -356,10 +357,10 @@ pub const P2POOL_NAME: &str = "Add a unique name to identify this node; Only [A-
 pub const P2POOL_NODE_IP: &str = "Specify the Monero Node IP to connect to with P2Pool; It must be a valid IPv4 address or a valid domain name; Max length = 255 characters";
 pub const P2POOL_RPC_PORT: &str = "Specify the RPC port of the Monero node; [1-65535]";
 pub const P2POOL_ZMQ_PORT: &str = "Specify the ZMQ port of the Monero node; [1-65535]";
-pub const P2POOL_PATH_NOT_FILE: &str = "P2Pool binary not found at the given PATH in the Gupax tab! To fix: goto the [Gupax Advanced] tab, select [Open] and specify where P2Pool is located.";
-pub const P2POOL_PATH_NOT_VALID: &str = "P2Pool binary at the given PATH in the Gupax tab doesn't look like P2Pool! To fix: goto the [Gupax Advanced] tab, select [Open] and specify where P2Pool is located.";
+pub const P2POOL_PATH_NOT_FILE: &str = "P2Pool binary not found at the given PATH in the Gupaxx tab! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where P2Pool is located.";
+pub const P2POOL_PATH_NOT_VALID: &str = "P2Pool binary at the given PATH in the Gupaxx tab doesn't look like P2Pool! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where P2Pool is located.";
 pub const P2POOL_PATH_OK: &str = "P2Pool was found at the given PATH";
-pub const P2POOL_PATH_EMPTY: &str = "P2Pool PATH is empty! To fix: goto the [Gupax Advanced] tab, select [Open] and specify where P2Pool is located.";
+pub const P2POOL_PATH_EMPTY: &str = "P2Pool PATH is empty! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where P2Pool is located.";
 
 // Node/Pool list
 pub const LIST_ADD: &str = "Add the current values to the list";
@@ -400,10 +401,10 @@ pub const XMRIG_API_PORT: &str =
 pub const XMRIG_TLS: &str = "Enable SSL/TLS connections (needs pool support)";
 pub const XMRIG_KEEPALIVE: &str = "Send keepalive packets to prevent timeout (needs pool support)";
 pub const XMRIG_THREADS: &str = "Number of CPU threads to use for mining";
-pub const XMRIG_PATH_NOT_FILE:  &str = "XMRig binary not found at the given PATH in the Gupax tab! To fix: goto the [Gupax Advanced] tab, select [Open] and specify where XMRig is located.";
-pub const XMRIG_PATH_NOT_VALID: &str = "XMRig binary at the given PATH in the Gupax tab doesn't look like XMRig! To fix: goto the [Gupax Advanced] tab, select [Open] and specify where XMRig is located.";
+pub const XMRIG_PATH_NOT_FILE:  &str = "XMRig binary not found at the given PATH in the Gupaxxtab! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where XMRig is located.";
+pub const XMRIG_PATH_NOT_VALID: &str = "XMRig binary at the given PATH in the Gupaxxtab doesn't look like XMRig! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where XMRig is located.";
 pub const XMRIG_PATH_OK: &str = "XMRig was found at the given PATH";
-pub const XMRIG_PATH_EMPTY:     &str = "XMRig PATH is empty! To fix: goto the [Gupax Advanced] tab, select [Open] and specify where XMRig is located.";
+pub const XMRIG_PATH_EMPTY:     &str = "XMRig PATH is empty! To fix: goto the [GupaxxAdvanced] tab, select [Open] and specify where XMRig is located.";
 
 // XvB
 pub const XVB_HELP: &str = "You need to register an account by clicking on the link above to get your token with the same p2pool XMR address you use for payment.";
@@ -437,26 +438,26 @@ pub const XVB_ROUND_DONOR_WHALE_MIN_HR: u32 = 100000;
 pub const XVB_ROUND_DONOR_MEGA_MIN_HR: u32 = 1000000;
 
 // CLI argument messages
-pub const ARG_HELP: &str = r#"USAGE: ./gupax [--flag]
+pub const ARG_HELP: &str = r#"USAGE: ./gupaxx [--flag]
 
     --help            Print this help message
     --version         Print version and build info
-    --state           Print Gupax state
+    --state           Print Gupaxxstate
     --nodes           Print the manual node list
     --payouts         Print the P2Pool payout log, payout count, and total XMR mined
     --no-startup      Disable all auto-startup settings for this instance (auto-update, auto-ping, etc)
-    --reset-state     Reset all Gupax state (your settings)
+    --reset-state     Reset all Gupaxxstate (your settings)
     --reset-nodes     Reset the manual node list in the [P2Pool] tab
     --reset-pools     Reset the manual pool list in the [XMRig] tab
     --reset-payouts   Reset the permanent P2Pool stats that appear in the [Status] tab
     --reset-all       Reset the state, manual node list, manual pool list, and P2Pool stats
 
-To view more detailed console debug information, start Gupax with
+To view more detailed console debug information, start Gupaxxwith
 the environment variable [RUST_LOG] set to a log level like so:
-    RUST_LOG=(trace|debug|info|warn|error) ./gupax"#;
-pub const ARG_COPYRIGHT: &str = r#"Gupax is licensed under GPLv3.
+    RUST_LOG=(trace|debug|info|warn|error) ./gupaxx"#;
+pub const ARG_COPYRIGHT: &str = r#"Gupaxxis licensed under GPLv3.
 For more information, see link below:
-<https://github.com/Cyrix126/gupax>"#;
+<https://github.com/Cyrix126/gupaxx>"#;
 
 // Unknown Data, replace HumanNumlber::unknown()
 pub const UNKNOWN_DATA: &str = "???";

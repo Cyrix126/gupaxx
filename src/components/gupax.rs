@@ -1,4 +1,4 @@
-// Gupax - GUI Uniting P2Pool And XMRig
+// Gupaxx - GUI Uniting P2Pool And XMRig
 //
 // Copyright (c) 2022-2023 hinto-janai
 //
@@ -65,7 +65,7 @@ pub enum Ratio {
     None,
 }
 
-//---------------------------------------------------------------------------------------------------- Gupax
+//---------------------------------------------------------------------------------------------------- Gupaxx
 impl Gupax {
     // Checks if a path is a valid path to a file.
     pub fn path_is_file(path: &str) -> bool {
@@ -88,11 +88,11 @@ impl Gupax {
         lock!(file_window).thread = true;
         thread::spawn(move || {
             match rfd::FileDialog::new()
-                .set_title(format!("Select {} Binary for Gupax", name))
+                .set_title(format!("Select {} Binary for Gupaxx", name))
                 .pick_file()
             {
                 Some(path) => {
-                    info!("Gupax | Path selected for {} ... {}", name, path.display());
+                    info!("Gupaxx | Path selected for {} ... {}", name, path.display());
                     match file_type {
                         P2pool => {
                             lock!(file_window).p2pool_path = path.display().to_string();
@@ -104,7 +104,7 @@ impl Gupax {
                         }
                     };
                 }
-                None => info!("Gupax | No path selected for {}", name),
+                None => info!("Gupaxx | No path selected for {}", name),
             };
             lock!(file_window).thread = false;
         });

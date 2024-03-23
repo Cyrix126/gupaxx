@@ -4,11 +4,11 @@ pub const ERROR: &str = "Disk error";
 pub const PATH_ERROR: &str = "PATH for state directory could not be not found";
 
 #[cfg(target_os = "windows")]
-pub const DIRECTORY: &str = r#"Gupax\"#;
+pub const DIRECTORY: &str = r#"Gupaxx\"#;
 #[cfg(target_os = "macos")]
-pub const DIRECTORY: &str = "Gupax/";
+pub const DIRECTORY: &str = "Gupaxx/";
 #[cfg(target_os = "linux")]
-pub const DIRECTORY: &str = "gupax/";
+pub const DIRECTORY: &str = "gupaxx/";
 
 // File names
 pub const STATE_TOML: &str = "state.toml";

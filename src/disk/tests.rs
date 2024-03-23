@@ -87,12 +87,12 @@ mod test {
 			api_ip = "localhost"
 			api_port = "18088"
 			name = "linux"
-			rig = "Gupax"
+			rig = "Gupaxx"
 			ip = "192.168.1.122"
 			port = "3333"
 			selected_index = 1
 			selected_name = "linux"
-			selected_rig = "Gupax"
+			selected_rig = "Gupaxx"
 			selected_ip = "192.168.1.122"
 			selected_port = "3333"
             token = "testtoken"
@@ -136,17 +136,17 @@ mod test {
     fn serde_custom_pool() {
         let pool = r#"
 			['Local P2Pool']
-			rig = "Gupax_v1.0.0"
+			rig = "Gupaxx_v1.0.0"
 			ip = "localhost"
 			port = "3333"
 
 			['aaa xx .. -']
-			rig = "Gupax"
+			rig = "Gupaxx"
 			ip = "192.168.22.22"
 			port = "1"
 
 			['           a']
-			rig = "Gupax_v1.0.0"
+			rig = "Gupaxx_v1.0.0"
 			ip = "127.0.0.1"
 			port = "65535"
 		"#;
@@ -212,12 +212,12 @@ mod test {
 			api_ip = "localhost"
 			api_port = "18088"
 			name = "Local P2Pool"
-			rig = "Gupax_v1.0.0"
+			rig = "Gupaxx_v1.0.0"
 			ip = "localhost"
 			port = "3333"
 			selected_index = 0
 			selected_name = "Local P2Pool"
-			selected_rig = "Gupax_v1.0.0"
+			selected_rig = "Gupaxx_v1.0.0"
 			selected_ip = "localhost"
 			selected_port = "3333"
 

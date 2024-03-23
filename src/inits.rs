@@ -170,11 +170,11 @@ pub fn init_auto(app: &mut App) {
     // [Auto-P2Pool]
     if app.state.gupax.auto_p2pool {
         if !Regexes::addr_ok(&app.state.p2pool.address) {
-            warn!("Gupax | P2Pool address is not valid! Skipping auto-p2pool...");
+            warn!("Gupaxx | P2Pool address is not valid! Skipping auto-p2pool...");
         } else if !Gupax::path_is_file(&app.state.gupax.p2pool_path) {
-            warn!("Gupax | P2Pool path is not a file! Skipping auto-p2pool...");
+            warn!("Gupaxx | P2Pool path is not a file! Skipping auto-p2pool...");
         } else if !crate::components::update::check_p2pool_path(&app.state.gupax.p2pool_path) {
-            warn!("Gupax | P2Pool path is not valid! Skipping auto-p2pool...");
+            warn!("Gupaxx | P2Pool path is not valid! Skipping auto-p2pool...");
         } else {
             let backup_hosts = app.gather_backup_hosts();
             Helper::start_p2pool(
@@ -191,9 +191,9 @@ pub fn init_auto(app: &mut App) {
     // [Auto-XMRig]
     if app.state.gupax.auto_xmrig {
         if !Gupax::path_is_file(&app.state.gupax.xmrig_path) {
-            warn!("Gupax | XMRig path is not an executable! Skipping auto-xmrig...");
+            warn!("Gupaxx | XMRig path is not an executable! Skipping auto-xmrig...");
         } else if !crate::components::update::check_xmrig_path(&app.state.gupax.xmrig_path) {
-            warn!("Gupax | XMRig path is not valid! Skipping auto-xmrig...");
+            warn!("Gupaxx | XMRig path is not valid! Skipping auto-xmrig...");
         } else if cfg!(windows) {
             Helper::start_xmrig(
                 &app.helper,

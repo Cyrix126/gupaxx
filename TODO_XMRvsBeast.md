@@ -52,6 +52,7 @@
   - [ ] adapt doc for new code
   - [x] cargo package metadata
   - [x] pgp signatures
+  - [x] rename reference of gupax name to gupaxx
 - [x] fix clippy
 - [ ] optimizations
   - [x] benchmarks table render only what is visible

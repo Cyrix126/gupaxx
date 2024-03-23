@@ -80,15 +80,15 @@ use zip::ZipArchive;
 //   - XMRig separates the hash and signature
 //   - P2Pool hashes are in UPPERCASE
 
-const GUPAX_METADATA: &str = "https://api.github.com/repos/hinto-janai/gupax/releases/latest";
+const GUPAX_METADATA: &str = "https://api.github.com/repos/Cyrix126/gupaxx/releases/latest";
 const P2POOL_METADATA: &str = "https://api.github.com/repos/SChernykh/p2pool/releases/latest";
 const XMRIG_METADATA: &str = "https://api.github.com/repos/xmrig/xmrig/releases/latest";
 
-const GUPAX_PREFIX: &str = "https://github.com/hinto-janai/gupax/releases/download/";
+const GUPAX_PREFIX: &str = "https://github.com/Cyrix126/gupaxx/releases/download/";
 const P2POOL_PREFIX: &str = "https://github.com/SChernykh/p2pool/releases/download/";
 const XMRIG_PREFIX: &str = "https://github.com/xmrig/xmrig/releases/download/";
 
-const GUPAX_SUFFIX: &str = "/gupax-";
+const GUPAX_SUFFIX: &str = "/gupaxx-";
 const P2POOL_SUFFIX: &str = "/p2pool-";
 const XMRIG_SUFFIX: &str = "/xmrig-";
 
@@ -101,12 +101,12 @@ mod impl_platform {
     pub(super) const GUPAX_EXTENSION: &str = "-windows-x64-standalone.zip";
     pub(super) const P2POOL_EXTENSION: &str = "-windows-x64.zip";
     pub(super) const XMRIG_EXTENSION: &str = "-msvc-win64.zip";
-    pub(super) const GUPAX_BINARY: &str = "Gupax.exe";
+    pub(super) const GUPAX_BINARY: &str = "Gupaxx.exe";
     pub(super) const P2POOL_BINARY: &str = "p2pool.exe";
     pub(super) const XMRIG_BINARY: &str = "xmrig.exe";
-    pub(super) const VALID_GUPAX_1: &str = "GUPAX.exe";
-    pub(super) const VALID_GUPAX_2: &str = "Gupax.exe";
-    pub(super) const VALID_GUPAX_3: &str = "gupax.exe";
+    pub(super) const VALID_GUPAX_1: &str = "GUPAXX.exe";
+    pub(super) const VALID_GUPAX_2: &str = "Gupaxx.exe";
+    pub(super) const VALID_GUPAX_3: &str = "gupaxx.exe";
     pub(super) const VALID_XMRIG_1: &str = "XMRIG.exe";
     pub(super) const VALID_XMRIG_2: &str = "XMRig.exe";
     pub(super) const VALID_XMRIG_3: &str = "Xmrig.exe";
@@ -119,12 +119,12 @@ mod impl_platform {
 
 #[cfg(target_family = "unix")]
 mod impl_unix {
-    pub(super) const GUPAX_BINARY: &str = "gupax";
+    pub(super) const GUPAX_BINARY: &str = "gupaxx";
     // pub(super) const P2POOL_BINARY: &str = "p2pool";
     // pub(super) const XMRIG_BINARY: &str = "xmrig";
-    pub(super) const VALID_GUPAX_1: &str = "GUPAX";
-    pub(super) const VALID_GUPAX_2: &str = "Gupax";
-    pub(super) const VALID_GUPAX_3: &str = "gupax";
+    pub(super) const VALID_GUPAX_1: &str = "GUPAXX";
+    pub(super) const VALID_GUPAX_2: &str = "Gupaxx";
+    pub(super) const VALID_GUPAX_3: &str = "gupaxx";
     pub(super) const VALID_XMRIG_1: &str = "XMRIG";
     pub(super) const VALID_XMRIG_2: &str = "XMRig";
     pub(super) const VALID_XMRIG_3: &str = "Xmrig";
@@ -221,8 +221,7 @@ const MSG_UPGRADE: &str = "Upgrading packages";
 pub const MSG_SUCCESS: &str = "Update successful";
 pub const MSG_FAILED: &str = "Update failed";
 pub const MSG_FAILED_HELP: &str =
-    "Consider manually replacing your executable from: https://gupax.io/downloads";
-
+    "Consider manually replacing your executable from github releases: https://github.com/Cyrix126/gupaxx/releases";
 const INIT: &str = "------------------- Init -------------------";
 const METADATA: &str = "----------------- Metadata -----------------";
 const COMPARE: &str = "----------------- Compare ------------------";
@@ -316,9 +315,9 @@ impl Update {
             .collect();
         let base = get_exe_dir()?;
         #[cfg(target_os = "windows")]
-        let tmp_dir = format!("{}{}{}{}", base, r"\gupax_update_", rand_string, r"\");
+        let tmp_dir = format!("{}{}{}{}", base, r"\gupaxx_update_", rand_string, r"\");
         #[cfg(target_family = "unix")]
-        let tmp_dir = format!("{}{}{}{}", base, "/gupax_update_", rand_string, "/");
+        let tmp_dir = format!("{}{}{}{}", base, "/gupaxx_update_", rand_string, "/");
         info!("Update | Temporary directory ... {}", tmp_dir);
         Ok(tmp_dir)
     }
@@ -518,10 +517,10 @@ impl Update {
         restart: Arc<Mutex<Restart>>,
     ) -> Result<(), anyhow::Error> {
         #[cfg(feature = "distro")]
-        error!("Update | This is the [Linux distro] version of Gupax, updates are disabled");
+        error!("Update | This is the [Linux distro] version of Gupaxx, updates are disabled");
         #[cfg(feature = "distro")]
         return Err(anyhow!(
-            "This is the [Linux distro] version of Gupax, updates are disabled"
+            "This is the [Linux distro] version of Gupaxx, updates are disabled"
         ));
 
         //---------------------------------------------------------------------------------------------------- Init
@@ -652,7 +651,7 @@ impl Update {
                     // using the old version (even though the underlying binary was updated).
                     old_ver = lock!(state_ver).gupax.clone();
                     diff = old_ver != new_ver && GUPAX_VERSION != new_ver;
-                    name = "Gupax";
+                    name = "Gupaxx";
                 }
                 P2pool => {
                     old_ver = lock!(state_ver).p2pool.clone();
@@ -835,7 +834,7 @@ impl Update {
                     #[cfg(target_os = "windows")]
                     if path.exists() {
                         let tmp_windows = match name {
-                            Gupax => tmp_dir.clone() + "gupax_old.exe",
+                            Gupax => tmp_dir.clone() + "gupaxx_old.exe",
                             P2pool => tmp_dir.clone() + "p2pool_old.exe",
                             Xmrig => tmp_dir.clone() + "xmrig_old.exe",
                         };

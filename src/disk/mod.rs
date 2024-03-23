@@ -66,9 +66,9 @@ pub mod tests;
 
 pub fn get_gupax_data_path() -> Result<PathBuf, TomlError> {
     // Get OS data folder
-    // Linux   | $XDG_DATA_HOME or $HOME/.local/share/gupax  | /home/alice/.local/state/gupax
-    // macOS   | $HOME/Library/Application Support/Gupax     | /Users/Alice/Library/Application Support/Gupax
-    // Windows | {FOLDERID_RoamingAppData}\Gupax             | C:\Users\Alice\AppData\Roaming\Gupax
+    // Linux   | $XDG_DATA_HOME or $HOME/.local/share/gupaxx  | /home/alice/.local/state/gupaxx
+    // macOS   | $HOME/Library/Application Support/Gupaxx     | /Users/Alice/Library/Application Support/Gupaxx
+    // Windows | {FOLDERID_RoamingAppData}\Gupaxx             | C:\Users\Alice\AppData\Roaming\Gupaxx
     match dirs::data_dir() {
         Some(mut path) => {
             path.push(DIRECTORY);

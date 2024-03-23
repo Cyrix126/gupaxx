@@ -65,17 +65,17 @@ impl Status {
 fn gupax(ui: &mut Ui, min_height: f32, width: f32, height: f32, sys: &Arc<Mutex<Sys>>) {
     ui.group(|ui| {
         ui.vertical(|ui| {
-            debug!("Status Tab | Rendering [Gupax]");
+            debug!("Status Tab | Rendering [Gupaxx]");
             ui.set_min_height(min_height);
             ui.add_sized(
                 [width, height],
                 Label::new(
-                    RichText::new("[Gupax]")
+                    RichText::new("[Gupaxx]")
                         .color(LIGHT_GRAY)
                         .text_style(TextStyle::Name("MonospaceLarge".into())),
                 ),
             )
-            .on_hover_text("Gupax is online");
+            .on_hover_text("Gupaxx is online");
             let sys = lock!(sys);
             ui.add_sized(
                 [width, height],
@@ -85,13 +85,13 @@ fn gupax(ui: &mut Ui, min_height: f32, width: f32, height: f32, sys: &Arc<Mutex<
             ui.add_sized([width, height], Label::new(sys.gupax_uptime.to_string()));
             ui.add_sized(
                 [width, height],
-                Label::new(RichText::new("Gupax CPU").underline().color(BONE)),
+                Label::new(RichText::new("Gupaxx CPU").underline().color(BONE)),
             )
             .on_hover_text(STATUS_GUPAX_CPU_USAGE);
             ui.add_sized([width, height], Label::new(sys.gupax_cpu_usage.to_string()));
             ui.add_sized(
                 [width, height],
-                Label::new(RichText::new("Gupax Memory").underline().color(BONE)),
+                Label::new(RichText::new("Gupaxx Memory").underline().color(BONE)),
             )
             .on_hover_text(STATUS_GUPAX_MEMORY_USAGE);
             ui.add_sized(

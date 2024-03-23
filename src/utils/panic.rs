@@ -20,7 +20,7 @@ info:
    OS      | {OS_NAME}
    args    | {args:?}
    commit  | {COMMIT}
-   gupax   | {GUPAX_VERSION}
+   gupaxx   | {GUPAX_VERSION}
    p2pool  | {P2POOL_VERSION} (bundled)
    xmrig   | {XMRIG_VERSION} (bundled)
    uptime  | {uptime} seconds

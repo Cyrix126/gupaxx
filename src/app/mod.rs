@@ -283,7 +283,7 @@ impl App {
             node_path: PathBuf::new(),
             pool_path: PathBuf::new(),
             version: GUPAX_VERSION,
-            name_version: format!("Gupax {}", GUPAX_VERSION),
+            name_version: format!("Gupaxx {}", GUPAX_VERSION),
         };
         //---------------------------------------------------------------------------------------------------- App init data that *could* panic
         info!("App Init | Getting EXE path...");
@@ -425,7 +425,7 @@ impl App {
                     Merge(e) => (e.to_string(), ErrorFerris::Error, ErrorButtons::ResetState),
                     Parse(e) => (e.to_string(), ErrorFerris::Panic, ErrorButtons::Quit),
                 };
-                app.error_state.set(format!("Gupax P2Pool Stats: {}\n\nTry deleting: {}\n\n(Warning: this will delete your P2Pool payout history...!)\n\n", e, app.gupax_p2pool_api_path.display()), ferris, button);
+                app.error_state.set(format!("Gupaxx P2Pool Stats: {}\n\nTry deleting: {}\n\n(Warning: this will delete your P2Pool payout history...!)\n\n", e, app.gupax_p2pool_api_path.display()), ferris, button);
             }
         }
         info!("App Init | Reading Gupax-P2Pool API files...");
@@ -447,7 +447,7 @@ impl App {
                     Merge(e) => (e.to_string(), ErrorFerris::Error, ErrorButtons::ResetState),
                     Parse(e) => (e.to_string(), ErrorFerris::Panic, ErrorButtons::Quit),
                 };
-                app.error_state.set(format!("Gupax P2Pool Stats: {}\n\nTry deleting: {}\n\n(Warning: this will delete your P2Pool payout history...!)\n\n", e, app.gupax_p2pool_api_path.display()), ferris, button);
+                app.error_state.set(format!("Gupaxx P2Pool Stats: {}\n\nTry deleting: {}\n\n(Warning: this will delete your P2Pool payout history...!)\n\n", e, app.gupax_p2pool_api_path.display()), ferris, button);
             }
         };
         drop(gupax_p2pool_api);
@@ -541,13 +541,13 @@ impl App {
             app.admin = true;
         } else {
             error!("Windows | Admin user not detected!");
-            app.error_state.set(format!("Gupax was not launched as Administrator!\nBe warned, XMRig might have less hashrate!"), ErrorFerris::Sudo, ErrorButtons::WindowsAdmin);
+            app.error_state.set(format!("Gupaxx was not launched as Administrator!\nBe warned, XMRig might have less hashrate!"), ErrorFerris::Sudo, ErrorButtons::WindowsAdmin);
         }
         #[cfg(target_family = "unix")]
         if sudo_check::check() != sudo_check::RunningAs::User {
             let id = sudo_check::check();
             error!("Unix | Regular user not detected: [{:?}]", id);
-            app.error_state.set(format!("Gupax was launched as: [{:?}]\nPlease launch Gupax with regular user permissions.", id), ErrorFerris::Panic, ErrorButtons::Quit);
+            app.error_state.set(format!("Gupaxx was launched as: [{:?}]\nPlease launch Gupax with regular user permissions.", id), ErrorFerris::Panic, ErrorButtons::Quit);
         }
 
         // macOS re-locates "dangerous" applications into some read-only "/private" directory.
