@@ -46,7 +46,7 @@
 - [x] fix some overlapping from upstream
 - [ ] edit metadata of project
   - [ ] adapt README for XvB 
-    - [ ] beta release
+    - [x] beta release
     - [ ] stable release
   - [ ] video tutorial to set up XvB Tab
   - [ ] adapt doc for new code
@@ -67,6 +67,6 @@
 - [x] merge commits from upstream
 - [ ] tests for new function 
   - [x] time calculated by algorithm 
-- [ ] pre-release
+- [x] pre-release
   - [ ] feedback
 - [ ] release
