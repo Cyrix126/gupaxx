@@ -418,11 +418,7 @@ pub const XVB_NODE_RPC: &str = "18089";
 pub const XVB_URL_RULES: &str = "https://xmrvsbeast.com/p2pool/rules.html";
 // buffer in percentage of HR to have plus the requirement.
 pub const XVB_BUFFER: f32 = 1.05;
-// time in second the algorithm will distribute the HR, 10 minutes for release and 30 seconds for debug.
-#[cfg(not(debug_assertions))]
 pub const XVB_TIME_ALGO: u32 = 600;
-#[cfg(debug_assertions)]
-pub const XVB_TIME_ALGO: u32 = 60;
 pub const XVB_TOKEN_LEN: usize = 9;
 pub const XVB_HERO_SELECT: &str =
     "This mode will donate all available hashrate while keeping a share in the  p2pool PPLNS window";

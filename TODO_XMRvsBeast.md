@@ -53,6 +53,7 @@
   - [x] cargo package metadata
   - [x] pgp signatures
   - [x] rename reference of gupax name to gupaxx
+  - [ ] replace AppImage with a desktop file
 - [x] fix clippy
 - [ ] optimizations
   - [x] benchmarks table render only what is visible
@@ -64,7 +65,8 @@
     - [ ] use hyper with socks proxy
 - [ ] better organize new code
 - [x] merge commits from upstream
-- [ ] tests for new functions
+- [ ] tests for new function 
+  - [x] time calculated by algorithm 
 - [ ] pre-release
   - [ ] feedback
 - [ ] release
