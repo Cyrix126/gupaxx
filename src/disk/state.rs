@@ -273,10 +273,10 @@ impl Default for Gupax {
     fn default() -> Self {
         Self {
             simple: true,
-            auto_update: true,
+            auto_update: false,
             auto_p2pool: false,
             auto_xmrig: false,
-            auto_xvb: true,
+            auto_xvb: false,
             ask_before_quit: true,
             save_before_quit: true,
             p2pool_path: DEFAULT_P2POOL_PATH.to_string(),
@@ -287,7 +287,7 @@ impl Default for Gupax {
             selected_height: APP_DEFAULT_HEIGHT as u16,
             selected_scale: APP_DEFAULT_SCALE,
             ratio: Ratio::Width,
-            tab: Tab::About,
+            tab: Tab::Xvb,
         }
     }
 }
