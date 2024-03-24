@@ -11,7 +11,7 @@ A new column in Status Tab to see public stats from the raffle.
 
 Updates by tor. The version of the crate used was outdated, plagued with security concerns and bloated the binary.
 It was only for updates, and it is not useful for this beta release.
-This functionality will be re-added for the stable release.
+This functionality will be re-added for the stable release in a nicer way.
 
 ## Bugfixes (visuals and performances)
 
