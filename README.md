@@ -15,15 +15,15 @@ Gupaxx is a fork of [**Gupax**](https://github.com/hinto-janai/gupax) integratin
 [![CI](https://github.com/cyrix126/gupaxx/actions/workflows/ci.yml/badge.svg)](https://github.com/cyrix126/gupaxx/actions/workflows/ci.yml)
 
 ## Contents
-* [What is Gupaxx/XMRvsBeast?](#what-is-gupaxx-xmrvsbeast)  
-* [Guide](#Guide) 
-* [XvB Tab](#XvB Tab) 
-	- [Console](#Console) 
-	- [Token Input](#Token Input) 
-	- [Private stats](#Private stats) 
-* [XvB Raffle](#XvB Raffle) 
-* [Other changes](#Other changes) 
-* [License](#License) 
+* [What is Gupaxx/XMRvsBeast?](#what-is-gupaxxxmrvsbeast)  
+* [Guide](#guide) 
+* [XvB Tab](#xvb-tab) 
+	- [Console](#console-of-xvb) 
+	- [Token Input](#token-input) 
+	- [Private stats](#private-stats) 
+* [XvB Raffle](#xvb-raffle-status) 
+* [Other changes](#other-changes) 
+* [License](#license) 
 
 ## What is Gupaxx/XMRvsBeast?
 [**`Gupaxx`**](https://getmonero.org) is a fork of [*Gupax*](https://github.com/hinto-janai/gupax) that integrate the [XMRvsBeast raffle](https://xmrvsbeast.com).
