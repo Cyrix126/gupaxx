@@ -54,6 +54,10 @@ DATE=$(date -d @${RNG}); check "DATE ... $DATE"
 
 # Tar Linux Bundle
 title "Tar Linux"
+# give execution permission
+chmod +x linux/gupaxx
+chmod +x linux/p2pool/p2pool
+chmod +x linux/xmrig/xmrig
 mv linux "gupaxx-$NEW_VER-linux-x64-bundle"; check "linux -> gupaxx-$NEW_VER-linux-x64-bundle"
 tar -czpf "gupaxx-${NEW_VER}-linux-x64-bundle.tar.gz" "gupaxx-$NEW_VER-linux-x64-bundle" --owner=lm --group=lm --mtime="$DATE"; check "tar linux-bundle"
 # Tar Linux Standalone
