@@ -162,6 +162,15 @@ fn p2pool(
             ui.add_sized([width, height], Label::new(format!("{}", api.uptime)));
             ui.add_sized(
                 [width, height],
+                Label::new(RichText::new("Current Shares").underline().color(BONE)),
+            )
+            .on_hover_text(STATUS_P2POOL_CURRENT_SHARES);
+            ui.add_sized(
+                [width, height],
+                Label::new(api.sidechain_shares.to_string()),
+            );
+            ui.add_sized(
+                [width, height],
                 Label::new(RichText::new("Shares Found").underline().color(BONE)),
             )
             .on_hover_text(STATUS_P2POOL_SHARES);

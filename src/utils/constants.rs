@@ -176,6 +176,8 @@ pub const STATUS_P2POOL_PAYOUTS:     &str = "The total amount of payouts receive
 pub const STATUS_P2POOL_XMR:         &str = "The total amount of XMR mined in this instance of P2Pool and an extrapolated estimate of how many you will mine in the future. Warning: these stats will be quite inaccurate if your P2Pool hasn't been running for a long time!";
 pub const STATUS_P2POOL_HASHRATE:    &str = "The total amount of hashrate your P2Pool has pointed at it in 15 minute, 1 hour, and 24 hour averages";
 pub const STATUS_P2POOL_SHARES: &str = "The total amount of shares found on P2Pool";
+pub const STATUS_P2POOL_CURRENT_SHARES: &str =
+    "Current shares valid in the PPLNS Window for your address";
 pub const STATUS_P2POOL_EFFORT: &str =
     "The average amount of effort needed to find a share, and the current effort";
 pub const STATUS_P2POOL_CONNECTIONS: &str = "The total amount of miner connections on this P2Pool";
