@@ -32,6 +32,7 @@ impl Helper {
         output_pub: Arc<Mutex<String>>,
         reader: Box<dyn std::io::Read + Send>,
         gupax_p2pool_api: Arc<Mutex<GupaxP2poolApi>>,
+        pub_api: Arc<Mutex<PubP2poolApi>>,
     ) {
         use std::io::BufRead;
         let mut stdout = std::io::BufReader::new(reader).lines();
@@ -40,6 +41,7 @@ impl Helper {
         let mut i = 0;
         while let Some(Ok(line)) = stdout.next() {
             let line = strip_ansi_escapes::strip_str(line);
+
             if let Err(e) = writeln!(lock!(output_parse), "{}", line) {
                 error!("P2Pool PTY Parse | Output error: {}", e);
             }
@@ -52,8 +54,26 @@ impl Helper {
                 i += 1;
             }
         }
-
+        let mut status_output = false;
         while let Some(Ok(line)) = stdout.next() {
+            // if command status is sent by gupaxx process and not the user, forward it only to update_from_status method.
+            // 25 lines after the command are the result of status, with last line finishing by update.
+            if line.contains("statusfromgupaxx") {
+                status_output = true;
+                continue;
+            }
+            if status_output {
+                if line.contains("Your shares") {
+                    // update sidechain shares
+                    let shares = line.split_once("=").expect("should be = at Your Share, maybe new version of p2pool has different output for status command ?").1.split_once("blocks").expect("should be a 'blocks' at Your Share, maybe new version of p2pool has different output for status command ?").0.trim().parse::<u32>().expect("this should be the number of share");
+                    lock!(pub_api).sidechain_shares = shares;
+                }
+                if line.contains("Uptime") {
+                    // end of status
+                    status_output = false;
+                }
+                continue;
+            }
             //			println!("{}", line); // For debugging.
             if P2POOL_REGEX.payout.is_match(&line) {
                 debug!("P2Pool PTY | Found payout, attempting write: {}", line);
@@ -394,8 +414,15 @@ impl Helper {
         let output_parse = Arc::clone(&lock!(process).output_parse);
         let output_pub = Arc::clone(&lock!(process).output_pub);
         let gupax_p2pool_api = Arc::clone(&gupax_p2pool_api);
+        let p2pool_api_c = Arc::clone(&pub_api);
         thread::spawn(move || {
-            Self::read_pty_p2pool(output_parse, output_pub, reader, gupax_p2pool_api);
+            Self::read_pty_p2pool(
+                output_parse,
+                output_pub,
+                reader,
+                gupax_p2pool_api,
+                p2pool_api_c,
+            );
         });
         let output_parse = Arc::clone(&lock!(process).output_parse);
         let output_pub = Arc::clone(&lock!(process).output_pub);
@@ -434,6 +461,7 @@ impl Helper {
             let now = Instant::now();
             debug!("P2Pool Watchdog | ----------- Start of loop -----------");
             lock!(gui_api).tick += 1;
+            lock!(gui_api).tick_status += 1;
 
             // Check if the process is secretly died without us knowing :)
             if let Ok(Some(code)) = lock!(child_pty).try_wait() {
@@ -636,6 +664,22 @@ impl Helper {
                     }
                 }
             }
+            if lock!(gui_api).tick_status >= 10 && lock!(process).state == ProcessState::Alive {
+                debug!("reading status output of p2pool node");
+                #[cfg(target_os = "windows")]
+                if let Err(e) = write!(stdin, "statusfromgupaxx\r\n") {
+                    error!("P2Pool Watchdog | STDIN error: {}", e);
+                }
+                #[cfg(target_family = "unix")]
+                if let Err(e) = writeln!(stdin, "statusfromgupaxx") {
+                    error!("P2Pool Watchdog | STDIN error: {}", e);
+                }
+                // Flush.
+                if let Err(e) = stdin.flush() {
+                    error!("P2Pool Watchdog | STDIN flush error: {}", e);
+                }
+                lock!(gui_api).tick_status = 0;
+            }
 
             // Sleep (only if 900ms hasn't passed)
             let elapsed = now.elapsed().as_millis();
@@ -733,6 +777,9 @@ pub struct PubP2poolApi {
     // Tick. Every loop this gets incremented.
     // At 60, it indicated we should read the below API files.
     pub tick: u8,
+    // Tick. Every loop this gets incremented.
+    // At 10, it indicated we should fetch data from status
+    pub tick_status: u8,
     // Network API
     pub monero_difficulty: HumanNumber, // e.g: [15,000,000]
     pub monero_hashrate: HumanNumber,   // e.g: [1.000 GH/s]
@@ -751,6 +798,8 @@ pub struct PubP2poolApi {
     pub p2pool_percent: HumanNumber, // Percentage of P2Pool hashrate capture of overall Monero hashrate.
     pub user_p2pool_percent: HumanNumber, // How much percent the user's hashrate accounts for in P2Pool.
     pub user_monero_percent: HumanNumber, // How much percent the user's hashrate accounts for in all of Monero hashrate.
+    // from status
+    pub sidechain_shares: u32,
 }
 
 impl Default for PubP2poolApi {
@@ -780,6 +829,7 @@ impl PubP2poolApi {
             current_effort: HumanNumber::unknown(),
             connections: HumanNumber::unknown(),
             tick: 0,
+            tick_status: 0,
             user_p2pool_hashrate_u64: 0,
             p2pool_difficulty_u64: 0,
             monero_difficulty_u64: 0,
@@ -799,6 +849,7 @@ impl PubP2poolApi {
             p2pool_percent: HumanNumber::unknown(),
             user_p2pool_percent: HumanNumber::unknown(),
             user_monero_percent: HumanNumber::unknown(),
+            sidechain_shares: 0,
         }
     }
 
@@ -816,6 +867,7 @@ impl PubP2poolApi {
         *gui_api = Self {
             output,
             tick: std::mem::take(&mut gui_api.tick),
+            tick_status: std::mem::take(&mut gui_api.tick_status),
             ..pub_api.clone()
         };
     }

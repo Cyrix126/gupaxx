@@ -190,22 +190,8 @@ impl Helper {
                     .await;
             });
         }
-        // see how many shares are found at p2pool node only if XvB is started successfully. If it wasn't, maybe P2pool is node not running.
-        let mut old_shares = if lock!(process).state == ProcessState::Alive {
-            // a loop until the value is some to let p2pool work and get first value.
-            loop {
-                if let Some(s) = lock!(gui_api_p2pool).shares_found {
-                    break s;
-                }
-                std::thread::sleep(std::time::Duration::from_secs(1));
-            }
-        } else {
-            // if Syncing state, this value is not needed
-            0
-        };
         // let mut old_shares = 0;
         let start = lock!(process).start;
-        let mut last_share = None;
         let mut last_algorithm = tokio::time::Instant::now();
         let mut last_request = tokio::time::Instant::now();
         let mut first_loop = true;
@@ -338,18 +324,7 @@ impl Helper {
                             }
                         }
                     });
-                    // check if share is in pplns window
-                    // p2pool local api show only found shares and not current shares. So we need to keep track of the time
-                    // the height of p2pool would be nicer but the p2pool api doesn't show it.
-                    let (share, new_time) = lock!(gui_api_p2pool)
-                        .is_share_present_in_ppplns_window(
-                            &mut old_shares,
-                            last_share,
-                            state_p2pool.mini,
-                        );
-                    if let Some(n) = new_time {
-                        last_share = Some(n);
-                    }
+                    let share = lock!(gui_api_p2pool).sidechain_shares;
 
                     //     // verify in which round type we are
                     let round = XvbPrivStats::round_type(share, &pub_api);
@@ -407,7 +382,7 @@ impl Helper {
                         });
 
                         // if share is in PW,
-                        if share {
+                        if share > 0 {
                             debug!("Xvb Process | Algorithm share is in current window");
                             // calcul minimum HR
 
@@ -667,8 +642,8 @@ impl XvbPrivStats {
         }
         spared_time
     }
-    fn round_type(share: bool, pub_api: &Arc<Mutex<PubXvbApi>>) -> Option<XvbRound> {
-        if share {
+    fn round_type(share: u32, pub_api: &Arc<Mutex<PubXvbApi>>) -> Option<XvbRound> {
+        if share > 0 {
             let stats_priv = &lock!(pub_api).stats_priv;
             match (
                 stats_priv.donor_1hr_avg as u32,
@@ -987,15 +962,17 @@ mod test {
     // };
 
     use std::{
+        path::PathBuf,
         sync::{Arc, Mutex},
         thread,
+        time::Duration,
     };
 
     use crate::{
         disk::state::{P2pool, Xvb},
-        helper::{p2pool::PubP2poolApi, xmrig::PubXmrigApi, xvb::XvbRound},
+        helper::{p2pool::PubP2poolApi, xmrig::PubXmrigApi, xvb::XvbRound, Process, ProcessState},
         macros::lock,
-        XVB_TIME_ALGO,
+        TIME_PPLNS_WINDOW_MINI, XVB_TIME_ALGO,
     };
 
     use super::{PubXvbApi, XvbPrivStats, XvbPubStats};
@@ -1021,7 +998,7 @@ mod test {
         let state_p2pool = P2pool::default();
         let mut state_xvb = Xvb::default();
         lock!(gui_api_p2pool).p2pool_difficulty_u64 = 95000000;
-        let share = true;
+        let share = 1;
         // verify that if one share found (enough for vip round) but not enough for donor round, no time will be given to xvb, except if in hero mode.
         // 15mn average HR of xmrig is 5kH/s
         lock!(gui_api_xmrig).hashrate_raw_15m = 5500.0;
@@ -1233,6 +1210,83 @@ mod test {
             XvbPrivStats::round_type(share, &gui_api_xvb),
             Some(XvbRound::DonorMega)
         );
+    }
+    #[test]
+    fn detect_new_share() {
+        let gui_api_p2pool = Arc::new(Mutex::new(PubP2poolApi::new()));
+
+        let mut state_p2pool = P2pool::default();
+        state_p2pool.mini = true;
+        // verify that when no new share is found, share is false
+        let mut last_share = None;
+        let mut nb_old_share = 0;
+        lock!(gui_api_p2pool).shares_found = Some(0);
+        let (share, new_time) = lock!(gui_api_p2pool).is_share_present_in_ppplns_window(
+            &mut nb_old_share,
+            last_share,
+            state_p2pool.mini,
+        );
+        if let Some(n) = new_time {
+            last_share = Some(n);
+        }
+        dbg!(&last_share);
+        dbg!(&nb_old_share);
+        assert!(!share);
+        // verify that if a new share is found, it is detected.
+        lock!(gui_api_p2pool).shares_found = Some(1);
+        let (share, new_time) = lock!(gui_api_p2pool).is_share_present_in_ppplns_window(
+            &mut nb_old_share,
+            last_share,
+            state_p2pool.mini,
+        );
+        if let Some(n) = new_time {
+            last_share = Some(n);
+        }
+        dbg!(&last_share);
+        dbg!(&nb_old_share);
+        assert!(share);
+        // verify that if a new share is found after another one, it is detected.
+        last_share = Some(last_share.unwrap() + Duration::from_secs(1));
+        lock!(gui_api_p2pool).shares_found = Some(2);
+        let (share, new_time) = lock!(gui_api_p2pool).is_share_present_in_ppplns_window(
+            &mut nb_old_share,
+            last_share,
+            state_p2pool.mini,
+        );
+        if let Some(n) = new_time {
+            last_share = Some(n);
+        }
+        dbg!(&last_share);
+        dbg!(&nb_old_share);
+        assert!(share);
+        // verify that the last share is still valid because not enough time has passed.
+        last_share = Some(last_share.unwrap() + Duration::from_secs(1));
+        let (share, new_time) = lock!(gui_api_p2pool).is_share_present_in_ppplns_window(
+            &mut nb_old_share,
+            last_share,
+            state_p2pool.mini,
+        );
+        if let Some(n) = new_time {
+            last_share = Some(n);
+        }
+        dbg!(&last_share);
+        dbg!(&nb_old_share);
+        assert!(share);
+        // verify that share is no more valid after window time if no new share was found.
+        last_share = Some(last_share.unwrap() + TIME_PPLNS_WINDOW_MINI);
+        let (share, new_time) = lock!(gui_api_p2pool).is_share_present_in_ppplns_window(
+            &mut nb_old_share,
+            last_share,
+            state_p2pool.mini,
+        );
+        dbg!(&new_time);
+
+        if let Some(n) = new_time {
+            last_share = Some(n);
+        }
+        dbg!(&last_share);
+        dbg!(&nb_old_share);
+        assert!(!share);
     }
     // #[tokio::main]
     // async fn algo(share: bool, xvb_time_algo: u32) -> XvbPubStats {
