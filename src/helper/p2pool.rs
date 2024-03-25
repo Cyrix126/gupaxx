@@ -65,6 +65,8 @@ impl Helper {
             if status_output {
                 if line.contains("Your shares") {
                     // update sidechain shares
+                    // todo optimization: replace with regex
+                    // todo safety: do not panic but show error message to user
                     let shares = line.split_once("=").expect("should be = at Your Share, maybe new version of p2pool has different output for status command ?").1.split_once("blocks").expect("should be a 'blocks' at Your Share, maybe new version of p2pool has different output for status command ?").0.trim().parse::<u32>().expect("this should be the number of share");
                     lock!(pub_api).sidechain_shares = shares;
                 }
@@ -1164,45 +1166,6 @@ impl PubP2poolApi {
             59 => "[**********************************************************  ]",
             60 => "[*********************************************************** ]",
             _ => "[************************************************************]",
-        }
-    }
-    // function to know if a share is in current window.
-    // If new share found, an instant of when it was found.
-    pub(super) fn is_share_present_in_ppplns_window(
-        &self,
-        old_shares: &mut u64,
-        last_time_found: Option<Instant>,
-        mini: bool,
-    ) -> (bool, Option<Instant>) {
-        if let Some(v) = self.shares_found {
-            if v > *old_shares {
-                // found new share
-                *old_shares = v;
-                (true, Some(Instant::now()))
-            } else {
-                // no new share found this last minute, check if last share is still valid
-                if let Some(n) = last_time_found {
-                    // a share was found before, is it still valid ?
-                    let time_window = if mini {
-                        TIME_PPLNS_WINDOW_MINI
-                    } else {
-                        TIME_PPLNS_WINDOW_MAIN
-                    };
-                    if n.elapsed() > time_window {
-                        // if time is expired, no share is present in current PW
-                        (false, None)
-                    } else {
-                        // if time is not expired, at least one is present in current PW
-                        (true, None)
-                    }
-                } else {
-                    // no share found before and no new share found, so there is no share in current PW
-                    (false, None)
-                }
-            }
-        } else {
-            // data from p2pool is not ready yet, so no share in pplns window.
-            (false, None)
         }
     }
 }
