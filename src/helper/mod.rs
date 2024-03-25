@@ -545,10 +545,64 @@ impl Helper {
 //---------------------------------------------------------------------------------------------------- TESTS
 #[cfg(test)]
 mod test {
+
     use crate::helper::p2pool::{PrivP2poolLocalApi, PrivP2poolNetworkApi};
 
     use super::*;
 
+    #[test]
+    fn get_current_shares() {
+        let mut stdout = "
+statusfromgupaxx
+2024-03-25 21:31:21.7919 SideChain status
+Monero node               = node2.monerodevs.org:18089:ZMQ:18084 (37.187.74.171)
+Main chain height         = 3113042
+Main chain hashrate       = 1.985 GH/s
+Side chain ID             = mini
+Side chain height         = 7230432
+Side chain hashrate       = 8.925 MH/s
+PPLNS window              = 2160 blocks (+79 uncles, 0 orphans)
+PPLNS window duration     = 6h 9m 46s
+Your wallet address       = 4A5Dwt2qKwKEQrZfo4aBkSNtvDDAzSFbAJcyFkdW5RwDh9U4WgeZrgKT4hUoE2gv8h6NmsNMTyjsEL8eSLMbABds5rYFWnw
+Your shares               = 0 blocks (+0 uncles, 0 orphans)
+Block reward share        = 0.000% (0.000000000000 XMR)
+2024-03-25 21:31:21.7920 StratumServer status
+Hashrate (15m est) = 0 H/s
+Hashrate (1h  est) = 0 H/s
+Hashrate (24h est) = 0 H/s
+Total hashes       = 0
+Shares found       = 0
+Average effort     = 0.000%
+Current effort     = 0.000%
+Connections        = 0 (0 incoming)
+2024-03-25 21:31:21.7920 P2PServer status
+Connections    = 10 (0 incoming)
+Peer list size = 1209
+Uptime         = 0h 2m 4s
+".lines();
+        let mut shares = 1;
+        let mut status_output = false;
+        while let Some(line) = stdout.next() {
+            // if command status is sent by gupaxx process and not the user, forward it only to update_from_status method.
+            // 25 lines after the command are the result of status, with last line finishing by update.
+            if line.contains("statusfromgupaxx") {
+                status_output = true;
+                continue;
+            }
+            if status_output {
+                if line.contains("Your shares") {
+                    // update sidechain shares
+                    shares = line.split_once("=").expect("should be = at Your Share, maybe new version of p2pool has different output for status command ?").1.split_once("blocks").expect("should be a 'blocks' at Your Share, maybe new version of p2pool has different output for status command ?").0.trim().parse::<u32>().expect("this should be the number of share");
+                }
+                if line.contains("Uptime") {
+                    // end of status
+                    status_output = false;
+                }
+                continue;
+            }
+        }
+        assert_eq!(shares, 0);
+    }
     #[test]
     fn reset_gui_output() {
         let max = crate::helper::GUI_OUTPUT_LEEWAY;
