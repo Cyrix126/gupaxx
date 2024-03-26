@@ -1,3 +1,18 @@
+# v0.1.2
+Fix release for beta version.
+This version is only made for testing purposes and have feedbacks.
+
+## Changes
+
+## Fixes
+Persist current shares value
+fix script for release
+
+## Bundled Versions
+* [`P2Pool v3.10`](https://github.com/SChernykh/p2pool/releases/tag/v3.10)
+* [`XMRig v6.21.2`](https://github.com/xmrig/xmrig/releases/tag/v6.21.2)
+
+
 # v0.1.1
 Fix release for beta version.
 This version is only made for testing purposes and have feedbacks.

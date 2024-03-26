@@ -48,9 +48,6 @@ title "Windows folder check"
 [[ -f windows/P2Pool/p2pool.exe ]]; check "windows/P2Pool/p2pool.exe"
 [[ -f windows/XMRig/xmrig.exe ]]; check "windows/XMRig/xmrig.exe"
 
-# Get random date for tar/zip
-title "RNG Date"
-DATE=$(date -d @${RNG}); check "DATE ... $DATE"
 
 # Tar Linux Bundle
 title "Tar Linux"
@@ -59,12 +56,12 @@ chmod +x linux/gupaxx
 chmod +x linux/p2pool/p2pool
 chmod +x linux/xmrig/xmrig
 mv linux "gupaxx-$NEW_VER-linux-x64-bundle"; check "linux -> gupaxx-$NEW_VER-linux-x64-bundle"
-tar -czpf "gupaxx-${NEW_VER}-linux-x64-bundle.tar.gz" "gupaxx-$NEW_VER-linux-x64-bundle" --owner=lm --group=lm --mtime="$DATE"; check "tar linux-bundle"
+tar -czpf "gupaxx-${NEW_VER}-linux-x64-bundle.tar.gz" "gupaxx-$NEW_VER-linux-x64-bundle" --owner=lm --group=lm ; check "tar linux-bundle"
 # Tar Linux Standalone
 mv "gupaxx-$NEW_VER-linux-x64-bundle" "gupaxx-$NEW_VER-linux-x64-standalone"; check "gupaxx-$NEW_VER-linux-x64-bundle -> gupaxx-$NEW_VER-linux-x64-standalone"
 rm -r "gupaxx-$NEW_VER-linux-x64-standalone/p2pool"; check "rm gupaxx-$NEW_VER-linux-x64-standalone/p2pool"
 rm -r "gupaxx-$NEW_VER-linux-x64-standalone/xmrig"; check "rm gupaxx-$NEW_VER-linux-x64-standalone/xmrig"
-tar -czpf "gupaxx-${NEW_VER}-linux-x64-standalone.tar.gz" "gupaxx-$NEW_VER-linux-x64-standalone" --owner=lm --group=lm --mtime="$DATE"; check "tar linux-standalone"
+tar -czpf "gupaxx-${NEW_VER}-linux-x64-standalone.tar.gz" "gupaxx-$NEW_VER-linux-x64-standalone" --owner=lm --group=lm ; check "tar linux-standalone"
 # Remove dir
 rm -r "gupaxx-$NEW_VER-linux-x64-standalone"; check "rm linux dir"
 
@@ -72,12 +69,12 @@ rm -r "gupaxx-$NEW_VER-linux-x64-standalone"; check "rm linux dir"
 # Tar macOS Bundle
 title "Tar macOS-x64"
 mv macos-x64 "gupaxx-$NEW_VER-macos-x64-bundle"; check "macos-x64 -> gupaxx-$NEW_VER-macos-x64-bundle"
-tar -czpf "gupaxx-${NEW_VER}-macos-x64-bundle.tar.gz" "gupaxx-$NEW_VER-macos-x64-bundle" --owner=lm --group=lm --mtime="$DATE"; check "tar macos-bundle"
+tar -czpf "gupaxx-${NEW_VER}-macos-x64-bundle.tar.gz" "gupaxx-$NEW_VER-macos-x64-bundle" --owner=lm --group=lm ; check "tar macos-bundle"
 # Tar macOS Standalone
 mv "gupaxx-$NEW_VER-macos-x64-bundle" "gupaxx-$NEW_VER-macos-x64-standalone"; check "gupaxx-$NEW_VER-macos-x64-bundle -> gupaxx-$NEW_VER-macos-x64-standalone"
 rm -r "gupaxx-$NEW_VER-macos-x64-standalone/Gupaxx.app/Contents/MacOS/p2pool"; check "rm gupaxx-$NEW_VER-macos-x64-standalone/Gupaxx.app/Contents/MacOS/p2pool"
 rm -r "gupaxx-$NEW_VER-macos-x64-standalone/Gupaxx.app/Contents/MacOS/xmrig"; check "rm gupaxx-$NEW_VER-macos-x64-standalone/Gupaxx.app/Contents/MacOS/xmrig/xmrig"
-tar -czpf "gupaxx-${NEW_VER}-macos-x64-standalone.tar.gz" "gupaxx-$NEW_VER-macos-x64-standalone" --owner=lm --group=lm --mtime="$DATE"; check "tar macos-x64-standalone"
+tar -czpf "gupaxx-${NEW_VER}-macos-x64-standalone.tar.gz" "gupaxx-$NEW_VER-macos-x64-standalone" --owner=lm --group=lm ; check "tar macos-x64-standalone"
 # Remove dir
 rm -r "gupaxx-$NEW_VER-macos-x64-standalone"; check "rm macos-x64 dir"
 
@@ -85,12 +82,12 @@ rm -r "gupaxx-$NEW_VER-macos-x64-standalone"; check "rm macos-x64 dir"
 # Tar macOS Bundle
 title "Tar macOS-arm64"
 mv macos-arm64 "gupaxx-$NEW_VER-macos-arm64-bundle"; check "macos-arm64 -> gupaxx-$NEW_VER-macos-arm64-bundle"
-tar -czpf "gupaxx-${NEW_VER}-macos-arm64-bundle.tar.gz" "gupaxx-$NEW_VER-macos-arm64-bundle" --owner=lm --group=lm --mtime="$DATE"; check "tar macos-arm64-bundle"
+tar -czpf "gupaxx-${NEW_VER}-macos-arm64-bundle.tar.gz" "gupaxx-$NEW_VER-macos-arm64-bundle" --owner=lm --group=lm ; check "tar macos-arm64-bundle"
 # Tar macOS Standalone
 mv "gupaxx-$NEW_VER-macos-arm64-bundle" "gupaxx-$NEW_VER-macos-arm64-standalone"; check "gupaxx-$NEW_VER-macos-arm64-bundle -> gupaxx-$NEW_VER-macos-arm64-standalone"
 rm -r "gupaxx-$NEW_VER-macos-arm64-standalone/Gupaxx.app/Contents/MacOS/p2pool"; check "rm gupaxx-$NEW_VER-macos-arm64-standalone/Gupaxx.app/Contents/MacOS/p2pool"
 rm -r "gupaxx-$NEW_VER-macos-arm64-standalone/Gupaxx.app/Contents/MacOS/xmrig"; check "rm gupaxx-$NEW_VER-macos-arm64-standalone/Gupaxx.app/Contents/MacOS/xmrig/xmrig"
-tar -czpf "gupaxx-${NEW_VER}-macos-arm64-standalone.tar.gz" "gupaxx-$NEW_VER-macos-arm64-standalone" --owner=lm --group=lm --mtime="$DATE"; check "tar macos-arm64-standalone"
+tar -czpf "gupaxx-${NEW_VER}-macos-arm64-standalone.tar.gz" "gupaxx-$NEW_VER-macos-arm64-standalone" --owner=lm --group=lm ; check "tar macos-arm64-standalone"
 # Remove dir
 rm -r "gupaxx-$NEW_VER-macos-arm64-standalone"; check "rm macos dir"
 

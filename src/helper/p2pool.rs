@@ -36,7 +36,7 @@ impl Helper {
         output_pub: Arc<Mutex<String>>,
         reader: Box<dyn std::io::Read + Send>,
         gupax_p2pool_api: Arc<Mutex<GupaxP2poolApi>>,
-        pub_api: Arc<Mutex<PubP2poolApi>>,
+        gui_api: Arc<Mutex<PubP2poolApi>>,
     ) {
         use std::io::BufRead;
         let mut stdout = std::io::BufReader::new(reader).lines();
@@ -74,7 +74,7 @@ impl Helper {
                             "P2pool | PTY getting current shares data from status: {} share",
                             shares
                         );
-                        lock!(pub_api).sidechain_shares = shares;
+                        lock!(gui_api).sidechain_shares = shares;
                     } else {
                         error!("P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {}", line);
                     }
@@ -425,7 +425,7 @@ impl Helper {
         let output_parse = Arc::clone(&lock!(process).output_parse);
         let output_pub = Arc::clone(&lock!(process).output_pub);
         let gupax_p2pool_api = Arc::clone(&gupax_p2pool_api);
-        let p2pool_api_c = Arc::clone(&pub_api);
+        let p2pool_api_c = Arc::clone(&gui_api);
         thread::spawn(move || {
             Self::read_pty_p2pool(
                 output_parse,
@@ -879,6 +879,7 @@ impl PubP2poolApi {
             output,
             tick: std::mem::take(&mut gui_api.tick),
             tick_status: std::mem::take(&mut gui_api.tick_status),
+            sidechain_shares: std::mem::take(&mut gui_api.sidechain_shares),
             ..pub_api.clone()
         };
     }
