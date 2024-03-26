@@ -464,12 +464,8 @@ pub const UNKNOWN_DATA: &str = "???";
 pub const BLOCK_PPLNS_WINDOW_MINI: u64 = 2160;
 pub const BLOCK_PPLNS_WINDOW_MAIN: u64 = 363;
 pub const SECOND_PER_BLOCK_P2POOL: u64 = 10;
-pub const TIME_PPLNS_WINDOW_MINI: Duration =
-    Duration::from_secs(BLOCK_PPLNS_WINDOW_MINI * SECOND_PER_BLOCK_P2POOL);
-pub const TIME_PPLNS_WINDOW_MAIN: Duration =
-    Duration::from_secs(BLOCK_PPLNS_WINDOW_MAIN * SECOND_PER_BLOCK_P2POOL);
-
-use std::time::Duration;
+// pub const TIME_PPLNS_WINDOW_MINI: Duration = Duration::from_secs(BLOCK_PPLNS_WINDOW_MINI * SECOND_PER_BLOCK_P2POOL);
+// pub const TIME_PPLNS_WINDOW_MAIN: Duration = Duration::from_secs(BLOCK_PPLNS_WINDOW_MAIN * SECOND_PER_BLOCK_P2POOL);
 
 //---------------------------------------------------------------------------------------------------- Visuals
 use egui::epaint::{Rounding, Shadow, Stroke};

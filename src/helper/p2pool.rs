@@ -5,6 +5,10 @@ use crate::disk::state::P2pool;
 use crate::helper::ProcessName;
 use crate::helper::ProcessSignal;
 use crate::helper::ProcessState;
+use crate::regex::contains_end_status;
+use crate::regex::contains_statuscommand;
+use crate::regex::contains_yourshare;
+use crate::regex::nb_current_shares;
 use crate::regex::P2POOL_REGEX;
 use crate::{
     constants::*,
@@ -58,19 +62,24 @@ impl Helper {
         while let Some(Ok(line)) = stdout.next() {
             // if command status is sent by gupaxx process and not the user, forward it only to update_from_status method.
             // 25 lines after the command are the result of status, with last line finishing by update.
-            if line.contains("statusfromgupaxx") {
+            if contains_statuscommand(&line) {
                 status_output = true;
                 continue;
             }
             if status_output {
-                if line.contains("Your shares") {
+                if contains_yourshare(&line) {
                     // update sidechain shares
-                    // todo optimization: replace with regex
-                    // todo safety: do not panic but show error message to user
-                    let shares = line.split_once("=").expect("should be = at Your Share, maybe new version of p2pool has different output for status command ?").1.split_once("blocks").expect("should be a 'blocks' at Your Share, maybe new version of p2pool has different output for status command ?").0.trim().parse::<u32>().expect("this should be the number of share");
-                    lock!(pub_api).sidechain_shares = shares;
+                    if let Some(shares) = nb_current_shares(&line) {
+                        debug!(
+                            "P2pool | PTY getting current shares data from status: {} share",
+                            shares
+                        );
+                        lock!(pub_api).sidechain_shares = shares;
+                    } else {
+                        error!("P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {}", line);
+                    }
                 }
-                if line.contains("Uptime") {
+                if contains_end_status(&line) {
                     // end of status
                     status_output = false;
                 }
@@ -667,7 +676,7 @@ impl Helper {
                 }
             }
             if lock!(gui_api).tick_status >= 10 && lock!(process).state == ProcessState::Alive {
-                debug!("reading status output of p2pool node");
+                debug!("P2Pool Watchdog | Reading status output of p2pool node");
                 #[cfg(target_os = "windows")]
                 if let Err(e) = write!(stdin, "statusfromgupaxx\r\n") {
                     error!("P2Pool Watchdog | STDIN error: {}", e);

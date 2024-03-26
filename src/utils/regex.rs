@@ -129,6 +129,38 @@ pub fn num_lines(s: &str) -> usize {
     static LINE_BREAKS: Lazy<Regex> = Lazy::new(|| Regex::new(r"\r?\n").unwrap());
     LINE_BREAKS.captures_iter(s).count() + 1
 }
+// get the number of current shares
+pub fn nb_current_shares(s: &str) -> Option<u32> {
+    static CURRENT_SHARE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"Your shares               = (?P<nb>\d+) blocks").unwrap());
+    if let Some(c) = CURRENT_SHARE.captures(s) {
+        if let Some(m) = c.name("nb") {
+            return Some(
+                m.as_str().parse::<u32>().expect(
+                    &[
+                        "the number of shares should have been a unit number but is :\n",
+                        m.as_str(),
+                    ]
+                    .concat(),
+                ),
+            );
+        }
+    }
+    None
+}
+pub fn contains_statuscommand(l: &str) -> bool {
+    static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^statusfromgupaxx").unwrap());
+    LINE_SHARE.is_match(l)
+}
+pub fn contains_yourshare(l: &str) -> bool {
+    static LINE_SHARE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"^Your shares               = ").unwrap());
+    LINE_SHARE.is_match(l)
+}
+pub fn contains_end_status(l: &str) -> bool {
+    static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^Uptime         ").unwrap());
+    LINE_SHARE.is_match(l)
+}
 //---------------------------------------------------------------------------------------------------- TEST
 #[cfg(test)]
 mod test {
