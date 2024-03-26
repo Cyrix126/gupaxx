@@ -617,16 +617,17 @@ impl Helper {
             );
             // Send an HTTP API request
             debug!("XMRig Watchdog | Attempting HTTP API request...");
-            if let Ok(priv_api) =
-                PrivXmrigApi::request_xmrig_api(client.clone(), &api_uri, token).await
-            {
-                debug!("XMRig Watchdog | HTTP API request OK, attempting [update_from_priv()]");
-                PubXmrigApi::update_from_priv(&pub_api, priv_api);
-            } else {
-                warn!(
-                    "XMRig Watchdog | Could not send HTTP API request to: {}",
-                    api_uri
-                );
+            match PrivXmrigApi::request_xmrig_api(client.clone(), &api_uri, token).await {
+                Ok(priv_api) => {
+                    debug!("XMRig Watchdog | HTTP API request OK, attempting [update_from_priv()]");
+                    PubXmrigApi::update_from_priv(&pub_api, priv_api);
+                }
+                Err(err) => {
+                    warn!(
+                        "XMRig Watchdog | Could not send HTTP API request to: {}\n{}",
+                        api_uri, err
+                    );
+                }
             }
 
             // Sleep (only if 900ms hasn't passed)
@@ -811,7 +812,7 @@ impl PrivXmrigApi {
             .uri(api_uri)
             .body(hyper::Body::empty())?;
         let response = tokio::time::timeout(
-            std::time::Duration::from_millis(500),
+            std::time::Duration::from_millis(5000),
             client.request(request),
         )
         .await?;
