@@ -1,3 +1,19 @@
+# v0.1.1
+Fix release for beta version.
+This version is only made for testing purposes and have feedbacks.
+
+## Changes
+Current Shares appears on P2pool column of Submenu process in Status Tab.
+Parse the current shares from the status command of p2pool instead of an estimation based on shares found and time.
+
+## Fixes
+XvB algorithm now gets the number of shares instead of 0.
+
+## Bundled Versions
+* [`P2Pool v3.10`](https://github.com/SChernykh/p2pool/releases/tag/v3.10)
+* [`XMRig v6.21.2`](https://github.com/xmrig/xmrig/releases/tag/v6.21.2)
+
+
 # v0.1.0
 First beta release of Gupaxx.  
 This version is only made for testing purposes and have feedbacks.
@@ -6,8 +22,8 @@ This version is only made for testing purposes and have feedbacks.
 See [DIFFERENCES.md](DIFFERENCES.md)
 
 ## Fixes
-See DIFFERENCES.md
+See [DIFFERENCES.md](DIFFERENCES.md)
 
 ## Bundled Versions
 * [`P2Pool v3.10`](https://github.com/SChernykh/p2pool/releases/tag/v3.10)
-* [`XMRig v6.21.1`](https://github.com/xmrig/xmrig/releases/tag/v6.21.1)
+* [`XMRig v6.21.2`](https://github.com/xmrig/xmrig/releases/tag/v6.21.2)
