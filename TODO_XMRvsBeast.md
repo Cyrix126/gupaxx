@@ -33,6 +33,9 @@
     - [x] button to autostart
     - [x] distribute hashrate conforming to the algorithm.
       - [x] check every 10 minutes average Xmrig HR of last 15 minutes
+      - [x] take into account outside HR
+        - [x] mining on p2pool
+        - [x] mining on XvB
       - [x] ask Xmrig to mine on p2pool
         - [x] generate token for xmrig
         - [x] enable xmrig with remote access control

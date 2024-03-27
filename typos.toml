@@ -3,3 +3,5 @@ extend-exclude = [
 	"assets/",
 	"pgp/",
 ]
+[default]
+extend-ignore-identifiers-re = ["ehr"]

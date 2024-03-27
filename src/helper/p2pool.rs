@@ -7,7 +7,9 @@ use crate::helper::ProcessSignal;
 use crate::helper::ProcessState;
 use crate::regex::contains_end_status;
 use crate::regex::contains_statuscommand;
+use crate::regex::contains_yourhashrate;
 use crate::regex::contains_yourshare;
+use crate::regex::estimated_hr;
 use crate::regex::nb_current_shares;
 use crate::regex::P2POOL_REGEX;
 use crate::{
@@ -67,6 +69,17 @@ impl Helper {
                 continue;
             }
             if status_output {
+                if contains_yourhashrate(&line) {
+                    if let Some(ehr) = estimated_hr(&line) {
+                        debug!(
+                            "P2pool | PTY getting current estimated HR data from status: {} share",
+                            ehr
+                        );
+                        lock!(gui_api).sidechain_ehr = ehr;
+                    } else {
+                        error!("P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {}", line);
+                    }
+                }
                 if contains_yourshare(&line) {
                     // update sidechain shares
                     if let Some(shares) = nb_current_shares(&line) {
@@ -811,6 +824,7 @@ pub struct PubP2poolApi {
     pub user_monero_percent: HumanNumber, // How much percent the user's hashrate accounts for in all of Monero hashrate.
     // from status
     pub sidechain_shares: u32,
+    pub sidechain_ehr: f32,
 }
 
 impl Default for PubP2poolApi {
@@ -861,6 +875,7 @@ impl PubP2poolApi {
             user_p2pool_percent: HumanNumber::unknown(),
             user_monero_percent: HumanNumber::unknown(),
             sidechain_shares: 0,
+            sidechain_ehr: 0.0,
         }
     }
 

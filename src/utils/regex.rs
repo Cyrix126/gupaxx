@@ -148,6 +148,24 @@ pub fn nb_current_shares(s: &str) -> Option<u32> {
     }
     None
 }
+pub fn estimated_hr(s: &str) -> Option<f32> {
+    static CURRENT_SHARE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"Your hashrate (pool-side) = (?P<nb>.*) KH/s").unwrap());
+    if let Some(c) = CURRENT_SHARE.captures(s) {
+        if let Some(m) = c.name("nb") {
+            return Some(
+                m.as_str().parse::<f32>().expect(
+                    &[
+                        "the number of shares should have been a float number but is :\n",
+                        m.as_str(),
+                    ]
+                    .concat(),
+                ),
+            );
+        }
+    }
+    None
+}
 pub fn contains_statuscommand(l: &str) -> bool {
     static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^statusfromgupaxx").unwrap());
     LINE_SHARE.is_match(l)
@@ -155,6 +173,11 @@ pub fn contains_statuscommand(l: &str) -> bool {
 pub fn contains_yourshare(l: &str) -> bool {
     static LINE_SHARE: Lazy<Regex> =
         Lazy::new(|| Regex::new(r"^Your shares               = ").unwrap());
+    LINE_SHARE.is_match(l)
+}
+pub fn contains_yourhashrate(l: &str) -> bool {
+    static LINE_SHARE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"^Your hashrate (pool-side)").unwrap());
     LINE_SHARE.is_match(l)
 }
 pub fn contains_end_status(l: &str) -> bool {

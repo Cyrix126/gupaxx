@@ -7,6 +7,7 @@ use hyper_tls::HttpsConnector;
 use log::{debug, error, info, warn};
 use readable::up::Uptime;
 use serde::Deserialize;
+use std::collections::VecDeque;
 use std::fmt::Write;
 use std::time::Duration;
 use std::{
@@ -405,6 +406,26 @@ impl Helper {
                 XVB_TIME_ALGO - time_donated, time_donated
             ),
                             );
+                            let hashrate_xmrig = lock!(gui_api_xmrig).hashrate_raw_15m;
+                            debug!("Xvb Process | Local HR is {}H/s ", hashrate_xmrig);
+                            lock!(gui_api).p2pool_sent_last_hour_samples.pop_back();
+                            lock!(gui_api).p2pool_sent_last_hour_samples.push_front(
+                                hashrate_xmrig
+                                    * ((XVB_TIME_ALGO - time_donated) / XVB_TIME_ALGO) as f32,
+                            );
+                            debug!(
+                                "Xvb Process | New average HR sent for XvB samples:  {:#?}",
+                                lock!(gui_api).p2pool_sent_last_hour_samples
+                            );
+                            lock!(gui_api).xvb_sent_last_hour_samples.pop_back();
+                            lock!(gui_api)
+                                .xvb_sent_last_hour_samples
+                                .push_front(hashrate_xmrig * (time_donated / XVB_TIME_ALGO) as f32);
+                            debug!(
+                                "Xvb Process | New average HR sent for XvB samples:  {:#?}",
+                                lock!(gui_api).xvb_sent_last_hour_samples
+                            );
+
                             // sleep 10m less spared time then request XMrig to mine on XvB
                             let was_instant = last_algorithm;
                             let gui_api_c = gui_api.clone();
@@ -426,6 +447,12 @@ impl Helper {
                         } else {
                             output_console(&gui_api, "No share in the current PPLNS Window !");
                             output_console(&gui_api, "Mining on P2pool for the next ten minutes.");
+                            lock!(gui_api).xvb_sent_last_hour_samples.pop_back();
+                            lock!(gui_api)
+                                .p2pool_sent_last_hour_samples
+                                .push_front(lock!(gui_api_xmrig).hashrate_raw_15m);
+                            lock!(gui_api).p2pool_sent_last_hour_samples.push_front(0.0);
+                            lock!(gui_api).p2pool_sent_last_hour_samples.pop_back();
                         }
                     }
                 }
@@ -448,13 +475,14 @@ impl Helper {
             }
         }
     }
-    fn minimum_hashrate_share(difficulty: u64, mini: bool) -> f32 {
+    // outside HR that is estimated on p2pool
+    fn minimum_hashrate_share(difficulty: u64, mini: bool, ohr: f32) -> f32 {
         let pws = if mini {
             BLOCK_PPLNS_WINDOW_MINI
         } else {
             BLOCK_PPLNS_WINDOW_MAIN
         };
-        (difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32 * XVB_BUFFER
+        ((difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32 * XVB_BUFFER) - ohr
     }
     fn time_that_could_be_spared(hr: f32, min_hr: f32) -> u32 {
         // percent of time minimum
@@ -466,15 +494,24 @@ impl Helper {
         }
         0
     }
-    fn minimum_time_for_highest_accessible_round(st: u32, hr: f32) -> u32 {
-        let hr_for_xvb = (st as f32 / XVB_TIME_ALGO as f32) * hr;
+
+    // spared time, local hr, current 1h average hr already mining on XvB, 1h average local HR sent on XvB.
+    fn minimum_time_for_highest_accessible_round(st: u32, lhr: f32, chr: f32, shr: f32) -> u32 {
+        let hr_for_xvb = (st as f32 / XVB_TIME_ALGO as f32) * lhr;
+        let ohr = chr - shr;
         match hr_for_xvb {
-            x if x > XVB_ROUND_DONOR_MEGA_MIN_HR as f32 => ((x / hr) * XVB_TIME_ALGO as f32) as u32,
-            x if x > XVB_ROUND_DONOR_WHALE_MIN_HR as f32 => {
-                ((x / hr) * XVB_TIME_ALGO as f32) as u32
+            x if x > XVB_ROUND_DONOR_MEGA_MIN_HR as f32 - ohr => {
+                ((x / lhr) * XVB_TIME_ALGO as f32) as u32
             }
-            x if x > XVB_ROUND_DONOR_VIP_MIN_HR as f32 => ((x / hr) * XVB_TIME_ALGO as f32) as u32,
-            x if x > XVB_ROUND_DONOR_MIN_HR as f32 => ((x / hr) * XVB_TIME_ALGO as f32) as u32,
+            x if x > XVB_ROUND_DONOR_WHALE_MIN_HR as f32 - ohr => {
+                ((x / lhr) * XVB_TIME_ALGO as f32) as u32
+            }
+            x if x > (XVB_ROUND_DONOR_VIP_MIN_HR as f32 - ohr) => {
+                ((x / lhr) * XVB_TIME_ALGO as f32) as u32
+            }
+            x if x > XVB_ROUND_DONOR_MIN_HR as f32 - ohr => {
+                ((x / lhr) * XVB_TIME_ALGO as f32) as u32
+            }
             _ => 0,
         }
     }
@@ -518,15 +555,39 @@ impl Helper {
             debug!("Xvb Process | mining on XvB pool");
         }
     }
+    // push new value into samples before executing this calcul
+    fn calc_last_hour_avg_hash_rate(samples: &VecDeque<f32>) -> f32 {
+        samples.iter().sum::<f32>() / samples.len() as f32
+    }
 }
 //---------------------------------------------------------------------------------------------------- Public XvB API
 use serde_this_or_that::as_u64;
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone)]
 pub struct PubXvbApi {
     pub output: String,
     pub uptime: u64,
+    pub xvb_sent_last_hour_samples: VecDeque<f32>,
+    pub p2pool_sent_last_hour_samples: VecDeque<f32>,
     pub stats_pub: XvbPubStats,
     pub stats_priv: XvbPrivStats,
+}
+impl Default for PubXvbApi {
+    fn default() -> Self {
+        let capacity = (3600 / XVB_TIME_ALGO) as usize;
+        let mut p2pool_sent_last_hour_samples = VecDeque::with_capacity(capacity);
+        for _ in 0..capacity {
+            p2pool_sent_last_hour_samples.push_back(0.0f32);
+        }
+        let xvb_sent_last_hour_samples = p2pool_sent_last_hour_samples.clone();
+        Self {
+            output: Default::default(),
+            uptime: Default::default(),
+            xvb_sent_last_hour_samples,
+            p2pool_sent_last_hour_samples,
+            stats_pub: Default::default(),
+            stats_priv: Default::default(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -621,23 +682,44 @@ impl XvbPrivStats {
         state_p2pool: &crate::disk::state::P2pool,
         state_xvb: &crate::disk::state::Xvb,
     ) -> u32 {
-        let hr = lock!(gui_api_xmrig).hashrate_raw_15m;
-        let min_hr = Helper::minimum_hashrate_share(
+        let lhr = lock!(gui_api_xmrig).hashrate_raw_15m;
+        let p2pool_ehr = lock!(gui_api_p2pool).sidechain_ehr;
+        // what if ehr stay still for the next ten minutes ? mHR will augment every ten minutes because it thinks that oHR is decreasing.
+        //
+        let p2pool_ohr = p2pool_ehr
+            - Helper::calc_last_hour_avg_hash_rate(
+                &lock!(gui_api_xvb).p2pool_sent_last_hour_samples,
+            );
+        let mut min_hr = Helper::minimum_hashrate_share(
             lock!(gui_api_p2pool).p2pool_difficulty_u64,
             state_p2pool.mini,
+            p2pool_ohr,
         );
-        debug!("Xvb Process | hr {}, min_hr: {} ", hr, min_hr);
+        if min_hr.is_sign_negative() {
+            min_hr = 0.0;
+        }
+        debug!("Xvb Process | hr {}, min_hr: {} ", lhr, min_hr);
         output_console(
                                 &gui_api_xvb,
-                                &format!("The average 15 minutes HR from Xmrig is {:.0} H/s, minimum required HR to keep a share in PPLNS window is {:.0} H/s", hr, min_hr),
+                                &format!("The average 15 minutes HR from Xmrig is {:.0} H/s, minimum required HR to keep a share in PPLNS window is {:.0} H/s, there was {} H/s estimated sent for your address on p2pool", lhr, min_hr, p2pool_ohr),
                             );
         // calculate how much time can be spared
-        let mut spared_time = Helper::time_that_could_be_spared(hr, min_hr);
+        let mut spared_time = Helper::time_that_could_be_spared(lhr, min_hr);
+
         if spared_time > 0 {
             // if not hero option
             if !state_xvb.hero {
+                let xvb_chr = lock!(gui_api_xvb).stats_priv.donor_1hr_avg;
+                let shr = Helper::calc_last_hour_avg_hash_rate(
+                    &lock!(gui_api_xvb).xvb_sent_last_hour_samples,
+                );
                 // calculate how much time needed to be spared to be in most round type minimum HR + buffer
-                spared_time = Helper::minimum_time_for_highest_accessible_round(spared_time, hr);
+                spared_time = Helper::minimum_time_for_highest_accessible_round(
+                    spared_time,
+                    lhr,
+                    xvb_chr,
+                    shr,
+                );
             }
         }
         spared_time
@@ -999,6 +1081,7 @@ mod test {
         let share = 1;
         // verify that if one share found (enough for vip round) but not enough for donor round, no time will be given to xvb, except if in hero mode.
         // 15mn average HR of xmrig is 5kH/s
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
         lock!(gui_api_xmrig).hashrate_raw_15m = 5500.0;
         state_xvb.hero = false;
         let given_time = XvbPrivStats::calcul_donated_time(
@@ -1041,6 +1124,7 @@ mod test {
             Some(XvbRound::Vip)
         );
         // verify that if one share and not enough for donor vip round (should be in donor round), right amount of time will be given to xvb for default and hero mode
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
         lock!(gui_api_xmrig).hashrate_raw_15m = 7000.0;
         state_xvb.hero = false;
         let given_time = XvbPrivStats::calcul_donated_time(
@@ -1083,6 +1167,7 @@ mod test {
             Some(XvbRound::Donor)
         );
         // verify that if one share and not enough for donor whale round(should be in donor vip), right amount of time will be given to xvb for default and hero mode
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
         lock!(gui_api_xmrig).hashrate_raw_15m = 18000.0;
         state_xvb.hero = false;
         let given_time = XvbPrivStats::calcul_donated_time(
@@ -1125,6 +1210,7 @@ mod test {
             Some(XvbRound::DonorVip)
         );
         // verify that if one share and not enough for donor mega round, right amount of time will be given to xvb for default and hero mode
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
         lock!(gui_api_xmrig).hashrate_raw_15m = 105000.0;
         state_xvb.hero = false;
         let given_time = XvbPrivStats::calcul_donated_time(
@@ -1167,6 +1253,7 @@ mod test {
             Some(XvbRound::DonorWhale)
         );
         // verify that if one share and enough for donor mega round, right amount of time will be given to xvb for default and hero mode
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
         lock!(gui_api_xmrig).hashrate_raw_15m = 1205000.0;
         state_xvb.hero = false;
         let given_time = XvbPrivStats::calcul_donated_time(
@@ -1207,6 +1294,55 @@ mod test {
         assert_eq!(
             XvbPrivStats::round_type(share, &gui_api_xvb),
             Some(XvbRound::DonorMega)
+        );
+        // verify that if one share and enough for donor vp round if XvB oHR is given, right amount of time will be given to xvb for default and hero mode
+        lock!(gui_api_xvb).output.clear();
+        lock!(gui_api_xmrig).hashrate_raw_15m = 12500.0;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 5000.0;
+        state_xvb.hero = false;
+        let given_time = XvbPrivStats::calcul_donated_time(
+            &gui_api_xmrig,
+            &gui_api_p2pool,
+            &gui_api_xvb,
+            &state_p2pool,
+            &state_xvb,
+        );
+        // verify that default mode will give x seconds
+        assert_eq!(given_time, 378);
+        // given time should always be less than XVB_TIME_ALGO
+        assert!(given_time < XVB_TIME_ALGO);
+        // verify that right round should be detected.
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            + 5000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            + 5000.0;
+        assert_eq!(
+            XvbPrivStats::round_type(share, &gui_api_xvb),
+            Some(XvbRound::DonorVip)
+        );
+        // verify that hero mode will give x seconds
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 5000.0;
+        state_xvb.hero = true;
+        let given_time = XvbPrivStats::calcul_donated_time(
+            &gui_api_xmrig,
+            &gui_api_p2pool,
+            &gui_api_xvb,
+            &state_p2pool,
+            &state_xvb,
+        );
+        assert_eq!(given_time, 378);
+        // verify that right round should be detected.
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            + 5000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            + 5000.0;
+        assert_eq!(
+            XvbPrivStats::round_type(share, &gui_api_xvb),
+            Some(XvbRound::DonorVip)
         );
     }
     // #[tokio::main]

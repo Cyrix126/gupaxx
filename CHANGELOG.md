@@ -1,3 +1,17 @@
+# v0.1.3
+Fix release for beta version.
+This version is only made for testing purposes and have feedbacks.
+
+## Changes
+take into account outside HR
+
+## Fixes
+downgrade to xmrig 6.21.1 to solve xmrig stats showing only after 15m
+
+## Bundled Versions
+* [`P2Pool v3.10`](https://github.com/SChernykh/p2pool/releases/tag/v3.10)
+* [`XMRig v6.21.1`](https://github.com/xmrig/xmrig/releases/tag/v6.21.1)
+
 # v0.1.2
 Fix release for beta version.
 This version is only made for testing purposes and have feedbacks.

@@ -21,4 +21,4 @@ The rendering of the benchmark table and of console outputs were calculating eve
 
 ## Security
 
-With the upgrade of dependencies, cargo audit show only one allowed warning instead of 5 vulnerabilities and 4 allowed warnings. 
+With the upgrade of dependencies, cargo audit show no warnings instead of 5 vulnerabilities and 4 allowed warnings. 
