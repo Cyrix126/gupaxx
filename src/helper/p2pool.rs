@@ -72,10 +72,10 @@ impl Helper {
                 if contains_yourhashrate(&line) {
                     if let Some(ehr) = estimated_hr(&line) {
                         debug!(
-                            "P2pool | PTY getting current estimated HR data from status: {} share",
+                            "P2pool | PTY getting current estimated HR data from status: {} KH/s",
                             ehr
                         );
-                        lock!(gui_api).sidechain_ehr = ehr;
+                        lock!(gui_api).sidechain_ehr = ehr * 1000.0;
                     } else {
                         error!("P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {}", line);
                     }
@@ -895,6 +895,7 @@ impl PubP2poolApi {
             tick: std::mem::take(&mut gui_api.tick),
             tick_status: std::mem::take(&mut gui_api.tick_status),
             sidechain_shares: std::mem::take(&mut gui_api.sidechain_shares),
+            sidechain_ehr: std::mem::take(&mut gui_api.sidechain_ehr),
             ..pub_api.clone()
         };
     }

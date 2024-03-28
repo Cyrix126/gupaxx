@@ -1,3 +1,20 @@
+# v0.1.4
+Fix release for beta version.
+This version is only made for testing purposes and have feedbacks.
+
+## Changes
+new logo
+algorithm wait for xmrig first value, takes 10s value at first start, 1m value at second start, 15m value at third start.
+
+## Fixes
+fix detection of p2pool eHR
+fix private round type stats
+fix name gupax tab to gupaxx
+
+## Bundled Versions
+* [`P2Pool v3.10`](https://github.com/SChernykh/p2pool/releases/tag/v3.10)
+* [`XMRig v6.21.1`](https://github.com/xmrig/xmrig/releases/tag/v6.21.1)
+
 # v0.1.3
 Fix release for beta version.
 This version is only made for testing purposes and have feedbacks.

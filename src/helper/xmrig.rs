@@ -683,6 +683,7 @@ pub struct PubXmrigApi {
     pub accepted: String,
     pub rejected: String,
     pub hashrate_raw: f32,
+    pub hashrate_raw_1m: f32,
     pub hashrate_raw_15m: f32,
     pub node: String,
 }
@@ -705,6 +706,7 @@ impl PubXmrigApi {
             accepted: UNKNOWN_DATA.to_string(),
             rejected: UNKNOWN_DATA.to_string(),
             hashrate_raw: 0.0,
+            hashrate_raw_1m: 0.0,
             hashrate_raw_15m: 0.0,
             node: UNKNOWN_DATA.to_string(),
         }
@@ -766,6 +768,10 @@ impl PubXmrigApi {
             Some(Some(h)) => *h,
             _ => 0.0,
         };
+        let hashrate_raw_1m = match private.hashrate.total.iter().nth(1) {
+            Some(Some(h)) => *h,
+            _ => 0.0,
+        };
         let hashrate_raw_15m = match private.hashrate.total.last() {
             Some(Some(h)) => *h,
             _ => 0.0,
@@ -779,6 +785,7 @@ impl PubXmrigApi {
             accepted: Unsigned::from(private.connection.accepted as usize).to_string(),
             rejected: Unsigned::from(private.connection.rejected as usize).to_string(),
             hashrate_raw,
+            hashrate_raw_1m,
             hashrate_raw_15m,
             ..std::mem::take(&mut *public)
         }

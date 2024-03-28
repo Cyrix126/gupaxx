@@ -36,7 +36,7 @@ impl crate::app::App {
                 if ui
                     .add_sized(
                         [width, height],
-                        SelectableLabel::new(self.tab == Tab::Gupax, "Gupax"),
+                        SelectableLabel::new(self.tab == Tab::Gupax, "Gupaxx"),
                     )
                     .clicked()
                 {

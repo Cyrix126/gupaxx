@@ -150,7 +150,7 @@ pub fn nb_current_shares(s: &str) -> Option<u32> {
 }
 pub fn estimated_hr(s: &str) -> Option<f32> {
     static CURRENT_SHARE: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"Your hashrate (pool-side) = (?P<nb>.*) KH/s").unwrap());
+        Lazy::new(|| Regex::new(r"(?P<nb>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)").unwrap());
     if let Some(c) = CURRENT_SHARE.captures(s) {
         if let Some(m) = c.name("nb") {
             return Some(
@@ -177,7 +177,7 @@ pub fn contains_yourshare(l: &str) -> bool {
 }
 pub fn contains_yourhashrate(l: &str) -> bool {
     static LINE_SHARE: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"^Your hashrate (pool-side)").unwrap());
+        Lazy::new(|| Regex::new(r"^Your hashrate \(pool-side\) = ").unwrap());
     LINE_SHARE.is_match(l)
 }
 pub fn contains_end_status(l: &str) -> bool {
