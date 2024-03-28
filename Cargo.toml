@@ -33,8 +33,8 @@ benri = "0.1.12"
 bytes = "1.6.0"
 dirs = "5.0.1"
 #--------------------------------------------------------------------------------
-egui = "0.26.2"
-egui_extras = { version = "0.26.2", features = ["image"] }
+egui = "0.27.0"
+egui_extras = { version = "0.27.0", features = ["image"] }
 ## 2023-12-28: https://github.com/hinto-janai/gupax/issues/68
 ##
 ## 2024-03-18: Both `glow` and `wgpu` seem to crash:
@@ -71,7 +71,7 @@ serde = { version = "1.0.197", features = ["rc", "derive"] }
 serde_json = "1.0.115"
 sysinfo = { version = "0.30.7", default-features = false }
 # tls-api = "0.9.0"
-tokio = { version = "1.36.0", features = ["rt", "time", "macros", "process", "rt-multi-thread"] }
+tokio = { version = "1.37.0", features = ["rt", "time", "macros", "process", "rt-multi-thread"] }
 toml = { version = "0.8.12", features = ["preserve_order"] }
 walkdir = "2.5.0"
 zeroize = "1.7.0"
@@ -83,13 +83,13 @@ readable = "0.16"
 chrono = {version="0.4.37", default-features=false, features=["clock", "std"]}
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
-eframe = { version = "0.26.2", features = ["wgpu"] }
+eframe = { version = "0.27.0", features = ["wgpu"] }
 tar = "0.4.40"
 flate2 = "1.0"
 sudo = "0.6.0"
 # macOS
 [target.'cfg(target_os = "macos")'.dependencies]
-eframe = { version = "0.26.2", features = ["wgpu"] }
+eframe = { version = "0.27.0", features = ["wgpu"] }
 # On apple-darwin targets there is an issue with the native and rustls
 # tls implementation so this makes it fall back to the openssl variant.
 #
@@ -103,7 +103,7 @@ eframe = { version = "0.26.2", features = ["wgpu"] }
 # linked as well which causes problems, so statically link it.
 lzma-sys = { version = "0.1.20", features = ["static"] }
 [dev-dependencies]
-egui = {version = "0.26.2", features=["callstack"]}
+egui = {version = "0.27.0", features=["callstack"]}
 
 # [target.'cfg(not(target_os = "macos"))'.dependencies]
 # tls-api-native-tls = "0.9.0"
@@ -111,7 +111,7 @@ egui = {version = "0.26.2", features=["callstack"]}
 # Windows dependencies
 [target.'cfg(windows)'.dependencies]
 # glow start on windows but not wgpu
-eframe = { version = "0.26.2", features = ["glow"] }
+eframe = { version = "0.27.0", features = ["glow"] }
 zip = "0.6.6"
 is_elevated = "0.1.2"
 
