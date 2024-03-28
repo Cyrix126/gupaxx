@@ -1,3 +1,19 @@
+# v0.1.5
+Fix release for beta version.
+This version is only made for testing purposes and have feedbacks.
+
+## Changes
+update dependencies of UI
+replace old http client
+
+## Fixes
+fix formatting hr algorithm
+fix private round calculation
+
+## Bundled Versions
+* [`P2Pool v3.10`](https://github.com/SChernykh/p2pool/releases/tag/v3.10)
+* [`XMRig v6.21.1`](https://github.com/xmrig/xmrig/releases/tag/v6.21.1)
+
 # v0.1.4
 Fix release for beta version.
 This version is only made for testing purposes and have feedbacks.

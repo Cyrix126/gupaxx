@@ -1090,10 +1090,12 @@ mod test {
         // given time should always be less than XVB_TIME_ALGO
         assert!(given_time < XVB_TIME_ALGO);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(
             XvbPrivStats::round_type(share, &gui_api_xvb),
             Some(XvbRound::Vip)
@@ -1109,10 +1111,12 @@ mod test {
         );
         assert_eq!(given_time, 96);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(
             XvbPrivStats::round_type(share, &gui_api_xvb),
             Some(XvbRound::Vip)
@@ -1133,10 +1137,12 @@ mod test {
         // given time should always be less than XVB_TIME_ALGO
         assert!(given_time < XVB_TIME_ALGO);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(
             XvbPrivStats::round_type(share, &gui_api_xvb),
             Some(XvbRound::Donor)
@@ -1152,10 +1158,12 @@ mod test {
         );
         assert_eq!(given_time, 204);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(
             XvbPrivStats::round_type(share, &gui_api_xvb),
             Some(XvbRound::Donor)
@@ -1176,10 +1184,12 @@ mod test {
         // given time should always be less than XVB_TIME_ALGO
         assert!(given_time < XVB_TIME_ALGO);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(
             XvbPrivStats::round_type(share, &gui_api_xvb),
             Some(XvbRound::DonorVip)
@@ -1195,10 +1205,12 @@ mod test {
         );
         assert_eq!(given_time, 446);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(
             XvbPrivStats::round_type(share, &gui_api_xvb),
             Some(XvbRound::DonorVip)
@@ -1219,10 +1231,12 @@ mod test {
         // given time should always be less than XVB_TIME_ALGO
         assert!(given_time < XVB_TIME_ALGO);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(
             XvbPrivStats::round_type(share, &gui_api_xvb),
             Some(XvbRound::DonorWhale)
@@ -1238,10 +1252,12 @@ mod test {
         );
         assert_eq!(given_time, 573);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(
             XvbPrivStats::round_type(share, &gui_api_xvb),
             Some(XvbRound::DonorWhale)
@@ -1262,10 +1278,12 @@ mod test {
         // given time should always be less than XVB_TIME_ALGO
         assert!(given_time < XVB_TIME_ALGO);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(
             XvbPrivStats::round_type(share, &gui_api_xvb),
             Some(XvbRound::DonorMega)
@@ -1281,10 +1299,12 @@ mod test {
         );
         assert_eq!(given_time, 597);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(
             XvbPrivStats::round_type(share, &gui_api_xvb),
             Some(XvbRound::DonorMega)
@@ -1306,12 +1326,14 @@ mod test {
         // given time should always be less than XVB_TIME_ALGO
         assert!(given_time < XVB_TIME_ALGO);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            + 5000.0;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            + 5000.0;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
+            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
+                + 5000.0)
+                / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
+            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
+                + 5000.0)
+                / 1000.0;
         assert_eq!(
             XvbPrivStats::round_type(share, &gui_api_xvb),
             Some(XvbRound::DonorVip)
@@ -1328,12 +1350,14 @@ mod test {
         );
         assert_eq!(given_time, 378);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            + 5000.0;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            + 5000.0;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
+            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
+                + 5000.0)
+                / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
+            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
+                + 5000.0)
+                / 1000.0;
         assert_eq!(
             XvbPrivStats::round_type(share, &gui_api_xvb),
             Some(XvbRound::DonorVip)
