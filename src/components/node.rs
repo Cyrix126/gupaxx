@@ -18,9 +18,9 @@
 use crate::components::update::Pkg;
 use crate::{constants::*, macros::*};
 use egui::Color32;
-use hyper::{client::HttpConnector, Body, Client, Request};
 use log::*;
 use rand::{thread_rng, Rng};
+use reqwest::{Client, RequestBuilder};
 
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -381,7 +381,7 @@ impl Ping {
         // Create HTTP client
         let info = "Creating HTTP Client".to_string();
         lock!(ping).msg = info;
-        let client: Client<HttpConnector> = Client::builder().build(HttpConnector::new());
+        let client = Client::new();
 
         // Random User Agent
         let rand_user_agent = Pkg::get_user_agent();
@@ -393,16 +393,13 @@ impl Ping {
             let client = client.clone();
             let ping = Arc::clone(&ping);
             let node_vec = Arc::clone(&node_vec);
-            let request = Request::builder()
-                .method("POST")
-                .uri("http://".to_string() + ip + ":" + rpc + "/json_rpc")
+            let request = client
+                .post("http://".to_string() + ip + ":" + rpc + "/json_rpc")
                 .header("User-Agent", rand_user_agent)
-                .body(hyper::Body::from(
-                    r#"{"jsonrpc":"2.0","id":"0","method":"get_info"}"#,
-                ))
-                .unwrap();
+                .body(r#"{"jsonrpc":"2.0","id":"0","method":"get_info"}"#);
+
             let handle = tokio::task::spawn(async move {
-                Self::response(client, request, ip, ping, percent, node_vec).await;
+                Self::response(request, ip, ping, percent, node_vec).await;
             });
             handles.push(handle);
         }
@@ -428,8 +425,7 @@ impl Ping {
     #[cold]
     #[inline(never)]
     async fn response(
-        client: Client<HttpConnector>,
-        request: Request<Body>,
+        request: RequestBuilder,
         ip: &'static str,
         ping: Arc<Mutex<Self>>,
         percent: f32,
@@ -438,10 +434,10 @@ impl Ping {
         let ms;
         let now = Instant::now();
 
-        match tokio::time::timeout(Duration::from_secs(5), client.request(request)).await {
+        match tokio::time::timeout(Duration::from_secs(5), request.send()).await {
             Ok(Ok(json_rpc)) => {
                 // Attempt to convert to JSON-RPC.
-                match hyper::body::to_bytes(json_rpc.into_body()).await {
+                match json_rpc.bytes().await {
                     Ok(b) => match serde_json::from_slice::<GetInfo<'_>>(&b) {
                         Ok(rpc) => {
                             if rpc.result.mainnet && rpc.result.synchronized {
@@ -485,6 +481,8 @@ impl Ping {
 //---------------------------------------------------------------------------------------------------- NODE
 #[cfg(test)]
 mod test {
+    use reqwest::Client;
+
     use crate::components::node::{
         format_ip, REMOTE_NODES, REMOTE_NODE_LENGTH, REMOTE_NODE_MAX_CHARS,
     };
@@ -514,7 +512,6 @@ mod test {
     #[tokio::test]
     #[ignore]
     async fn full_ping() {
-        use hyper::{client::HttpConnector, Client, Request};
         use serde::{Deserialize, Serialize};
 
         #[derive(Deserialize, Serialize)]
@@ -524,7 +521,7 @@ mod test {
         }
 
         // Create HTTP client
-        let client: Client<HttpConnector> = Client::builder().build(HttpConnector::new());
+        let client = Client::new();
 
         // Random User Agent
         let rand_user_agent = Pkg::get_user_agent();
@@ -541,16 +538,13 @@ mod test {
             let client = client.clone();
             // Try 3 times before failure
             let mut i = 1;
-            let mut response = loop {
-                let request = Request::builder()
-                    .method("POST")
-                    .uri("http://".to_string() + ip + ":" + rpc + "/json_rpc")
+            let response = loop {
+                let request = client
+                    .post("http://".to_string() + ip + ":" + rpc + "/json_rpc")
                     .header("User-Agent", rand_user_agent)
-                    .body(hyper::Body::from(
-                        r#"{"jsonrpc":"2.0","id":"0","method":"get_info"}"#,
-                    ))
-                    .unwrap();
-                match client.request(request).await {
+                    .body(r#"{"jsonrpc":"2.0","id":"0","method":"get_info"}"#);
+
+                match request.send().await {
                     Ok(response) => break response,
                     Err(e) => {
                         println!("{:#?}", e);
@@ -565,8 +559,7 @@ mod test {
                     }
                 }
             };
-            let body = hyper::body::to_bytes(response.body_mut()).await.unwrap();
-            let getinfo: GetInfo = serde_json::from_slice(&body).unwrap();
+            let getinfo = response.json::<GetInfo>().await.unwrap();
             assert!(getinfo.id == "0");
             assert!(getinfo.jsonrpc == "2.0");
             n += 1;

@@ -37,13 +37,12 @@ use crate::{
     utils::errors::{ErrorButtons, ErrorFerris, ErrorState},
 };
 use anyhow::{anyhow, Error};
-use hyper::{
-    header::{HeaderValue, LOCATION},
-    Body, Client, Request,
-};
+use bytes::Bytes;
 use log::*;
 use rand::distributions::Alphanumeric;
 use rand::{thread_rng, Rng};
+use reqwest::header::{LOCATION, USER_AGENT};
+use reqwest::{Client, RequestBuilder};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};
@@ -322,8 +321,8 @@ impl Update {
         Ok(tmp_dir)
     }
 
-    #[cold]
-    #[inline(never)]
+    // #[cold]
+    // #[inline(never)]
     // Get an HTTPS client. Uses [Arti] if Tor is enabled.
     // The base type looks something like [hyper::Client<...>].
     // This is then wrapped with the custom [ClientEnum] type to implement
@@ -337,13 +336,6 @@ impl Update {
     //     ClientEnum::Tor(T)   => get_response(... T ...)
     //     ClientEnum::Https(H) => get_response(... H ...)
     //
-    pub fn get_client() -> Result<ClientEnum, anyhow::Error> {
-        let mut connector = hyper_tls::HttpsConnector::new();
-        connector.https_only(true);
-        let client = ClientEnum::Https(Client::builder().build(connector));
-        Ok(client)
-    }
-
     #[cold]
     #[inline(never)]
     // Intermediate function that spawns a new thread
@@ -553,7 +545,7 @@ impl Update {
         info!("Update | {}", msg);
         *lock!(lock.msg) = msg;
         drop(lock);
-        let client = Self::get_client()?;
+        let client = Client::new();
         *lock2!(update, prog) += 5.0;
         info!("Update | Init ... OK ... {}%", lock2!(update, prog));
 
@@ -584,11 +576,7 @@ impl Update {
                 let link = pkg.link_metadata.to_string();
                 // Send to async
                 let handle: JoinHandle<Result<(), anyhow::Error>> = tokio::spawn(async move {
-                    match client {
-                        ClientEnum::Https(h) => {
-                            Pkg::get_metadata(new_ver, h, link, user_agent).await
-                        }
-                    }
+                    Pkg::get_metadata(new_ver, &client, link, user_agent).await
                 });
                 handles.push(handle);
             }
@@ -726,11 +714,10 @@ impl Update {
                     }
                 };
                 info!("Update | {} ... {}", pkg.name, link);
-                let handle: JoinHandle<Result<(), anyhow::Error>> = tokio::spawn(async move {
-                    match client {
-                        ClientEnum::Https(h) => Pkg::get_bytes(bytes, h, link, user_agent).await,
-                    }
-                });
+                let handle: JoinHandle<Result<(), anyhow::Error>> =
+                    tokio::spawn(
+                        async move { Pkg::get_bytes(bytes, &client, link, user_agent).await },
+                    );
                 handles.push(handle);
             }
             // Handle await
@@ -906,11 +893,6 @@ impl Update {
     }
 }
 
-#[derive(Debug, Clone)]
-pub enum ClientEnum {
-    Https(hyper::Client<hyper_tls::HttpsConnector<hyper::client::HttpConnector>>),
-}
-
 //---------------------------------------------------------------------------------------------------- Pkg struct/impl
 #[derive(Debug, Clone)]
 pub struct Pkg {
@@ -919,7 +901,7 @@ pub struct Pkg {
     link_prefix: &'static str,
     link_suffix: &'static str,
     link_extension: &'static str,
-    bytes: Arc<Mutex<hyper::body::Bytes>>,
+    bytes: Arc<Mutex<Bytes>>,
     new_ver: Arc<Mutex<String>>,
 }
 
@@ -974,35 +956,28 @@ impl Pkg {
     #[cold]
     #[inline(never)]
     // Generate GET request based off input URI + fake user agent
-    fn get_request(link: String, user_agent: &'static str) -> Result<Request<Body>, anyhow::Error> {
-        let request = Request::builder()
-            .method("GET")
-            .uri(link)
-            .header(
-                hyper::header::USER_AGENT,
-                HeaderValue::from_static(user_agent),
-            )
-            .body(Body::empty())?;
-        Ok(request)
+    fn get_request(
+        client: &Client,
+        link: String,
+        user_agent: &'static str,
+    ) -> Result<RequestBuilder, anyhow::Error> {
+        Ok(client.get(link).header(USER_AGENT, user_agent))
     }
 
     #[cold]
     #[inline(never)]
     // Get metadata using [Generic hyper::client<C>] & [Request]
     // and change [version, prog] under an Arc<Mutex>
-    async fn get_metadata<C>(
+    async fn get_metadata(
         new_ver: Arc<Mutex<String>>,
-        client: Client<C>,
+        client: &Client,
         link: String,
         user_agent: &'static str,
-    ) -> Result<(), Error>
-    where
-        C: hyper::client::connect::Connect + Clone + Send + Sync + 'static,
-    {
-        let request = Pkg::get_request(link, user_agent)?;
-        let mut response = client.request(request).await?;
-        let body = hyper::body::to_bytes(response.body_mut()).await?;
-        let body: TagName = serde_json::from_slice(&body)?;
+    ) -> Result<(), Error> {
+        let request = Pkg::get_request(&client, link, user_agent)?;
+        let response = request.send().await?;
+        dbg!(&response);
+        let body = response.json::<TagName>().await?;
         *lock!(new_ver) = body.tag_name;
         Ok(())
     }
@@ -1011,22 +986,20 @@ impl Pkg {
     #[inline(never)]
     // Takes a [Request], fills the appropriate [Pkg]
     // [bytes] field with the [Archive/Standalone]
-    async fn get_bytes<C>(
+    async fn get_bytes(
         bytes: Arc<Mutex<bytes::Bytes>>,
-        client: Client<C>,
+        client: &Client,
         link: String,
         user_agent: &'static str,
-    ) -> Result<(), anyhow::Error>
-    where
-        C: hyper::client::connect::Connect + Clone + Send + Sync + 'static,
-    {
-        let request = Self::get_request(link, user_agent)?;
-        let mut response = client.request(request).await?;
+    ) -> Result<(), anyhow::Error> {
+        let request = Self::get_request(&client, link, user_agent)?;
+        let mut response = request.send().await?;
         // GitHub sends a 302 redirect, so we must follow
         // the [Location] header... only if Reqwest had custom
         // connectors so I didn't have to manually do this...
         if response.headers().contains_key(LOCATION) {
-            let request = Self::get_request(
+            response = Self::get_request(
+                &client,
                 response
                     .headers()
                     .get(LOCATION)
@@ -1034,10 +1007,11 @@ impl Pkg {
                     .to_str()?
                     .to_string(),
                 user_agent,
-            )?;
-            response = client.request(request).await?;
+            )?
+            .send()
+            .await?;
         }
-        let body = hyper::body::to_bytes(response.into_body()).await?;
+        let body = response.bytes().await?;
         *lock!(bytes) = body;
         Ok(())
     }

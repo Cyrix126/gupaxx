@@ -57,8 +57,7 @@ egui_extras = { version = "0.27.0", features = ["image"] }
 #--------------------------------------------------------------------------------
 env_logger = "0.11.3"
 figment = { version = "0.10.15", features = ["toml"] }
-hyper = {version="0.14.28", features=["client", "http1"]}
-hyper-tls = "0.5.0"
+reqwest = {version = "0.12.2", default-features=false, features=["json", "default-tls"]}
 image = { version = "0.25.0", features = ["png"] }
 log = "0.4.21"
 num-format = { version = "0.4.4", default-features = false }

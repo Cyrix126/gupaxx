@@ -7,6 +7,8 @@ use anyhow::{anyhow, Result};
 use log::*;
 use readable::num::Unsigned;
 use readable::up::Uptime;
+use reqwest::header::AUTHORIZATION;
+use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::path::Path;
@@ -444,8 +446,7 @@ impl Helper {
         let output_parse = Arc::clone(&lock!(process).output_parse);
         let output_pub = Arc::clone(&lock!(process).output_pub);
 
-        let client: hyper::Client<hyper::client::HttpConnector> =
-            hyper::Client::builder().build(hyper::client::HttpConnector::new());
+        let client = Client::new();
         let start = lock!(process).start;
         let api_uri = {
             if !api_ip_port.ends_with('/') {
@@ -617,7 +618,7 @@ impl Helper {
             );
             // Send an HTTP API request
             debug!("XMRig Watchdog | Attempting HTTP API request...");
-            match PrivXmrigApi::request_xmrig_api(client.clone(), &api_uri, token).await {
+            match PrivXmrigApi::request_xmrig_api(&client, &api_uri, token).await {
                 Ok(priv_api) => {
                     debug!("XMRig Watchdog | HTTP API request OK, attempting [update_from_priv()]");
                     PubXmrigApi::update_from_priv(&pub_api, priv_api);
@@ -809,27 +810,22 @@ impl PrivXmrigApi {
     #[inline]
     // Send an HTTP request to XMRig's API, serialize it into [Self] and return it
     async fn request_xmrig_api(
-        client: hyper::Client<hyper::client::HttpConnector>,
+        client: &Client,
         api_uri: &str,
         token: &str,
     ) -> std::result::Result<Self, anyhow::Error> {
-        let request = hyper::Request::builder()
-            .method("GET")
-            .header("Authorization", ["Bearer ", token].concat())
-            .uri(api_uri)
-            .body(hyper::Body::empty())?;
-        let response = tokio::time::timeout(
-            std::time::Duration::from_millis(5000),
-            client.request(request),
-        )
-        .await?;
-        let body = hyper::body::to_bytes(response?.body_mut()).await?;
-        Ok(serde_json::from_slice::<Self>(&body)?)
+        let request = client
+            .get(api_uri)
+            .header(AUTHORIZATION, ["Bearer ", token].concat());
+        Ok(request
+            .timeout(std::time::Duration::from_millis(5000))
+            .send()
+            .await?.json().await?)
     }
     #[inline]
     // // Replace config with new node
     pub async fn update_xmrig_config(
-        client: &hyper::Client<hyper::client::HttpConnector>,
+        client: &Client,
         api_uri: &str,
         token: &str,
         node: &XvbNode,
@@ -837,19 +833,10 @@ impl PrivXmrigApi {
         gui_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
     ) -> Result<()> {
         // get config
-        let request = hyper::Request::builder()
-            .method("GET")
-            .header("Authorization", ["Bearer ", token].concat())
-            .uri(api_uri)
-            .body(hyper::Body::empty())?;
-        let response = tokio::time::timeout(
-            std::time::Duration::from_millis(500),
-            client.request(request),
-        )
-        .await?;
-        let body = hyper::body::to_bytes(response?.body_mut()).await?;
-        // deserialize to json
-        let mut config = serde_json::from_slice::<Value>(&body)?;
+        let request = client
+            .get(api_uri)
+            .header(AUTHORIZATION, ["Bearer ", token].concat());
+        let mut config = request.send().await?.json::<Value>().await?;
         // modify node configuration
         let uri = [node.url(), ":".to_string(), node.port()].concat();
         info!("replace xmrig config with node {}", uri);
@@ -868,20 +855,15 @@ impl PrivXmrigApi {
             .pointer_mut("/pools/0/keepalive")
             .ok_or_else(|| anyhow!("pools/0/keepalive does not exist in xmrig config"))? =
             node.keepalive().into();
-        // reconstruct body from new config
-        let body = hyper::body::Body::from(config.to_string());
         // send new config
-        let request = hyper::Request::builder()
-            .method("PUT")
+        client
+            .put(api_uri)
             .header("Authorization", ["Bearer ", token].concat())
             .header("Content-Type", "application/json")
-            .uri(api_uri)
-            .body(body)?;
-        tokio::time::timeout(
-            std::time::Duration::from_millis(500),
-            client.request(request),
-        )
-        .await??;
+            .timeout(std::time::Duration::from_secs(5))
+            .body(config.to_string())
+            .send()
+            .await?;
         // update process status
         lock!(gui_api_xmrig).node = node.to_string();
         anyhow::Ok(())
