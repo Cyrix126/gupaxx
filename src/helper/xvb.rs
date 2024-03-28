@@ -720,7 +720,8 @@ impl XvbPrivStats {
             min_hr = 0.0;
         }
         debug!("Xvb Process | hr {}, min_hr: {} ", lhr, min_hr);
-        let msg = format!("local HR from Xmrig is {} kH/s, minimum required HR to keep a share in PPLNS window is {} k/s, there was {} kH/s estimated sent for your address on p2pool",  Float::from_3(lhr.into()), Float::from_3(min_hr.into()), Float::from_3(p2pool_ehr.into()));
+        // numbers are divided by a thousands to print kH/s and not H/s
+        let msg = format!("local HR from Xmrig is {} kH/s, minimum required HR to keep a share in PPLNS window is {} kH/s, there was {} kH/s estimated sent for your address on p2pool",  Float::from_3((lhr / 1000.0).into()), Float::from_3((min_hr / 1000.0).into()), Float::from_3((p2pool_ehr / 1000.0).into()));
         output_console(&gui_api_xvb, &msg);
         // calculate how much time can be spared
         let mut spared_time = Helper::time_that_could_be_spared(lhr, min_hr);
@@ -747,8 +748,8 @@ impl XvbPrivStats {
         if share > 0 {
             let stats_priv = &lock!(pub_api).stats_priv;
             match (
-                stats_priv.donor_1hr_avg as u32,
-                stats_priv.donor_24hr_avg as u32,
+                (stats_priv.donor_1hr_avg * 1000.0) as u32,
+                (stats_priv.donor_24hr_avg * 1000.0) as u32,
             ) {
                 x if x.0 > XVB_ROUND_DONOR_MEGA_MIN_HR && x.1 > XVB_ROUND_DONOR_MEGA_MIN_HR => {
                     Some(XvbRound::DonorMega)

@@ -75,6 +75,7 @@ impl Helper {
                             "P2pool | PTY getting current estimated HR data from status: {} KH/s",
                             ehr
                         );
+                        // multiply by a thousand because value is given as kH/s instead H/s
                         lock!(gui_api).sidechain_ehr = ehr * 1000.0;
                     } else {
                         error!("P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {}", line);
