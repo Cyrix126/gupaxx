@@ -17,6 +17,7 @@
 
 // Some regexes used throughout Gupax.
 
+use log::error;
 use once_cell::sync::Lazy;
 use regex::Regex;
 
@@ -149,9 +150,23 @@ pub fn nb_current_shares(s: &str) -> Option<u32> {
     None
 }
 pub fn estimated_hr(s: &str) -> Option<f32> {
-    static CURRENT_SHARE: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"(?P<nb>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?)").unwrap());
+    static CURRENT_SHARE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"(?P<nb>[-+]?[0-9]*\.?[0-9]+([eE][-+]?[0-9]+)?) (?P<unit>.*)H/s").unwrap()
+    });
     if let Some(c) = CURRENT_SHARE.captures(s) {
+        let coeff = if let Some(unit) = c.name("unit") {
+            match unit.as_str() {
+                "K" => 1000,
+                "M" => 1000 * 1000,
+                "G" => 1000 * 1000 * 1000,
+                _ => {
+                    error!("unit of your p2pool sidechain HR is not recognized.");
+                    1
+                }
+            }
+        } else {
+            1
+        } as f32;
         if let Some(m) = c.name("nb") {
             return Some(
                 m.as_str().parse::<f32>().expect(
@@ -160,7 +175,7 @@ pub fn estimated_hr(s: &str) -> Option<f32> {
                         m.as_str(),
                     ]
                     .concat(),
-                ),
+                ) * coeff,
             );
         }
     }

@@ -76,7 +76,11 @@ impl Helper {
                             ehr
                         );
                         // multiply by a thousand because value is given as kH/s instead H/s
-                        lock!(gui_api).sidechain_ehr = ehr * 1000.0;
+                        lock!(gui_api).sidechain_ehr = ehr;
+                        debug!(
+                            "P2pool | PTY getting current estimated HR data from status: {} H/s",
+                            lock!(gui_api).sidechain_ehr
+                        );
                     } else {
                         error!("P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {}", line);
                     }
@@ -211,13 +215,13 @@ impl Helper {
     }
 
     // Takes in a 95-char Monero address, returns the first and last
-    // 6 characters separated with dots like so: [4abcde...abcdef]
+    // 8 characters separated with dots like so: [4abcdefg...abcdefgh]
     pub fn head_tail_of_monero_address(address: &str) -> String {
         if address.len() < 95 {
             return "???".to_string();
         }
-        let head = &address[0..6];
-        let tail = &address[89..95];
+        let head = &address[0..8];
+        let tail = &address[87..95];
         head.to_owned() + "..." + tail
     }
 
