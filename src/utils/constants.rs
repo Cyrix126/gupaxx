@@ -423,13 +423,15 @@ pub const XVB_BUFFER: f32 = 1.05;
 pub const XVB_TIME_ALGO: u32 = 600;
 pub const XVB_TOKEN_LEN: usize = 9;
 pub const XVB_HERO_SELECT: &str =
-    "This mode will donate all available hashrate while keeping a share in the  p2pool PPLNS window";
+    "This mode will donate all available hashrate while keeping a share in the  p2pool PPLNS window.\nWhen modified, the algorithm will use the new choice at the next decision.";
 pub const XVB_TOKEN_FIELD: &str = "Token";
 pub const XVB_FAILURE_FIELD: &str = "Failures";
 pub const XVB_DONATED_1H_FIELD: &str = "Donated last hour";
 pub const XVB_DONATED_24H_FIELD: &str = "Donated last 24 hours";
 pub const XVB_ROUND_TYPE_FIELD: &str = "Round";
 pub const XVB_WINNER_FIELD: &str = "Win";
+pub const XVB_MINING_ON_FIELD: &str = "Currently Mining on";
+
 pub const XVB_ROUND_DONOR_MIN_HR: u32 = 1000;
 pub const XVB_ROUND_DONOR_VIP_MIN_HR: u32 = 10000;
 pub const XVB_ROUND_DONOR_WHALE_MIN_HR: u32 = 100000;

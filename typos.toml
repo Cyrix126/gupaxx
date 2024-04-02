@@ -4,4 +4,4 @@ extend-exclude = [
 	"pgp/",
 ]
 [default]
-extend-ignore-identifiers-re = ["ehr"]
+extend-ignore-identifiers-re = ["ehr", "PN"]

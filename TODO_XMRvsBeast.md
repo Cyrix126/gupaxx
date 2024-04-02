@@ -14,6 +14,7 @@
   - [x] link and message hovering explaining registration and needs to read the rules.
   - [x] token input
   - [x] hero checkbox
+    - [x] without restart of xvb (next decision of algo)
   - [x] log section
     - [x] state of XvB process
     - [x] selected XvB node
@@ -23,6 +24,7 @@
       - [x] from XvB API (fails, average 1h and 24h)
       - [x] round type in
       - [x] win or loose
+  - [x] indicator of mining round and time left.
   - [x] new process for XvB
     - [x] update preferred XvB node based on ping and backup 
       - [x] fix: xmrig will not do anything if node is not responding. Need to parse output of xmrig for error and update nodes.
@@ -33,6 +35,7 @@
     - [x] button to autostart
     - [x] distribute hashrate conforming to the algorithm.
       - [x] check every 10 minutes average Xmrig HR of last 15 minutes
+      - [x] fast startup (check 10s first decision then 1m second decision)
       - [x] take into account outside HR
         - [x] mining on p2pool
         - [x] mining on XvB
@@ -64,11 +67,10 @@
   - [ ] use tor socks proxy instead of creating one
     - [x] remove arti
     - [ ] bundle arti cmd binary
-    - [ ] upgrade to hyper stable
-    - [ ] use hyper with socks proxy
-- [ ] better organize new code
+    - [x] replace hyper with reqwest
+- [x] better organize new code
 - [x] merge commits from upstream
-- [ ] tests for new function 
+- [x] tests for new function 
   - [x] time calculated by algorithm 
 - [x] pre-release
   - [ ] feedback

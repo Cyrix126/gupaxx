@@ -974,7 +974,7 @@ impl Pkg {
         link: String,
         user_agent: &'static str,
     ) -> Result<(), Error> {
-        let request = Pkg::get_request(&client, link, user_agent)?;
+        let request = Pkg::get_request(client, link, user_agent)?;
         let response = request.send().await?;
         dbg!(&response);
         let body = response.json::<TagName>().await?;
@@ -992,14 +992,14 @@ impl Pkg {
         link: String,
         user_agent: &'static str,
     ) -> Result<(), anyhow::Error> {
-        let request = Self::get_request(&client, link, user_agent)?;
+        let request = Self::get_request(client, link, user_agent)?;
         let mut response = request.send().await?;
         // GitHub sends a 302 redirect, so we must follow
         // the [Location] header... only if Reqwest had custom
         // connectors so I didn't have to manually do this...
         if response.headers().contains_key(LOCATION) {
             response = Self::get_request(
-                &client,
+                client,
                 response
                     .headers()
                     .get(LOCATION)

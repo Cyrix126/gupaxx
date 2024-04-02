@@ -484,6 +484,7 @@ impl Helper {
         *lock!(gui_api) = PubP2poolApi::new();
 
         // 4. Loop as watchdog
+        let mut first_loop = true;
         info!("P2Pool | Entering watchdog mode... woof!");
         loop {
             // Set timer
@@ -693,7 +694,9 @@ impl Helper {
                     }
                 }
             }
-            if lock!(gui_api).tick_status >= 10 && lock!(process).state == ProcessState::Alive {
+            if (lock!(gui_api).tick_status >= 60 || first_loop)
+                && lock!(process).state == ProcessState::Alive
+            {
                 debug!("P2Pool Watchdog | Reading status output of p2pool node");
                 #[cfg(target_os = "windows")]
                 if let Err(e) = write!(stdin, "statusfromgupaxx\r\n") {
@@ -712,6 +715,9 @@ impl Helper {
 
             // Sleep (only if 900ms hasn't passed)
             let elapsed = now.elapsed().as_millis();
+            if first_loop {
+                first_loop = false;
+            }
             // Since logic goes off if less than 1000, casting should be safe
             if elapsed < 900 {
                 let sleep = (900 - elapsed) as u64;

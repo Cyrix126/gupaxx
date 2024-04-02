@@ -1,13 +1,59 @@
+# v0.1.6
+Fix release for beta version.
+This version is only made for testing purposes and have feedbacks.
+
+## Changes
+### User interface
+Indicator with countdown for algorithm.  
+Hero mode button active on next decision of algorithm without restart.  
+Add info if algorithm decision is made with hero mode selected.  
+Text on hover improvements for token input.  
+Better displaying info about HR relative to algorithm on console output  
+Add info if algorithm is waiting for XMRig average HR.  
+### Internal
+Use HTTP client default retry  
+Bump deps versions  
+#### XvB process
+Immediately start algorithm when possible without delay.  
+Will retrieve public and private stats just before algorithm rerun, so decision is based on last data.  
+Algorithm takes longest average HR of XMRig depending on what's available (instead of depending of the number of run of the algorithm).  
+#### Manage lost connection of XvB nodes
+Continue XvB partially if XvB nodes fails instead of stopping.  
+Make XMRig go back to P2Pool if needed after XvB nodes fail.  
+Check continuously if XvB nodes came online after fail.  
+Auto reload XvB process if XvB nodes came online.  
+#### P2pool
+Retrieve current shares as soon as p2pool process is synced.  
+
+### Code Organization
+Separate XvB process into submodules.  
+Simplify code for XvB process.  
+Put tests into own file.  
+Update test to take into account margin on XvB side.  
+
+## Fixes
+Winner was not recognized.  
+Did not take into account scale of sent sidechain P2Pool HR.  
+Last hour average HR sent kept only one sample.  
+Multiple instance of algorithm ran in parallel under some conditions.  
+XMRig config was updated when not needed, even for 0 seconds.  
+Calculation of time needed to send minimum HR for round type was sending all spared HR less outside XvB HR instead of just minimum HR for round type less oHR.  
+Calculation of current round type was only looking if value was more than minimum required when it should look if value is more or equal (very few chances to have exactly equal HR but was noticed with the units test).  
+
+## Bundled Versions
+* [`P2Pool v3.10`](https://github.com/SChernykh/p2pool/releases/tag/v3.10)  
+* [`XMRig v6.21.1`](https://github.com/xmrig/xmrig/releases/tag/v6.21.1)  
+
 # v0.1.5
 Fix release for beta version.
 This version is only made for testing purposes and have feedbacks.
 
 ## Changes
 update dependencies of UI
-replace old http client
+replace old HTTP client
 
 ## Fixes
-fix formatting hr algorithm
+fix formatting HR algorithm
 fix private round calculation
 
 ## Bundled Versions

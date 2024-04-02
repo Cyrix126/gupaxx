@@ -21,6 +21,8 @@ use log::error;
 use once_cell::sync::Lazy;
 use regex::Regex;
 
+use crate::helper::xvb::nodes::XvbNode;
+
 //---------------------------------------------------------------------------------------------------- Lazy
 pub static REGEXES: Lazy<Regexes> = Lazy::new(Regexes::new);
 pub static P2POOL_REGEX: Lazy<P2poolRegex> = Lazy::new(P2poolRegex::new);
@@ -136,17 +138,41 @@ pub fn nb_current_shares(s: &str) -> Option<u32> {
         Lazy::new(|| Regex::new(r"Your shares               = (?P<nb>\d+) blocks").unwrap());
     if let Some(c) = CURRENT_SHARE.captures(s) {
         if let Some(m) = c.name("nb") {
-            return Some(
-                m.as_str().parse::<u32>().expect(
-                    &[
+            return Some(m.as_str().parse::<u32>().unwrap_or_else(|_| {
+                panic!(
+                    "{}",
+                    [
                         "the number of shares should have been a unit number but is :\n",
                         m.as_str(),
                     ]
-                    .concat(),
-                ),
-            );
+                    .concat()
+                )
+            }));
         }
     }
+    None
+}
+pub fn detect_new_node_xmrig(s: &str) -> Option<XvbNode> {
+    static CURRENT_SHARE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"net      use pool (?P<pool>.*?) ").unwrap());
+    if let Some(c) = CURRENT_SHARE.captures(s) {
+        if let Some(m) = c.name("pool") {
+            match m.as_str() {
+                // if user change address of local p2pool, it could create issue ?
+                "127.0.0.1:3333" => {
+                    return Some(XvbNode::P2pool);
+                }
+                "eu.xmrvsbeast.com:4247" => {
+                    return Some(XvbNode::Europe);
+                }
+                "na.xmrvsbeast.com:4247" => {
+                    return Some(XvbNode::NorthAmerica);
+                }
+                _ => {}
+            }
+        }
+    }
+    error!("a line on xmrig console was detected as using a new pool but the syntax was not recognized.");
     None
 }
 pub fn estimated_hr(s: &str) -> Option<f32> {
@@ -169,17 +195,28 @@ pub fn estimated_hr(s: &str) -> Option<f32> {
         } as f32;
         if let Some(m) = c.name("nb") {
             return Some(
-                m.as_str().parse::<f32>().expect(
-                    &[
-                        "the number of shares should have been a float number but is :\n",
-                        m.as_str(),
-                    ]
-                    .concat(),
-                ) * coeff,
+                m.as_str().parse::<f32>().unwrap_or_else(|_| {
+                    panic!(
+                        "{}",
+                        [
+                            "the number of shares should have been a float number but is :\n",
+                            m.as_str(),
+                        ]
+                        .concat()
+                    )
+                }) * coeff,
             );
         }
     }
     None
+}
+pub fn contains_connect_error(l: &str) -> bool {
+    static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"connect error").unwrap());
+    LINE_SHARE.is_match(l)
+}
+pub fn contains_usepool(l: &str) -> bool {
+    static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"use pool").unwrap());
+    LINE_SHARE.is_match(l)
 }
 pub fn contains_statuscommand(l: &str) -> bool {
     static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^statusfromgupaxx").unwrap());

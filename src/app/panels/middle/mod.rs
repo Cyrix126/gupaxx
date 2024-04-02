@@ -1,5 +1,6 @@
 use crate::app::keys::KeyPressed;
 use crate::app::Tab;
+use crate::helper::ProcessState;
 use crate::utils::constants::*;
 use crate::utils::errors::{ErrorButtons, ErrorFerris};
 use crate::utils::macros::lock;
@@ -161,7 +162,7 @@ path_xmr: {:#?}\n
 				}
 				Tab::Xvb => {
 					debug!("App | Entering [XvB] Tab");
-					crate::disk::state::Xvb::show(&mut self.state.xvb, self.size, &self.state.p2pool.address, ctx, ui, &self.xvb_api, lock!(self.xvb).is_alive()&& !lock!(self.xvb).is_syncing() && !lock!(self.xvb).is_not_mining());
+					crate::disk::state::Xvb::show(&mut self.state.xvb, self.size, &self.state.p2pool.address, ctx, ui, &self.xvb_api, lock!(self.xvb).state == ProcessState::Alive);
 				}
 			}
 		});

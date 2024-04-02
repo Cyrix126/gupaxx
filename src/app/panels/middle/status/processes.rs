@@ -5,7 +5,7 @@ use std::sync::{Arc, Mutex};
 use crate::disk::state::Status;
 use crate::helper::p2pool::{ImgP2pool, PubP2poolApi};
 use crate::helper::xmrig::{ImgXmrig, PubXmrigApi};
-use crate::helper::xvb::{PubXvbApi, XvbRound};
+use crate::helper::xvb::{rounds::XvbRound, PubXvbApi};
 use crate::helper::Sys;
 use crate::utils::macros::lock;
 use egui::TextStyle;

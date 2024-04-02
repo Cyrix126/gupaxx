@@ -4,6 +4,7 @@ use egui::TextStyle::{self, Name};
 use egui::{vec2, Image, RichText, TextEdit, Ui, Vec2};
 use log::debug;
 use readable::num::Float;
+use readable::up::Uptime;
 
 use crate::helper::xvb::PubXvbApi;
 use crate::regex::num_lines;
@@ -14,6 +15,7 @@ use crate::utils::constants::{
 };
 use crate::utils::macros::lock;
 use crate::utils::regex::Regexes;
+use crate::XVB_MINING_ON_FIELD;
 use crate::{
     constants::{BYTES_XVB, SPACE},
     utils::constants::{DARK_GRAY, XVB_URL},
@@ -96,22 +98,28 @@ impl crate::disk::state::Xvb {
         };
         ui.add_space(space_h);
         ui.horizontal(|ui| {
+        // hovering text is difficult because egui doesn't hover over inner widget. But on disabled does.
                 ui.group(|ui| {
-                    ui.colored_label(color, text);
+                    ui.colored_label(color, text)
+                    .on_hover_text(XVB_HELP);
                     ui.add(
                         TextEdit::singleline(&mut self.token)
                             .char_limit(9)
                             .desired_width(ui.text_style_height(&TextStyle::Body) * 9.0)
                             .vertical_align(egui::Align::Center),
-                        )
+                        ).on_hover_text(XVB_HELP)
             })
             .response
-            .on_hover_text_at_pointer(XVB_HELP);
+            .on_hover_text(XVB_HELP);
             ui.add_space(height / 48.0);
     ui.style_mut().spacing.icon_width_inner = width / 45.0;
     ui.style_mut().spacing.icon_width = width / 35.0;
     ui.style_mut().spacing.icon_spacing = space_h;
-            ui.checkbox(&mut self.hero, "Hero Mode").on_hover_text(XVB_HERO_SELECT);
+                       if ui.checkbox(&mut self.hero, "Hero Mode").on_hover_text(XVB_HERO_SELECT).clicked() {
+                // also change hero mode of runtime.
+                lock!(api).stats_priv.runtime_hero_mode = self.hero;
+            }
+
 // need to warn the user if no address is set in p2pool tab
         if !Regexes::addr_ok(address) {
             ui.add_space(width / 16.0);
@@ -125,12 +133,15 @@ impl crate::disk::state::Xvb {
         });
         // private stats
         ui.add_space(space_h);
+        // ui.add_enabled_ui(private_stats, |ui| {
         ui.add_enabled_ui(private_stats, |ui| {
+            let api = &lock!(api);
+            let priv_stats = &api.stats_priv;
+            let current_node = &api.current_node;
+            let width_stat = (ui.available_width() - SPACE * 4.0) / 5.0;
+            let height_stat = 0.0;
+            let size_stat = vec2(width_stat, height_stat);
             ui.horizontal(|ui| {
-                let priv_stats = &lock!(api).stats_priv;
-                let width_stat = (ui.available_width() - SPACE * 4.0) / 5.0;
-                let height_stat = 0.0;
-                let size_stat = vec2(width_stat, height_stat);
                 let round = match &priv_stats.round_participate {
                     Some(r) => r.to_string(),
                     None => "None".to_string(),
@@ -204,6 +215,35 @@ impl crate::disk::state::Xvb {
                     })
                     .response
                 });
+            });
+            // indicators
+            ui.horizontal(|ui| {
+                ui.add_sized(size_stat, |ui: &mut Ui| {
+                    ui.group(|ui| {
+                        let size_stat = vec2(
+                            ui.available_width(),
+                            0.0, // + ui.spacing().item_spacing.y,
+                        );
+                        ui.add_sized(size_stat, |ui: &mut Ui| {
+                            ui.vertical_centered(|ui| {
+                                ui.label(XVB_MINING_ON_FIELD)
+                                    .on_hover_text_at_pointer(&priv_stats.msg_indicator);
+                                ui.label(
+                                    current_node
+                                        .as_ref()
+                                        .map_or("No where".to_string(), |n| n.to_string()),
+                                )
+                                .on_hover_text_at_pointer(&priv_stats.msg_indicator);
+                                ui.label(Uptime::from(priv_stats.time_switch_node).to_string())
+                                    .on_hover_text_at_pointer(&priv_stats.msg_indicator)
+                            })
+                            .response
+                        })
+                    })
+                    .response
+                    .on_disabled_hover_text("Algorithm is not running.")
+                })
+                // currently mining on
             });
         });
         // Rules link help
