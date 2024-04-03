@@ -108,9 +108,8 @@ impl crate::disk::state::Xvb {
                             .desired_width(ui.text_style_height(&TextStyle::Body) * 9.0)
                             .vertical_align(egui::Align::Center),
                         ).on_hover_text(XVB_HELP)
-            })
-            .response
-            .on_hover_text(XVB_HELP);
+            });
+            // .on_hover_text(XVB_HELP);
             ui.add_space(height / 48.0);
     ui.style_mut().spacing.icon_width_inner = width / 45.0;
     ui.style_mut().spacing.icon_width = width / 35.0;
