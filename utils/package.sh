@@ -30,9 +30,6 @@ cd skel; check "CD into skel"
 # and that the naming schemes are correct
 title "Linux folder check"
 [[ -f linux/gupaxx ]]; check "linux/gupaxx"
-[[ -f linux/Gupaxx.AppImage ]]; check "linux/Gupaxx.AppImage"
-OUTPUT=$(cat linux/Gupaxx.AppImage)
-[[ $OUTPUT = "./gupaxx" ]]; check "linux/Gupaxx.AppImage = ./gupaxx"
 [[ -f linux/p2pool/p2pool ]]; check "linux/p2pool/p2pool"
 [[ -f linux/xmrig/xmrig ]]; check "linux/xmrig/xmrig"
 title "macOS-x64 folder check"
