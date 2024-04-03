@@ -14,8 +14,8 @@ mv Gupaxx-macos-x64.app/Contents/Info.plist skel/macos-x64/Gupaxx.app/Contents/I
 mv Gupaxx-macos-x64.app/Contents/MacOS/gupaxx skel/macos-x64/Gupaxx.app/Contents/MacOS/gupaxx
 mv Gupaxx-macos-arm64.app/Contents/MacOS/gupaxx skel/macos-arm64/Gupaxx.app/Contents/MacOS/gupaxx
 mv Gupaxx-macos-arm64.app/Contents/Info.plist skel/macos-arm64/Gupaxx.app/Contents/Info.plist
-rm Gupaxx-macos-x64.app
-rm Gupaxx-macos-arm64.app
+rm -r Gupaxx-macos-x64.app
+rm -r Gupaxx-macos-arm64.app
 rm linux.zip; rm macos.zip; rm windows.zip
 # windows unzip only the exe so not tar to delete.
 rm linux.tar; rm macos.tar
