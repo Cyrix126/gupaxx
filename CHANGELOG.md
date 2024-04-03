@@ -1,3 +1,28 @@
+# v0.1.7
+Fix release for beta version.  
+This version is only made for testing purposes and have feedbacks.
+
+## Changes
+### User interface
+Round type consider 1h average HR with 20% margin.
+Desktop file for Linux replacing fake AppImage.
+
+### Internal
+Bump deps versions  
+Better automatization for releases.  
+
+### Documentation
+Documentation of new src directory  
+rework README with fresh screenshots, tutorial video and better help.
+
+## Fixes
+given time was not subtracted from countdown when needed.  
+duplicate help message on input token
+
+## Bundled Versions
+* [`P2Pool v3.10`](https://github.com/SChernykh/p2pool/releases/tag/v3.10)  
+* [`XMRig v6.21.1`](https://github.com/xmrig/xmrig/releases/tag/v6.21.1)  
+
 # v0.1.6
 Fix release for beta version.
 This version is only made for testing purposes and have feedbacks.
