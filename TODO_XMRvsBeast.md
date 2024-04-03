@@ -61,17 +61,16 @@
   - [x] rename reference of gupax name to gupaxx
   - [ ] replace AppImage with a desktop file
 - [x] fix clippy
-- [ ] optimizations
+- [x] optimizations
   - [x] benchmarks table render only what is visible
   - [x] console output render only what is visible
-  - [ ] use tor socks proxy instead of creating one
     - [x] remove arti
-    - [ ] bundle arti cmd binary
     - [x] replace hyper with reqwest
 - [x] better organize new code
 - [x] merge commits from upstream
 - [x] tests for new function 
   - [x] time calculated by algorithm 
+- [x] better automatization with utils for releases
 - [x] pre-release
   - [ ] feedback
 - [ ] release

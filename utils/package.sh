@@ -120,7 +120,7 @@ clipboard() {
 	echo '```'
 }
 CHANGELOG=$(clipboard); check "Create changelog + sign"
-echo "$CHANGELOG" | xclip -selection clipboard
+echo "$CHANGELOG" | wl-copy  $clipboard
 check "Changelog into clipboard"
 
 # Reset timezone
