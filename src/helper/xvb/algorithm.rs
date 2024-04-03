@@ -97,7 +97,9 @@ fn time_that_could_be_spared(hr: f32, min_hr: f32) -> u32 {
 
 // spared time, local hr, current 1h average hr already mining on XvB, 1h average local HR sent on XvB.
 fn minimum_time_for_highest_accessible_round(st: u32, lhr: f32, chr: f32, shr: f32) -> u32 {
-    let hr_for_xvb = (st as f32 / XVB_TIME_ALGO as f32) * lhr;
+    // we remove one second that could possibly be sent, because if the time needed is a float, it will be rounded up.
+    // this subtraction can not fail because mnimum spared time is >= 6.
+    let hr_for_xvb = ((st - 1) as f32 / XVB_TIME_ALGO as f32) * lhr;
     info!(
         "hr for xvb is: ({st} / {}) * {lhr} = {hr_for_xvb}H/s",
         XVB_TIME_ALGO
@@ -124,15 +126,14 @@ fn minimum_time_for_highest_accessible_round(st: u32, lhr: f32, chr: f32, shr: f
         "minimum required HR for donor round is: {} - {ohr} = {min_donor}H/s",
         XVB_ROUND_DONOR_MIN_HR
     );
-
-    match hr_for_xvb {
+    let min = match hr_for_xvb {
         x if x > min_mega => {
             info!("trying to get Mega round");
             info!(
                 "minimum second to send = ((({x} - ({x} - {min_mega})) / {lhr}) * {}) ",
                 XVB_TIME_ALGO
             );
-            (((x - (x - min_mega)) / lhr) * XVB_TIME_ALGO as f32) as u32
+            min_mega
         }
         x if x > min_whale => {
             info!("trying to get Whale round");
@@ -140,7 +141,7 @@ fn minimum_time_for_highest_accessible_round(st: u32, lhr: f32, chr: f32, shr: f
                 "minimum second to send = ((({x} - ({x} - {min_whale})) / {lhr}) * {}) ",
                 XVB_TIME_ALGO
             );
-            (((x - (x - min_whale)) / lhr) * XVB_TIME_ALGO as f32) as u32
+            min_whale
         }
         x if x > min_donorvip => {
             info!("trying to get Vip Donor round");
@@ -148,7 +149,7 @@ fn minimum_time_for_highest_accessible_round(st: u32, lhr: f32, chr: f32, shr: f
                 "minimum second to send = ((({x} - ({x} - {min_donorvip})) / {lhr}) * {}) ",
                 XVB_TIME_ALGO
             );
-            (((x - (x - min_donorvip)) / lhr) * XVB_TIME_ALGO as f32) as u32
+            min_donorvip
         }
         x if x > min_donor => {
             info!("trying to get Donor round");
@@ -156,10 +157,12 @@ fn minimum_time_for_highest_accessible_round(st: u32, lhr: f32, chr: f32, shr: f
                 "minimum second to send = ((({x} - ({x} - {min_donor})) / {lhr}) * {}) ",
                 XVB_TIME_ALGO
             );
-            (((x - (x - min_donor)) / lhr) * XVB_TIME_ALGO as f32) as u32
+            min_donor
         }
-        _ => 0,
-    }
+        _ => return 0,
+    };
+
+    (((hr_for_xvb - (hr_for_xvb - min)) / lhr) * XVB_TIME_ALGO as f32).ceil() as u32
 }
 #[allow(clippy::too_many_arguments)]
 async fn sleep_then_update_node_xmrig(
@@ -229,7 +232,7 @@ pub(crate) async fn algorithm(
     token_xmrig: &str,
     state_p2pool: &crate::disk::state::P2pool,
     share: u32,
-    time_donated: &mut u32,
+    time_donated: &Arc<Mutex<u32>>,
 ) {
     debug!("Xvb Process | Algorithm is started");
     output_console(
@@ -257,21 +260,21 @@ pub(crate) async fn algorithm(
                 lock!(gui_api_xmrig).hashrate_raw
             }
         };
-        *time_donated =
+        *lock!(time_donated) =
             calcul_donated_time(hashrate_xmrig, gui_api_p2pool, gui_api_xvb, state_p2pool);
+        let time_donated = *lock!(time_donated);
         debug!("Xvb Process | Donated time {} ", time_donated);
         output_console(
             gui_api_xvb,
             &format!(
                 "Mining on P2pool node for {} seconds then on XvB for {} seconds.",
-                XVB_TIME_ALGO - *time_donated,
+                XVB_TIME_ALGO - time_donated,
                 time_donated
             ),
         );
 
         // p2pool need to be mined if donated time is not equal to xvb_time_algo
-        if *time_donated != XVB_TIME_ALGO
-            && lock!(gui_api_xvb).current_node != Some(XvbNode::P2pool)
+        if time_donated != XVB_TIME_ALGO && lock!(gui_api_xvb).current_node != Some(XvbNode::P2pool)
         {
             debug!("Xvb Process | request xmrig to mine on p2pool");
             if let Err(err) = PrivXmrigApi::update_xmrig_config(
@@ -298,7 +301,7 @@ pub(crate) async fn algorithm(
         // sleep 10m less spared time then request XMrig to mine on XvB
         sleep_then_update_node_xmrig(
             last_algorithm,
-            *time_donated,
+            time_donated,
             client,
             XMRIG_CONFIG_URI,
             token_xmrig,
@@ -310,11 +313,11 @@ pub(crate) async fn algorithm(
         lock!(gui_api_xvb)
             .p2pool_sent_last_hour_samples
             .0
-            .push_back(hashrate_xmrig * ((XVB_TIME_ALGO - *time_donated) / XVB_TIME_ALGO) as f32);
+            .push_back(hashrate_xmrig * ((XVB_TIME_ALGO - time_donated) / XVB_TIME_ALGO) as f32);
         lock!(gui_api_xvb)
             .xvb_sent_last_hour_samples
             .0
-            .push_back(hashrate_xmrig * (*time_donated / XVB_TIME_ALGO) as f32);
+            .push_back(hashrate_xmrig * (time_donated / XVB_TIME_ALGO) as f32);
     } else {
         // no share, so we mine on p2pool. We update xmrig only if it was still mining on XvB.
         if lock!(gui_api_xvb).current_node != Some(XvbNode::P2pool) {

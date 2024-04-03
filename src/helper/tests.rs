@@ -551,14 +551,12 @@ Uptime         = 0h 2m 4s
         // given time should always be less than XVB_TIME_ALGO
         assert!(given_time < XVB_TIME_ALGO);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::Vip));
         // verify that hero mode will give x seconds
         lock!(gui_api_xvb).stats_priv.runtime_hero_mode = true;
@@ -570,14 +568,12 @@ Uptime         = 0h 2m 4s
         );
         assert_eq!(given_time, 45);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::Vip));
         // verify that if one share and not enough for donor vip round (should be in donor round), right amount of time will be given to xvb for default and hero mode
         lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
@@ -594,14 +590,12 @@ Uptime         = 0h 2m 4s
         // given time should always be less than XVB_TIME_ALGO
         assert!(given_time < XVB_TIME_ALGO);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::Donor));
         // verify that hero mode will give x seconds
         lock!(gui_api_xvb).stats_priv.runtime_hero_mode = true;
@@ -613,14 +607,12 @@ Uptime         = 0h 2m 4s
         );
         assert_eq!(given_time, 253);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::Donor));
         // verify that if one share and not enough for donor whale round(should be in donor vip), right amount of time will be given to xvb for default and hero mode
         lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
@@ -633,18 +625,16 @@ Uptime         = 0h 2m 4s
             &state_p2pool,
         );
         // verify that default mode will give x seconds
-        assert_eq!(given_time, 315);
+        assert_eq!(given_time, 316);
         // given time should always be less than XVB_TIME_ALGO
         assert!(given_time < XVB_TIME_ALGO);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorVip));
         // verify that hero mode will give x seconds
         lock!(gui_api_xvb).stats_priv.runtime_hero_mode = true;
@@ -656,14 +646,12 @@ Uptime         = 0h 2m 4s
         );
         assert_eq!(given_time, 454);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorVip));
         // verify that if one share and not enough for donor mega round, right amount of time will be given to xvb for default and hero mode
         lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
@@ -676,18 +664,16 @@ Uptime         = 0h 2m 4s
             &state_p2pool,
         );
         // verify that default mode will give x seconds
-        assert_eq!(given_time, 571);
+        assert_eq!(given_time, 572);
         // given time should always be less than XVB_TIME_ALGO
         assert!(given_time < XVB_TIME_ALGO);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorWhale));
         // verify that hero mode will give x seconds
         lock!(gui_api_xvb).stats_priv.runtime_hero_mode = true;
@@ -699,14 +685,12 @@ Uptime         = 0h 2m 4s
         );
         assert_eq!(given_time, 573);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorWhale));
         // verify that if one share and enough for donor mega round, right amount of time will be given to xvb for default and hero mode
         lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
@@ -719,18 +703,16 @@ Uptime         = 0h 2m 4s
             &state_p2pool,
         );
         // verify that default mode will give x seconds
-        assert_eq!(given_time, 497);
+        assert_eq!(given_time, 498);
         // given time should always be less than XVB_TIME_ALGO
         assert!(given_time < XVB_TIME_ALGO);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorMega));
         // verify that hero mode will give x seconds
         lock!(gui_api_xvb).stats_priv.runtime_hero_mode = true;
@@ -742,14 +724,12 @@ Uptime         = 0h 2m 4s
         );
         assert_eq!(given_time, 597);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                / 1000.0)
-                * 1.2;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
+            * lock!(gui_api_xmrig).hashrate_raw_15m)
+            / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorMega));
         // verify that if one share and enough for donor vp round if XvB oHR is given, right amount of time will be given to xvb for default and hero mode
         lock!(gui_api_xvb).output.clear();
@@ -767,18 +747,14 @@ Uptime         = 0h 2m 4s
         // given time should always be less than XVB_TIME_ALGO
         assert!(given_time < XVB_TIME_ALGO);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((((given_time as f32
-            / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            + 5000.0)
-            / 1000.0)
-            * 1.2;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((((given_time as f32
-            / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            + 5000.0)
-            / 1000.0)
-            * 1.2;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
+            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
+                + 5000.0)
+                / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
+            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
+                + 5000.0)
+                / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorVip));
         // verify that hero mode will give x seconds
         lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 5.0;
@@ -791,18 +767,14 @@ Uptime         = 0h 2m 4s
         );
         assert_eq!(given_time, 378);
         // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((((given_time as f32
-            / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            + 5000.0)
-            / 1000.0)
-            * 1.2;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((((given_time as f32
-            / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            + 5000.0)
-            / 1000.0)
-            * 1.2;
+        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
+            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
+                + 5000.0)
+                / 1000.0;
+        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
+            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
+                + 5000.0)
+                / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorVip));
     }
 }

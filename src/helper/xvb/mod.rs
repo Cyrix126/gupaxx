@@ -177,7 +177,7 @@ impl Helper {
         // retry will be accessed from the 1m spawn, it can influence the start of algo.
         let retry = Arc::new(Mutex::new(false));
         // time donated by algorithm. With being persistent across loop, we can construct the indicator.
-        let mut time_donated = 0;
+        let time_donated = Arc::new(Mutex::new(0));
         // let handles;
         let handle_algo = Arc::new(Mutex::new(None));
         let mut handle_request = None;
@@ -240,7 +240,7 @@ impl Helper {
                 // first_loop is false here but could be changed to true under some conditions.
                 // will send a stop signal if public stats failed or update data with new one.
                 handle_request = Some(spawn(
-                    enc!((client, pub_api, gui_api, gui_api_p2pool, gui_api_xmrig, state_xvb, state_p2pool, state_xmrig, process, last_algorithm, retry, handle_algo) async move {
+                    enc!((client, pub_api, gui_api, gui_api_p2pool, gui_api_xmrig, state_xvb, state_p2pool, state_xmrig, process, last_algorithm, retry, handle_algo, time_donated) async move {
                         // needs to wait here for public stats to get private stats.
                         if last_request.elapsed() >= Duration::from_secs(60) || first_loop || lock!(last_algorithm).elapsed() >= Duration::from_secs((XVB_TIME_ALGO as f32 * 0.95)as u64) {
                         XvbPubStats::update_stats(&client, &gui_api, &pub_api, &process).await;
@@ -283,7 +283,7 @@ impl Helper {
                                 let last_algorithm = *lock!(last_algorithm);
 
 
-                                *lock!(handle_algo) = Some(spawn(enc!((client, gui_api, gui_api_xmrig, state_xmrig) async move {
+                                *lock!(handle_algo) = Some(spawn(enc!((client, gui_api, gui_api_xmrig, state_xmrig, time_donated) async move {
                                     algorithm(
                                         &client,
                                         last_algorithm,
@@ -293,7 +293,7 @@ impl Helper {
                                         &state_xmrig.token,
                                         &state_p2pool,
                                         share,
-                                        &mut time_donated,
+                                        &time_donated,
                                     ).await;
                                 })));
                             } else {
@@ -332,7 +332,7 @@ impl Helper {
                 is_algo_finished,
                 process,
                 pub_api,
-                time_donated,
+                *lock!(time_donated),
                 &last_algorithm,
             );
             // first_loop is done, but maybe retry will allow the algorithm to retry again.
