@@ -1,7 +1,7 @@
 cargo-features = ["profile-rustflags"]
 [package]
 name = "gupaxx"
-version = "0.1.6"
+version = "0.1.7"
 authors = ["cyrix126 <gupaxx@baermail.fr>"]
 description = "Fork of Gupax integrating the XMRvsBeast Raffle "
 documentation = "https://github.com/cyrix126/gupaxx"
@@ -33,8 +33,8 @@ benri = "0.1.12"
 bytes = "1.6.0"
 dirs = "5.0.1"
 #--------------------------------------------------------------------------------
-egui = "0.27.1"
-egui_extras = { version = "0.27.1", features = ["image"] }
+egui = "0.27.2"
+egui_extras = { version = "0.27.2", features = ["image"] }
 ## 2023-12-28: https://github.com/hinto-janai/gupax/issues/68
 ##
 ## 2024-03-18: Both `glow` and `wgpu` seem to crash:
@@ -45,15 +45,6 @@ egui_extras = { version = "0.27.1", features = ["image"] }
 ## It also fixes crashes on CPU-based graphics. Only used for Windows.
 ## Using [wgpu] actually crashes macOS (fixed in 0.20.x though).
 
-## [external/egui/crates/eframe/src/native/run.rs] line 41: [.with_srgb(true)]
-## This line causes a [panic!] inside a Windows VM, from a Linux host.
-## There are many issue threads and PRs to fix it but for now,
-## this is here for convenience sake when I'm testing.
-## The only change is [.with_srgb()] is set to [false].
-#eframe = { path = "external/egui/crates/eframe" }
-#egui = { path = "external/egui/crates/egui" }
-#egui_glow = { path = "external/egui/crates/egui_glow"}
-#egui_extras = { path = "external/egui/crates/egui_extras", features = ["image"] }
 #--------------------------------------------------------------------------------
 env_logger = "0.11.3"
 figment = { version = "0.10.15", features = ["toml"] }
@@ -68,13 +59,13 @@ regex = { version = "1.10.4", default-features = false, features = ["perf"] }
 rfd = "0.14.1"
 serde = { version = "1.0.197", features = ["rc", "derive"] }
 serde_json = "1.0.115"
-sysinfo = { version = "0.30.7", default-features = false }
+sysinfo = { version = "0.30.8", default-features = false }
 # tls-api = "0.9.0"
 tokio = { version = "1.37.0", features = ["rt", "time", "macros", "process", "rt-multi-thread"] }
 toml = { version = "0.8.12", features = ["preserve_order"] }
 walkdir = "2.5.0"
 zeroize = "1.7.0"
-strsim = "0.11.0"
+strsim = "0.11.1"
 strip-ansi-escapes = "0.2.0"
 derive_more = {version="0.99.17", default-features=false, features=["display"]}
 serde-this-or-that = "0.4.2"
@@ -84,13 +75,13 @@ enclose = "1.1.8"
 bounded-vec-deque = {version="0.1.1", default-features=false}
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
-eframe = { version = "0.27.1", features = ["wgpu"] }
+eframe = { version = "0.27.2", features = ["wgpu"] }
 tar = "0.4.40"
 flate2 = "1.0"
 sudo = "0.6.0"
 # macOS
 [target.'cfg(target_os = "macos")'.dependencies]
-eframe = { version = "0.27.1", features = ["wgpu"] }
+eframe = { version = "0.27.2", features = ["wgpu"] }
 # On apple-darwin targets there is an issue with the native and rustls
 # tls implementation so this makes it fall back to the openssl variant.
 #
@@ -104,7 +95,7 @@ eframe = { version = "0.27.1", features = ["wgpu"] }
 # linked as well which causes problems, so statically link it.
 lzma-sys = { version = "0.1.20", features = ["static"] }
 [dev-dependencies]
-egui = {version = "0.27.1", features=["callstack"]}
+egui = {version = "0.27.2", features=["callstack"]}
 
 # [target.'cfg(not(target_os = "macos"))'.dependencies]
 # tls-api-native-tls = "0.9.0"
@@ -112,7 +103,7 @@ egui = {version = "0.27.1", features=["callstack"]}
 # Windows dependencies
 [target.'cfg(windows)'.dependencies]
 # glow start on windows but not wgpu
-eframe = { version = "0.27.1", features = ["glow"] }
+eframe = { version = "0.27.2", features = ["glow"] }
 zip = "0.6.6"
 is_elevated = "0.1.2"
 
