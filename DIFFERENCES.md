@@ -9,9 +9,13 @@ A new column in Status Tab to see public stats from the raffle.
 
 ## Removed functionality
 
-Updates by tor. The version of the crate used was outdated, plagued with security concerns and bloated the binary.
-It was only for updates, and it is not useful for this beta release.
-This functionality will be re-added for the stable release in a nicer way.
+Updates by tor. The version of the crate used was outdated, plagued with security concerns and bloated the binary.  
+It was only for updates.  
+If you want Gupaxx to update by tor, you can torify it when launching.
+
+## Technical Debt
+
+All dependencies are upgraded to last possible version, even when there is a breaking change (code of Gupaxx is modified for that).
 
 ## Bugfixes (visuals and performances)
 
@@ -21,4 +25,4 @@ The rendering of the benchmark table and of console outputs were calculating eve
 
 ## Security
 
-With the upgrade of dependencies, cargo audit show no warnings instead of 5 vulnerabilities and 4 allowed warnings. 
+With the upgrade of dependencies, cargo audit show no warnings instead of 5 vulnerabilities and 4 allowed warnings for Gupax. 

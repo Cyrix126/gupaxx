@@ -55,11 +55,11 @@
     - [x] beta release
     - [ ] stable release
   - [ ] video tutorial to set up XvB Tab
-  - [ ] adapt doc for new code
+  - [x] adapt doc for new code
   - [x] cargo package metadata
   - [x] pgp signatures
   - [x] rename reference of gupax name to gupaxx
-  - [ ] replace AppImage with a desktop file
+  - [x] replace AppImage with a desktop file
 - [x] fix clippy
 - [x] optimizations
   - [x] benchmarks table render only what is visible

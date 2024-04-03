@@ -10,7 +10,7 @@ You can see the progress with [TODO](TODO_XMRvsBeast.md)
 
 ## Gupaxx
 
-Gupaxx is a fork of [**Gupax**](https://github.com/hinto-janai/gupax) integrating the [XMRvsBeast Raffle](https://xmrvsbeast.com). 
+Gupaxx is a fork of [**Gupax**](https://github.com/hinto-janai/gupax) integrating the [XMRvsBeast Raffle](https://xmrvsbeast.com), it is also a maintained software. It is made to make in the most easy way possible mining on P2Pool while optionally participating (but you will want to :wink:) in the XMRvsBeast raffle.  
 
 [![CI](https://github.com/cyrix126/gupaxx/actions/workflows/ci.yml/badge.svg)](https://github.com/cyrix126/gupaxx/actions/workflows/ci.yml)
 
@@ -28,7 +28,7 @@ Gupaxx is a fork of [**Gupax**](https://github.com/hinto-janai/gupax) integratin
 ## What is Gupaxx/XMRvsBeast?
 [**`Gupaxx`**](https://getmonero.org) is a fork of [*Gupax*](https://github.com/hinto-janai/gupax) that integrate the [XMRvsBeast raffle](https://xmrvsbeast.com).
 
-This fork add an easy way to distribute your hashrate between P2pool and XMRvsBeast to participate in the raffle to win more xmr while supporting the p2pool network.
+This fork adds an easy way to distribute your hashrate between P2pool and XMRvsBeast to participate in the raffle to win more xmr while supporting the p2pool network.
 
 To have a detailed explication of Gupax, see the [README](https://github.com/hinto-janai/gupax) of upstream.
 
@@ -40,6 +40,10 @@ To have a detailed explication of Gupax, see the [README](https://github.com/hin
 1. [Download the bundled version of Gupaxx](https://github.com/Cyrix126/gupaxx/releases)
 2. Extract
 3. Launch Gupaxx
+
+Next steps can be seen in this video tutorial.  
+https://libre-depanne.fr/ressources/tuto_gupaxx.webm
+
 4. Input your Monero address in the `P2Pool` tab
 5. Register your same address on [XMRvsBeast](https://xmrvsbeast.com)
 6. Input the token received in the XvB Tab
@@ -62,7 +66,7 @@ The output of console will show useful information on the status of the XvB proc
 
 ### Token input
 
-You need to put the token received when you registered your xmr payout address.
+You need to put the token received when you registered your XMR payout address.
 
 ### Private stats
 
@@ -79,8 +83,24 @@ This column will be active if the XvB process is started even partially, it does
 
 ## Other changes
 
-This fork brings upgrades of dependence and some bugfixes about visual, performance and security that you can find in [DIFFERENCES](DIFFERENCES.md)
+This fork brings upgrades of dependence and some bugfixes about visual, performance and security that you can find in [DIFFERENCES](DIFFERENCES.md).  
 I will eventually (meaning when I'll have time) create pull requests for upstream about these differences.
+
+## Troubleshooting
+
+If you have any issue, feel free to ask for support in the [xmrvsbeast matrix room](#xmrvsbeast:monero.social) or to open an issue in this repo. You can also contact me though [email](email:gupaxx@baermail.fr).
+
+### Windows
+
+You must add an exception to your antivirus for the directory where gupaxx is executed. Follow the step for Windows Only that start at 30 seconds in this [video](https://user-images.githubusercontent.com/101352116/207978455-6ffdc0cc-204c-4594-9a2f-e10c505745bc.mp4).
+
+### Mac OSX
+
+You must remove Gupaxx app from quarantine with following command:  
+*If you have put Gupaxx.app in your Applications*  
+`xattr -d com.apple.quarantine /Applications/Gupaxx.app`
+See this [issue](https://github.com/hinto-janai/gupax/issues/51).
+
 
 
 ## License
