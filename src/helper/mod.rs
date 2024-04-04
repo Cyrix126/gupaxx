@@ -48,7 +48,7 @@ use std::{
     time::*,
 };
 
-use self::xvb::PubXvbApi;
+use self::xvb::{nodes::XvbNode, PubXvbApi};
 pub mod p2pool;
 pub mod tests;
 pub mod xmrig;
@@ -218,13 +218,13 @@ impl Default for ProcessState {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Clone, Copy, PartialEq, Debug)]
 pub enum ProcessSignal {
     None,
     Start,
     Stop,
     Restart,
-    UpdateNodes,
+    UpdateNodes(XvbNode),
 }
 
 impl Default for ProcessSignal {

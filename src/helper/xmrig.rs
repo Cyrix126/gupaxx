@@ -60,11 +60,14 @@ impl Helper {
             // need to verify if node still working
             // for that need to catch "connect error"
             if contains_connect_error(&line) {
-                // updating current node to None.
-                lock!(pub_api_xvb).current_node = None;
-                // send signal to update node.
-                warn!("XMRig PTY Parse | node is offline, switching to backup.");
-                lock!(process_xvb).signal = ProcessSignal::UpdateNodes;
+                let current_node = lock!(pub_api_xvb).current_node;
+                if let Some(current_node) = current_node {
+                    // updating current node to None, will stop sending signal of FailedNode until new node is set
+                    // send signal to update node.
+                    warn!("XMRig PTY Parse | node is offline, sending signal to update nodes.");
+                    lock!(process_xvb).signal = ProcessSignal::UpdateNodes(current_node);
+                    lock!(pub_api_xvb).current_node = None;
+                }
             }
             if contains_usepool(&line) {
                 info!("XMRig PTY Parse | new pool detected");
@@ -73,7 +76,8 @@ impl Helper {
                 let node = detect_new_node_xmrig(&line);
                 if node.is_none() {
                     error!("XMRig PTY Parse | node is not understood, switching to backup.");
-                    lock!(process_xvb).signal = ProcessSignal::UpdateNodes;
+                    // update with default will choose which XvB to prefer. Will update XvB to use p2pool.
+                    lock!(process_xvb).signal = ProcessSignal::UpdateNodes(XvbNode::default());
                 }
                 lock!(pub_api_xvb).current_node = node;
             }

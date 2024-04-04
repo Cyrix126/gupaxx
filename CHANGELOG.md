@@ -1,3 +1,20 @@
+# v0.1.8
+Fix release for beta version.  
+This version is only made for testing purposes and have feedback.  
+
+## Changes
+### Internal
+Better manage fail of nodes from XvB  
+## Fixes
+Algorithm time too short under some conditions.  
+Countdown too short under some conditions  
+Request API stuck after some time  
+Average local HR sent not saved  
+
+## Bundled Versions
+* [`P2Pool v3.10`](https://github.com/SChernykh/p2pool/releases/tag/v3.10)  
+* [`XMRig v6.21.1`](https://github.com/xmrig/xmrig/releases/tag/v6.21.1)  
+
 # v0.1.7
 Fix release for beta version.  
 This version is only made for testing purposes and have feedback.

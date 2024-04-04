@@ -6,7 +6,7 @@ use std::{
 use log::{debug, info, warn};
 use readable::num::Float;
 use reqwest::Client;
-use tokio::time::{sleep_until, Instant};
+use tokio::time::sleep;
 
 use crate::{
     helper::{
@@ -166,7 +166,6 @@ fn minimum_time_for_highest_accessible_round(st: u32, lhr: f32, chr: f32, shr: f
 }
 #[allow(clippy::too_many_arguments)]
 async fn sleep_then_update_node_xmrig(
-    was_instant: Instant,
     spared_time: u32,
     client: &Client,
     api_uri: &str,
@@ -175,12 +174,12 @@ async fn sleep_then_update_node_xmrig(
     gui_api_xvb: &Arc<Mutex<PubXvbApi>>,
     gui_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
 ) {
-    let node = lock!(gui_api_xvb).stats_priv.node.clone();
+    let node = lock!(gui_api_xvb).stats_priv.node;
     debug!(
         "Xvb Process | algo sleep for {} while mining on P2pool",
         XVB_TIME_ALGO - spared_time
     );
-    sleep_until(was_instant + Duration::from_secs((XVB_TIME_ALGO - spared_time) as u64)).await;
+    sleep(Duration::from_secs((XVB_TIME_ALGO - spared_time).into())).await;
     // only update xmrig config if it is actually mining.
     if spared_time > 0 {
         debug!("Xvb Process | request xmrig to mine on XvB");
@@ -215,7 +214,7 @@ async fn sleep_then_update_node_xmrig(
         }
         // will not quit the process until it is really done.
         // xvb process watch this algo handle to see if process is finished or not.
-        sleep_until(was_instant + Duration::from_secs(spared_time.into())).await;
+        sleep(Duration::from_secs(spared_time.into())).await;
     }
 }
 // push new value into samples before executing this calcul
@@ -225,7 +224,6 @@ fn calc_last_hour_avg_hash_rate(samples: &SamplesAverageHour) -> f32 {
 #[allow(clippy::too_many_arguments)]
 pub(crate) async fn algorithm(
     client: &Client,
-    last_algorithm: Instant,
     gui_api_xvb: &Arc<Mutex<PubXvbApi>>,
     gui_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
     gui_api_p2pool: &Arc<Mutex<PubP2poolApi>>,
@@ -300,7 +298,6 @@ pub(crate) async fn algorithm(
 
         // sleep 10m less spared time then request XMrig to mine on XvB
         sleep_then_update_node_xmrig(
-            last_algorithm,
             time_donated,
             client,
             XMRIG_CONFIG_URI,
@@ -313,11 +310,14 @@ pub(crate) async fn algorithm(
         lock!(gui_api_xvb)
             .p2pool_sent_last_hour_samples
             .0
-            .push_back(hashrate_xmrig * ((XVB_TIME_ALGO - time_donated) / XVB_TIME_ALGO) as f32);
+            .push_back(
+                hashrate_xmrig
+                    * ((XVB_TIME_ALGO as f32 - time_donated as f32) / XVB_TIME_ALGO as f32),
+            );
         lock!(gui_api_xvb)
             .xvb_sent_last_hour_samples
             .0
-            .push_back(hashrate_xmrig * (time_donated / XVB_TIME_ALGO) as f32);
+            .push_back(hashrate_xmrig * (time_donated as f32 / XVB_TIME_ALGO as f32));
     } else {
         // no share, so we mine on p2pool. We update xmrig only if it was still mining on XvB.
         if lock!(gui_api_xvb).current_node != Some(XvbNode::P2pool) {
@@ -345,13 +345,13 @@ pub(crate) async fn algorithm(
         }
         output_console(gui_api_xvb, "No share in the current PPLNS Window !");
         output_console(gui_api_xvb, "Mining on P2pool for the next ten minutes.");
-        sleep_until(last_algorithm + Duration::from_secs(XVB_TIME_ALGO.into())).await;
+        sleep(Duration::from_secs(XVB_TIME_ALGO.into())).await;
         lock!(gui_api_xvb)
             .p2pool_sent_last_hour_samples
             .0
             .push_back(lock!(gui_api_xmrig).hashrate_raw_15m);
         lock!(gui_api_xvb)
-            .p2pool_sent_last_hour_samples
+            .xvb_sent_last_hour_samples
             .0
             .push_back(0.0);
     }
