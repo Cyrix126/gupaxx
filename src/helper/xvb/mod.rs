@@ -171,7 +171,7 @@ impl Helper {
         // uptime of last run of algo
         let last_algorithm = Arc::new(Mutex::new(tokio::time::Instant::now()));
         // uptime of last request (public and private)
-        let mut last_request = tokio::time::Instant::now();
+        let last_request = Arc::new(Mutex::new(tokio::time::Instant::now()));
         // algo check if his behavior must be like the first time or second time. It can reset those values to re-act like first time even if it's not the case.
         let mut first_loop = true;
         // retry will be accessed from the 1m spawn, it can influence the start of algo.
@@ -180,7 +180,7 @@ impl Helper {
         let time_donated = Arc::new(Mutex::new(0));
         // let handles;
         let handle_algo = Arc::new(Mutex::new(None));
-        let mut handle_request = None;
+        let handle_request = Arc::new(Mutex::new(None));
         let mut msg_retry_done = false;
         info!("XvB | Entering Process mode... ");
         loop {
@@ -217,33 +217,42 @@ impl Helper {
                 info!("XvB Watchdog | Signal has stopped the loop");
                 break;
             }
-            let handle = lock!(handle_algo);
-            let is_algo_started_once = handle.is_some();
-            let is_algo_finished = handle.as_ref().is_some_and(|algo| algo.is_finished());
-            drop(handle);
+            let handle_algo_c = lock!(handle_algo);
+            let is_algo_started_once = handle_algo_c.is_some();
+            let is_algo_finished = handle_algo_c
+                .as_ref()
+                .is_some_and(|algo| algo.is_finished());
+            let handle_request_c = lock!(handle_request);
+            let is_request_finished = handle_request_c
+                .as_ref()
+                .is_some_and(|request: &JoinHandle<()>| request.is_finished())
+                || handle_request_c.is_none();
+            drop(handle_algo_c);
+            drop(handle_request_c);
             // Send an HTTP API request only if one minute is passed since the last request or if first loop or if algorithm need to retry or if request is finished and algo is finished or almost finished (only public and private stats). We make sure public and private stats are refreshed before doing another run of the algo.
             // We make sure algo or request are not rerun when they are not over.
-            if last_request.elapsed() >= Duration::from_secs(60)
-                || first_loop
-                || *lock!(retry)
-                || ((is_algo_finished
-                    || lock!(last_algorithm).elapsed()
-                        >= Duration::from_secs((XVB_TIME_ALGO as f32 * 0.95) as u64))
-                    && (handle_request
-                        .as_ref()
-                        .is_some_and(|req: &JoinHandle<()>| req.is_finished())
-                        || handle_request.is_none()))
+            // in the case of quick refresh before new run of algo, make sure it doesn't happen multiple times.
+            let last_request_expired = lock!(last_request).elapsed() >= Duration::from_secs(60);
+            let should_refresh_before_next_algo = is_algo_started_once
+                && lock!(last_algorithm).elapsed()
+                    >= Duration::from_secs((XVB_TIME_ALGO as f32 * 0.95) as u64)
+                && lock!(last_request).elapsed() >= Duration::from_secs(25);
+            let process_alive = lock!(process).state == ProcessState::Alive;
+            if ((last_request_expired || first_loop)
+                || (*lock!(retry) || is_algo_finished || should_refresh_before_next_algo)
+                    && process_alive)
+                && is_request_finished
             {
                 // do not wait for the request to finish so that they are retrieved at exactly one minute interval and not block the thread.
                 // Private API will also use this instant if XvB is Alive.
-                last_request = tokio::time::Instant::now();
                 // first_loop is false here but could be changed to true under some conditions.
                 // will send a stop signal if public stats failed or update data with new one.
-                handle_request = Some(spawn(
-                    enc!((client, pub_api, gui_api, gui_api_p2pool, gui_api_xmrig, state_xvb, state_p2pool, state_xmrig, process, last_algorithm, retry, handle_algo, time_donated) async move {
+                *lock!(handle_request) = Some(spawn(
+                    enc!((client, pub_api, gui_api, gui_api_p2pool, gui_api_xmrig, state_xvb, state_p2pool, state_xmrig, process, last_algorithm, retry, handle_algo, time_donated, last_request) async move {
                         // needs to wait here for public stats to get private stats.
-                        if last_request.elapsed() >= Duration::from_secs(60) || first_loop || lock!(last_algorithm).elapsed() >= Duration::from_secs((XVB_TIME_ALGO as f32 * 0.95)as u64) {
+                        if last_request_expired || first_loop || should_refresh_before_next_algo {
                         XvbPubStats::update_stats(&client, &gui_api, &pub_api, &process).await;
+                            *lock!(last_request) = Instant::now();
                         }
                         // private stats needs valid token and address.
                         // other stats needs everything to be alive, so just require alive here for now.
@@ -253,13 +262,14 @@ impl Helper {
                             let share = lock!(gui_api_p2pool).sidechain_shares;
                             debug!("XvB | Number of current shares: {}", share);
                         // private stats can be requested every minute or first loop or if the have almost finished.
-                        if last_request.elapsed() >= Duration::from_secs(60) || first_loop || lock!(last_algorithm).elapsed() >= Duration::from_secs((XVB_TIME_ALGO as f32 * 0.95)as u64) {
+                        if last_request_expired || first_loop || should_refresh_before_next_algo {
                             debug!("XvB Watchdog | Attempting HTTP private API request...");
                             // reload private stats, it send a signal if error that will be captured on the upper thread.
                             XvbPrivStats::update_stats(
                                 &client, &state_p2pool.address, &state_xvb.token, &pub_api, &gui_api, &process,
                             )
                             .await;
+                            *lock!(last_request) = Instant::now();
 
                             // verify in which round type we are
                             let round = round_type(share, &pub_api);
@@ -279,14 +289,9 @@ impl Helper {
                                 *lock!(retry) = false;
                                 // reset instant because algo will start.
                                 *lock!(last_algorithm) = Instant::now();
-                                // send the instant that will be consumed by algo. Algo does not modify it.
-                                let last_algorithm = *lock!(last_algorithm);
-
-
                                 *lock!(handle_algo) = Some(spawn(enc!((client, gui_api, gui_api_xmrig, state_xmrig, time_donated) async move {
                                     algorithm(
                                         &client,
-                                        last_algorithm,
                                         &gui_api,
                                         &gui_api_xmrig,
                                         &gui_api_p2pool,
@@ -447,7 +452,6 @@ async fn check_conditions_for_start(
         ProcessState::Syncing
     } else {
         // all test passed, so it can be Alive
-        info!("XvB will ping nodes");
         // stay at middle, updateNodes will finish by syncing or offlinenodes and check_status in loop will change state accordingly.
         ProcessState::Middle
     };
@@ -460,7 +464,7 @@ async fn check_conditions_for_start(
         );
     }
     // will update the preferred node for the first loop, even if partially started.
-    lock!(process_xvb).signal = ProcessSignal::UpdateNodes;
+    lock!(process_xvb).signal = ProcessSignal::UpdateNodes(XvbNode::default());
     lock!(process_xvb).state = state;
 }
 #[allow(clippy::too_many_arguments)]
@@ -575,85 +579,58 @@ fn signal_interrupt(
     // check if STOP or RESTART Signal is given.
     // if STOP, will put Signal to None, if Restart to Wait
     // in either case, will break from loop.
-    if lock!(process).signal == ProcessSignal::Stop {
-        debug!("P2Pool Watchdog | Stop SIGNAL caught");
-        // Wait to get the exit status
-        let uptime = start.elapsed();
-        info!(
-            "Xvb Watchdog | Stopped ... Uptime was: [{}]",
-            Uptime::from(uptime)
-        );
-        // insert the signal into output of XvB
-        // This is written directly into the GUI API, because sometimes the 900ms event loop can't catch it.
-        output_console(gui_api, "\n\n\nXvB stopped\n\n\n");
-        debug!("XvB Watchdog | Stop SIGNAL done, breaking");
-        lock!(process).signal = ProcessSignal::None;
-        lock!(process).state = ProcessState::Dead;
-        // reset stats
-        reset_data_xvb(pub_api, gui_api);
-        return true;
-    // Check RESTART
-    } else if lock!(process).signal == ProcessSignal::Restart {
-        debug!("XvB Watchdog | Restart SIGNAL caught");
-        let uptime = Uptime::from(start.elapsed());
-        info!("XvB Watchdog | Stopped ... Uptime was: [{}]", uptime);
-        // no output to console because service will be started with fresh output.
-        debug!("XvB Watchdog | Restart SIGNAL done, breaking");
-        lock!(process).state = ProcessState::Waiting;
-        reset_data_xvb(pub_api, gui_api);
-        return true;
-    // Check UPDATE NODES
-    } else if lock!(process).signal == ProcessSignal::UpdateNodes
-        && lock!(process).state != ProcessState::Waiting
-    {
-        info!("XvB Watchdog | Signal has been given to ping and reselect Nodes.");
-        // if signal is waiting, he is restarting or already updating nodes.
-        // need to know if it was starting xvb
-        // A signal has been given to ping the nodes and select the fastest.
-        let token_xmrig = state_xmrig.token.clone();
-        let address = state_p2pool.address.clone();
-        let alive = lock!(process).state == ProcessState::Alive;
-        // so it won't execute another signal of update nodes if it is already doing it.
-        lock!(process).state = ProcessState::Waiting;
-        lock!(process).signal = ProcessSignal::None;
-        spawn(
-            enc!((gui_api, pub_api, gui_api_xmrig, client, process) async move {
-                // if nodes die while being used by xmrig, it needs see which one is capable, send a signal if none is useable and switch xmrig to the good node (or p2pool if none).
-                // update nodes will make the state Syncing, and the loop of the thread will detected if it can be made alive.
-                XvbNode::update_fastest_node(&client, &gui_api, &pub_api, &process).await;
-                // only update xmrig if state is alive.
-                if alive {
-                    let node = lock!(gui_api).stats_priv.node.clone();
-                    if let Err(err) = PrivXmrigApi::update_xmrig_config(
-                        &client,
-                        XMRIG_CONFIG_URI,
-                        &token_xmrig,
-                        &node,
-                        &address,
-                        &gui_api_xmrig,
-                    )
-                    .await
-                    {
-                        // show to console error about updating xmrig config
-                        output_console(
-                            &gui_api,
-                            &format!(
-                                "Failure to update xmrig config with HTTP API.\nError: {}",
-                                err
-                            ),
-                        );
-                    } else {
-                        output_console(
-                            &gui_api,
-                            &format!("XvB node failed, falling back to {}", node),
-                        );
-                    }
-                }
-                // verify if nodes were joignable.
-                if lock!(process).state == ProcessState::OfflineNodesAll {
-                    // if state did not change after updating fastest node, it means all xvb nodes failed.
-                    // we need to spawn a process to verify periodiccly until the nodes are online. The service state will be Alive then.
-
+    let signal = lock!(process).signal;
+    match signal {
+        ProcessSignal::Stop => {
+            debug!("P2Pool Watchdog | Stop SIGNAL caught");
+            // Wait to get the exit status
+            let uptime = start.elapsed();
+            info!(
+                "Xvb Watchdog | Stopped ... Uptime was: [{}]",
+                Uptime::from(uptime)
+            );
+            // insert the signal into output of XvB
+            // This is written directly into the GUI API, because sometimes the 900ms event loop can't catch it.
+            output_console(gui_api, "\n\n\nXvB stopped\n\n\n");
+            debug!("XvB Watchdog | Stop SIGNAL done, breaking");
+            lock!(process).signal = ProcessSignal::None;
+            lock!(process).state = ProcessState::Dead;
+            // reset stats
+            reset_data_xvb(pub_api, gui_api);
+            return true;
+        }
+        ProcessSignal::Restart => {
+            debug!("XvB Watchdog | Restart SIGNAL caught");
+            let uptime = Uptime::from(start.elapsed());
+            info!("XvB Watchdog | Stopped ... Uptime was: [{}]", uptime);
+            // no output to console because service will be started with fresh output.
+            debug!("XvB Watchdog | Restart SIGNAL done, breaking");
+            lock!(process).state = ProcessState::Waiting;
+            reset_data_xvb(pub_api, gui_api);
+            return true;
+        }
+        ProcessSignal::UpdateNodes(node) => {
+            if lock!(process).state != ProcessState::Waiting {
+                let token_xmrig = state_xmrig.token.clone();
+                let address = state_p2pool.address.clone();
+                // check if state is alive. If it is and it is receiving such a signal, it means something a node (XvB or P2Pool) has failed.
+                // if XvB, xmrig needs to be switch to the other node (both will be checked though to be sure).
+                // if both XvB nodes fail after checking, process will be partially stopped and a new spawn will verify if nodes are again online and so will continue the process completely if that's the case.
+                // if P2pool, the process has to stop the algo and continue partially. The process will continue completely if the confitions are met again.
+                // if XvB was not alive, then if it is for XvB nodes, it will check and update preferred node and set XMRig to P2pool if that's not the case.
+                // if XvB was not alive and update was for P2pool, XvB must ignore. XMRig will stop sending signals because current node will be none.
+                let was_alive = lock!(process).state != ProcessState::Alive;
+                // so it won't execute another signal of update nodes if it is already doing it.
+                lock!(process).state = ProcessState::Waiting;
+                lock!(process).signal = ProcessSignal::None;
+                spawn(
+                    enc!((node, process, client, gui_api, pub_api, was_alive, address, token_xmrig, gui_api_xmrig) async move {
+                    match node {
+                        XvbNode::NorthAmerica|XvbNode::Europe if was_alive => {
+                            // a node is failing. We need to first verify if a node is available
+                        XvbNode::update_fastest_node(&client, &gui_api, &pub_api, &process).await;
+                            if lock!(process).state == ProcessState::OfflineNodesAll {
+                                // No available nodes, so launch a process to verify periodicly.
                     sleep(Duration::from_secs(10)).await;
                     info!("node fail, set spawn that will retry nodes and update state.");
                     while lock!(process).state == ProcessState::OfflineNodesAll {
@@ -661,12 +638,47 @@ fn signal_interrupt(
                         XvbNode::update_fastest_node(&client, &pub_api, &gui_api, &process).await;
                         sleep(Duration::from_secs(10)).await;
                     }
-                }
-            }),
-        );
-        // the state will be Offline or Alive after update_fastest_node is done, meanwhile Signal will be None so not re-treated before update_fastest is done.
-        // so if a backup was used, it will be alive. If not, the algorithm stop and xmrig is updated to mine on p2pool.
+                                
+                            }
+                                // a good node is found, so the next check of the loop should be good and the algo will update XMRig with the good one.
+
+                            
+                        },
+                        XvbNode::NorthAmerica|XvbNode::Europe if !was_alive => {
+                            // Probably a start. We don't consider XMRig using XvB nodes without algo.
+                                // can update xmrig and check status of state in the same time.
+                            // Need to set XMRig to P2Pool if it wasn't. XMRig should have populated this value at his start.
+
+                if lock!(gui_api).current_node != Some(XvbNode::P2pool) {
+                                spawn(enc!((client, token_xmrig, address, gui_api_xmrig, gui_api) async move{
+                    if let Err(err) = PrivXmrigApi::update_xmrig_config(
+                        &client,
+                        XMRIG_CONFIG_URI,
+                        &token_xmrig,
+                        &XvbNode::P2pool,
+                        &address,
+                        &gui_api_xmrig,
+                    )
+                    .await {
+                        output_console(
+                            &gui_api,
+                            &format!(
+                                "Failure to update xmrig config with HTTP API.\nError: {}",
+                                err
+                            ),
+                        );
+                                }
+                            }
+                                ));}
+            },
+                        _ => {}
+                } } ),
+                );
+            }
+        }
+        _ => {}
     }
+
     false
 }
 fn reset_data_xvb(pub_api: &Arc<Mutex<PubXvbApi>>, gui_api: &Arc<Mutex<PubXvbApi>>) {
@@ -706,7 +718,7 @@ fn update_indicator_algo(
     last_algorithm: &Arc<Mutex<Instant>>,
 ) {
     if is_algo_started_once && !is_algo_finished && lock!(process).state == ProcessState::Alive {
-        let node = lock!(pub_api).current_node.clone();
+        let node = lock!(pub_api).current_node;
         let msg_indicator = match node {
             Some(XvbNode::P2pool) if time_donated > 0 => {
                 // algo is mining on p2pool but will switch to XvB after

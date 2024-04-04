@@ -16,7 +16,7 @@ use crate::{
 };
 
 use super::PubXvbApi;
-#[derive(Clone, Debug, Default, PartialEq, Display)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, Display)]
 pub enum XvbNode {
     #[display(fmt = "XvB North America Node")]
     NorthAmerica,
