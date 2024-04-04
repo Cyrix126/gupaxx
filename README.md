@@ -109,6 +109,6 @@ See this [issue](https://github.com/hinto-janai/gupax/issues/51).
 ## License
 The GUI library Gupaxx uses is [egui](https://github.com/emilk/egui). It is licensed under [MIT](https://github.com/emilk/egui/blob/master/LICENSE-MIT) & [Apache 2.0.](https://github.com/emilk/egui/blob/master/LICENSE-APACHE)
 
-[Many other libraries are used that have various licenses.](https://github.com/hinto-janai/gupax/blob/master/Cargo.toml)
+[Many other libraries are used that have various licenses.](https://github.com/Cyrix126/gupaxx/blob/master/Cargo.toml)
 
 [Gupaxx](https://github.com/cyrix126/gupax/blob/master/LICENSE), [P2Pool](https://github.com/SChernykh/p2pool/blob/master/LICENSE), and [XMRig](https://github.com/xmrig/xmrig/blob/master/LICENSE) are licensed under the GNU General Public License v3.0.
