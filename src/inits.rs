@@ -144,6 +144,12 @@ pub fn init_auto(app: &mut App) {
     } else {
         info!("Starting init_auto()...");
     }
+    // update the absolute path, or gupaxx will crash if it's not valid and p2pool is enabled since it only verify the relative path.
+    // it could be the case if gupaxx was manually installed, the relative path stay the same but absolute path will also still stay on the old path that maybe is deleted. SO the check with the absolute path would be valid but when launched with the other old/wrong path from absolute, it would panic.
+    // this change is non breaking and will fix the issue if it was occurring.
+    app.state
+        .update_absolute_path()
+        .expect("could not get the current path");
 
     // [Auto-Update]
     #[cfg(not(feature = "distro"))]
