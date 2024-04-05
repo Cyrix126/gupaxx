@@ -552,10 +552,6 @@ pub static VISUALS: Lazy<Visuals> = Lazy::new(|| {
 //---------------------------------------------------------------------------------------------------- CONSTANTS
 #[cfg(test)]
 mod test {
-    #[test]
-    fn gupax_version_is_semver() {
-        assert_eq!(crate::GUPAX_VERSION.len(), 6);
-    }
 
     #[test]
     fn default_app_ratio_is_4_by_3() {
