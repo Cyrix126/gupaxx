@@ -1,7 +1,7 @@
 cargo-features = ["profile-rustflags"]
 [package]
 name = "gupaxx"
-version = "0.1.8"
+version = "0.1.9"
 authors = ["cyrix126 <gupaxx@baermail.fr>"]
 description = "Fork of Gupax integrating the XMRvsBeast Raffle "
 documentation = "https://github.com/cyrix126/gupaxx"
@@ -48,7 +48,7 @@ egui_extras = { version = "0.27.2", features = ["image"] }
 #--------------------------------------------------------------------------------
 env_logger = "0.11.3"
 figment = { version = "0.10.15", features = ["toml"] }
-reqwest = {version = "0.12.2", default-features=false, features=["json", "default-tls", "http2"]}
+reqwest = {version = "0.12.3", default-features=false, features=["json", "default-tls", "http2"]}
 image = { version = "0.25.1", features = ["png"] }
 log = "0.4.21"
 num-format = { version = "0.4.4", default-features = false }

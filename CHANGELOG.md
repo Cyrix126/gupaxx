@@ -1,3 +1,19 @@
+# v0.1.9
+Fix release for beta version.  
+This version is only made for testing purposes and have feedback.  
+
+## Changes
+### Internal
+do not stop completely XvB process if stats can not be retrieved but retry every ten seconds and reload if they are retrieved again.  
+Bump version  
+
+## Fixes
+Do not crash at startup if path of P2Pool executable is not valid and P2Pool is in auto start  
+
+## Bundled Versions
+* [`P2Pool v3.10`](https://github.com/SChernykh/p2pool/releases/tag/v3.10)  
+* [`XMRig v6.21.1`](https://github.com/xmrig/xmrig/releases/tag/v6.21.1)  
+
 # v0.1.8
 Fix release for beta version.  
 This version is only made for testing purposes and have feedback.  
