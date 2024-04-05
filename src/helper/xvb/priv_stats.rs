@@ -1,12 +1,16 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 use anyhow::bail;
 use log::{debug, error, warn};
 use reqwest::{Client, StatusCode};
 use serde::Deserialize;
+use tokio::time::sleep;
 
 use crate::{
-    helper::{xvb::output_console, Process, ProcessSignal, ProcessState},
+    helper::{xvb::output_console, Process, ProcessState},
     macros::lock,
     XVB_URL,
 };
@@ -48,6 +52,7 @@ impl XvbPrivStats {
                 ]
                 .concat(),
             )
+            .timeout(Duration::from_secs(5))
             .send()
             .await?;
         match resp.status() {
@@ -79,6 +84,7 @@ impl XvbPrivStats {
             Ok(new_data) => {
                 debug!("XvB Watchdog | HTTP API request OK");
                 lock!(&pub_api).stats_priv = new_data;
+                // if last request failed, we are now ready to show stats again and maybe be alive next loop.
             }
             Err(err) => {
                 warn!(
@@ -89,8 +95,13 @@ impl XvbPrivStats {
                     gui_api,
                     &format!("Failure to retrieve private stats from {}", XVB_URL),
                 );
-                lock!(process).state = ProcessState::Failed;
-                lock!(process).signal = ProcessSignal::Stop;
+                lock!(process).state = ProcessState::Retry;
+                // sleep here because it is in a spawn and will not block the user stopping or restarting the service.
+                output_console(
+                    gui_api,
+                    "Waiting 10 seconds before trying to get stats again.",
+                );
+                sleep(Duration::from_secs(10)).await;
             }
         }
     }

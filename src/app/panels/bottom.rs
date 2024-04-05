@@ -605,7 +605,7 @@ fn status_p2pool(state: ProcessState, ui: &mut Ui, size: Vec2) {
             color = ORANGE;
             P2POOL_SYNCING
         }
-        Middle | Waiting | NotMining | OfflineNodesAll => {
+        Middle | Waiting | NotMining | OfflineNodesAll | Retry => {
             color = YELLOW;
             P2POOL_MIDDLE
         }
@@ -632,7 +632,7 @@ fn status_xmrig(state: ProcessState, ui: &mut Ui, size: Vec2) {
             color = ORANGE;
             XMRIG_NOT_MINING
         }
-        Middle | Waiting | Syncing => {
+        Middle | Waiting | Syncing | Retry => {
             color = YELLOW;
             XMRIG_MIDDLE
         }
@@ -650,7 +650,7 @@ fn status_xvb(state: ProcessState, ui: &mut Ui, size: Vec2) {
             color = GRAY;
             XVB_DEAD
         }
-        Failed => {
+        Failed | Retry => {
             color = RED;
             XVB_FAILED
         }

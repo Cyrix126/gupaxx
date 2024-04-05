@@ -1,12 +1,16 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    sync::{Arc, Mutex},
+    time::Duration,
+};
 
 use log::{debug, warn};
 use reqwest::Client;
 use serde::Deserialize;
 use serde_this_or_that::as_u64;
+use tokio::time::sleep;
 
 use crate::{
-    helper::{xvb::output_console, Process, ProcessSignal, ProcessState},
+    helper::{xvb::output_console, Process, ProcessState},
     macros::lock,
     XVB_URL_PUBLIC_API,
 };
@@ -43,6 +47,7 @@ impl XvbPubStats {
     ) -> std::result::Result<Self, anyhow::Error> {
         Ok(client
             .get(XVB_URL_PUBLIC_API)
+            .timeout(Duration::from_secs(5))
             .send()
             .await?
             .json::<Self>()
@@ -59,6 +64,14 @@ impl XvbPubStats {
             Ok(new_data) => {
                 debug!("XvB Watchdog | HTTP API request OK");
                 lock!(&pub_api).stats_pub = new_data;
+                // if last request failed, we are now ready to show stats again and maybe be alive next loop.
+                if lock!(process).state == ProcessState::Retry {
+                    lock!(process).state = ProcessState::Syncing;
+                    output_console(
+                        gui_api,
+                        "Stats are now working again after last successful request.",
+                    );
+                }
             }
             Err(err) => {
                 warn!(
@@ -66,16 +79,24 @@ impl XvbPubStats {
                     XVB_URL_PUBLIC_API, err
                 );
                 // output the error to console
+                // if error already present, no need to print it multiple times.
+                if lock!(process).state != ProcessState::Retry {
+                    output_console(
+                        gui_api,
+                        &format!(
+                            "Failure to retrieve public stats from {}\nWill retry shortly...",
+                            XVB_URL_PUBLIC_API
+                        ),
+                    );
+                }
+                // we stop the algo (will be stopped by the check status on next loop) because we can't make the rest work without public stats. (winner in xvb private stats).
+                lock!(process).state = ProcessState::Retry;
+                // sleep here because it is in a spawn and will not block the user stopping or restarting the service.
                 output_console(
                     gui_api,
-                    &format!(
-                        "Failure to retrieve public stats from {}",
-                        XVB_URL_PUBLIC_API
-                    ),
+                    "Waiting 10 seconds before trying to get stats again.",
                 );
-                // we stop because we can't make the rest work without public stats. (winner in xvb private stats).
-                lock!(process).state = ProcessState::Failed;
-                lock!(process).signal = ProcessSignal::Stop;
+                sleep(Duration::from_secs(10)).await;
             }
         }
     }

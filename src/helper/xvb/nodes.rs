@@ -120,7 +120,11 @@ impl XvbNode {
             // could be used by xmrig who signal that a node is not joignable
             // or by the start of xvb
             // next iteration of the loop of XvB process will verify if all conditions are met to be alive.
-            lock!(process_xvb).state = ProcessState::Syncing;
+            if lock!(process_xvb).state != ProcessState::Syncing
+                && lock!(process_xvb).state != ProcessState::Retry
+            {
+                lock!(process_xvb).state = ProcessState::Syncing;
+            }
         }
         lock!(pub_api_xvb).stats_priv.node = node;
     }

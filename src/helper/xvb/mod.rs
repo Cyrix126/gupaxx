@@ -200,7 +200,8 @@ impl Helper {
                 pub_api_xmrig,
                 state_p2pool,
                 state_xmrig,
-            );
+            )
+            .await;
 
             // check signal
             debug!("XvB | check signal");
@@ -283,7 +284,7 @@ impl Helper {
                                 lock!(pub_api).stats_priv.win_current = true
                             }
                         }
-                            if (first_loop || *lock!(retry)|| is_algo_finished) && lock!(gui_api_xmrig).hashrate_raw > 0.0
+                            if (first_loop || *lock!(retry)|| is_algo_finished) && lock!(gui_api_xmrig).hashrate_raw > 0.0 && lock!(process).state == ProcessState::Alive
                             {
                                 // if algo was started, it must not retry next loop.
                                 *lock!(retry) = false;
@@ -302,8 +303,9 @@ impl Helper {
                                     ).await;
                                 })));
                             } else {
-                                // if xmrig is still at 0 HR but is alive and algorithm is skipped, recheck first 10s of xmrig inside algorithm next time (in one minute)
-                                if lock!(gui_api_xmrig).hashrate_raw == 0.0 {
+                                // if xmrig is still at 0 HR but is alive and algorithm is skipped, recheck first 10s of xmrig inside algorithm next time (in one minute). Don't check if algo failed to start because state was not alive after getting private stats.
+
+                                if lock!(gui_api_xmrig).hashrate_raw == 0.0 && lock!(process).state == ProcessState::Alive {
                                     *lock!(retry) = true
                                 }
                             }
@@ -468,7 +470,7 @@ async fn check_conditions_for_start(
     lock!(process_xvb).state = state;
 }
 #[allow(clippy::too_many_arguments)]
-fn check_state_outcauses_xvb(
+async fn check_state_outcauses_xvb(
     client: &Client,
     gui_api: &Arc<Mutex<PubXvbApi>>,
     pub_api: &Arc<Mutex<PubXvbApi>>,
@@ -559,6 +561,10 @@ fn check_state_outcauses_xvb(
                 gui_api,
                 "XvB is now started because p2pool and xmrig came online.",
             );
+        }
+        ProcessState::Retry => {
+            debug!("XvB | Retry to get stats from https://xmrvsbeast.com in this loop if delay is done.");
+            *first_loop = true;
         }
         // nothing to do, we don't want to change other state
         _ => {}
