@@ -54,7 +54,7 @@ https://github.com/Cyrix126/gupaxx/assets/58007246/610cbfea-fd97-4150-95ed-9c8a7
 7. Start XMRig
 8. Start XvB
 
-Gupaxx will distribute your hashrate between P2Pool and XMRvsBeast as defined here by the [algorithm](NOTES_ALGORITHM).
+Gupaxx will distribute your hashrate between P2Pool and XMRvsBeast as defined here by the [algorithm](NOTES_ALGORITHM.md).
 
 The algorithm will decide which quantity of HR will be directed to P2pool and to XMRvsBeast, so that you still keep a share in the [PPLNS Window](https://github.com/SChernykh/p2pool#how-payouts-work-in-p2pool). It will send by default just enough to get to the highest round or, if hero mode is enabled, everything minus minimum required to still have a share in the PPLNS Window.
 </div>
@@ -78,7 +78,7 @@ Private information about your address on XMRvsBeast can be found here after the
 
 ## XvB Raffle Status
 
-Gupaxx add a new column **XvB Raffle** on the Status Tab in the Process submenu. It displays public statistics of XMRvsBeast, which are available here 
+Gupaxx add a new column **XvB Raffle** on the Status Tab in the Process submenu. It displays public statistics of XMRvsBeast, which are available [here](https://xmrvsbeast.com/p2pool).  
 It is refreshed every minute.
 This column will be active if the XvB process is started even partially, it doesn't need the token to be provided.
 
@@ -91,7 +91,7 @@ I will eventually (meaning when I'll have time) create pull requests for upstrea
 
 ## Troubleshooting
 
-If you have any issue, feel free to ask for support in the [xmrvsbeast matrix room](#xmrvsbeast:monero.social) or to open an issue in this repo. You can also contact me though [email](email:gupaxx@baermail.fr).
+If you have any issue, feel free to ask for support in the [xmrvsbeast matrix room](#xmrvsbeast:monero.social) or to open an issue in this repo. You can also contact me through [email](email:gupaxx@baermail.fr).
 
 ### Windows
 
