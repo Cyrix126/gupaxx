@@ -530,13 +530,11 @@ impl Update {
                 path.display()
             );
             // if bundled, create directory for p2pool and xmrig if not present
-            if lock!(og).gupax.bundled {
-                if name == P2POOL_BINARY || name == XMRIG_BINARY {
-                    std::fs::create_dir_all(
-                        path.parent()
-                            .ok_or_else(|| anyhow!(format!("{} path failed", name)))?,
-                    )?;
-                }
+            if lock!(og).gupax.bundled && (name == P2POOL_BINARY || name == XMRIG_BINARY) {
+                std::fs::create_dir_all(
+                    path.parent()
+                        .ok_or_else(|| anyhow!(format!("{} path failed", name)))?,
+                )?;
             }
             // Move downloaded path into old path
             std::fs::rename(entry.path(), path)?;

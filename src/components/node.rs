@@ -67,7 +67,7 @@ const REMOTE_NODE_MAX_CHARS: usize = {
     assert!(len != 0);
     len
 };
-
+#[allow(dead_code)]
 pub struct RemoteNode {
     pub ip: &'static str,
     pub location: &'static str,
@@ -278,6 +278,7 @@ impl NodeData {
 //
 // This struct leaves out most fields on purpose,
 // we only need a few to verify the node is ok.
+#[allow(dead_code)] // allow dead code because Deserialize doesn't use all the fields in this program
 #[derive(Debug, serde::Deserialize)]
 pub struct GetInfo<'a> {
     pub id: &'a str,
