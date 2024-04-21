@@ -55,8 +55,8 @@ title "Tar Linux"
 # give execution permission
 chmod +x linux/gupaxx
 chmod +x linux_b/gupaxx
-chmod +x linux/p2pool/p2pool
-chmod +x linux/xmrig/xmrig
+chmod +x linux_b/p2pool/p2pool
+chmod +x linux_b/xmrig/xmrig
 mv linux_b "gupaxx-$NEW_VER-linux-x64-bundle"; check "linux -> gupaxx-$NEW_VER-linux-x64-bundle"
 tar -czpf "gupaxx-${NEW_VER}-linux-x64-bundle.tar.gz" "gupaxx-$NEW_VER-linux-x64-bundle" --owner=lm --group=lm ; check "tar linux-bundle"
 # Tar Linux Standalone

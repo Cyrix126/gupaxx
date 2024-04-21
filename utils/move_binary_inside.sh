@@ -6,6 +6,7 @@
 [[ -f windows.zip ]]; check "windows zip"
 [[ -f macos.zip ]]; check "macos zip"
 unzip linux.zip; unzip macos.zip; unzip windows.zip
+tar -xf windows.tar
 mv gupaxx.exe skel/windows/Gupaxx.exe
 mv gupaxx_b.exe skel/windows_b/Gupaxx.exe
 tar -xf linux.tar
@@ -26,4 +27,4 @@ rm -r Gupaxx-macos-x64.app_b
 rm -r Gupaxx-macos-arm64.app_b
 rm linux.zip; rm macos.zip; rm windows.zip
 # windows unzip only the exe so not tar to delete.
-rm linux.tar; rm macos.tar
+rm linux.tar; rm macos.tar; rm windows.tar
