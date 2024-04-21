@@ -105,7 +105,8 @@ egui = {version = "0.27.2", features=["callstack"]}
 # Windows dependencies
 [target.'cfg(windows)'.dependencies]
 # glow start on windows but not wgpu
-eframe = { version = "0.27.2", features = ["glow"] }
+eframe = { version = "0.27.2", features = ["wgpu"] }
+wgpu = {version = "0.19.4", features=["angle"]}
 zip = "0.6.6"
 is_elevated = "0.1.2"
 
