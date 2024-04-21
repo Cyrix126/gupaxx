@@ -25,6 +25,7 @@ incremental = true
 
 [features]
 default = []
+bundle = []
 distro = []
 
 [dependencies]
@@ -73,6 +74,7 @@ readable = "0.16"
 chrono = {version="0.4.37", default-features=false, features=["clock", "std"]}
 enclose = "1.1.8"
 bounded-vec-deque = {version="0.1.1", default-features=false}
+cfg-if = "1.0"
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
 eframe = { version = "0.27.2", features = ["wgpu"] }

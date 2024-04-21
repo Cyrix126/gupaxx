@@ -2075,6 +2075,7 @@ dependencies = [
  "benri",
  "bounded-vec-deque",
  "bytes",
+ "cfg-if",
  "chrono",
  "derive_more",
  "dirs",
