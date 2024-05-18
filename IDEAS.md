@@ -17,11 +17,6 @@ The code, issues and PR could be synchronized with Github.
 ### Website
 Build a website like [gupax.io](https://gupax.io) to have a more user frendly presentation and installation method.  
 Having a website, we can detect the architecture and os of the visitor and give him the right archive to download.
-### Successor of Gupax
-Gupaxx is maintained and does not force the use of the raffle. It also fix bugs and brings improvements. I don't see any reasons to use the original Gupax now.  
-Gupaxx could replace Gupax as **the** GUI to make mining on monero easy.  
-Original author could be asked to archive his repository and give a link to Gupaxx.  
-P2pool explorer could also be updated to provide a link to Gupaxx instead of Gupax.  
 ### Generated wallet
 If Gupaxx could create a wallet and put the primary address in p2pool tab automaticcly, it would remove a manual step for the user.  
 It could be an option to ask at first start.  
@@ -46,21 +41,28 @@ Gupaxx could add support for linux arm64 since p2pool and xmrig can compile on t
 On linux, we can activate 1GB pages after detecting cpu flags. We can also add cpu affinity option.
 #### Manual optimizations
 On the XMRig tab, inform users about manual optimizations that Gupaxx can't control. For example, disabling hyper-threading in BIOS is recommended.
+### CLI for Algorithm
+For advanced users, a CLI could be made to use the algorithm without a GUI
+It would allow the user to do automation and installation on headless environment and save a few HR from the Gupaxx process.
+This CLI would still offer a way to the user to pass options to xmrig and to start his p2pool server or to use another one already running.  
 #### Integrate XMRig-Proxy
 The algorithm of distribution of HR can't control HR outside of his instance.
 It must estimate external HR, which can be approximative.
 If a user control multiples miners, it could connect all of them to a xmrig-proxy instance.
-Gupaxx could offer this xmrig-instance and control it like it was a normal xmrig instance.
-### CLI for Algorithm
-For advanced users, a CLI could be made to use the algorithm without a GUI
-It would allow the user to do automation and installation on headless environment and save a few HR from the Gupaxx process.
+Gupaxx could offer this xmrig-instance and control it like it was a normal xmrig instance.  
+OR
+#### Watch Stratum Data instead of estimate.
+Right now, the algorithm estimate the eHR with the estimation made by the p2pool instance which is calculating from passed shares.
+The algorithm could instead watch the stats from the stratum server, which is exact but would take into account only miners which are pointed to it.
+Miners using the cli xmrig could point their miners to the p2pool instance of Gupaxx, or have an indentical option if they are using the CLI of the algorithm.
+The algorithm would still check the estimation made by the p2pool instane of Gupaxx and warn the user if it seems there is too much difference between the data of the stratum server and the one of p2pool. It could prevent the user to forget to configure a miner to the stratum p2pool.
+
 
 ## Trust-less
 ### Reproducible builds
 To remove necessary trust, binairies released should have the same checksum if recompiled without code change.
 See [this](https://reproducible-builds.org).
+### Release changes notes preview
+Show the summuray of what will change between releases before updating to newer release.
 ### Donation transparency
 So that user can see how much is given to this project and make their own opinion of if enough donations have been given or not, the history of donation should be made visible with the viewkey available.  
-### Remove auto donation of XMRig
-I don't think any user user wants to be forced to give donation.
-It would mean creating a simple fork and bundling it instead of using upstream.This fork should be up to date with upstream.
