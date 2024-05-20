@@ -85,11 +85,8 @@ pub fn get_gupax_data_path() -> Result<PathBuf, TomlError> {
         }
     }
 }
-
+#[cfg(target_family = "unix")]
 pub fn set_unix_750_perms(path: &PathBuf) -> Result<(), TomlError> {
-    #[cfg(target_os = "windows")]
-    return Ok(());
-    #[cfg(target_family = "unix")]
     match fs::set_permissions(path, fs::Permissions::from_mode(0o750)) {
         Ok(_) => {
             info!(
@@ -124,6 +121,9 @@ pub fn create_gupax_dir(path: &PathBuf) -> Result<(), TomlError> {
             return Err(TomlError::Io(e));
         }
     }
+    #[cfg(target_os = "windows")]
+    return Ok(());
+    #[cfg(target_family = "unix")]
     set_unix_750_perms(path)
 }
 

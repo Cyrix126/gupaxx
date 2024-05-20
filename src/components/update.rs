@@ -180,14 +180,12 @@ pub fn check_xmrig_path(path: &str) -> bool {
 
 #[derive(Clone)]
 pub struct Update {
-    pub path_gupax: String,  // Full path to current gupax
-    pub path_p2pool: String, // Full path to current p2pool
-    pub path_xmrig: String,  // Full path to current xmrig
-    #[cfg(target_os = "windows")]
-    pub tmp_dir: String, // Full path to temporary directory
+    pub path_gupax: String,         // Full path to current gupax
+    pub path_p2pool: String,        // Full path to current p2pool
+    pub path_xmrig: String,         // Full path to current xmrig
     pub updating: Arc<Mutex<bool>>, // Is an update in progress?
-    pub prog: Arc<Mutex<f32>>, // Holds the 0-100% progress bar number
-    pub msg: Arc<Mutex<String>>, // Message to display on [Gupax] tab while updating
+    pub prog: Arc<Mutex<f32>>,      // Holds the 0-100% progress bar number
+    pub msg: Arc<Mutex<String>>,    // Message to display on [Gupax] tab while updating
 }
 
 impl Update {
@@ -197,8 +195,6 @@ impl Update {
             path_gupax,
             path_p2pool: path_p2pool.display().to_string(),
             path_xmrig: path_xmrig.display().to_string(),
-            #[cfg(target_os = "windows")]
-            tmp_dir: "".to_string(),
             updating: arc_mut!(false),
             prog: arc_mut!(0.0),
             msg: arc_mut!(MSG_NONE.to_string()),
