@@ -1,3 +1,26 @@
+# v1.1.1
+Stable release, bugfixes and new features.
+
+## Changes
+### UI
+- update list of cpu benchmarks (from upstream https://github.com/hinto-janai/gupax/commit/cce8e03fd4d641a002179d4a864e2a1b09c6d1f5) 
+### Internal
+- do not spawn a thread when unnecessary, use async instead.
+- minor code cleanup
+- update dependencies
+### Doc
+- add system requirements on README
+ 
+## Fixes
+- Windows, set xmrig priority which fix:  
+  https://github.com/Cyrix126/gupaxx/issues/6
+  https://github.com/Cyrix126/gupaxx/issues/7
+- fix some popup formatting (from upstream https://github.com/hinto-janai/gupax/commit/81a780e1d5512b6819dfafd9860527d8329c20b2) 
+
+## Bundled Versions
+* [`P2Pool v3.10`](https://github.com/SChernykh/p2pool/releases/tag/v3.10)  
+* [`XMRig v6.21.1`](https://github.com/xmrig/xmrig/releases/tag/v6.21.1)  
+
 # v1.1.0
 Stable release, bugfixes and new features.
 

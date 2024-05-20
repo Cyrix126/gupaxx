@@ -1,7 +1,7 @@
 cargo-features = ["profile-rustflags"]
 [package]
 name = "gupaxx"
-version = "1.1.0"
+version = "1.1.1"
 authors = ["cyrix126 <gupaxx@baermail.fr>"]
 description = "Fork of Gupax integrating the XMRvsBeast Raffle "
 documentation = "https://github.com/cyrix126/gupaxx"
@@ -29,7 +29,7 @@ bundle = []
 distro = []
 
 [dependencies]
-anyhow = "1.0.85"
+anyhow = "1.0.86"
 benri = "0.1.12"
 bytes = "1.6.0"
 dirs = "5.0.1"
@@ -72,7 +72,7 @@ derive_more = {version="0.99.17", default-features=false, features=["display"]}
 serde-this-or-that = "0.4.2"
 readable = "0.16"
 chrono = {version="0.4.38", default-features=false, features=["clock", "std"]}
-enclose = "1.1.8"
+enclose = "1.2.0"
 bounded-vec-deque = {version="0.1.1", default-features=false}
 cfg-if = "1.0"
 # Unix dependencies
