@@ -395,7 +395,9 @@ impl Helper {
     #[inline(never)]
     // The P2Pool watchdog. Spawns 1 OS thread for reading a PTY (STDOUT+STDERR), and combines the [Child] with a PTY so STDIN actually works.
     #[allow(clippy::too_many_arguments)]
-    fn spawn_p2pool_watchdog(
+    #[allow(clippy::await_holding_lock)]
+    #[tokio::main]
+    async fn spawn_p2pool_watchdog(
         process: Arc<Mutex<Process>>,
         gui_api: Arc<Mutex<PubP2poolApi>>,
         pub_api: Arc<Mutex<PubP2poolApi>>,
@@ -444,7 +446,7 @@ impl Helper {
         let output_pub = Arc::clone(&lock!(process).output_pub);
         let gupax_p2pool_api = Arc::clone(&gupax_p2pool_api);
         let p2pool_api_c = Arc::clone(&gui_api);
-        thread::spawn(move || {
+        tokio::spawn(async move {
             Self::read_pty_p2pool(
                 output_parse,
                 output_pub,
@@ -726,7 +728,7 @@ impl Helper {
                     lock!(gui_api).tick,
                     sleep
                 );
-                sleep!(sleep);
+                tokio::time::sleep(Duration::from_millis(sleep)).await;
             } else {
                 debug!(
                     "P2Pool Watchdog | END OF LOOP - Tick: [{}/60] Not sleeping!",

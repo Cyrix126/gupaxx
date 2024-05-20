@@ -114,7 +114,8 @@ impl Helper {
 
         info!("XvB | spawn watchdog");
         thread::spawn(enc!((state_xvb, state_p2pool, state_xmrig) move || {
-            Self::spawn_xvb_watchdog(
+            // thread priority, else there are issue on windows but it is also good for other OS
+                Self::spawn_xvb_watchdog(
                 &gui_api,
                 &pub_api,
                 &process,
@@ -218,18 +219,15 @@ impl Helper {
                 info!("XvB Watchdog | Signal has stopped the loop");
                 break;
             }
-            let handle_algo_c = lock!(handle_algo);
-            let is_algo_started_once = handle_algo_c.is_some();
-            let is_algo_finished = handle_algo_c
+            // let handle_algo_c = lock!(handle_algo);
+            let is_algo_started_once = lock!(handle_algo).is_some();
+            let is_algo_finished = lock!(handle_algo)
                 .as_ref()
                 .is_some_and(|algo| algo.is_finished());
-            let handle_request_c = lock!(handle_request);
-            let is_request_finished = handle_request_c
+            let is_request_finished = lock!(handle_request)
                 .as_ref()
                 .is_some_and(|request: &JoinHandle<()>| request.is_finished())
-                || handle_request_c.is_none();
-            drop(handle_algo_c);
-            drop(handle_request_c);
+                || lock!(handle_request).is_none();
             // Send an HTTP API request only if one minute is passed since the last request or if first loop or if algorithm need to retry or if request is finished and algo is finished or almost finished (only public and private stats). We make sure public and private stats are refreshed before doing another run of the algo.
             // We make sure algo or request are not rerun when they are not over.
             // in the case of quick refresh before new run of algo, make sure it doesn't happen multiple times.
@@ -353,7 +351,7 @@ impl Helper {
             if elapsed < 999 {
                 let sleep = (999 - elapsed) as u64;
                 debug!("XvB Watchdog | END OF LOOP - Sleeping for [{}]s...", sleep);
-                std::thread::sleep(std::time::Duration::from_millis(sleep))
+                tokio::time::sleep(Duration::from_millis(sleep)).await;
             } else {
                 debug!("XMRig Watchdog | END OF LOOP - Not sleeping!");
             }
