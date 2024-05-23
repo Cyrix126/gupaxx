@@ -1,3 +1,8 @@
+# v1.1.2
+## Changes
+* [Remote Node](https://github.com/hinto-janai/gupax#remote-monero-nodes) changes:
+	- Removed `xmr{1,2,3}.rs.me` (thanks @MattJGH [#79](https://github.com/hinto-janai/gupax/issues/79#issuecomment-2127273487))
+
 # v1.1.1
 Stable release, bugfixes and new features.
 
@@ -10,7 +15,6 @@ Stable release, bugfixes and new features.
 - update dependencies
 ### Doc
 - add system requirements on README
- 
 ## Fixes
 - Windows, set xmrig priority which fix:  
   https://github.com/Cyrix126/gupaxx/issues/6
