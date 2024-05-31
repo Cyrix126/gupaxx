@@ -93,12 +93,14 @@ fn time_that_could_be_spared(hr: f32, min_hr: f32) -> u32 {
     let minimum_time_required_on_p2pool = XVB_TIME_ALGO as f32 / (hr / min_hr);
     info!("XvB Process | Time of algo / local hashrate / minimum hashrate = minimum time required on p2pool\n{XVB_TIME_ALGO} / ({hr} / {min_hr}) = {minimum_time_required_on_p2pool}");
     let spared_time = XVB_TIME_ALGO as f32 - minimum_time_required_on_p2pool;
-    info!("XvB Process | Time of algo - minimum time required on p2pool = time that can be spared.\n{XVB_TIME_ALGO} - {minimum_time_required_on_p2pool}");
+    info!("XvB Process | Time of algo - minimum time required on p2pool = time that can be spared.\n{XVB_TIME_ALGO} - {minimum_time_required_on_p2pool} = {spared_time}");
     // if less than 6 seconds, XMRig could hardly have the time to mine anything.
     if spared_time >= 6.0 {
-        info!("XvB Process | sparted time is equal or less than 6 seconds, so everything goes to p2pool.");
         return spared_time as u32;
     }
+    info!(
+        "XvB Process | sparted time is equal or less than 6 seconds, so everything goes to p2pool."
+    );
     0
 }
 
