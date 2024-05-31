@@ -85,7 +85,7 @@ fn minimum_hashrate_share(difficulty: u64, mini: bool, ohr: f32) -> f32 {
         BLOCK_PPLNS_WINDOW_MAIN
     };
     let minimum_hr = ((difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32 * XVB_BUFFER) - ohr;
-    info!("XvB Process | (difficulty / (window pplns blocks * seconds per p2pool block) * BUFFER) - outside HR\n({difficulty} / ({pws} * {SECOND_PER_BLOCK_P2POOL}) * {XVB_BUFFER}) - {ohr}");
+    info!("XvB Process | (difficulty / (window pplns blocks * seconds per p2pool block) * BUFFER) - outside HR = minimum HR to keep a share\n({difficulty} / ({pws} * {SECOND_PER_BLOCK_P2POOL}) * {XVB_BUFFER}) - {ohr} = {minimum_hr}");
     minimum_hr
 }
 fn time_that_could_be_spared(hr: f32, min_hr: f32) -> u32 {
