@@ -1,5 +1,5 @@
 use crate::helper::{ProcessName, ProcessSignal, ProcessState};
-use crate::regex::{contains_connect_error, contains_usepool, detect_new_node_xmrig, XMRIG_REGEX};
+use crate::regex::{contains_error, contains_usepool, detect_new_node_xmrig, XMRIG_REGEX};
 use crate::utils::human::HumanNumber;
 use crate::utils::sudo::SudoState;
 use crate::{constants::*, macros::*};
@@ -59,7 +59,7 @@ impl Helper {
         while let Some(Ok(line)) = stdout.next() {
             // need to verify if node still working
             // for that need to catch "connect error"
-            if contains_connect_error(&line) {
+            if contains_error(&line) {
                 let current_node = lock!(pub_api_xvb).current_node;
                 if let Some(current_node) = current_node {
                     // updating current node to None, will stop sending signal of FailedNode until new node is set

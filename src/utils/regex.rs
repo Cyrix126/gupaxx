@@ -210,8 +210,8 @@ pub fn estimated_hr(s: &str) -> Option<f32> {
     }
     None
 }
-pub fn contains_connect_error(l: &str) -> bool {
-    static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"connect error").unwrap());
+pub fn contains_error(l: &str) -> bool {
+    static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"error").unwrap());
     LINE_SHARE.is_match(l)
 }
 pub fn contains_usepool(l: &str) -> bool {
