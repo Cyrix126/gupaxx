@@ -31,17 +31,19 @@ pub(crate) fn calcul_donated_time(
     let p2pool_ehr = lock!(gui_api_p2pool).sidechain_ehr;
     // what if ehr stay still for the next ten minutes ? mHR will augment every ten minutes because it thinks that oHR is decreasing.
     //
-    let p2pool_ohr = p2pool_ehr
-        - calc_last_hour_avg_hash_rate(&lock!(gui_api_xvb).p2pool_sent_last_hour_samples);
+    let avg_hr = calc_last_hour_avg_hash_rate(&lock!(gui_api_xvb).p2pool_sent_last_hour_samples);
+    let p2pool_ohr = p2pool_ehr - avg_hr;
+    info!("XvB Process | p2pool sidechain HR - last hour average HR = estimated outside HR\n{p2pool_ehr} - {avg_hr} = {p2pool_ohr}");
     let mut min_hr = minimum_hashrate_share(
         lock!(gui_api_p2pool).p2pool_difficulty_u64,
         state_p2pool.mini,
         p2pool_ohr,
     );
     if min_hr.is_sign_negative() {
+        info!("XvB Process | if minimum HR is negative, it is 0.");
         min_hr = 0.0;
     }
-    debug!("Xvb Process | hr {}, min_hr: {} ", lhr, min_hr);
+    info!("Xvb Process | hr {}, min_hr: {} ", lhr, min_hr);
     // numbers are divided by a thousands to print kH/s and not H/s
     let msg_lhr = format!(
         "{} kH/s local HR from Xmrig",
@@ -65,7 +67,7 @@ pub(crate) fn calcul_donated_time(
         // if not hero option
         if !lock!(gui_api_xvb).stats_priv.runtime_hero_mode {
             let xvb_chr = lock!(gui_api_xvb).stats_priv.donor_1hr_avg * 1000.0;
-            info!("current HR on XVB (last hour): {xvb_chr}");
+            info!("current HR on XvB (last hour): {xvb_chr}");
             let shr = calc_last_hour_avg_hash_rate(&lock!(gui_api_xvb).xvb_sent_last_hour_samples);
             // calculate how much time needed to be spared to be in most round type minimum HR + buffer
             spared_time = minimum_time_for_highest_accessible_round(spared_time, lhr, xvb_chr, shr);
@@ -82,14 +84,19 @@ fn minimum_hashrate_share(difficulty: u64, mini: bool, ohr: f32) -> f32 {
     } else {
         BLOCK_PPLNS_WINDOW_MAIN
     };
-    ((difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32 * XVB_BUFFER) - ohr
+    let minimum_hr = ((difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32 * XVB_BUFFER) - ohr;
+    info!("XvB Process | (difficulty / (window pplns blocks * seconds per p2pool block) * BUFFER) - outside HR\n({difficulty} / ({pws} * {SECOND_PER_BLOCK_P2POOL}) * {XVB_BUFFER}) - {ohr}");
+    minimum_hr
 }
 fn time_that_could_be_spared(hr: f32, min_hr: f32) -> u32 {
     // percent of time minimum
     let minimum_time_required_on_p2pool = XVB_TIME_ALGO as f32 / (hr / min_hr);
+    info!("XvB Process | Time of algo / local hashrate / minimum hashrate = minimum time required on p2pool\n{XVB_TIME_ALGO} / ({hr} / {min_hr}) = {minimum_time_required_on_p2pool}");
     let spared_time = XVB_TIME_ALGO as f32 - minimum_time_required_on_p2pool;
+    info!("XvB Process | Time of algo - minimum time required on p2pool = time that can be spared.\n{XVB_TIME_ALGO} - {minimum_time_required_on_p2pool}");
     // if less than 6 seconds, XMRig could hardly have the time to mine anything.
     if spared_time >= 6.0 {
+        info!("XvB Process | sparted time is equal or less than 6 seconds, so everything goes to p2pool.");
         return spared_time as u32;
     }
     0

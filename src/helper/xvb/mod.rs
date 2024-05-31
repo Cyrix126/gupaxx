@@ -619,6 +619,7 @@ fn signal_interrupt(
         }
         ProcessSignal::UpdateNodes(node) => {
             if lock!(process).state != ProcessState::Waiting {
+                warn!("received the UpdateNode signal");
                 let token_xmrig = state_xmrig.token.clone();
                 let rig = state_xmrig.rig.clone();
                 let address = state_p2pool.address.clone();
@@ -641,7 +642,7 @@ fn signal_interrupt(
                             if lock!(process).state == ProcessState::OfflineNodesAll {
                                 // No available nodes, so launch a process to verify periodicly.
                     sleep(Duration::from_secs(10)).await;
-                    info!("node fail, set spawn that will retry nodes and update state.");
+                    warn!("node fail, set spawn that will retry nodes and update state.");
                     while lock!(process).state == ProcessState::OfflineNodesAll {
                         // this spawn will stay alive until nodes are joignable or XvB process is stopped or failed.
                         XvbNode::update_fastest_node(&client, &pub_api, &gui_api, &process).await;
