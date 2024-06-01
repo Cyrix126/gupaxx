@@ -32,7 +32,10 @@ pub(crate) fn calcul_donated_time(
     // what if ehr stay still for the next ten minutes ? mHR will augment every ten minutes because it thinks that oHR is decreasing.
     //
     let avg_hr = calc_last_hour_avg_hash_rate(&lock!(gui_api_xvb).p2pool_sent_last_hour_samples);
-    let p2pool_ohr = p2pool_ehr - avg_hr;
+    let mut p2pool_ohr = p2pool_ehr - avg_hr;
+    if p2pool_ohr < 0.0 {
+        p2pool_ohr = 0.0;
+    }
     info!("XvB Process | p2pool sidechain HR - last hour average HR = estimated outside HR\n{p2pool_ehr} - {avg_hr} = {p2pool_ohr}");
     let mut min_hr = minimum_hashrate_share(
         lock!(gui_api_p2pool).p2pool_difficulty_u64,
