@@ -59,10 +59,14 @@ The algorithm would still check the estimation made by the p2pool instance of Gu
 
 
 ## Trust-less
+## Builds
 ### Reproducible builds
 To remove necessary trust, binairies released should have the same checksum if recompiled without code change.
 See [this](https://reproducible-builds.org).
 ### Release changes notes preview
 Show the summuray of what will change between releases before updating to newer release.
+## Donation
 ### Donation transparency
 So that user can see how much is given to this project and make their own opinion of if enough donations have been given or not, the history of donation should be made visible with the viewkey available.  
+## XvB
+keeping track of participation history in rounds and showing results in the XvB tab.
