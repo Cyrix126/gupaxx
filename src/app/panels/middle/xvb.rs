@@ -6,11 +6,12 @@ use log::debug;
 use readable::num::Float;
 use readable::up::Uptime;
 
+use crate::disk::state::XvbMode;
 use crate::helper::xvb::PubXvbApi;
 use crate::regex::num_lines;
 use crate::utils::constants::{
     GREEN, LIGHT_GRAY, ORANGE, RED, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD, XVB_FAILURE_FIELD,
-    XVB_HELP, XVB_HERO_SELECT, XVB_ROUND_TYPE_FIELD, XVB_TOKEN_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES,
+    XVB_HELP, XVB_ROUND_TYPE_FIELD, XVB_TOKEN_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES,
     XVB_WINNER_FIELD,
 };
 use crate::utils::macros::lock;
@@ -114,10 +115,29 @@ impl crate::disk::state::Xvb {
     ui.style_mut().spacing.icon_width_inner = width / 45.0;
     ui.style_mut().spacing.icon_width = width / 35.0;
     ui.style_mut().spacing.icon_spacing = space_h;
-                       if ui.checkbox(&mut self.hero, "Hero Mode").on_hover_text(XVB_HERO_SELECT).clicked() {
-                // also change hero mode of runtime.
-                lock!(api).stats_priv.runtime_hero_mode = self.hero;
-            }
+
+    egui::ComboBox::from_label("")
+    .selected_text(format!("{:?}", self.mode))
+    .show_ui(ui, |ui| {
+        ui.horizontal(|ui| {
+            ui.selectable_value(&mut self.mode, XvbMode::Auto, "Automatic");
+            ui.selectable_value(&mut self.mode, XvbMode::Hero, "Hero Mode");
+            ui.selectable_value(&mut self.mode, XvbMode::ManuallyDonante, "Manually Donate");
+            ui.selectable_value(&mut self.mode, XvbMode::ManuallyKeep, "Manually Keep");
+        })
+    });
+    if self.mode == XvbMode::ManuallyDonante || self.mode == XvbMode::ManuallyKeep {
+    ui.horizontal(|ui| {
+        ui.add(
+            TextEdit::singleline(&mut self.amount)
+        )
+    });
+}
+
+
+
+    
+
 
 // need to warn the user if no address is set in p2pool tab
         if !Regexes::addr_ok(address) {

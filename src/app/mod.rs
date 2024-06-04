@@ -525,7 +525,14 @@ impl App {
         app.tab = app.state.gupax.tab;
 
         // Set saved Hero mode to runtime.
-        app.xvb_api.lock().unwrap().stats_priv.runtime_hero_mode = app.state.xvb.hero;
+        app.xvb_api.lock().unwrap().stats_priv.runtime_mode = app.state.xvb.mode.clone().into();
+        app.xvb_api.lock().unwrap().stats_priv.runtime_manual_amount = match app.state.xvb.amount.parse() {
+            Ok(n) => n,
+            Err(_) => {
+                warn!("Cannot parse [amount] to u64, defaulting to 0");
+                0
+            }
+        };
 
         // Check if [P2pool.node] exists
         info!("App Init | Checking if saved remote node still exists...");

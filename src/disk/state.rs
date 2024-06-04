@@ -243,10 +243,19 @@ pub struct Xmrig {
     pub token: String,
 }
 
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
+pub enum XvbMode {
+    Auto,
+    ManuallyDonante,
+    ManuallyKeep,
+    Hero,
+}
+
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
 pub struct Xvb {
     pub token: String,
-    pub hero: bool,
+    pub mode: XvbMode,
+    pub amount: String
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -373,5 +382,11 @@ impl Default for Version {
             p2pool: P2POOL_VERSION.to_string(),
             xmrig: XMRIG_VERSION.to_string(),
         }
+    }
+}
+
+impl Default for XvbMode {
+    fn default() -> Self {
+        Self::Auto
     }
 }

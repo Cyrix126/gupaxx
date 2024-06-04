@@ -1,6 +1,5 @@
 use std::{
-    sync::{Arc, Mutex},
-    time::Duration,
+    mem::ManuallyDrop, sync::{Arc, Mutex}, time::Duration
 };
 
 use log::{debug, info, warn};
@@ -13,12 +12,9 @@ use crate::{
         p2pool::PubP2poolApi,
         xmrig::{PrivXmrigApi, PubXmrigApi},
         xvb::{nodes::XvbNode, output_console, output_console_without_time},
-    },
-    macros::lock,
-    BLOCK_PPLNS_WINDOW_MAIN, BLOCK_PPLNS_WINDOW_MINI, SECOND_PER_BLOCK_P2POOL, XMRIG_CONFIG_URI,
-    XVB_BUFFER, XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR, XVB_ROUND_DONOR_VIP_MIN_HR,
-    XVB_ROUND_DONOR_WHALE_MIN_HR, XVB_TIME_ALGO,
+    }, macros::lock, BLOCK_PPLNS_WINDOW_MAIN, BLOCK_PPLNS_WINDOW_MINI, SECOND_PER_BLOCK_P2POOL, XMRIG_CONFIG_URI, XVB_BUFFER, XVB_MINING_ON_FIELD, XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR, XVB_ROUND_DONOR_VIP_MIN_HR, XVB_ROUND_DONOR_WHALE_MIN_HR, XVB_TIME_ALGO
 };
+use crate::helper::xvb::priv_stats::RuntimeMode;
 
 use super::{PubXvbApi, SamplesAverageHour};
 
@@ -68,15 +64,25 @@ pub(crate) fn calcul_donated_time(
 
     if spared_time > 0 {
         // if not hero option
-        if !lock!(gui_api_xvb).stats_priv.runtime_hero_mode {
+        if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::Auto {
             let xvb_chr = lock!(gui_api_xvb).stats_priv.donor_1hr_avg * 1000.0;
             info!("current HR on XvB (last hour): {xvb_chr}");
             let shr = calc_last_hour_avg_hash_rate(&lock!(gui_api_xvb).xvb_sent_last_hour_samples);
             // calculate how much time needed to be spared to be in most round type minimum HR + buffer
             spared_time = minimum_time_for_highest_accessible_round(spared_time, lhr, xvb_chr, shr);
         }
+
+        let manual_amount = lock!(gui_api_xvb).stats_priv.runtime_manual_amount as u32;
+        if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::ManuallyDonante {
+            spared_time = XVB_TIME_ALGO * manual_amount / (avg_hr as u32);
+        }
+
+        if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::ManuallyKeep { 
+            spared_time = XVB_TIME_ALGO - (XVB_TIME_ALGO * manual_amount / (avg_hr as u32));
+        }
+        
     }
-    if lock!(gui_api_xvb).stats_priv.runtime_hero_mode {
+    if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::Hero {
         output_console(gui_api_xvb, "Hero mode is enabled for this decision");
     }
     spared_time

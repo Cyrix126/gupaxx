@@ -14,8 +14,18 @@ use crate::{
     macros::lock,
     XVB_URL,
 };
+use crate::disk::state::XvbMode;
 
 use super::{nodes::XvbNode, rounds::XvbRound, PubXvbApi};
+
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+pub enum RuntimeMode {
+    Auto,
+    ManuallyDonante,
+    ManuallyKeep,
+    Hero,
+}
 
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct XvbPrivStats {
@@ -36,7 +46,8 @@ pub struct XvbPrivStats {
     pub msg_indicator: String,
     #[serde(skip)]
     // so the hero mode can change between two decision of algorithm without restarting XvB.
-    pub runtime_hero_mode: bool,
+    pub runtime_mode: RuntimeMode,
+    pub runtime_manual_amount: u64
 }
 
 impl XvbPrivStats {
@@ -104,5 +115,22 @@ impl XvbPrivStats {
                 sleep(Duration::from_secs(10)).await;
             }
         }
+    }
+}
+
+impl From<XvbMode> for RuntimeMode {
+    fn from(mode: XvbMode) -> Self {
+        match mode {
+            XvbMode::Auto => Self::Auto,
+            XvbMode::ManuallyDonante => Self::ManuallyDonante,
+            XvbMode::ManuallyKeep => Self::ManuallyKeep,
+            XvbMode::Hero => Self::Hero,
+        }
+    }
+}
+
+impl Default for RuntimeMode {
+    fn default() -> Self {
+        Self::Auto
     }
 }
