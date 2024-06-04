@@ -1,5 +1,5 @@
 use std::{
-    mem::ManuallyDrop, sync::{Arc, Mutex}, time::Duration
+    mem::ManuallyDrop, sync::{Arc, Mutex}, thread::current, time::Duration
 };
 
 use log::{debug, info, warn};
@@ -61,9 +61,10 @@ pub(crate) fn calcul_donated_time(
     output_console(gui_api_xvb, &msg_ehr);
     // calculate how much time can be spared
     
-    let spared_time = match lock!(gui_api_xvb).stats_priv.runtime_mode {
+    let current_mode = &lock!(gui_api_xvb).stats_priv.runtime_mode;
+    let spared_time = match *current_mode {
         RuntimeMode::Auto => {
-            info!("RuntimeMode::Auto - calculating spared_time --------------------------------");
+            info!("RuntimeMode::Auto - calculating spared_time");
             let mut spared_time = time_that_could_be_spared(lhr, min_hr);
             let xvb_chr = lock!(gui_api_xvb).stats_priv.donor_1hr_avg * 1000.0;
             info!("current HR on XvB (last hour): {xvb_chr}");
@@ -73,23 +74,21 @@ pub(crate) fn calcul_donated_time(
             spared_time
         },
         RuntimeMode::Hero => {
-            info!("RuntimeMode::Hero - calculating spared_time --------------------------------");
+            info!("RuntimeMode::Hero - calculating spared_time");
             time_that_could_be_spared(lhr, min_hr)
         },
         RuntimeMode::ManuallyDonante => {
-            info!("RuntimeMode::ManuallyDonate - calculating spared_time --------------------------------");
+            info!("RuntimeMode::ManuallyDonate - calculating spared_time");
             let manual_amount = lock!(gui_api_xvb).stats_priv.runtime_manual_amount as u32;
-            let avg_hr = avg_hr as u32;
-            let spared_time = XVB_TIME_ALGO * manual_amount / avg_hr;
-            info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}");
+            let spared_time = XVB_TIME_ALGO * manual_amount / (avg_hr as u32);
+            info!("spared_time = {XVB_TIME_ALGO} * {manual_amount} / {avg_hr} = {spared_time}");
             spared_time
         },
         RuntimeMode::ManuallyKeep => {
-            info!("RuntimeMode::ManuallyKeep - calculating spared_time --------------------------------");
+            info!("RuntimeMode::ManuallyKeep - calculating spared_time");
             let manual_amount = lock!(gui_api_xvb).stats_priv.runtime_manual_amount as u32;
-            let avg_hr = avg_hr as u32;
-            let spared_time = XVB_TIME_ALGO - (XVB_TIME_ALGO * manual_amount / avg_hr);
-            info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}");
+            let spared_time = XVB_TIME_ALGO - (XVB_TIME_ALGO * manual_amount / (avg_hr as u32));
+            info!("spared_time = {XVB_TIME_ALGO} * {manual_amount} / {avg_hr} = {spared_time}");
             spared_time
         }
     };
