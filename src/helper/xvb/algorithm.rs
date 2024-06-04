@@ -3,7 +3,7 @@ use std::{
 };
 
 use log::{debug, info, warn};
-use readable::num::Float;
+use readable::{num::Float, run::Runtime};
 use reqwest::Client;
 use tokio::time::sleep;
 
@@ -24,27 +24,10 @@ pub(crate) fn calcul_donated_time(
     gui_api_xvb: &Arc<Mutex<PubXvbApi>>,
     state_p2pool: &crate::disk::state::P2pool,
 ) -> u32 {
-    
-    let manual_amount = lock!(gui_api_xvb).stats_priv.runtime_manual_amount as u32;
-    let avg_hr = calc_last_hour_avg_hash_rate(&lock!(gui_api_xvb).p2pool_sent_last_hour_samples);
-    {
-        let avg_hr = avg_hr as u32;
-        if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::ManuallyDonante && avg_hr > 0 {
-            let spared_time = XVB_TIME_ALGO * manual_amount / avg_hr;
-            info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}");
-            return spared_time;
-        }
-
-        if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::ManuallyKeep && avg_hr > 0 { 
-            let spared_time = XVB_TIME_ALGO - (XVB_TIME_ALGO * manual_amount / avg_hr);
-            info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}");
-            return spared_time;
-        }
-    }
-    
     let p2pool_ehr = lock!(gui_api_p2pool).sidechain_ehr;
     // what if ehr stay still for the next ten minutes ? mHR will augment every ten minutes because it thinks that oHR is decreasing.
     //
+    let avg_hr = calc_last_hour_avg_hash_rate(&lock!(gui_api_xvb).p2pool_sent_last_hour_samples);
     let mut p2pool_ohr = p2pool_ehr - avg_hr;
     if p2pool_ohr < 0.0 {
         p2pool_ohr = 0.0;
@@ -77,23 +60,40 @@ pub(crate) fn calcul_donated_time(
     output_console(gui_api_xvb, &msg_mhr);
     output_console(gui_api_xvb, &msg_ehr);
     // calculate how much time can be spared
-    let mut spared_time = time_that_could_be_spared(lhr, min_hr);
-
-    if spared_time > 0 {
-        // if not hero option
-        if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::Auto {
+    
+    let spared_time = match lock!(gui_api_xvb).stats_priv.runtime_mode {
+        RuntimeMode::Auto => {
+            info!("RuntimeMode::Auto - calculating spared_time --------------------------------");
+            let mut spared_time = time_that_could_be_spared(lhr, min_hr);
             let xvb_chr = lock!(gui_api_xvb).stats_priv.donor_1hr_avg * 1000.0;
             info!("current HR on XvB (last hour): {xvb_chr}");
             let shr = calc_last_hour_avg_hash_rate(&lock!(gui_api_xvb).xvb_sent_last_hour_samples);
             // calculate how much time needed to be spared to be in most round type minimum HR + buffer
             spared_time = minimum_time_for_highest_accessible_round(spared_time, lhr, xvb_chr, shr);
+            spared_time
+        },
+        RuntimeMode::Hero => {
+            info!("RuntimeMode::Hero - calculating spared_time --------------------------------");
+            time_that_could_be_spared(lhr, min_hr)
+        },
+        RuntimeMode::ManuallyDonante => {
+            info!("RuntimeMode::ManuallyDonate - calculating spared_time --------------------------------");
+            let manual_amount = lock!(gui_api_xvb).stats_priv.runtime_manual_amount as u32;
+            let avg_hr = avg_hr as u32;
+            let spared_time = XVB_TIME_ALGO * manual_amount / avg_hr;
+            info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}");
+            spared_time
+        },
+        RuntimeMode::ManuallyKeep => {
+            info!("RuntimeMode::ManuallyKeep - calculating spared_time --------------------------------");
+            let manual_amount = lock!(gui_api_xvb).stats_priv.runtime_manual_amount as u32;
+            let avg_hr = avg_hr as u32;
+            let spared_time = XVB_TIME_ALGO - (XVB_TIME_ALGO * manual_amount / avg_hr);
+            info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}");
+            spared_time
         }
-
+    };
         
-    }
-    if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::Hero {
-        output_console(gui_api_xvb, "Hero mode is enabled for this decision");
-    }
     spared_time
 }
 fn minimum_hashrate_share(difficulty: u64, mini: bool, ohr: f32) -> f32 {
