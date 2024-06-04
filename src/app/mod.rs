@@ -525,12 +525,13 @@ impl App {
         app.tab = app.state.gupax.tab;
 
         // Set saved Hero mode to runtime.
+        debug!("Setting runtime_mode & runtime_manual_amount");
         app.xvb_api.lock().unwrap().stats_priv.runtime_mode = app.state.xvb.mode.clone().into();
         app.xvb_api.lock().unwrap().stats_priv.runtime_manual_amount = match app.state.xvb.amount.parse::<u64>() {
             Ok(n) => n,
             Err(_) => {
-                error!("Cannot parse [amount] to u64, defaulting to 0");
-                0
+                error!("Cannot parse [amount] to u64, defaulting to 1");
+                1
             }
         };
 

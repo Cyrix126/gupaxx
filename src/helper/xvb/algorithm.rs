@@ -72,18 +72,18 @@ pub(crate) fn calcul_donated_time(
             spared_time = minimum_time_for_highest_accessible_round(spared_time, lhr, xvb_chr, shr);
         }
 
+        
         let manual_amount = lock!(gui_api_xvb).stats_priv.runtime_manual_amount as u32;
         let avg_hr = avg_hr as u32;
         if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::ManuallyDonante && avg_hr > 0 {
             spared_time = XVB_TIME_ALGO * manual_amount / avg_hr;
-            info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}")
+            info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}");
         }
 
         if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::ManuallyKeep && avg_hr > 0 { 
             spared_time = XVB_TIME_ALGO - (XVB_TIME_ALGO * manual_amount / avg_hr);
-            info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}")
+            info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}");
         }
-        
     }
     if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::Hero {
         output_console(gui_api_xvb, "Hero mode is enabled for this decision");
