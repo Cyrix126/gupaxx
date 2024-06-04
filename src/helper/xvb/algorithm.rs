@@ -73,12 +73,12 @@ pub(crate) fn calcul_donated_time(
         }
 
         let manual_amount = lock!(gui_api_xvb).stats_priv.runtime_manual_amount as u32;
-        if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::ManuallyDonante {
+        if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::ManuallyDonante || avg_hr > 0 {
             spared_time = XVB_TIME_ALGO * manual_amount / (avg_hr as u32);
             info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}")
         }
 
-        if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::ManuallyKeep { 
+        if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::ManuallyKeep || avg_hr > 0 { 
             spared_time = XVB_TIME_ALGO - (XVB_TIME_ALGO * manual_amount / (avg_hr as u32));
             info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}")
         }
