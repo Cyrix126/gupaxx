@@ -1,9 +1,10 @@
 use std::{
-    mem::ManuallyDrop, sync::{Arc, Mutex}, thread::current, time::Duration
+    sync::{Arc, Mutex},
+    time::Duration,
 };
 
 use log::{debug, info, warn};
-use readable::{num::Float, run::Runtime};
+use readable::num::Float;
 use reqwest::Client;
 use tokio::time::sleep;
 
@@ -11,10 +12,13 @@ use crate::{
     helper::{
         p2pool::PubP2poolApi,
         xmrig::{PrivXmrigApi, PubXmrigApi},
-        xvb::{nodes::XvbNode, output_console, output_console_without_time},
-    }, macros::lock, BLOCK_PPLNS_WINDOW_MAIN, BLOCK_PPLNS_WINDOW_MINI, SECOND_PER_BLOCK_P2POOL, XMRIG_CONFIG_URI, XVB_BUFFER, XVB_MINING_ON_FIELD, XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR, XVB_ROUND_DONOR_VIP_MIN_HR, XVB_ROUND_DONOR_WHALE_MIN_HR, XVB_TIME_ALGO
+        xvb::{nodes::XvbNode, output_console, output_console_without_time, priv_stats::RuntimeMode},
+    },
+    macros::lock,
+    BLOCK_PPLNS_WINDOW_MAIN, BLOCK_PPLNS_WINDOW_MINI, SECOND_PER_BLOCK_P2POOL, XMRIG_CONFIG_URI,
+    XVB_BUFFER, XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR, XVB_ROUND_DONOR_VIP_MIN_HR,
+    XVB_ROUND_DONOR_WHALE_MIN_HR, XVB_TIME_ALGO,
 };
-use crate::helper::xvb::priv_stats::RuntimeMode;
 
 use super::{PubXvbApi, SamplesAverageHour};
 
@@ -60,39 +64,46 @@ pub(crate) fn calcul_donated_time(
     output_console(gui_api_xvb, &msg_mhr);
     output_console(gui_api_xvb, &msg_ehr);
     // calculate how much time can be spared
-    
-    let current_mode = &lock!(gui_api_xvb).stats_priv.runtime_mode;
-    let spared_time = match *current_mode {
+
+    let mode = lock!(gui_api_xvb).stats_priv.runtime_mode.clone();
+
+    let default_spared_time = time_that_could_be_spared(lhr, min_hr);
+    let spared_time = match mode {
         RuntimeMode::Auto => {
             info!("RuntimeMode::Auto - calculating spared_time");
-            let mut spared_time = time_that_could_be_spared(lhr, min_hr);
             let xvb_chr = lock!(gui_api_xvb).stats_priv.donor_1hr_avg * 1000.0;
             info!("current HR on XvB (last hour): {xvb_chr}");
             let shr = calc_last_hour_avg_hash_rate(&lock!(gui_api_xvb).xvb_sent_last_hour_samples);
             // calculate how much time needed to be spared to be in most round type minimum HR + buffer
-            spared_time = minimum_time_for_highest_accessible_round(spared_time, lhr, xvb_chr, shr);
-            spared_time
+            minimum_time_for_highest_accessible_round(default_spared_time, lhr, xvb_chr, shr)
         },
         RuntimeMode::Hero => {
-            info!("RuntimeMode::Hero - calculating spared_time");
-            time_that_could_be_spared(lhr, min_hr)
+            info!("RuntimeMode::Hero - calculating spared_time lhr:{lhr} min_hr:{min_hr}");
+            output_console(gui_api_xvb, "Hero mode is enabled for this decision");
+            default_spared_time
         },
         RuntimeMode::ManuallyDonante => {
-            info!("RuntimeMode::ManuallyDonate - calculating spared_time");
-            let manual_amount = lock!(gui_api_xvb).stats_priv.runtime_manual_amount as u32;
-            let spared_time = XVB_TIME_ALGO * manual_amount / (avg_hr as u32);
-            info!("spared_time = {XVB_TIME_ALGO} * {manual_amount} / {avg_hr} = {spared_time}");
-            spared_time
+            let donate_hr = lock!(gui_api_xvb).stats_priv.runtime_manual_amount;
+            info!("RuntimeMode::ManuallyDonate - lhr:{lhr} donate_hr:{donate_hr}");
+            if lhr < 1.0 {
+                default_spared_time
+            } else {
+                XVB_TIME_ALGO * (donate_hr as u32) / (lhr as u32)
+            }
         },
         RuntimeMode::ManuallyKeep => {
-            info!("RuntimeMode::ManuallyKeep - calculating spared_time");
-            let manual_amount = lock!(gui_api_xvb).stats_priv.runtime_manual_amount as u32;
-            let spared_time = XVB_TIME_ALGO - (XVB_TIME_ALGO * manual_amount / (avg_hr as u32));
-            info!("spared_time = {XVB_TIME_ALGO} * {manual_amount} / {avg_hr} = {spared_time}");
-            spared_time
+            let keep_hr = lock!(gui_api_xvb).stats_priv.runtime_manual_amount;
+            info!("RuntimeMode::ManuallyDonate - lhr:{lhr} keep_hr:{keep_hr}");
+            if lhr < 1.0 {
+                default_spared_time
+            } else {
+                XVB_TIME_ALGO - (XVB_TIME_ALGO * (keep_hr as u32) / (lhr as u32))
+            }
         }
     };
-        
+
+    info!("Final spared_time is {spared_time}");
+
     spared_time
 }
 fn minimum_hashrate_share(difficulty: u64, mini: bool, ohr: f32) -> f32 {

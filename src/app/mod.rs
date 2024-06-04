@@ -527,13 +527,7 @@ impl App {
         // Set saved Hero mode to runtime.
         debug!("Setting runtime_mode & runtime_manual_amount");
         app.xvb_api.lock().unwrap().stats_priv.runtime_mode = app.state.xvb.mode.clone().into();
-        app.xvb_api.lock().unwrap().stats_priv.runtime_manual_amount = match app.state.xvb.amount.parse::<u64>() {
-            Ok(n) => n,
-            Err(_) => {
-                error!("Cannot parse [amount] to u64, defaulting to 1");
-                1
-            }
-        };
+        app.xvb_api.lock().unwrap().stats_priv.runtime_manual_amount = app.state.xvb.amount.parse().unwrap();
 
         // Check if [P2pool.node] exists
         info!("App Init | Checking if saved remote node still exists...");
