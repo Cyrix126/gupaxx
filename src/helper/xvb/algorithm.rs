@@ -24,10 +24,27 @@ pub(crate) fn calcul_donated_time(
     gui_api_xvb: &Arc<Mutex<PubXvbApi>>,
     state_p2pool: &crate::disk::state::P2pool,
 ) -> u32 {
+    
+    let manual_amount = lock!(gui_api_xvb).stats_priv.runtime_manual_amount as u32;
+    let avg_hr = calc_last_hour_avg_hash_rate(&lock!(gui_api_xvb).p2pool_sent_last_hour_samples);
+    {
+        let avg_hr = avg_hr as u32;
+        if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::ManuallyDonante && avg_hr > 0 {
+            let spared_time = XVB_TIME_ALGO * manual_amount / avg_hr;
+            info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}");
+            return spared_time;
+        }
+
+        if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::ManuallyKeep && avg_hr > 0 { 
+            let spared_time = XVB_TIME_ALGO - (XVB_TIME_ALGO * manual_amount / avg_hr);
+            info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}");
+            return spared_time;
+        }
+    }
+    
     let p2pool_ehr = lock!(gui_api_p2pool).sidechain_ehr;
     // what if ehr stay still for the next ten minutes ? mHR will augment every ten minutes because it thinks that oHR is decreasing.
     //
-    let avg_hr = calc_last_hour_avg_hash_rate(&lock!(gui_api_xvb).p2pool_sent_last_hour_samples);
     let mut p2pool_ohr = p2pool_ehr - avg_hr;
     if p2pool_ohr < 0.0 {
         p2pool_ohr = 0.0;
@@ -73,17 +90,6 @@ pub(crate) fn calcul_donated_time(
         }
 
         
-        let manual_amount = lock!(gui_api_xvb).stats_priv.runtime_manual_amount as u32;
-        let avg_hr = avg_hr as u32;
-        if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::ManuallyDonante && avg_hr > 0 {
-            spared_time = XVB_TIME_ALGO * manual_amount / avg_hr;
-            info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}");
-        }
-
-        if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::ManuallyKeep && avg_hr > 0 { 
-            spared_time = XVB_TIME_ALGO - (XVB_TIME_ALGO * manual_amount / avg_hr);
-            info!("spared_time = 600 * {manual_amount} / {avg_hr} = {spared_time}");
-        }
     }
     if lock!(gui_api_xvb).stats_priv.runtime_mode == RuntimeMode::Hero {
         output_console(gui_api_xvb, "Hero mode is enabled for this decision");
