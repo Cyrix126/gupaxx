@@ -33,21 +33,23 @@ impl crate::disk::state::Xvb {
         api: &Arc<Mutex<PubXvbApi>>,
         private_stats: bool,
     ) {
-        let website_height = size.y / 10.0;
-        let width = size.x;
-        let height = size.y;
-        let space_h = height / 48.0;
-        // logo and website link
-        ui.vertical_centered(|ui| {
-            ui.add_sized(
-                [width, website_height],
-                Image::from_bytes("bytes:/xvb.png", BYTES_XVB),
-            );
-            ui.style_mut().override_text_style = Some(TextStyle::Heading);
-            ui.add_space(space_h);
-            ui.hyperlink_to("XMRvsBeast", XVB_URL);
-            ui.add_space(space_h);
-        });
+        if self.simple {
+            let website_height = size.y / 10.0;
+            let width = size.x;
+            let height = size.y;
+            let space_h = height / 48.0;
+            // logo and website link
+            ui.vertical_centered(|ui| {
+                ui.add_sized(
+                    [width, website_height],
+                    Image::from_bytes("bytes:/xvb.png", BYTES_XVB),
+                );
+                ui.style_mut().override_text_style = Some(TextStyle::Heading);
+                ui.add_space(space_h);
+                ui.hyperlink_to("XMRvsBeast", XVB_URL);
+                ui.add_space(space_h);
+            });
+        }
         // console output for log
         debug!("XvB Tab | Rendering [Console]");
         ui.group(|ui| {
