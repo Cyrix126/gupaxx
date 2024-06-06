@@ -18,6 +18,7 @@ use crate::helper::p2pool::ImgP2pool;
 use crate::helper::p2pool::PubP2poolApi;
 use crate::helper::xmrig::ImgXmrig;
 use crate::helper::xmrig::PubXmrigApi;
+use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::helper::xvb::PubXvbApi;
 use crate::helper::Helper;
 use crate::helper::Process;
@@ -527,7 +528,14 @@ impl App {
         // Set saved Hero mode to runtime.
         debug!("Setting runtime_mode & runtime_manual_amount");
         app.xvb_api.lock().unwrap().stats_priv.runtime_mode = app.state.xvb.mode.clone().into();
-        app.xvb_api.lock().unwrap().stats_priv.runtime_manual_amount = app.state.xvb.amount.parse().unwrap();
+        app.xvb_api.lock().unwrap().stats_priv.runtime_manual_amount = match app.state.xvb.amount.parse() {
+            Ok(n) => n,
+            Err(e) => {
+                error!("App Init | Failed to parse manual amount: {}", e);
+                app.xvb_api.lock().unwrap().stats_priv.runtime_mode = RuntimeMode::Auto;
+                0
+            }
+        };
 
         // Check if [P2pool.node] exists
         info!("App Init | Checking if saved remote node still exists...");

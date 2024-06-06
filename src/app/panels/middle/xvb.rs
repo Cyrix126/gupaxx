@@ -16,7 +16,7 @@ use crate::utils::constants::{
 };
 use crate::utils::macros::lock;
 use crate::utils::regex::Regexes;
-use crate::XVB_MINING_ON_FIELD;
+use crate::{XVB_MANUAL_HASHRATE_HELP, XVB_MINING_ON_FIELD};
 use crate::{
     constants::{BYTES_XVB, SPACE},
     utils::constants::{DARK_GRAY, XVB_URL},
@@ -130,7 +130,8 @@ impl crate::disk::state::Xvb {
     ui.horizontal(|ui| {
         ui.add(
             TextEdit::singleline(&mut self.amount)
-        )
+            .vertical_align(egui::Align::Center)
+        ).on_hover_text(XVB_MANUAL_HASHRATE_HELP)
     });
 }
 
