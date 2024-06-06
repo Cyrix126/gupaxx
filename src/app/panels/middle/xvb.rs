@@ -117,45 +117,49 @@ impl crate::disk::state::Xvb {
     ui.style_mut().spacing.icon_spacing = space_h;
 
     
-    ui.group(|ui| {
-        ui.vertical_centered(|ui| {
-            ui.horizontal(|ui| {
+    if !self.simple {
 
-                egui::ComboBox::from_label("")
-                .selected_text(format!("{:?}", self.mode))
-                .show_ui(ui, |ui| {
-                        ui.selectable_value(&mut self.mode, XvbMode::Auto, "Automatic");
-                        ui.selectable_value(&mut self.mode, XvbMode::Hero, "Hero Mode");
-                        ui.selectable_value(&mut self.mode, XvbMode::ManuallyDonate, "Manually Donate");
-                        ui.selectable_value(&mut self.mode, XvbMode::ManuallyKeep, "Manually Keep");
+        ui.group(|ui| {
+            ui.vertical_centered(|ui| {
+                ui.horizontal(|ui| {
+
+                    egui::ComboBox::from_label("")
+                    .selected_text(format!("{:?}", self.mode))
+                    .show_ui(ui, |ui| {
+                            ui.selectable_value(&mut self.mode, XvbMode::Auto, "Automatic");
+                            ui.selectable_value(&mut self.mode, XvbMode::Hero, "Hero Mode");
+                            ui.selectable_value(&mut self.mode, XvbMode::ManuallyDonate, "Manually Donate");
+                            ui.selectable_value(&mut self.mode, XvbMode::ManuallyKeep, "Manually Keep");
+                    });
+                    if self.mode == XvbMode::ManuallyDonate || self.mode == XvbMode::ManuallyKeep {
+                        let (text, color) = if self.amount.is_empty() {
+                            (
+                                format!(""),
+                                LIGHT_GRAY,
+                            )
+                        }  else if self.amount.parse::<u32>().is_ok() {
+                            (format!("✔"), GREEN)
+                        } else {
+                            (
+                                format!("Invalid hashrate ❌"),
+                                RED,
+                            )
+                        };
+
+                        ui.add_space(space_h);
+
+                        ui.colored_label(color, text);
+                        ui.add(
+                            TextEdit::singleline(&mut self.amount)
+                            .vertical_align(egui::Align::Center)
+                        ).on_hover_text(XVB_MANUAL_HASHRATE_HELP);
+                    }
+
                 });
-                if self.mode == XvbMode::ManuallyDonate || self.mode == XvbMode::ManuallyKeep {
-                    let (text, color) = if self.amount.is_empty() {
-                        (
-                            format!(""),
-                            LIGHT_GRAY,
-                        )
-                    }  else if self.amount.parse::<u32>().is_ok() {
-                        (format!("✔"), GREEN)
-                    } else {
-                        (
-                            format!("Invalid hashrate ❌"),
-                            RED,
-                        )
-                    };
-
-                    ui.add_space(space_h);
-
-                    ui.colored_label(color, text);
-                    ui.add(
-                        TextEdit::singleline(&mut self.amount)
-                        .vertical_align(egui::Align::Center)
-                    ).on_hover_text(XVB_MANUAL_HASHRATE_HELP);
-                }
-
             });
         });
-    });
+
+    }
 
 
     

@@ -253,6 +253,7 @@ pub enum XvbMode {
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
 pub struct Xvb {
+    pub simple: bool,
     pub token: String,
     pub mode: XvbMode,
     pub amount: String
