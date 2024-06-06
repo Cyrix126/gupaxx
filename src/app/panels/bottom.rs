@@ -607,7 +607,6 @@ impl crate::app::App {
                     size,
                     SelectableLabel::new(self.state.xvb.simple, "Simple"),
                 )
-                .on_hover_text(XMRIG_SIMPLE)
                 .clicked()
             {
                 self.state.xvb.simple = true;
