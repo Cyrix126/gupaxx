@@ -82,7 +82,7 @@ pub(crate) fn calcul_donated_time(
             output_console(gui_api_xvb, "Hero mode is enabled for this decision");
             default_spared_time
         },
-        RuntimeMode::ManuallyDonante => {
+        RuntimeMode::ManuallyDonate => {
             let donate_hr = lock!(gui_api_xvb).stats_priv.runtime_manual_amount;
             info!("RuntimeMode::ManuallyDonate - lhr:{lhr} donate_hr:{donate_hr}");
             if lhr < 1.0 {

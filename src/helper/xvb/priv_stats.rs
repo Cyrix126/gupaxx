@@ -22,7 +22,7 @@ use super::{nodes::XvbNode, rounds::XvbRound, PubXvbApi};
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub enum RuntimeMode {
     Auto,
-    ManuallyDonante,
+    ManuallyDonate,
     ManuallyKeep,
     Hero,
 }
@@ -123,7 +123,7 @@ impl From<XvbMode> for RuntimeMode {
     fn from(mode: XvbMode) -> Self {
         match mode {
             XvbMode::Auto => Self::Auto,
-            XvbMode::ManuallyDonante => Self::ManuallyDonante,
+            XvbMode::ManuallyDonate => Self::ManuallyDonate,
             XvbMode::ManuallyKeep => Self::ManuallyKeep,
             XvbMode::Hero => Self::Hero,
         }

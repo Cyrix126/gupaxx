@@ -122,11 +122,11 @@ impl crate::disk::state::Xvb {
         ui.horizontal(|ui| {
             ui.selectable_value(&mut self.mode, XvbMode::Auto, "Automatic");
             ui.selectable_value(&mut self.mode, XvbMode::Hero, "Hero Mode");
-            ui.selectable_value(&mut self.mode, XvbMode::ManuallyDonante, "Manually Donate");
+            ui.selectable_value(&mut self.mode, XvbMode::ManuallyDonate, "Manually Donate");
             ui.selectable_value(&mut self.mode, XvbMode::ManuallyKeep, "Manually Keep");
         })
     });
-    if self.mode == XvbMode::ManuallyDonante || self.mode == XvbMode::ManuallyKeep {
+    if self.mode == XvbMode::ManuallyDonate || self.mode == XvbMode::ManuallyKeep {
     ui.horizontal(|ui| {
         ui.add(
             TextEdit::singleline(&mut self.amount)

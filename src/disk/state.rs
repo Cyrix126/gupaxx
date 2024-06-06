@@ -246,7 +246,7 @@ pub struct Xmrig {
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub enum XvbMode {
     Auto,
-    ManuallyDonante,
+    ManuallyDonate,
     ManuallyKeep,
     Hero,
 }
