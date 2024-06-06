@@ -12,7 +12,7 @@ use crate::regex::num_lines;
 use crate::utils::constants::{
     GREEN, LIGHT_GRAY, ORANGE, RED, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD, XVB_FAILURE_FIELD,
     XVB_HELP, XVB_ROUND_TYPE_FIELD, XVB_TOKEN_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES,
-    XVB_WINNER_FIELD,
+    XVB_WINNER_FIELD, XVB_HERO_SELECT
 };
 use crate::utils::macros::lock;
 use crate::utils::regex::Regexes;
@@ -33,23 +33,23 @@ impl crate::disk::state::Xvb {
         api: &Arc<Mutex<PubXvbApi>>,
         private_stats: bool,
     ) {
-        if self.simple {
-            let website_height = size.y / 10.0;
-            let width = size.x;
-            let height = size.y;
-            let space_h = height / 48.0;
-            // logo and website link
-            ui.vertical_centered(|ui| {
-                ui.add_sized(
-                    [width, website_height],
-                    Image::from_bytes("bytes:/xvb.png", BYTES_XVB),
-                );
-                ui.style_mut().override_text_style = Some(TextStyle::Heading);
-                ui.add_space(space_h);
-                ui.hyperlink_to("XMRvsBeast", XVB_URL);
-                ui.add_space(space_h);
-            });
-        }
+        let website_height = size.y / 10.0;
+        let width = size.x;
+        let height = size.y;
+        let space_h = height / 48.0;
+        // if self.simple {
+        //     // logo and website link
+        //     ui.vertical_centered(|ui| {
+        //         ui.add_sized(
+        //             [width, website_height],
+        //             Image::from_bytes("bytes:/xvb.png", BYTES_XVB),
+        //         );
+        //         ui.style_mut().override_text_style = Some(TextStyle::Heading);
+        //         ui.add_space(space_h);
+        //         ui.hyperlink_to("XMRvsBeast", XVB_URL);
+        //         ui.add_space(space_h);
+        //     });
+        // }
         // console output for log
         debug!("XvB Tab | Rendering [Console]");
         ui.group(|ui| {
@@ -119,6 +119,23 @@ impl crate::disk::state::Xvb {
     ui.style_mut().spacing.icon_spacing = space_h;
 
     
+    // --------------------------- XVB Simple -------------------------------------------
+    if self.simple {
+        ui.group(|ui| {
+            ui.vertical_centered(|ui| {
+                ui.horizontal(|ui| {
+                    egui::ComboBox::from_label("")
+                    .selected_text(format!("{:?}", self.mode))
+                    .show_ui(ui, |ui| {
+                            ui.selectable_value(&mut self.mode, XvbMode::Auto, "Automatic");
+                            ui.selectable_value(&mut self.mode, XvbMode::Hero, "Hero Mode");
+                    });
+                });
+            });
+        });
+    }
+    
+    // --------------------------- XVB Advanced -----------------------------------------
     if !self.simple {
 
         ui.group(|ui| {
