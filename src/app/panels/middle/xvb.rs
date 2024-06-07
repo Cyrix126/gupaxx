@@ -3,10 +3,12 @@ use std::sync::{Arc, Mutex};
 use egui::TextStyle::{self, Name};
 use egui::{vec2, Image, RichText, TextEdit, Ui, Vec2};
 use log::debug;
+use log::error;
 use readable::num::Float;
 use readable::up::Uptime;
 
 use crate::disk::state::XvbMode;
+use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::helper::xvb::PubXvbApi;
 use crate::regex::num_lines;
 use crate::utils::constants::{
@@ -37,19 +39,19 @@ impl crate::disk::state::Xvb {
         let width = size.x;
         let height = size.y;
         let space_h = height / 48.0;
-        // if self.simple {
-        //     // logo and website link
-        //     ui.vertical_centered(|ui| {
-        //         ui.add_sized(
-        //             [width, website_height],
-        //             Image::from_bytes("bytes:/xvb.png", BYTES_XVB),
-        //         );
-        //         ui.style_mut().override_text_style = Some(TextStyle::Heading);
-        //         ui.add_space(space_h);
-        //         ui.hyperlink_to("XMRvsBeast", XVB_URL);
-        //         ui.add_space(space_h);
-        //     });
-        // }
+
+        // logo and website link
+        ui.vertical_centered(|ui| {
+            ui.add_sized(
+                [width, website_height],
+                Image::from_bytes("bytes:/xvb.png", BYTES_XVB),
+            );
+            ui.style_mut().override_text_style = Some(TextStyle::Heading);
+            ui.add_space(space_h);
+            ui.hyperlink_to("XMRvsBeast", XVB_URL);
+            ui.add_space(space_h);
+        });
+
         // console output for log
         debug!("XvB Tab | Rendering [Console]");
         ui.group(|ui| {
@@ -121,22 +123,18 @@ impl crate::disk::state::Xvb {
     
     // --------------------------- XVB Simple -------------------------------------------
     if self.simple {
-        ui.group(|ui| {
-            ui.vertical_centered(|ui| {
-                ui.horizontal(|ui| {
-                    egui::ComboBox::from_label("")
-                    .selected_text(format!("{:?}", self.mode))
-                    .show_ui(ui, |ui| {
-                            ui.selectable_value(&mut self.mode, XvbMode::Auto, "Automatic");
-                            ui.selectable_value(&mut self.mode, XvbMode::Hero, "Hero Mode");
-                    });
-                });
-            });
-        });
+
+        if ui.checkbox(&mut self.simple_hero_mode, "Hero Mode").on_hover_text(XVB_HERO_SELECT).clicked() {
+            // also change hero mode of runtime.
+            lock!(api).stats_priv.runtime_mode = RuntimeMode::Hero;
+        } else {
+            lock!(api).stats_priv.runtime_mode = RuntimeMode::Auto;
+        }
+
     }
-    
-    // --------------------------- XVB Advanced -----------------------------------------
-    if !self.simple {
+ 
+     // --------------------------- XVB Advanced -----------------------------------------
+     if !self.simple {
 
         ui.group(|ui| {
             ui.vertical_centered(|ui| {
@@ -178,13 +176,24 @@ impl crate::disk::state::Xvb {
             });
         });
 
-    }
+        // Set runtime_mode & runtime_manual_amount
+        lock!(api).stats_priv.runtime_mode = self.mode.clone().into();
+        lock!(api).stats_priv.runtime_manual_amount = match self.amount.parse() {
+            Ok(n) => n,
+            Err(e) => {
+                error!("Error parsing int {}", e);
+                lock!(api).stats_priv.runtime_mode = RuntimeMode::Auto;
+                0
+            }
+        };
+
+    } 
 
 
     
 
 
-// need to warn the user if no address is set in p2pool tab
+        // need to warn the user if no address is set in p2pool tab
         if !Regexes::addr_ok(address) {
             ui.add_space(width / 16.0);
             debug!("XvB Tab | Rendering warning text");

@@ -510,6 +510,32 @@ impl crate::app::App {
             }
         });
     }
+    
+    fn xvb_submenu(&mut self, ui: &mut Ui, size: Vec2) {
+        ui.group(|ui| {
+            let width = size.x / 1.5;
+            let size = vec2(width, size.y);
+            if ui
+                .add_sized(
+                    size,
+                    SelectableLabel::new(!self.state.xvb.simple, "Advanced"),
+                )
+                .clicked()
+            {
+                self.state.xvb.simple = false;
+            }
+            ui.separator();
+            if ui
+                .add_sized(
+                    size,
+                    SelectableLabel::new(self.state.xvb.simple, "Simple"),
+                )
+                .clicked()
+            {
+                self.state.xvb.simple = true;
+            }
+        });
+    }
     fn xvb_run_actions(
         &mut self,
         ui: &mut Ui,
@@ -588,31 +614,6 @@ impl crate::app::App {
         });
     }
     
-    fn xvb_submenu(&mut self, ui: &mut Ui, size: Vec2) {
-        ui.group(|ui| {
-            let width = size.x / 1.5;
-            let size = vec2(width, size.y);
-            if ui
-                .add_sized(
-                    size,
-                    SelectableLabel::new(!self.state.xvb.simple, "Advanced"),
-                )
-                .clicked()
-            {
-                self.state.xvb.simple = false;
-            }
-            ui.separator();
-            if ui
-                .add_sized(
-                    size,
-                    SelectableLabel::new(self.state.xvb.simple, "Simple"),
-                )
-                .clicked()
-            {
-                self.state.xvb.simple = true;
-            }
-        });
-    }
 }
 
 fn status_p2pool(state: ProcessState, ui: &mut Ui, size: Vec2) {

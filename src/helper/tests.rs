@@ -3,7 +3,7 @@ mod test {
 
     use crate::helper::{
         p2pool::{PrivP2poolLocalApi, PrivP2poolNetworkApi},
-        xvb::{algorithm::calcul_donated_time, rounds::round_type},
+        xvb::{algorithm::calcul_donated_time, priv_stats::RuntimeMode, rounds::round_type},
         Helper, Process, ProcessName, ProcessState,
     };
 
@@ -539,7 +539,7 @@ Uptime         = 0h 2m 4s
         // 15mn average HR of xmrig is 5kH/s
         lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
         lock!(gui_api_xmrig).hashrate_raw_15m = 5000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_hero_mode = false;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,
             &gui_api_p2pool,
@@ -559,7 +559,7 @@ Uptime         = 0h 2m 4s
             / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::Vip));
         // verify that hero mode will give x seconds
-        lock!(gui_api_xvb).stats_priv.runtime_hero_mode = true;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,
             &gui_api_p2pool,
@@ -578,7 +578,7 @@ Uptime         = 0h 2m 4s
         // verify that if one share and not enough for donor vip round (should be in donor round), right amount of time will be given to xvb for default and hero mode
         lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
         lock!(gui_api_xmrig).hashrate_raw_15m = 8000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_hero_mode = false;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,
             &gui_api_p2pool,
@@ -598,7 +598,7 @@ Uptime         = 0h 2m 4s
             / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::Donor));
         // verify that hero mode will give x seconds
-        lock!(gui_api_xvb).stats_priv.runtime_hero_mode = true;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,
             &gui_api_p2pool,
@@ -617,7 +617,7 @@ Uptime         = 0h 2m 4s
         // verify that if one share and not enough for donor whale round(should be in donor vip), right amount of time will be given to xvb for default and hero mode
         lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
         lock!(gui_api_xmrig).hashrate_raw_15m = 19000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_hero_mode = false;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,
             &gui_api_p2pool,
@@ -637,7 +637,7 @@ Uptime         = 0h 2m 4s
             / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorVip));
         // verify that hero mode will give x seconds
-        lock!(gui_api_xvb).stats_priv.runtime_hero_mode = true;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,
             &gui_api_p2pool,
@@ -656,7 +656,7 @@ Uptime         = 0h 2m 4s
         // verify that if one share and not enough for donor mega round, right amount of time will be given to xvb for default and hero mode
         lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
         lock!(gui_api_xmrig).hashrate_raw_15m = 105000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_hero_mode = false;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,
             &gui_api_p2pool,
@@ -676,7 +676,7 @@ Uptime         = 0h 2m 4s
             / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorWhale));
         // verify that hero mode will give x seconds
-        lock!(gui_api_xvb).stats_priv.runtime_hero_mode = true;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,
             &gui_api_p2pool,
@@ -695,7 +695,7 @@ Uptime         = 0h 2m 4s
         // verify that if one share and enough for donor mega round, right amount of time will be given to xvb for default and hero mode
         lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
         lock!(gui_api_xmrig).hashrate_raw_15m = 1205000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_hero_mode = false;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,
             &gui_api_p2pool,
@@ -715,7 +715,7 @@ Uptime         = 0h 2m 4s
             / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorMega));
         // verify that hero mode will give x seconds
-        lock!(gui_api_xvb).stats_priv.runtime_hero_mode = true;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,
             &gui_api_p2pool,
@@ -735,7 +735,7 @@ Uptime         = 0h 2m 4s
         lock!(gui_api_xvb).output.clear();
         lock!(gui_api_xmrig).hashrate_raw_15m = 12500.0;
         lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 5.0;
-        lock!(gui_api_xvb).stats_priv.runtime_hero_mode = false;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,
             &gui_api_p2pool,
@@ -758,7 +758,7 @@ Uptime         = 0h 2m 4s
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorVip));
         // verify that hero mode will give x seconds
         lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 5.0;
-        lock!(gui_api_xvb).stats_priv.runtime_hero_mode = true;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,
             &gui_api_p2pool,

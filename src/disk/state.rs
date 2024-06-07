@@ -255,6 +255,7 @@ pub enum XvbMode {
 pub struct Xvb {
     pub simple: bool,
     pub token: String,
+    pub simple_hero_mode: bool,
     pub mode: XvbMode,
     pub amount: String
 }
