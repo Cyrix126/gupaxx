@@ -19,8 +19,14 @@ jobs:
         submodules: recursive
     - name: Format
       run: cargo fmt --all --check
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    steps:
     - name: Test
-      run: cargo test
+      run: cargo test --all-features
   # Run typo checker separately.
   # This will fast-cancel other CI early if this fails.
   typo:
@@ -38,10 +44,8 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Clippy (fail on warnings)
-      run: cargo clippy --workspace --all-features --all-targets -- -D warnings
+      run: cargo clippy --all-features --all-targets -- -D warnings
     - name: Check compilation
       run: cargo check --all-features --verbose
-    - name: Tests
-      run: cargo test --all-features
     - name: Documentation
       run: cargo doc --workspace --all-features --no-deps
