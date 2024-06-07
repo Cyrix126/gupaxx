@@ -175,7 +175,7 @@ impl Xmrig {
             ui.horizontal(|ui| {
                 ui.add_sized(
                     [text_width, text_edit],
-                    Label::new(format!("Pause on active [0-255]:")),
+                    Label::new("Pause on active [0-255]:".to_string()),
                 );
                 ui.add_sized([width, text_edit], Slider::new(&mut self.pause, 0..=255))
                     .on_hover_text(format!("{} [{}] seconds.", XMRIG_PAUSE, self.pause));
