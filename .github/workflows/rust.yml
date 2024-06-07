@@ -1,0 +1,47 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  fmt:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+    - name: Format
+      run: cargo fmt --all --check
+    - name: Test
+      run: cargo test
+  # Run typo checker separately.
+  # This will fast-cancel other CI early if this fails.
+  typo:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+    - name: Spell Check
+      uses: crate-ci/typos@master
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Clippy (fail on warnings)
+      run: cargo clippy --workspace --all-features --all-targets -- -D warnings
+    - name: Check compilation
+      run: cargo check --all-features --verbose
+    - name: Tests
+      run: cargo test --all-features
+    - name: Documentation
+      run: cargo doc --workspace --all-features --no-deps
