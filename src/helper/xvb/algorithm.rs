@@ -83,8 +83,13 @@ pub(crate) fn calcul_donated_time(
             default_spared_time
         },
         RuntimeMode::ManuallyDonate => {
-            let donate_hr = lock!(gui_api_xvb).stats_priv.runtime_manual_amount;
+            let mut donate_hr = lock!(gui_api_xvb).stats_priv.runtime_manual_amount;
             info!("RuntimeMode::ManuallyDonate - lhr:{lhr} donate_hr:{donate_hr}");
+
+            if donate_hr > (lhr as u64) {
+                donate_hr = lhr as u64;
+            }
+
             if lhr < 1.0 {
                 default_spared_time
             } else {
@@ -92,8 +97,13 @@ pub(crate) fn calcul_donated_time(
             }
         },
         RuntimeMode::ManuallyKeep => {
-            let keep_hr = lock!(gui_api_xvb).stats_priv.runtime_manual_amount;
+            let mut keep_hr = lock!(gui_api_xvb).stats_priv.runtime_manual_amount;
             info!("RuntimeMode::ManuallyDonate - lhr:{lhr} keep_hr:{keep_hr}");
+
+            if keep_hr > (lhr as u64) {
+                keep_hr = lhr as u64;
+            }
+
             if lhr < 1.0 {
                 default_spared_time
             } else {
