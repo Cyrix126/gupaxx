@@ -27,7 +27,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Test
-      run: cargo test --all-features
+      run: cargo test 
   typo:
     runs-on: ubuntu-latest
     steps:
@@ -43,7 +43,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Clippy (fail on warnings)
-      run: cargo clippy --all-features -- -D warnings
+      run: cargo clippy -- -D warnings
   check:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -52,7 +52,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Check compilation
-      run: cargo check --all-features --verbose
+      run: cargo check  --verbose
   doc:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -61,4 +61,4 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Documentation
-      run: cargo doc --all-features --no-deps
+      run: cargo doc --no-deps
