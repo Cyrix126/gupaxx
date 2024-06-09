@@ -93,6 +93,9 @@ pub(crate) fn calcul_donated_time(
             info!("RuntimeMode::ManuallyDonate - lhr:{lhr} keep_hr:{keep_hr}");
 
             XVB_TIME_ALGO - (XVB_TIME_ALGO * (keep_hr as u32) / (lhr as u32))
+        },
+        RuntimeMode::ManualDonationLevel => {
+            todo!()
         }
     };
 

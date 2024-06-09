@@ -6,7 +6,7 @@ use log::debug;
 use readable::num::Float;
 use readable::up::Uptime;
 
-use crate::disk::state::XvbMode;
+use crate::disk::state::{XvbMode, ManualDonationLevel};
 use crate::helper::xmrig::PubXmrigApi;
 use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::helper::xvb::PubXvbApi;
@@ -134,7 +134,11 @@ impl crate::disk::state::Xvb {
         }
 
     }
- 
+});
+
+
+    ui.add_space(space_h);
+
      // --------------------------- XVB Advanced -----------------------------------------
      if !self.simple {
 
@@ -149,6 +153,7 @@ impl crate::disk::state::Xvb {
                             ui.selectable_value(&mut self.mode, XvbMode::Hero, "Hero Mode");
                             ui.selectable_value(&mut self.mode, XvbMode::ManuallyDonate, "Manually Donate");
                             ui.selectable_value(&mut self.mode, XvbMode::ManuallyKeep, "Manually Keep");
+                            ui.selectable_value(&mut self.mode, XvbMode::ManualDonationLevel, "Manual Donation Level");
                     });
                     if self.mode == XvbMode::ManuallyDonate || self.mode == XvbMode::ManuallyKeep {
 
@@ -167,6 +172,17 @@ impl crate::disk::state::Xvb {
                         ui.add(
                             egui::Slider::new(&mut self.amount, 0.0..=(hashrate_xmrig as f64)).text("H/s")
                         ).on_hover_text(XVB_MANUAL_HASHRATE_HELP);
+                        
+                    }
+                    
+                    if self.mode ==  XvbMode::ManualDonationLevel {
+                        ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::VIP, "VIP");
+                        ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::Donor, "Donor");
+                        ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorVIP, "DonorVIP");
+                        ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorWhale, "DonorWhale");
+                        ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorMega, "DonorMega");
+                        
+                        lock!(api).stats_priv.runtime_manual_donation_level = self.manual_donation_level.clone().into();
                     }
 
                 });
@@ -177,8 +193,6 @@ impl crate::disk::state::Xvb {
         lock!(api).stats_priv.runtime_mode = self.mode.clone().into();
         lock!(api).stats_priv.runtime_manual_amount = self.amount;
     } 
-     
-});
 
     // need to warn the user if no address is set in p2pool tab
     if !Regexes::addr_ok(address) {

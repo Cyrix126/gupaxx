@@ -249,6 +249,17 @@ pub enum XvbMode {
     ManuallyDonate,
     ManuallyKeep,
     Hero,
+    ManualDonationLevel
+}
+
+
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
+pub enum ManualDonationLevel {
+    VIP,
+    Donor,
+    DonorVIP,
+    DonorWhale,
+    DonorMega
 }
 
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize, Default)]
@@ -257,7 +268,8 @@ pub struct Xvb {
     pub token: String,
     pub simple_hero_mode: bool,
     pub mode: XvbMode,
-    pub amount: f64
+    pub amount: f64,
+    pub manual_donation_level: ManualDonationLevel
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -390,5 +402,11 @@ impl Default for Version {
 impl Default for XvbMode {
     fn default() -> Self {
         Self::Auto
+    }
+}
+
+impl Default for ManualDonationLevel {
+    fn default() -> Self {
+        Self::VIP
     }
 }

@@ -10,9 +10,7 @@ use serde::Deserialize;
 use tokio::time::sleep;
 
 use crate::{
-    helper::{xvb::output_console, Process, ProcessState},
-    macros::lock,
-    XVB_URL,
+    disk::state::ManualDonationLevel, helper::{xvb::output_console, Process, ProcessState}, macros::lock, XVB_URL
 };
 use crate::disk::state::XvbMode;
 
@@ -25,6 +23,17 @@ pub enum RuntimeMode {
     ManuallyDonate,
     ManuallyKeep,
     Hero,
+    ManualDonationLevel
+}
+
+
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+pub enum RuntimeDonationLevel {
+    VIP,
+    Donor,
+    DonorVIP,
+    DonorWhale,
+    DonorMega
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -48,7 +57,9 @@ pub struct XvbPrivStats {
     // so the hero mode can change between two decision of algorithm without restarting XvB.
     pub runtime_mode: RuntimeMode,
     #[serde(skip)]
-    pub runtime_manual_amount: f64
+    pub runtime_manual_amount: f64,
+    #[serde(skip)]
+    pub runtime_manual_donation_level: RuntimeDonationLevel
 }
 
 impl XvbPrivStats {
@@ -126,6 +137,19 @@ impl From<XvbMode> for RuntimeMode {
             XvbMode::ManuallyDonate => Self::ManuallyDonate,
             XvbMode::ManuallyKeep => Self::ManuallyKeep,
             XvbMode::Hero => Self::Hero,
+            XvbMode::ManualDonationLevel => Self::ManualDonationLevel
+        }
+    }
+}
+
+impl From<ManualDonationLevel> for RuntimeDonationLevel {
+    fn from(level: ManualDonationLevel) -> Self {
+        match level {
+            ManualDonationLevel::VIP => RuntimeDonationLevel::VIP,
+            ManualDonationLevel::Donor => RuntimeDonationLevel::Donor,
+            ManualDonationLevel::DonorVIP => RuntimeDonationLevel::DonorVIP,
+            ManualDonationLevel::DonorWhale => RuntimeDonationLevel::DonorWhale,
+            ManualDonationLevel::DonorMega => RuntimeDonationLevel::DonorMega
         }
     }
 }
@@ -133,5 +157,11 @@ impl From<XvbMode> for RuntimeMode {
 impl Default for RuntimeMode {
     fn default() -> Self {
         Self::Auto
+    }
+}
+
+impl Default for RuntimeDonationLevel {
+    fn default() -> Self {
+        Self::VIP
     }
 }
