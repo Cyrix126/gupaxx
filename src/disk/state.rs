@@ -255,7 +255,6 @@ pub enum XvbMode {
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub enum ManualDonationLevel {
-    VIP,
     Donor,
     DonorVIP,
     DonorWhale,
@@ -407,6 +406,6 @@ impl Default for XvbMode {
 
 impl Default for ManualDonationLevel {
     fn default() -> Self {
-        Self::VIP
+        Self::Donor
     }
 }

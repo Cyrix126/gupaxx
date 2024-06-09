@@ -29,7 +29,6 @@ pub enum RuntimeMode {
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
 pub enum RuntimeDonationLevel {
-    VIP,
     Donor,
     DonorVIP,
     DonorWhale,
@@ -145,7 +144,6 @@ impl From<XvbMode> for RuntimeMode {
 impl From<ManualDonationLevel> for RuntimeDonationLevel {
     fn from(level: ManualDonationLevel) -> Self {
         match level {
-            ManualDonationLevel::VIP => RuntimeDonationLevel::VIP,
             ManualDonationLevel::Donor => RuntimeDonationLevel::Donor,
             ManualDonationLevel::DonorVIP => RuntimeDonationLevel::DonorVIP,
             ManualDonationLevel::DonorWhale => RuntimeDonationLevel::DonorWhale,
@@ -162,6 +160,6 @@ impl Default for RuntimeMode {
 
 impl Default for RuntimeDonationLevel {
     fn default() -> Self {
-        Self::VIP
+        Self::Donor
     }
 }

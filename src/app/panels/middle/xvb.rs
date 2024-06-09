@@ -177,7 +177,6 @@ impl crate::disk::state::Xvb {
                         }
                         
                         if self.mode ==  XvbMode::ManualDonationLevel {
-                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::VIP, "VIP");
                             ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::Donor, "Donor");
                             ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorVIP, "DonorVIP");
                             ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorWhale, "DonorWhale");

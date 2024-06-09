@@ -20,7 +20,7 @@ use crate::{
     XVB_ROUND_DONOR_WHALE_MIN_HR, XVB_TIME_ALGO,
 };
 
-use super::{PubXvbApi, SamplesAverageHour};
+use super::{priv_stats::RuntimeDonationLevel, PubXvbApi, SamplesAverageHour};
 
 pub(crate) fn calcul_donated_time(
     lhr: f32,
@@ -63,17 +63,18 @@ pub(crate) fn calcul_donated_time(
     output_console(gui_api_xvb, &msg_lhr);
     output_console(gui_api_xvb, &msg_mhr);
     output_console(gui_api_xvb, &msg_ehr);
-    // calculate how much time can be spared
 
+    let xvb_chr = lock!(gui_api_xvb).stats_priv.donor_1hr_avg * 1000.0;
+    info!("current HR on XvB (last hour): {xvb_chr}");
+    let shr = calc_last_hour_avg_hash_rate(&lock!(gui_api_xvb).xvb_sent_last_hour_samples);
+
+    // calculate how much time can be spared
     let mode = lock!(gui_api_xvb).stats_priv.runtime_mode.clone();
 
     let default_spared_time = time_that_could_be_spared(lhr, min_hr);
     let spared_time = match mode {
         RuntimeMode::Auto => {
             info!("RuntimeMode::Auto - calculating spared_time");
-            let xvb_chr = lock!(gui_api_xvb).stats_priv.donor_1hr_avg * 1000.0;
-            info!("current HR on XvB (last hour): {xvb_chr}");
-            let shr = calc_last_hour_avg_hash_rate(&lock!(gui_api_xvb).xvb_sent_last_hour_samples);
             // calculate how much time needed to be spared to be in most round type minimum HR + buffer
             minimum_time_for_highest_accessible_round(default_spared_time, lhr, xvb_chr, shr)
         },
@@ -95,7 +96,9 @@ pub(crate) fn calcul_donated_time(
             XVB_TIME_ALGO - (XVB_TIME_ALGO * (keep_hr as u32) / (lhr as u32))
         },
         RuntimeMode::ManualDonationLevel => {
-            todo!()
+            let donation_level = lock!(gui_api_xvb).stats_priv.runtime_manual_donation_level.clone();
+            
+            minimum_time_for_manual_round(donation_level, default_spared_time, lhr, xvb_chr, shr)
         }
     };
 
@@ -198,6 +201,35 @@ fn minimum_time_for_highest_accessible_round(st: u32, lhr: f32, chr: f32, shr: f
 
     (((hr_for_xvb - (hr_for_xvb - min)) / lhr) * XVB_TIME_ALGO as f32).ceil() as u32
 }
+
+fn minimum_time_for_manual_round(level: RuntimeDonationLevel, st: u32, lhr: f32, chr: f32, shr: f32) -> u32 {
+    let hr_for_xvb = ((st - 1) as f32 / XVB_TIME_ALGO as f32) * lhr;
+    info!(
+        "hr for xvb is: ({st} / {}) * {lhr} = {hr_for_xvb}H/s",
+        XVB_TIME_ALGO
+    );
+    let ohr = chr - shr;
+    
+    let min = match level {
+        RuntimeDonationLevel::Donor => {
+            XVB_ROUND_DONOR_MIN_HR as f32 - ohr
+        },
+        RuntimeDonationLevel::DonorVIP => {
+            XVB_ROUND_DONOR_VIP_MIN_HR as f32 - ohr
+        },
+        RuntimeDonationLevel::DonorWhale => {
+            XVB_ROUND_DONOR_WHALE_MIN_HR as f32 - ohr
+        },
+        RuntimeDonationLevel::DonorMega => {
+            XVB_ROUND_DONOR_MEGA_MIN_HR as f32 - ohr
+        }
+    };
+    
+    
+    
+    (((hr_for_xvb - (hr_for_xvb - min)) / lhr) * XVB_TIME_ALGO as f32).ceil() as u32
+}
+
 #[allow(clippy::too_many_arguments)]
 async fn sleep_then_update_node_xmrig(
     spared_time: u32,
