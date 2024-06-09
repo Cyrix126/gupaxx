@@ -177,22 +177,19 @@ impl crate::disk::state::Xvb {
         lock!(api).stats_priv.runtime_mode = self.mode.clone().into();
         lock!(api).stats_priv.runtime_manual_amount = self.amount;
     } 
+     
+});
 
+    // need to warn the user if no address is set in p2pool tab
+    if !Regexes::addr_ok(address) {
+        debug!("XvB Tab | Rendering warning text");
+            ui.horizontal_wrapped(|ui|{
+        ui.label(RichText::new("You don't have any payout address set in the P2pool Tab ! XvB process needs one to function properly.")
+                    .color(ORANGE));
 
-    
-
-
-        // need to warn the user if no address is set in p2pool tab
-        if !Regexes::addr_ok(address) {
-            ui.add_space(width / 16.0);
-            debug!("XvB Tab | Rendering warning text");
-                ui.horizontal_wrapped(|ui|{
-            ui.label(RichText::new("You don't have any payout address set in the P2pool Tab ! XvB process needs one to function properly.")
-                        .color(ORANGE));
-
-                });
-        }
-        });
+            });
+    }
+        
         // private stats
         ui.add_space(space_h);
         // ui.add_enabled_ui(private_stats, |ui| {
