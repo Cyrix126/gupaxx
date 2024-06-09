@@ -43,9 +43,10 @@ impl crate::disk::state::Xvb {
         let space_h = height / 48.0;
 
         // logo and website link
-        ui.vertical_centered(|ui| {
+        ui.horizontal(|ui| {
+            ui.add_space(width / 2.0 - 150.0);
             ui.add_sized(
-                [width, website_height],
+                [100.0, website_height],
                 Image::from_bytes("bytes:/xvb.png", BYTES_XVB),
             );
             ui.style_mut().override_text_style = Some(TextStyle::Heading);
