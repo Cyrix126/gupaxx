@@ -18,7 +18,6 @@ use crate::helper::p2pool::ImgP2pool;
 use crate::helper::p2pool::PubP2poolApi;
 use crate::helper::xmrig::ImgXmrig;
 use crate::helper::xmrig::PubXmrigApi;
-use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::helper::xvb::PubXvbApi;
 use crate::helper::Helper;
 use crate::helper::Process;

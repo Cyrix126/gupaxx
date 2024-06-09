@@ -3,7 +3,6 @@ use std::sync::{Arc, Mutex};
 use egui::TextStyle::{self, Name};
 use egui::{vec2, Image, RichText, TextEdit, Ui, Vec2};
 use log::debug;
-use log::error;
 use readable::num::Float;
 use readable::up::Uptime;
 
