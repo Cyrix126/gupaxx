@@ -97,6 +97,7 @@ pub(crate) fn calcul_donated_time(
         },
         RuntimeMode::ManualDonationLevel => {
             let donation_level = lock!(gui_api_xvb).stats_priv.runtime_manual_donation_level.clone();
+            info!("RuntimeMode::ManualDonationLevel - level {donation_level}");
             
             minimum_time_for_manual_round(donation_level, default_spared_time, lhr, xvb_chr, shr)
         }
