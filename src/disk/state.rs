@@ -251,13 +251,13 @@ pub enum XvbMode {
     Hero,
 }
 
-#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
+#[derive(Clone, PartialEq, Debug, Deserialize, Serialize, Default)]
 pub struct Xvb {
     pub simple: bool,
     pub token: String,
     pub simple_hero_mode: bool,
     pub mode: XvbMode,
-    pub amount: String
+    pub amount: f64
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

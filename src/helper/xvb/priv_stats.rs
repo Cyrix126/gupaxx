@@ -48,7 +48,7 @@ pub struct XvbPrivStats {
     // so the hero mode can change between two decision of algorithm without restarting XvB.
     pub runtime_mode: RuntimeMode,
     #[serde(skip)]
-    pub runtime_manual_amount: u64
+    pub runtime_manual_amount: f64
 }
 
 impl XvbPrivStats {

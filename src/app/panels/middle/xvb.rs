@@ -8,6 +8,7 @@ use readable::num::Float;
 use readable::up::Uptime;
 
 use crate::disk::state::XvbMode;
+use crate::helper::xmrig::PubXmrigApi;
 use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::helper::xvb::PubXvbApi;
 use crate::regex::num_lines;
@@ -33,6 +34,7 @@ impl crate::disk::state::Xvb {
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
         api: &Arc<Mutex<PubXvbApi>>,
+        gui_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
         private_stats: bool,
     ) {
         let website_height = size.y / 10.0;
@@ -149,26 +151,21 @@ impl crate::disk::state::Xvb {
                             ui.selectable_value(&mut self.mode, XvbMode::ManuallyKeep, "Manually Keep");
                     });
                     if self.mode == XvbMode::ManuallyDonate || self.mode == XvbMode::ManuallyKeep {
-                        let (text, color) = if self.amount.is_empty() {
-                            (
-                                format!(""),
-                                LIGHT_GRAY,
-                            )
-                        }  else if self.amount.parse::<u32>().is_ok() {
-                            (format!("✔"), GREEN)
-                        } else {
-                            (
-                                format!("Invalid hashrate ❌"),
-                                RED,
-                            )
-                        };
 
                         ui.add_space(space_h);
 
-                        ui.colored_label(color, text);
+                        let hashrate_xmrig = {
+                            if lock!(gui_api_xmrig).hashrate_raw_15m > 0.0 {
+                                lock!(gui_api_xmrig).hashrate_raw_15m
+                            } else if lock!(gui_api_xmrig).hashrate_raw_1m > 0.0 {
+                                lock!(gui_api_xmrig).hashrate_raw_1m
+                            } else {
+                                lock!(gui_api_xmrig).hashrate_raw
+                            }
+                        };
+
                         ui.add(
-                            TextEdit::singleline(&mut self.amount)
-                            .vertical_align(egui::Align::Center)
+                            egui::Slider::new(&mut self.amount, 0.0..=(hashrate_xmrig as f64)).text("H/s")
                         ).on_hover_text(XVB_MANUAL_HASHRATE_HELP);
                     }
 
@@ -178,15 +175,7 @@ impl crate::disk::state::Xvb {
 
         // Set runtime_mode & runtime_manual_amount
         lock!(api).stats_priv.runtime_mode = self.mode.clone().into();
-        lock!(api).stats_priv.runtime_manual_amount = match self.amount.parse() {
-            Ok(n) => n,
-            Err(e) => {
-                error!("Error parsing int {}", e);
-                lock!(api).stats_priv.runtime_mode = RuntimeMode::Auto;
-                0
-            }
-        };
-
+        lock!(api).stats_priv.runtime_manual_amount = self.amount;
     } 
 
 

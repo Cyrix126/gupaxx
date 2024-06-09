@@ -83,32 +83,16 @@ pub(crate) fn calcul_donated_time(
             default_spared_time
         },
         RuntimeMode::ManuallyDonate => {
-            let mut donate_hr = lock!(gui_api_xvb).stats_priv.runtime_manual_amount;
+            let donate_hr = lock!(gui_api_xvb).stats_priv.runtime_manual_amount;
             info!("RuntimeMode::ManuallyDonate - lhr:{lhr} donate_hr:{donate_hr}");
 
-            if donate_hr > (lhr as u64) {
-                donate_hr = lhr as u64;
-            }
-
-            if lhr < 1.0 {
-                default_spared_time
-            } else {
-                XVB_TIME_ALGO * (donate_hr as u32) / (lhr as u32)
-            }
+            XVB_TIME_ALGO * (donate_hr as u32) / (lhr as u32)
         },
         RuntimeMode::ManuallyKeep => {
-            let mut keep_hr = lock!(gui_api_xvb).stats_priv.runtime_manual_amount;
+            let keep_hr = lock!(gui_api_xvb).stats_priv.runtime_manual_amount;
             info!("RuntimeMode::ManuallyDonate - lhr:{lhr} keep_hr:{keep_hr}");
 
-            if keep_hr > (lhr as u64) {
-                keep_hr = lhr as u64;
-            }
-
-            if lhr < 1.0 {
-                default_spared_time
-            } else {
-                XVB_TIME_ALGO - (XVB_TIME_ALGO * (keep_hr as u32) / (lhr as u32))
-            }
+            XVB_TIME_ALGO - (XVB_TIME_ALGO * (keep_hr as u32) / (lhr as u32))
         }
     };
 
@@ -299,6 +283,7 @@ pub(crate) async fn algorithm(
             gui_api_xvb,
             "At least one share is in current PPLNS window.",
         );
+
         let hashrate_xmrig = {
             if lock!(gui_api_xmrig).hashrate_raw_15m > 0.0 {
                 lock!(gui_api_xmrig).hashrate_raw_15m
@@ -308,6 +293,7 @@ pub(crate) async fn algorithm(
                 lock!(gui_api_xmrig).hashrate_raw
             }
         };
+
         *lock!(time_donated) =
             calcul_donated_time(hashrate_xmrig, gui_api_p2pool, gui_api_xvb, state_p2pool);
         let time_donated = *lock!(time_donated);
