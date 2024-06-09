@@ -97,7 +97,7 @@ pub(crate) fn calcul_donated_time(
         },
         RuntimeMode::ManualDonationLevel => {
             let donation_level = lock!(gui_api_xvb).stats_priv.runtime_manual_donation_level.clone();
-            info!("RuntimeMode::ManualDonationLevel - level {donation_level}");
+            info!("RuntimeMode::ManualDonationLevel");
             
             minimum_time_for_manual_round(donation_level, default_spared_time, lhr, xvb_chr, shr)
         }
@@ -213,15 +213,19 @@ fn minimum_time_for_manual_round(level: RuntimeDonationLevel, st: u32, lhr: f32,
     
     let min = match level {
         RuntimeDonationLevel::Donor => {
+            info!("RuntimeDonationLevel::Donor");
             XVB_ROUND_DONOR_MIN_HR as f32 - ohr
         },
         RuntimeDonationLevel::DonorVIP => {
+            info!("RuntimeDonationLevel::DonorVIP");
             XVB_ROUND_DONOR_VIP_MIN_HR as f32 - ohr
         },
         RuntimeDonationLevel::DonorWhale => {
+            info!("RuntimeDonationLevel::DonorWhale");
             XVB_ROUND_DONOR_WHALE_MIN_HR as f32 - ohr
         },
         RuntimeDonationLevel::DonorMega => {
+            info!("RuntimeDonationLevel::DonorMega");
             XVB_ROUND_DONOR_MEGA_MIN_HR as f32 - ohr
         }
     };
