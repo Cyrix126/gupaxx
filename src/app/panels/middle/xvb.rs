@@ -14,7 +14,9 @@ use crate::regex::num_lines;
 use crate::utils::constants::{
     GREEN, LIGHT_GRAY, ORANGE, RED, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD, XVB_FAILURE_FIELD,
     XVB_HELP, XVB_ROUND_TYPE_FIELD, XVB_TOKEN_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES,
-    XVB_WINNER_FIELD, XVB_HERO_SELECT
+    XVB_WINNER_FIELD, XVB_HERO_SELECT, XVB_MODE_MANUALLY_DONATE, XVB_MODE_MANUALLY_KEEP, XVB_MODE_MANUAL_DONATION_LEVEL,
+    XVB_DONATION_LEVEL_DONOR_HELP, XVB_DONATION_LEVEL_VIP_DONOR_HELP, XVB_DONATION_LEVEL_WHALE_DONOR_HELP,
+    XVB_DONATION_LEVEL_MEGA_DONOR_HELP
 };
 use crate::utils::macros::lock;
 use crate::utils::regex::Regexes;
@@ -153,9 +155,12 @@ impl crate::disk::state::Xvb {
                         .show_ui(ui, |ui| {
                                 ui.selectable_value(&mut self.mode, XvbMode::Auto, "Automatic");
                                 ui.selectable_value(&mut self.mode, XvbMode::Hero, "Hero Mode");
-                                ui.selectable_value(&mut self.mode, XvbMode::ManuallyDonate, "Manually Donate");
-                                ui.selectable_value(&mut self.mode, XvbMode::ManuallyKeep, "Manually Keep");
-                                ui.selectable_value(&mut self.mode, XvbMode::ManualDonationLevel, "Manual Donation Level");
+                                ui.selectable_value(&mut self.mode, XvbMode::ManuallyDonate, "Manually Donate")
+                                .on_hover_text(XVB_MODE_MANUALLY_DONATE);
+                                ui.selectable_value(&mut self.mode, XvbMode::ManuallyKeep, "Manually Keep")
+                                .on_hover_text(XVB_MODE_MANUALLY_KEEP);
+                                ui.selectable_value(&mut self.mode, XvbMode::ManualDonationLevel, "Manual Donation Level")
+                                .on_hover_text(XVB_MODE_MANUAL_DONATION_LEVEL);
                         });
                         if self.mode == XvbMode::ManuallyDonate || self.mode == XvbMode::ManuallyKeep {
 
@@ -182,10 +187,14 @@ impl crate::disk::state::Xvb {
                         }
                         
                         if self.mode ==  XvbMode::ManualDonationLevel {
-                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::Donor, "Donor");
-                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorVIP, "DonorVIP");
-                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorWhale, "DonorWhale");
-                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorMega, "DonorMega");
+                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::Donor, "Donor")
+                            .on_hover_text(XVB_DONATION_LEVEL_DONOR_HELP);
+                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorVIP, "DonorVIP")
+                            .on_hover_text(XVB_DONATION_LEVEL_VIP_DONOR_HELP);
+                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorWhale, "DonorWhale")
+                            .on_hover_text(XVB_DONATION_LEVEL_WHALE_DONOR_HELP);
+                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorMega, "DonorMega")
+                            .on_hover_text(XVB_DONATION_LEVEL_MEGA_DONOR_HELP);
                             
                             lock!(api).stats_priv.runtime_manual_donation_level = self.manual_donation_level.clone().into();
                         }
