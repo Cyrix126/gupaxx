@@ -243,8 +243,9 @@ pub struct Xmrig {
     pub token: String,
 }
 
-#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
 pub enum XvbMode {
+    #[default]
     Auto,
     ManuallyDonate,
     ManuallyKeep,
@@ -253,8 +254,9 @@ pub enum XvbMode {
 }
 
 
-#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
 pub enum ManualDonationLevel {
+    #[default]
     Donor,
     DonorVIP,
     DonorWhale,
@@ -395,17 +397,5 @@ impl Default for Version {
             p2pool: P2POOL_VERSION.to_string(),
             xmrig: XMRIG_VERSION.to_string(),
         }
-    }
-}
-
-impl Default for XvbMode {
-    fn default() -> Self {
-        Self::Auto
-    }
-}
-
-impl Default for ManualDonationLevel {
-    fn default() -> Self {
-        Self::Donor
     }
 }

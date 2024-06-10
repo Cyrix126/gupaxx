@@ -17,8 +17,9 @@ use crate::disk::state::XvbMode;
 use super::{nodes::XvbNode, rounds::XvbRound, PubXvbApi};
 
 
-#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq, Default)]
 pub enum RuntimeMode {
+    #[default]
     Auto,
     ManuallyDonate,
     ManuallyKeep,
@@ -27,8 +28,9 @@ pub enum RuntimeMode {
 }
 
 
-#[derive(Debug, Clone, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Deserialize, PartialEq, Eq, Default)]
 pub enum RuntimeDonationLevel {
+    #[default]
     Donor,
     DonorVIP,
     DonorWhale,
@@ -149,17 +151,5 @@ impl From<ManualDonationLevel> for RuntimeDonationLevel {
             ManualDonationLevel::DonorWhale => RuntimeDonationLevel::DonorWhale,
             ManualDonationLevel::DonorMega => RuntimeDonationLevel::DonorMega
         }
-    }
-}
-
-impl Default for RuntimeMode {
-    fn default() -> Self {
-        Self::Auto
-    }
-}
-
-impl Default for RuntimeDonationLevel {
-    fn default() -> Self {
-        Self::Donor
     }
 }
