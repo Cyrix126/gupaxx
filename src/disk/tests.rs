@@ -99,6 +99,11 @@ mod test {
             token = "testtoken"
 
             [xvb]
+			simple = true
+			simple_hero_mode = true
+			mode = "Hero"
+			amount = 1000.0
+			manual_donation_level = "Donor"
             token = ""
             hero = false
             node = "Europe"
