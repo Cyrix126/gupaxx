@@ -449,10 +449,10 @@ pub const XVB_MODE_MANUAL_DONATION_LEVEL: &str = "Set the XvB donation level man
 
 
 // Manual Donation Levels
-pub const XVB_DONATION_LEVEL_DONOR_HELP: &str = "To qualify you must be actively donating at least 1 kH/s (1hr and 24hr avg.)";
-pub const XVB_DONATION_LEVEL_VIP_DONOR_HELP: &str = "To qualify you must be actively donating at least 10 kH/s (1hr and 24hr avg.)";
-pub const XVB_DONATION_LEVEL_WHALE_DONOR_HELP: &str = "To qualify you must be actively donating at least 100 kH/s (1hr and 24hr avg.)";
-pub const XVB_DONATION_LEVEL_MEGA_DONOR_HELP: &str = "To qualify you must be actively donating at least 1000 kH/s (1hr and 24hr avg.)";
+pub const XVB_DONATION_LEVEL_DONOR_HELP: &str = "To qualify at least 1 kH/s will be actively donated (1hr and 24hr avg.)";
+pub const XVB_DONATION_LEVEL_VIP_DONOR_HELP: &str = "To qualify at least 10 kH/s will be actively donated (1hr and 24hr avg.)";
+pub const XVB_DONATION_LEVEL_WHALE_DONOR_HELP: &str = "To qualify at least 100 kH/s will be actively donated (1hr and 24hr avg.)";
+pub const XVB_DONATION_LEVEL_MEGA_DONOR_HELP: &str = "To qualify at least 1000 kH/s will be actively donated (1hr and 24hr avg.)";
 
 
 // CLI argument messages
