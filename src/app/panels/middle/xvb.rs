@@ -38,6 +38,7 @@ impl crate::disk::state::Xvb {
     ) {
         egui::ScrollArea::vertical().show(ui, |ui| {
 
+            let text_edit = size.y / 25.0;
             let website_height = size.y / 10.0;
             let width = size.x;
             let height = size.y;
@@ -170,9 +171,13 @@ impl crate::disk::state::Xvb {
                                 }
                             };
 
-                            ui.add(
-                                egui::Slider::new(&mut self.amount, 0.0..=(hashrate_xmrig as f64)).text("H/s")
-                            ).on_hover_text(XVB_MANUAL_HASHRATE_HELP);
+                            ui.horizontal(|ui| {
+                                ui.spacing_mut().slider_width = width * 0.7;
+                                ui.add_sized(
+                                    [width, text_edit],
+                                    egui::Slider::new(&mut self.amount, 0.0..=(hashrate_xmrig as f64)).text("H/s")
+                                ).on_hover_text(XVB_MANUAL_HASHRATE_HELP);
+                            });
                             
                         }
                         
@@ -194,6 +199,7 @@ impl crate::disk::state::Xvb {
             lock!(api).stats_priv.runtime_manual_amount = self.amount;
         } 
 
+         ui.add_space(space_h);
         // need to warn the user if no address is set in p2pool tab
         if !Regexes::addr_ok(address) {
             debug!("XvB Tab | Rendering warning text");
