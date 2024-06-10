@@ -16,11 +16,11 @@ use crate::utils::constants::{
     XVB_HELP, XVB_ROUND_TYPE_FIELD, XVB_TOKEN_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES,
     XVB_WINNER_FIELD, XVB_HERO_SELECT, XVB_MODE_MANUALLY_DONATE, XVB_MODE_MANUALLY_KEEP, XVB_MODE_MANUAL_DONATION_LEVEL,
     XVB_DONATION_LEVEL_DONOR_HELP, XVB_DONATION_LEVEL_VIP_DONOR_HELP, XVB_DONATION_LEVEL_WHALE_DONOR_HELP,
-    XVB_DONATION_LEVEL_MEGA_DONOR_HELP
+    XVB_DONATION_LEVEL_MEGA_DONOR_HELP, XVB_MANUAL_SLIDER_DONATE_HELP, XVB_MANUAL_SLIDER_KEEP_HELP
 };
 use crate::utils::macros::lock;
 use crate::utils::regex::Regexes;
-use crate::{XVB_MANUAL_HASHRATE_HELP, XVB_MINING_ON_FIELD};
+use crate::{XVB_MINING_ON_FIELD};
 use crate::{
     constants::{BYTES_XVB, SPACE},
     utils::constants::{DARK_GRAY, XVB_URL},
@@ -175,13 +175,19 @@ impl crate::disk::state::Xvb {
                                     lock!(gui_api_xmrig).hashrate_raw
                                 }
                             };
+                            
+                            let slider_help_text = if self.mode == XvbMode::ManuallyDonate {
+                                XVB_MANUAL_SLIDER_DONATE_HELP
+                            } else {
+                                XVB_MANUAL_SLIDER_KEEP_HELP
+                            };
 
                             ui.horizontal(|ui| {
                                 ui.spacing_mut().slider_width = width * 0.7;
                                 ui.add_sized(
                                     [width, text_edit],
                                     egui::Slider::new(&mut self.amount, 0.0..=(hashrate_xmrig as f64)).text("H/s")
-                                ).on_hover_text(XVB_MANUAL_HASHRATE_HELP);
+                                ).on_hover_text(slider_help_text);
                             });
                             
                         }
