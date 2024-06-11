@@ -412,8 +412,8 @@ pub const XMRIG_PATH_EMPTY:     &str = "XMRig PATH is empty! To fix: goto the [G
 
 // XvB
 pub const XVB_HELP: &str = "You need to register an account by clicking on the link above to get your token with the same p2pool XMR address you use for payment.";
-pub const XVB_MANUAL_SLIDER_DONATE_HELP: &str = "Set the hashrate amount to donate to XvB manually";
-pub const XVB_MANUAL_SLIDER_KEEP_HELP: &str = "Set the hashrate amount to keep on p2pool manually";
+pub const XVB_MANUAL_SLIDER_MANUAL_XVB_HELP: &str = "Set the hashrate amount to donate to XvB manually, The remaining hashrate will be sent to p2pool";
+pub const XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP: &str = "Set the hashrate amount to keep on p2pool manually, The remaining hasrate will be donated to xvb";
 pub const XVB_URL: &str = "https://xmrvsbeast.com";
 
 pub const XVB_URL_PUBLIC_API: &str = "https://xmrvsbeast.com/p2pool/stats";
@@ -443,9 +443,9 @@ pub const XVB_ROUND_DONOR_WHALE_MIN_HR: u32 = 100000;
 pub const XVB_ROUND_DONOR_MEGA_MIN_HR: u32 = 1000000;
 
 // Manual Mode
-pub const XVB_MODE_MANUALLY_DONATE: &str = "Set the amount donated to XvB manually";
-pub const XVB_MODE_MANUALLY_KEEP: &str = "Set the p2pool hashrate manually";
-pub const XVB_MODE_MANUAL_DONATION_LEVEL: &str = "Set the XvB donation level manually";
+pub const XVB_MODE_MANUAL_XVB_HELP: &str = "Manually set the amount to donate to XmrVsBeast, The remaining hashrate will be sent to p2pool";
+pub const XVB_MODE_MANUAL_P2POOL_HELP: &str = "Manually set the amount to keep on P2pool, The remaining hashrate will be donated to xvb";
+pub const XVB_MODE_MANUAL_DONATION_LEVEL_HELP: &str = "Manually set the XvB donation level";
 
 
 // Manual Donation Levels

@@ -258,8 +258,8 @@ pub struct Xvb {
 pub enum XvbMode {
     #[default]
     Auto,
-    ManuallyDonate,
-    ManuallyKeep,
+    ManualXvb,
+    ManualP2pool,
     Hero,
     ManualDonationLevel,
 }

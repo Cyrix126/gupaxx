@@ -788,7 +788,7 @@ Uptime         = 0h 2m 4s
         lock!(gui_api_p2pool).p2pool_difficulty_u64 = 95000000;
         lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
         lock!(gui_api_xmrig).hashrate_raw_15m = 5000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManuallyDonate;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualXvb;
         lock!(gui_api_xvb).stats_priv.runtime_manual_amount = 500.0;
         
         let given_time = calcul_donated_time(
@@ -801,7 +801,7 @@ Uptime         = 0h 2m 4s
         assert_eq!(given_time, 60);
         
         
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManuallyKeep;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualP2pool;
 
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,

@@ -14,9 +14,9 @@ use crate::regex::num_lines;
 use crate::utils::constants::{
     GREEN, LIGHT_GRAY, ORANGE, RED, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD, XVB_FAILURE_FIELD,
     XVB_HELP, XVB_ROUND_TYPE_FIELD, XVB_TOKEN_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES,
-    XVB_WINNER_FIELD, XVB_HERO_SELECT, XVB_MODE_MANUALLY_DONATE, XVB_MODE_MANUALLY_KEEP, XVB_MODE_MANUAL_DONATION_LEVEL,
+    XVB_WINNER_FIELD, XVB_HERO_SELECT, XVB_MODE_MANUAL_XVB_HELP, XVB_MODE_MANUAL_P2POOL_HELP, XVB_MODE_MANUAL_DONATION_LEVEL_HELP,
     XVB_DONATION_LEVEL_DONOR_HELP, XVB_DONATION_LEVEL_VIP_DONOR_HELP, XVB_DONATION_LEVEL_WHALE_DONOR_HELP,
-    XVB_DONATION_LEVEL_MEGA_DONOR_HELP, XVB_MANUAL_SLIDER_DONATE_HELP, XVB_MANUAL_SLIDER_KEEP_HELP
+    XVB_DONATION_LEVEL_MEGA_DONOR_HELP, XVB_MANUAL_SLIDER_MANUAL_XVB_HELP, XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP
 };
 use crate::utils::macros::lock;
 use crate::utils::regex::Regexes;
@@ -154,16 +154,16 @@ impl crate::disk::state::Xvb {
                         egui::ComboBox::from_label("")
                         .selected_text(format!("{:?}", self.mode))
                         .show_ui(ui, |ui| {
-                                ui.selectable_value(&mut self.mode, XvbMode::Auto, "Automatic");
-                                ui.selectable_value(&mut self.mode, XvbMode::Hero, "Hero Mode");
-                                ui.selectable_value(&mut self.mode, XvbMode::ManuallyDonate, "Manually Donate")
-                                .on_hover_text(XVB_MODE_MANUALLY_DONATE);
-                                ui.selectable_value(&mut self.mode, XvbMode::ManuallyKeep, "Manually Keep")
-                                .on_hover_text(XVB_MODE_MANUALLY_KEEP);
-                                ui.selectable_value(&mut self.mode, XvbMode::ManualDonationLevel, "Manual Donation Level")
-                                .on_hover_text(XVB_MODE_MANUAL_DONATION_LEVEL);
+                                ui.selectable_value(&mut self.mode, XvbMode::Auto, "Auto");
+                                ui.selectable_value(&mut self.mode, XvbMode::Hero, "Hero");
+                                ui.selectable_value(&mut self.mode, XvbMode::ManualXvb, "ManualXvb")
+                                .on_hover_text(XVB_MODE_MANUAL_XVB_HELP);
+                                ui.selectable_value(&mut self.mode, XvbMode::ManualP2pool, "ManualP2pool")
+                                .on_hover_text(XVB_MODE_MANUAL_P2POOL_HELP);
+                                ui.selectable_value(&mut self.mode, XvbMode::ManualDonationLevel, "ManualDonationLevel")
+                                .on_hover_text(XVB_MODE_MANUAL_DONATION_LEVEL_HELP);
                         });
-                        if self.mode == XvbMode::ManuallyDonate || self.mode == XvbMode::ManuallyKeep {
+                        if self.mode == XvbMode::ManualXvb || self.mode == XvbMode::ManualP2pool {
 
                             ui.add_space(space_h);
 
@@ -181,10 +181,10 @@ impl crate::disk::state::Xvb {
                                 hashrate_xmrig /= 1000.0;
                             }
                             
-                            let slider_help_text = if self.mode == XvbMode::ManuallyDonate {
-                                XVB_MANUAL_SLIDER_DONATE_HELP
+                            let slider_help_text = if self.mode == XvbMode::ManualXvb {
+                                XVB_MANUAL_SLIDER_MANUAL_XVB_HELP
                             } else {
-                                XVB_MANUAL_SLIDER_KEEP_HELP
+                                XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP
                             };
 
                             ui.add_enabled_ui(is_alive, |ui| {

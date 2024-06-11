@@ -21,8 +21,8 @@ use super::{nodes::XvbNode, rounds::XvbRound, PubXvbApi};
 pub enum RuntimeMode {
     #[default]
     Auto,
-    ManuallyDonate,
-    ManuallyKeep,
+    ManualXvb,
+    ManualP2pool,
     Hero,
     ManualDonationLevel
 }
@@ -135,8 +135,8 @@ impl From<XvbMode> for RuntimeMode {
     fn from(mode: XvbMode) -> Self {
         match mode {
             XvbMode::Auto => Self::Auto,
-            XvbMode::ManuallyDonate => Self::ManuallyDonate,
-            XvbMode::ManuallyKeep => Self::ManuallyKeep,
+            XvbMode::ManualXvb => Self::ManualXvb,
+            XvbMode::ManualP2pool => Self::ManualP2pool,
             XvbMode::Hero => Self::Hero,
             XvbMode::ManualDonationLevel => Self::ManualDonationLevel
         }
