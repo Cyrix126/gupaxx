@@ -167,7 +167,7 @@ impl crate::disk::state::Xvb {
 
                             ui.add_space(space_h);
 
-                            let hashrate_xmrig = {
+                            let mut hashrate_xmrig = {
                                 if lock!(gui_api_xmrig).hashrate_raw_15m > 0.0 {
                                     lock!(gui_api_xmrig).hashrate_raw_15m
                                 } else if lock!(gui_api_xmrig).hashrate_raw_1m > 0.0 {
@@ -176,6 +176,10 @@ impl crate::disk::state::Xvb {
                                     lock!(gui_api_xmrig).hashrate_raw
                                 }
                             };
+
+                            if self.manual_donation_metric == ManualDonationMetric::Kilo {
+                                hashrate_xmrig /= 1000.0;
+                            }
                             
                             let slider_help_text = if self.mode == XvbMode::ManuallyDonate {
                                 XVB_MANUAL_SLIDER_DONATE_HELP
