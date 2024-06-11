@@ -168,12 +168,12 @@ impl crate::disk::state::Xvb {
                             ui.add_space(space_h);
 
                             let mut is_slider_enabled = true;
-                            let mut hashrate_xmrig = {
+                            let hashrate_xmrig = {
                                 if lock!(gui_api_xmrig).hashrate_raw_15m > 0.0 {
                                     lock!(gui_api_xmrig).hashrate_raw_15m
                                 } else if lock!(gui_api_xmrig).hashrate_raw_1m > 0.0 {
                                     lock!(gui_api_xmrig).hashrate_raw_1m
-                                } else if lock!(gui_api_xmrig).hashrate_raw {
+                                } else if lock!(gui_api_xmrig).hashrate_raw > 0.0 {
                                     lock!(gui_api_xmrig).hashrate_raw
                                 } else {
                                     is_slider_enabled = false;
@@ -181,10 +181,7 @@ impl crate::disk::state::Xvb {
                                 }
                             };
 
-                            if self.manual_donation_metric == ManualDonationMetric::Kilo {
-                                hashrate_xmrig /= 1000.0;
-                            }
-                            
+
                             let slider_help_text = if self.mode == XvbMode::ManualXvb {
                                 XVB_MANUAL_SLIDER_MANUAL_XVB_HELP
                             } else {
@@ -196,21 +193,22 @@ impl crate::disk::state::Xvb {
                                     ui.spacing_mut().slider_width = width * 0.5;
                                     ui.add_sized(
                                         [width, text_edit],
-                                        egui::Slider::new(&mut self.amount, 0.0..=(hashrate_xmrig as f64))
+                                        egui::Slider::new(&mut self.manual_slider_amount, 0.0..=(hashrate_xmrig as f64))
                                     ).on_hover_text(slider_help_text);
 
-                                    if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Hash, "H/s")).clicked() &&
-                                    self.manual_donation_metric != ManualDonationMetric::Hash
-                                    {
-                                        self.amount *= 1000.0;
+                                    if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Hash, "H/s")).clicked() {
                                         self.manual_donation_metric = ManualDonationMetric::Hash;
+                                        self.manual_slider_amount = self.manual_amount_raw;
                                     }
-                                    if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Kilo, "kH/s")).clicked() &&
-                                    self.manual_donation_metric != ManualDonationMetric::Kilo
-                                    {
-                                        self.amount /= 1000.0;
+                                    if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Kilo, "kH/s")).clicked() {
                                         self.manual_donation_metric = ManualDonationMetric::Kilo;
+                                        self.manual_slider_amount = self.manual_amount_raw / 1000.0;
                                     };
+                                    if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Mega, "MH/s")).clicked() {
+                                        self.manual_donation_metric = ManualDonationMetric::Mega;
+                                        self.manual_slider_amount = self.manual_amount_raw / 1_000_000.0;
+                                    };
+
 
                                 });
                             });
@@ -233,14 +231,22 @@ impl crate::disk::state::Xvb {
                     });
                 });
             });
+            
+            match self.manual_donation_metric {
+                ManualDonationMetric::Hash => {
+                    self.manual_amount_raw = self.manual_slider_amount;
+                },
+                ManualDonationMetric::Kilo => {
+                    self.manual_amount_raw = self.manual_slider_amount * 1000.0;
+                },
+                ManualDonationMetric::Mega => {
+                    self.manual_amount_raw = self.manual_slider_amount * 1_000_000.0;
+                }
+            }
 
             // Set runtime_mode & runtime_manual_amount
             lock!(api).stats_priv.runtime_mode = self.mode.clone().into();
-            if self.manual_donation_metric == ManualDonationMetric::Hash {
-                lock!(api).stats_priv.runtime_manual_amount = self.amount;
-            } else {
-                lock!(api).stats_priv.runtime_manual_amount = self.amount * 1000.0;
-            }
+            lock!(api).stats_priv.runtime_manual_amount = self.manual_amount_raw;
         } 
 
          ui.add_space(space_h);

@@ -249,7 +249,8 @@ pub struct Xvb {
     pub token: String,
     pub simple_hero_mode: bool,
     pub mode: XvbMode,
-    pub amount: f64,
+    pub manual_amount_raw: f64,
+    pub manual_slider_amount: f64,
     pub manual_donation_level: ManualDonationLevel,
     pub manual_donation_metric: ManualDonationMetric,
 }
@@ -258,9 +259,9 @@ pub struct Xvb {
 pub enum XvbMode {
     #[default]
     Auto,
+    Hero,
     ManualXvb,
     ManualP2pool,
-    Hero,
     ManualDonationLevel,
 }
 
@@ -278,6 +279,7 @@ pub enum ManualDonationMetric {
     #[default]
     Hash,
     Kilo,
+    Mega
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
