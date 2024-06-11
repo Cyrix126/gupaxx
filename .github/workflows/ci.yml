@@ -44,8 +44,6 @@ jobs:
         fi
       shell: bash
 
-    - name: Test
-      run: cargo test --release
 
     - name: Build
       run: |
