@@ -195,8 +195,11 @@ impl crate::disk::state::Xvb {
                                         egui::Slider::new(&mut self.amount, 0.0..=(hashrate_xmrig as f64))
                                     ).on_hover_text(slider_help_text);
 
-                                    ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Hash, "H/s"));
+                                    if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Hash, "H/s")).clicked() {
+                                        self.manual_donation_metric = ManualDonationMetric::Hash;
+                                    }
                                     if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Kilo, "kH/s")).clicked() {
+                                        self.manual_donation_metric = ManualDonationMetric::Kilo;
                                         self.amount *= 1000.0;
                                     };
 
