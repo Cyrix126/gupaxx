@@ -200,7 +200,6 @@ impl crate::disk::state::Xvb {
                                     }
                                     if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Kilo, "kH/s")).clicked() {
                                         self.manual_donation_metric = ManualDonationMetric::Kilo;
-                                        self.amount *= 1000.0;
                                     };
 
                                 });
@@ -227,7 +226,11 @@ impl crate::disk::state::Xvb {
 
             // Set runtime_mode & runtime_manual_amount
             lock!(api).stats_priv.runtime_mode = self.mode.clone().into();
-            lock!(api).stats_priv.runtime_manual_amount = self.amount;
+            if self.manual_donation_metric == ManualDonationMetric::Hash {
+                lock!(api).stats_priv.runtime_manual_amount = self.amount;
+            } else {
+                lock!(api).stats_priv.runtime_manual_amount = self.amount * 1000.0;
+            }
         } 
 
          ui.add_space(space_h);
