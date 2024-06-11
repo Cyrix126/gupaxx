@@ -168,7 +168,7 @@ impl crate::disk::state::Xvb {
                             ui.add_space(space_h);
 
                             let mut is_slider_enabled = true;
-                            let hashrate_xmrig = {
+                            let mut hashrate_xmrig = {
                                 if lock!(gui_api_xmrig).hashrate_raw_15m > 0.0 {
                                     lock!(gui_api_xmrig).hashrate_raw_15m
                                 } else if lock!(gui_api_xmrig).hashrate_raw_1m > 0.0 {
@@ -183,13 +183,10 @@ impl crate::disk::state::Xvb {
                             
                             
                             // Adjust maximum slider amount based on slider metric
-                            match self.manual_donation_metric {
-                                ManualDonationMetric::Kilo => {
-                                    hashrate_xmrig /= 1000.0;
-                                },
-                                ManualDonationMetric::Mega => {
-                                    hashrate_xmrig /= 1_000_000.0;
-                                }
+                            if self.manual_donation_metric == ManualDonationMetric::Kilo {
+                                hashrate_xmrig /= 1000.0;
+                            } else if self.manual_donation_metric == ManualDonationMetric::Mega {
+                                hashrate_xmrig /= 1_000_000.0;
                             }
 
 
