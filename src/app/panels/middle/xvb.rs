@@ -36,7 +36,7 @@ impl crate::disk::state::Xvb {
         ui: &mut egui::Ui,
         api: &Arc<Mutex<PubXvbApi>>,
         gui_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
-        private_stats: bool,
+        is_alive: bool,
     ) {
         egui::ScrollArea::vertical().show(ui, |ui| {
 
@@ -182,12 +182,14 @@ impl crate::disk::state::Xvb {
                                 XVB_MANUAL_SLIDER_KEEP_HELP
                             };
 
-                            ui.horizontal(|ui| {
-                                ui.spacing_mut().slider_width = width * 0.7;
-                                ui.add_sized(
-                                    [width, text_edit],
-                                    egui::Slider::new(&mut self.amount, 0.0..=(hashrate_xmrig as f64)).text("H/s")
-                                ).on_hover_text(slider_help_text);
+                            ui.add_enabled_ui(is_alive, |ui| {
+                                ui.horizontal(|ui| {
+                                    ui.spacing_mut().slider_width = width * 0.7;
+                                    ui.add_sized(
+                                        [width, text_edit],
+                                        egui::Slider::new(&mut self.amount, 0.0..=(hashrate_xmrig as f64)).text("H/s")
+                                    ).on_hover_text(slider_help_text);
+                                });
                             });
                             
                         }
@@ -227,8 +229,8 @@ impl crate::disk::state::Xvb {
             
             // private stats
             ui.add_space(space_h);
-            // ui.add_enabled_ui(private_stats, |ui| {
-            ui.add_enabled_ui(private_stats, |ui| {
+            // ui.add_enabled_ui(is_alive, |ui| {
+            ui.add_enabled_ui(is_alive, |ui| {
                 let api = &lock!(api);
                 let priv_stats = &api.stats_priv;
                 let current_node = &api.current_node;
