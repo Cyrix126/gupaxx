@@ -122,7 +122,7 @@ impl crate::app::App {
                                 key,
                                 wants_input,
                             );
-                        },
+                        }
                         Tab::About => {}
                     }
                 });
@@ -510,7 +510,7 @@ impl crate::app::App {
             }
         });
     }
-    
+
     fn xvb_submenu(&mut self, ui: &mut Ui, size: Vec2) {
         ui.group(|ui| {
             let width = size.x / 1.5;
@@ -526,10 +526,7 @@ impl crate::app::App {
             }
             ui.separator();
             if ui
-                .add_sized(
-                    size,
-                    SelectableLabel::new(self.state.xvb.simple, "Simple"),
-                )
+                .add_sized(size, SelectableLabel::new(self.state.xvb.simple, "Simple"))
                 .clicked()
             {
                 self.state.xvb.simple = true;
@@ -613,7 +610,6 @@ impl crate::app::App {
             }
         });
     }
-    
 }
 
 fn status_p2pool(state: ProcessState, ui: &mut Ui, size: Vec2) {

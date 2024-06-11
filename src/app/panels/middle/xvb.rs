@@ -6,21 +6,23 @@ use log::debug;
 use readable::num::Float;
 use readable::up::Uptime;
 
-use crate::disk::state::{XvbMode, ManualDonationLevel, ManualDonationMetric};
+use crate::disk::state::{ManualDonationLevel, ManualDonationMetric, XvbMode};
 use crate::helper::xmrig::PubXmrigApi;
 use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::helper::xvb::PubXvbApi;
 use crate::regex::num_lines;
 use crate::utils::constants::{
-    GREEN, LIGHT_GRAY, ORANGE, RED, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD, XVB_FAILURE_FIELD,
-    XVB_HELP, XVB_ROUND_TYPE_FIELD, XVB_TOKEN_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES,
-    XVB_WINNER_FIELD, XVB_HERO_SELECT, XVB_MODE_MANUAL_XVB_HELP, XVB_MODE_MANUAL_P2POOL_HELP, XVB_MODE_MANUAL_DONATION_LEVEL_HELP,
-    XVB_DONATION_LEVEL_DONOR_HELP, XVB_DONATION_LEVEL_VIP_DONOR_HELP, XVB_DONATION_LEVEL_WHALE_DONOR_HELP,
-    XVB_DONATION_LEVEL_MEGA_DONOR_HELP, XVB_MANUAL_SLIDER_MANUAL_XVB_HELP, XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP
+    GREEN, LIGHT_GRAY, ORANGE, RED, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD,
+    XVB_DONATION_LEVEL_DONOR_HELP, XVB_DONATION_LEVEL_MEGA_DONOR_HELP,
+    XVB_DONATION_LEVEL_VIP_DONOR_HELP, XVB_DONATION_LEVEL_WHALE_DONOR_HELP, XVB_FAILURE_FIELD,
+    XVB_HELP, XVB_HERO_SELECT, XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP,
+    XVB_MANUAL_SLIDER_MANUAL_XVB_HELP, XVB_MODE_MANUAL_DONATION_LEVEL_HELP,
+    XVB_MODE_MANUAL_P2POOL_HELP, XVB_MODE_MANUAL_XVB_HELP, XVB_ROUND_TYPE_FIELD, XVB_TOKEN_FIELD,
+    XVB_TOKEN_LEN, XVB_URL_RULES, XVB_WINNER_FIELD,
 };
 use crate::utils::macros::lock;
 use crate::utils::regex::Regexes;
-use crate::{XVB_MINING_ON_FIELD};
+use crate::XVB_MINING_ON_FIELD;
 use crate::{
     constants::{BYTES_XVB, SPACE},
     utils::constants::{DARK_GRAY, XVB_URL},
@@ -127,7 +129,6 @@ impl crate::disk::state::Xvb {
         ui.style_mut().spacing.icon_width = width / 35.0;
         ui.style_mut().spacing.icon_spacing = space_h;
 
-        
         // --------------------------- XVB Simple -------------------------------------------
         if self.simple {
 
@@ -180,8 +181,6 @@ impl crate::disk::state::Xvb {
                                     1000.0
                                 }
                             };
-                            
-                            
                             // Adjust maximum slider amount based on slider metric
                             if self.manual_donation_metric == ManualDonationMetric::Kilo {
                                 hashrate_xmrig /= 1000.0;
@@ -216,11 +215,8 @@ impl crate::disk::state::Xvb {
                                         self.manual_donation_metric = ManualDonationMetric::Mega;
                                         self.manual_slider_amount = self.manual_amount_raw / 1_000_000.0;
                                     };
-
-
                                 });
                             });
-                            
                         }
 
                         if self.mode ==  XvbMode::ManualDonationLevel {
@@ -232,14 +228,13 @@ impl crate::disk::state::Xvb {
                             .on_hover_text(XVB_DONATION_LEVEL_WHALE_DONOR_HELP);
                             ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorMega, "DonorMega")
                             .on_hover_text(XVB_DONATION_LEVEL_MEGA_DONOR_HELP);
-                            
+
                             lock!(api).stats_priv.runtime_manual_donation_level = self.manual_donation_level.clone().into();
                         }
-
                     });
                 });
             });
-            
+
             // Update manual_amount_raw based on slider
             match self.manual_donation_metric {
                 ManualDonationMetric::Hash => {
@@ -256,7 +251,7 @@ impl crate::disk::state::Xvb {
             // Set runtime_mode & runtime_manual_amount
             lock!(api).stats_priv.runtime_mode = self.mode.clone().into();
             lock!(api).stats_priv.runtime_manual_amount = self.manual_amount_raw;
-        } 
+        }
 
          ui.add_space(space_h);
         // need to warn the user if no address is set in p2pool tab
@@ -264,11 +259,9 @@ impl crate::disk::state::Xvb {
             debug!("XvB Tab | Rendering warning text");
                 ui.horizontal_wrapped(|ui|{
             ui.label(RichText::new("You don't have any payout address set in the P2pool Tab ! XvB process needs one to function properly.")
-                        .color(ORANGE));
-
+                    .color(ORANGE));
                 });
         }
-            
             // private stats
             ui.add_space(space_h);
             // ui.add_enabled_ui(is_alive, |ui| {

@@ -279,7 +279,7 @@ pub enum ManualDonationMetric {
     #[default]
     Hash,
     Kilo,
-    Mega
+    Mega,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

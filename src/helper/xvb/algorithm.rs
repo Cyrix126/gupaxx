@@ -12,7 +12,9 @@ use crate::{
     helper::{
         p2pool::PubP2poolApi,
         xmrig::{PrivXmrigApi, PubXmrigApi},
-        xvb::{nodes::XvbNode, output_console, output_console_without_time, priv_stats::RuntimeMode},
+        xvb::{
+            nodes::XvbNode, output_console, output_console_without_time, priv_stats::RuntimeMode,
+        },
     },
     macros::lock,
     BLOCK_PPLNS_WINDOW_MAIN, BLOCK_PPLNS_WINDOW_MINI, SECOND_PER_BLOCK_P2POOL, XMRIG_CONFIG_URI,
@@ -77,28 +79,31 @@ pub(crate) fn calcul_donated_time(
             info!("RuntimeMode::Auto - calculating spared_time");
             // calculate how much time needed to be spared to be in most round type minimum HR + buffer
             minimum_time_for_highest_accessible_round(default_spared_time, lhr, xvb_chr, shr)
-        },
+        }
         RuntimeMode::Hero => {
             info!("RuntimeMode::Hero - calculating spared_time lhr:{lhr} min_hr:{min_hr}");
             output_console(gui_api_xvb, "Hero mode is enabled for this decision");
             default_spared_time
-        },
+        }
         RuntimeMode::ManualXvb => {
             let donate_hr = lock!(gui_api_xvb).stats_priv.runtime_manual_amount;
             info!("RuntimeMode::ManualXvb - lhr:{lhr} donate_hr:{donate_hr}");
 
             XVB_TIME_ALGO * (donate_hr as u32) / (lhr as u32)
-        },
+        }
         RuntimeMode::ManualP2pool => {
             let keep_hr = lock!(gui_api_xvb).stats_priv.runtime_manual_amount;
             info!("RuntimeMode::ManualXvb - lhr:{lhr} keep_hr:{keep_hr}");
 
             XVB_TIME_ALGO - (XVB_TIME_ALGO * (keep_hr as u32) / (lhr as u32))
-        },
+        }
         RuntimeMode::ManualDonationLevel => {
-            let donation_level = lock!(gui_api_xvb).stats_priv.runtime_manual_donation_level.clone();
+            let donation_level = lock!(gui_api_xvb)
+                .stats_priv
+                .runtime_manual_donation_level
+                .clone();
             info!("RuntimeMode::ManualDonationLevel");
-            
+
             minimum_time_for_manual_round(donation_level, default_spared_time, lhr, xvb_chr, shr)
         }
     };
@@ -203,35 +208,39 @@ fn minimum_time_for_highest_accessible_round(st: u32, lhr: f32, chr: f32, shr: f
     (((hr_for_xvb - (hr_for_xvb - min)) / lhr) * XVB_TIME_ALGO as f32).ceil() as u32
 }
 
-fn minimum_time_for_manual_round(level: RuntimeDonationLevel, st: u32, lhr: f32, chr: f32, shr: f32) -> u32 {
+fn minimum_time_for_manual_round(
+    level: RuntimeDonationLevel,
+    st: u32,
+    lhr: f32,
+    chr: f32,
+    shr: f32,
+) -> u32 {
     let hr_for_xvb = ((st - 1) as f32 / XVB_TIME_ALGO as f32) * lhr;
     info!(
         "hr for xvb is: ({st} / {}) * {lhr} = {hr_for_xvb}H/s",
         XVB_TIME_ALGO
     );
     let ohr = chr - shr;
-    
+
     let min = match level {
         RuntimeDonationLevel::Donor => {
             info!("RuntimeDonationLevel::Donor");
             XVB_ROUND_DONOR_MIN_HR as f32 - ohr
-        },
+        }
         RuntimeDonationLevel::DonorVIP => {
             info!("RuntimeDonationLevel::DonorVIP");
             XVB_ROUND_DONOR_VIP_MIN_HR as f32 - ohr
-        },
+        }
         RuntimeDonationLevel::DonorWhale => {
             info!("RuntimeDonationLevel::DonorWhale");
             XVB_ROUND_DONOR_WHALE_MIN_HR as f32 - ohr
-        },
+        }
         RuntimeDonationLevel::DonorMega => {
             info!("RuntimeDonationLevel::DonorMega");
             XVB_ROUND_DONOR_MEGA_MIN_HR as f32 - ohr
         }
     };
-    
-    
-    
+
     (((hr_for_xvb - (hr_for_xvb - min)) / lhr) * XVB_TIME_ALGO as f32).ceil() as u32
 }
 

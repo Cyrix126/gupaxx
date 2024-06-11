@@ -402,7 +402,6 @@ impl PubXvbApi {
         }
         let runtime_mode = std::mem::take(&mut gui_api.stats_priv.runtime_mode);
         let runtime_manual_amount = std::mem::take(&mut gui_api.stats_priv.runtime_manual_amount);
-        
 
         *gui_api = Self {
             output,
@@ -700,7 +699,7 @@ fn reset_data_xvb(pub_api: &Arc<Mutex<PubXvbApi>>, gui_api: &Arc<Mutex<PubXvbApi
     let current_node = mem::take(&mut lock!(pub_api).current_node.clone());
     let runtime_mode = mem::take(&mut lock!(gui_api).stats_priv.runtime_mode);
     let runtime_manual_amount = mem::take(&mut lock!(gui_api).stats_priv.runtime_manual_amount);
-    
+
     // let output = mem::take(&mut lock!(gui_api).output);
     *lock!(pub_api) = PubXvbApi::new();
     *lock!(gui_api) = PubXvbApi::new();

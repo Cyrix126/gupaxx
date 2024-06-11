@@ -9,13 +9,15 @@ use reqwest::{Client, StatusCode};
 use serde::Deserialize;
 use tokio::time::sleep;
 
-use crate::{
-    disk::state::ManualDonationLevel, helper::{xvb::output_console, Process, ProcessState}, macros::lock, XVB_URL
-};
 use crate::disk::state::XvbMode;
+use crate::{
+    disk::state::ManualDonationLevel,
+    helper::{xvb::output_console, Process, ProcessState},
+    macros::lock,
+    XVB_URL,
+};
 
 use super::{nodes::XvbNode, rounds::XvbRound, PubXvbApi};
-
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq, Default)]
 pub enum RuntimeMode {
@@ -24,9 +26,8 @@ pub enum RuntimeMode {
     ManualXvb,
     ManualP2pool,
     Hero,
-    ManualDonationLevel
+    ManualDonationLevel,
 }
-
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq, Default)]
 pub enum RuntimeDonationLevel {
@@ -34,7 +35,7 @@ pub enum RuntimeDonationLevel {
     Donor,
     DonorVIP,
     DonorWhale,
-    DonorMega
+    DonorMega,
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
@@ -60,7 +61,7 @@ pub struct XvbPrivStats {
     #[serde(skip)]
     pub runtime_manual_amount: f64,
     #[serde(skip)]
-    pub runtime_manual_donation_level: RuntimeDonationLevel
+    pub runtime_manual_donation_level: RuntimeDonationLevel,
 }
 
 impl XvbPrivStats {
@@ -138,7 +139,7 @@ impl From<XvbMode> for RuntimeMode {
             XvbMode::ManualXvb => Self::ManualXvb,
             XvbMode::ManualP2pool => Self::ManualP2pool,
             XvbMode::Hero => Self::Hero,
-            XvbMode::ManualDonationLevel => Self::ManualDonationLevel
+            XvbMode::ManualDonationLevel => Self::ManualDonationLevel,
         }
     }
 }
@@ -149,7 +150,7 @@ impl From<ManualDonationLevel> for RuntimeDonationLevel {
             ManualDonationLevel::Donor => RuntimeDonationLevel::Donor,
             ManualDonationLevel::DonorVIP => RuntimeDonationLevel::DonorVIP,
             ManualDonationLevel::DonorWhale => RuntimeDonationLevel::DonorWhale,
-            ManualDonationLevel::DonorMega => RuntimeDonationLevel::DonorMega
+            ManualDonationLevel::DonorMega => RuntimeDonationLevel::DonorMega,
         }
     }
 }

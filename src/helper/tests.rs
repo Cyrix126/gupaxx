@@ -3,7 +3,10 @@ mod test {
 
     use crate::helper::{
         p2pool::{PrivP2poolLocalApi, PrivP2poolNetworkApi},
-        xvb::{algorithm::calcul_donated_time, priv_stats::RuntimeMode, priv_stats::RuntimeDonationLevel, rounds::round_type},
+        xvb::{
+            algorithm::calcul_donated_time, priv_stats::RuntimeDonationLevel,
+            priv_stats::RuntimeMode, rounds::round_type,
+        },
         Helper, Process, ProcessName, ProcessState,
     };
 
@@ -778,9 +781,9 @@ Uptime         = 0h 2m 4s
                 / 1000.0;
         assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorVip));
     }
-    
+
     #[test]
-    fn test_xvb_advanced_options () {
+    fn test_xvb_advanced_options() {
         let gui_api_xvb = Arc::new(Mutex::new(PubXvbApi::new()));
         let gui_api_p2pool = Arc::new(Mutex::new(PubP2poolApi::new()));
         let gui_api_xmrig = Arc::new(Mutex::new(PubXmrigApi::new()));
@@ -790,17 +793,16 @@ Uptime         = 0h 2m 4s
         lock!(gui_api_xmrig).hashrate_raw_15m = 5000.0;
         lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualXvb;
         lock!(gui_api_xvb).stats_priv.runtime_manual_amount = 500.0;
-        
+
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,
             &gui_api_p2pool,
             &gui_api_xvb,
             &state_p2pool,
         );
-        
+
         assert_eq!(given_time, 60);
-        
-        
+
         lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualP2pool;
 
         let given_time = calcul_donated_time(
@@ -810,12 +812,10 @@ Uptime         = 0h 2m 4s
             &state_p2pool,
         );
         assert_eq!(given_time, 540);
-        
 
         lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualDonationLevel;
         lock!(gui_api_xvb).stats_priv.runtime_manual_donation_level = RuntimeDonationLevel::Donor;
-        
-        
+
         let given_time = calcul_donated_time(
             lock!(gui_api_xmrig).hashrate_raw_15m,
             &gui_api_p2pool,
@@ -823,6 +823,5 @@ Uptime         = 0h 2m 4s
             &state_p2pool,
         );
         assert_eq!(given_time, 120);
-        
     }
 }
