@@ -180,6 +180,17 @@ impl crate::disk::state::Xvb {
                                     1000.0
                                 }
                             };
+                            
+                            
+                            // Adjust maximum slider amount based on slider metric
+                            match self.manual_donation_metric {
+                                ManualDonationMetric::Kilo => {
+                                    hashrate_xmrig /= 1000.0;
+                                },
+                                ManualDonationMetric::Mega => {
+                                    hashrate_xmrig /= 1_000_000.0;
+                                }
+                            }
 
 
                             let slider_help_text = if self.mode == XvbMode::ManualXvb {
@@ -214,7 +225,7 @@ impl crate::disk::state::Xvb {
                             });
                             
                         }
-                        
+
                         if self.mode ==  XvbMode::ManualDonationLevel {
                             ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::Donor, "Donor")
                             .on_hover_text(XVB_DONATION_LEVEL_DONOR_HELP);
@@ -232,6 +243,7 @@ impl crate::disk::state::Xvb {
                 });
             });
             
+            // Update manual_amount_raw based on slider
             match self.manual_donation_metric {
                 ManualDonationMetric::Hash => {
                     self.manual_amount_raw = self.manual_slider_amount;
