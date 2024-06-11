@@ -243,26 +243,6 @@ pub struct Xmrig {
     pub token: String,
 }
 
-#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
-pub enum XvbMode {
-    #[default]
-    Auto,
-    ManuallyDonate,
-    ManuallyKeep,
-    Hero,
-    ManualDonationLevel
-}
-
-
-#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
-pub enum ManualDonationLevel {
-    #[default]
-    Donor,
-    DonorVIP,
-    DonorWhale,
-    DonorMega
-}
-
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize, Default)]
 pub struct Xvb {
     pub simple: bool,
@@ -270,7 +250,34 @@ pub struct Xvb {
     pub simple_hero_mode: bool,
     pub mode: XvbMode,
     pub amount: f64,
-    pub manual_donation_level: ManualDonationLevel
+    pub manual_donation_level: ManualDonationLevel,
+    pub manual_donation_metric: ManualDonationMetric,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
+pub enum XvbMode {
+    #[default]
+    Auto,
+    ManuallyDonate,
+    ManuallyKeep,
+    Hero,
+    ManualDonationLevel,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
+pub enum ManualDonationLevel {
+    #[default]
+    Donor,
+    DonorVIP,
+    DonorWhale,
+    DonorMega,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
+pub enum ManualDonationMetric {
+    #[default]
+    Hash,
+    Kilo,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

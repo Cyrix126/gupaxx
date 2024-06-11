@@ -6,7 +6,7 @@ use log::debug;
 use readable::num::Float;
 use readable::up::Uptime;
 
-use crate::disk::state::{XvbMode, ManualDonationLevel};
+use crate::disk::state::{XvbMode, ManualDonationLevel, ManualDonationMetric};
 use crate::helper::xmrig::PubXmrigApi;
 use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::helper::xvb::PubXvbApi;
@@ -28,6 +28,7 @@ use crate::{
 
 impl crate::disk::state::Xvb {
     #[inline(always)] // called once
+    #[allow(clippy::too_many_arguments)]
     pub fn show(
         &mut self,
         size: Vec2,
@@ -184,11 +185,17 @@ impl crate::disk::state::Xvb {
 
                             ui.add_enabled_ui(is_alive, |ui| {
                                 ui.horizontal(|ui| {
-                                    ui.spacing_mut().slider_width = width * 0.7;
+                                    ui.spacing_mut().slider_width = width * 0.5;
                                     ui.add_sized(
                                         [width, text_edit],
-                                        egui::Slider::new(&mut self.amount, 0.0..=(hashrate_xmrig as f64)).text("H/s")
+                                        egui::Slider::new(&mut self.amount, 0.0..=(hashrate_xmrig as f64))
                                     ).on_hover_text(slider_help_text);
+
+                                    ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Hash, "H/s"));
+                                    if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Kilo, "kH/s")).clicked() {
+                                        self.amount *= 1000.0;
+                                    };
+
                                 });
                             });
                             
