@@ -443,8 +443,8 @@ pub const XVB_ROUND_DONOR_WHALE_MIN_HR: u32 = 100000;
 pub const XVB_ROUND_DONOR_MEGA_MIN_HR: u32 = 1000000;
 
 // Manual Mode
-pub const XVB_MODE_MANUAL_XVB_HELP: &str = "Manually set the amount to donate to XmrVsBeast, The remaining hashrate will be sent to p2pool";
-pub const XVB_MODE_MANUAL_P2POOL_HELP: &str = "Manually set the amount to keep on P2pool, The remaining hashrate will be donated to xvb";
+pub const XVB_MODE_MANUAL_XVB_HELP: &str = "Manually set the amount to donate to XmrVsBeast, If value is more than xmrig hashrate it might be changed";
+pub const XVB_MODE_MANUAL_P2POOL_HELP: &str = "Manually set the amount to keep on P2pool, If value is more than xmrig hashrate it might be changed";
 pub const XVB_MODE_MANUAL_DONATION_LEVEL_HELP: &str = "Manually set the XvB donation level";
 
 

@@ -167,13 +167,17 @@ impl crate::disk::state::Xvb {
 
                             ui.add_space(space_h);
 
+                            let mut is_slider_enabled = true;
                             let mut hashrate_xmrig = {
                                 if lock!(gui_api_xmrig).hashrate_raw_15m > 0.0 {
                                     lock!(gui_api_xmrig).hashrate_raw_15m
                                 } else if lock!(gui_api_xmrig).hashrate_raw_1m > 0.0 {
                                     lock!(gui_api_xmrig).hashrate_raw_1m
-                                } else {
+                                } else if lock!(gui_api_xmrig).hashrate_raw {
                                     lock!(gui_api_xmrig).hashrate_raw
+                                } else {
+                                    is_slider_enabled = false;
+                                    1000.0
                                 }
                             };
 
@@ -187,7 +191,7 @@ impl crate::disk::state::Xvb {
                                 XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP
                             };
 
-                            ui.add_enabled_ui(is_alive, |ui| {
+                            ui.add_enabled_ui(is_slider_enabled, |ui| {
                                 ui.horizontal(|ui| {
                                     ui.spacing_mut().slider_width = width * 0.5;
                                     ui.add_sized(
