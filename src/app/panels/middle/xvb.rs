@@ -201,7 +201,7 @@ impl crate::disk::state::Xvb {
                                     ui.spacing_mut().slider_width = width * 0.5;
                                     ui.add_sized(
                                         [width, text_edit],
-                                        egui::Slider::new(&mut self.manual_slider_amount, 0.0..=(hashrate_xmrig as f64))
+                                        egui::Slider::new(&mut self.manual_slider_amount, 0.0..=(hashrate_xmrig as f64)).max_decimals(3)
                                     ).on_hover_text(slider_help_text);
 
                                     if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Hash, "H/s")).clicked() {
