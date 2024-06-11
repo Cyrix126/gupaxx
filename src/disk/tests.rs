@@ -104,6 +104,7 @@ mod test {
 			mode = "Hero"
 			amount = 1000.0
 			manual_donation_level = "Donor"
+      manual_donation_metric = "Hash"
             token = ""
             hero = false
             node = "Europe"
