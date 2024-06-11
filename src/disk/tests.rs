@@ -102,9 +102,10 @@ mod test {
 			simple = true
 			simple_hero_mode = true
 			mode = "Hero"
-			amount = 1000.0
+			manual_amount_raw = 1000.0
+			manual_slider_amount = 1000.0
 			manual_donation_level = "Donor"
-      manual_donation_metric = "Hash"
+      		manual_donation_metric = "Hash"
             token = ""
             hero = false
             node = "Europe"
