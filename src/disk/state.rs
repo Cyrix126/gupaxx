@@ -309,6 +309,19 @@ pub enum ManualDonationMetric {
     Mega,
 }
 
+impl Display for ManualDonationMetric {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let text = match self {
+            Self::Hash => "H/s",
+            Self::Kilo => "KH/s",
+            Self::Mega => "MH/s"
+        };
+
+        write!(f, "{}", text)
+        
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct Version {
     pub gupax: String,
@@ -430,13 +443,13 @@ impl Default for Xvb {
     fn default() -> Self {
         Self {
             simple: true,
-            token: "".to_string(),
-            simple_hero_mode: false,
-            mode: XvbMode::default(),
-            manual_amount_raw: 0.0,
-            manual_slider_amount: 0.0,
-            manual_donation_level: ManualDonationLevel::default(),
-            manual_donation_metric: ManualDonationMetric::default(),
+            token: String::with_capacity(9),
+            simple_hero_mode: Default::default(),
+            mode: Default::default(),
+            manual_amount_raw: Default::default(),
+            manual_slider_amount: Default::default(),
+            manual_donation_level: Default::default(),
+            manual_donation_metric: Default::default(),
         }
     }
 }

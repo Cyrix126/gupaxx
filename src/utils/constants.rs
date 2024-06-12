@@ -412,8 +412,8 @@ pub const XMRIG_PATH_EMPTY:     &str = "XMRig PATH is empty! To fix: goto the [G
 
 // XvB
 pub const XVB_HELP: &str = "You need to register an account by clicking on the link above to get your token with the same p2pool XMR address you use for payment.";
-pub const XVB_MANUAL_SLIDER_MANUAL_XVB_HELP: &str = "Set the hashrate amount to donate to XvB manually, The remaining hashrate will be sent to p2pool";
-pub const XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP: &str = "Set the hashrate amount to keep on p2pool manually, The remaining hasrate will be donated to xvb";
+pub const XVB_MANUAL_SLIDER_MANUAL_XVB_HELP: &str = "Set the hashrate amount to donate to XvB manually, The remaining hashrate will be sent to p2pool. If the selected hashrate is more than your xmrig hashrate it will be overwritten";
+pub const XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP: &str = "Set the hashrate amount to keep on p2pool manually, The remaining hasrate will be donated to xvb. If the selected hashrate is more than your xmrig hashrate it will be overwritten ";
 pub const XVB_URL: &str = "https://xmrvsbeast.com";
 
 pub const XVB_URL_PUBLIC_API: &str = "https://xmrvsbeast.com/p2pool/stats";

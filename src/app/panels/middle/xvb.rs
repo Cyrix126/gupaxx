@@ -172,6 +172,12 @@ impl crate::disk::state::Xvb {
 
                             ui.add_space(space_h);
 
+                            let default_xmrig_hashrate = match self.manual_donation_metric {
+                                ManualDonationMetric::Hash => 1_000.0,
+                                ManualDonationMetric::Kilo => 1_000_000.0,
+                                ManualDonationMetric::Mega => 1_000_000_000.0
+                            };
+
                             let mut hashrate_xmrig = {
                                 if lock!(gui_api_xmrig).hashrate_raw_15m > 0.0 {
                                     lock!(gui_api_xmrig).hashrate_raw_15m
@@ -180,7 +186,7 @@ impl crate::disk::state::Xvb {
                                 } else if lock!(gui_api_xmrig).hashrate_raw > 0.0 {
                                     lock!(gui_api_xmrig).hashrate_raw
                                 } else {
-                                    1000.0
+                                    default_xmrig_hashrate
                                 }
                             };
                             // Adjust maximum slider amount based on slider metric
@@ -198,24 +204,28 @@ impl crate::disk::state::Xvb {
                             };
 
                             ui.horizontal(|ui| {
-                                ui.spacing_mut().slider_width = width * 0.5;
-                                ui.add_sized(
-                                    [width, text_edit],
-                                    egui::Slider::new(&mut self.manual_slider_amount, 0.0..=(hashrate_xmrig as f64)).max_decimals(3)
-                                ).on_hover_text(slider_help_text);
-
-                                if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Hash, "H/s")).clicked() {
+                                
+                                if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Hash, "Hash")).clicked() {
                                     self.manual_donation_metric = ManualDonationMetric::Hash;
                                     self.manual_slider_amount = self.manual_amount_raw;
                                 }
-                                if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Kilo, "KH/s")).clicked() {
+                                if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Kilo, "Kilo")).clicked() {
                                     self.manual_donation_metric = ManualDonationMetric::Kilo;
                                     self.manual_slider_amount = self.manual_amount_raw / 1000.0;
                                 };
-                                if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Mega, "MH/s")).clicked() {
+                                if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Mega, "Mega")).clicked() {
                                     self.manual_donation_metric = ManualDonationMetric::Mega;
                                     self.manual_slider_amount = self.manual_amount_raw / 1_000_000.0;
                                 };
+                                
+                                ui.spacing_mut().slider_width = width * 0.5;
+                                ui.add_sized(
+                                    [width, text_edit],
+                                    egui::Slider::new(&mut self.manual_slider_amount, 0.0..=(hashrate_xmrig as f64))
+                                    .text(self.manual_donation_metric.to_string())
+                                    .max_decimals(3)
+                                ).on_hover_text(slider_help_text);
+
                             });
                         }
 
