@@ -151,17 +151,26 @@ impl crate::disk::state::Xvb {
             ui.group(|ui| {
                 ui.vertical_centered(|ui| {
                     ui.horizontal(|ui| {
+                        
+                        
+                        let selected_text = match self.mode {
+                            XvbMode::Auto => "Auto".to_string(),
+                            XvbMode::Hero => "Hero".to_string(),
+                            XvbMode::ManualXvb => "Manual Xvb".to_string(),
+                            XvbMode::ManualP2pool => "Manual P2pool".to_string(),
+                            XvbMode::ManualDonationLevel => "Manual Donation Level".to_string()
+                        };
 
                         egui::ComboBox::from_label("")
-                        .selected_text(format!("{:?}", self.mode))
+                        .selected_text(selected_text)
                         .show_ui(ui, |ui| {
                                 ui.selectable_value(&mut self.mode, XvbMode::Auto, "Auto");
                                 ui.selectable_value(&mut self.mode, XvbMode::Hero, "Hero");
-                                ui.selectable_value(&mut self.mode, XvbMode::ManualXvb, "ManualXvb")
+                                ui.selectable_value(&mut self.mode, XvbMode::ManualXvb, "Manual Xvb")
                                 .on_hover_text(XVB_MODE_MANUAL_XVB_HELP);
-                                ui.selectable_value(&mut self.mode, XvbMode::ManualP2pool, "ManualP2pool")
+                                ui.selectable_value(&mut self.mode, XvbMode::ManualP2pool, "Manual P2pool")
                                 .on_hover_text(XVB_MODE_MANUAL_P2POOL_HELP);
-                                ui.selectable_value(&mut self.mode, XvbMode::ManualDonationLevel, "ManualDonationLevel")
+                                ui.selectable_value(&mut self.mode, XvbMode::ManualDonationLevel, "Manual Donation Level")
                                 .on_hover_text(XVB_MODE_MANUAL_DONATION_LEVEL_HELP);
                         });
                         if self.mode == XvbMode::ManualXvb || self.mode == XvbMode::ManualP2pool {
@@ -222,11 +231,11 @@ impl crate::disk::state::Xvb {
                         if self.mode ==  XvbMode::ManualDonationLevel {
                             ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::Donor, "Donor")
                             .on_hover_text(XVB_DONATION_LEVEL_DONOR_HELP);
-                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorVIP, "DonorVIP")
+                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorVIP, "Donor VIP")
                             .on_hover_text(XVB_DONATION_LEVEL_VIP_DONOR_HELP);
-                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorWhale, "DonorWhale")
+                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorWhale, "Donor Whale")
                             .on_hover_text(XVB_DONATION_LEVEL_WHALE_DONOR_HELP);
-                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorMega, "DonorMega")
+                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorMega, "Donor Mega")
                             .on_hover_text(XVB_DONATION_LEVEL_MEGA_DONOR_HELP);
 
                             lock!(api).stats_priv.runtime_manual_donation_level = self.manual_donation_level.clone().into();
