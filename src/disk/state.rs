@@ -243,7 +243,7 @@ pub struct Xmrig {
     pub token: String,
 }
 
-#[derive(Clone, PartialEq, Debug, Deserialize, Serialize, Default)]
+#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub struct Xvb {
     pub simple: bool,
     pub token: String,
@@ -395,6 +395,21 @@ impl Default for Xmrig {
                 .take(16)
                 .map(char::from)
                 .collect(),
+        }
+    }
+}
+
+impl Default for Xvb {
+    fn default() -> Self {
+        Self {
+            simple: true,
+            token: "".to_string(),
+            simple_hero_mode: false,
+            mode: XvbMode::Auto,
+            manual_amount_raw: 0.0,
+            manual_slider_amount: 0.0,
+            manual_donation_level: ManualDonationLevel::Donor,
+            manual_donation_metric: ManualDonationMetric::Hash,
         }
     }
 }
