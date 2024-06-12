@@ -122,6 +122,10 @@ impl Helper {
         info!("XMRig | Attempting to stop...");
         lock2!(helper, xmrig).signal = ProcessSignal::Stop;
         lock2!(helper, xmrig).state = ProcessState::Middle;
+        let gui_api = Arc::clone(&lock!(helper).gui_api_xmrig);
+        let pub_api = Arc::clone(&lock!(helper).pub_api_xmrig);
+        *lock!(pub_api) = PubXmrigApi::new();
+        *lock!(gui_api) = PubXmrigApi::new();
     }
 
     #[cold]
