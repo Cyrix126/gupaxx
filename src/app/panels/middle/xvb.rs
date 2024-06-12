@@ -152,25 +152,21 @@ impl crate::disk::state::Xvb {
                 ui.vertical_centered(|ui| {
                     ui.horizontal(|ui| {
                         
-                        
-                        let selected_text = match self.mode {
-                            XvbMode::Auto => "Auto".to_string(),
-                            XvbMode::Hero => "Hero".to_string(),
-                            XvbMode::ManualXvb => "Manual Xvb".to_string(),
-                            XvbMode::ManualP2pool => "Manual P2pool".to_string(),
-                            XvbMode::ManualDonationLevel => "Manual Donation Level".to_string()
-                        };
-
                         egui::ComboBox::from_label("")
-                        .selected_text(selected_text)
+                        .selected_text(self.mode.to_string())
                         .show_ui(ui, |ui| {
-                                ui.selectable_value(&mut self.mode, XvbMode::Auto, "Auto");
-                                ui.selectable_value(&mut self.mode, XvbMode::Hero, "Hero");
-                                ui.selectable_value(&mut self.mode, XvbMode::ManualXvb, "Manual Xvb")
+                                ui.selectable_value(&mut self.mode, XvbMode::Auto,
+                                     XvbMode::Auto.to_string());
+                                ui.selectable_value(&mut self.mode, XvbMode::Hero,
+                                     XvbMode::Hero.to_string());
+                                ui.selectable_value(&mut self.mode, XvbMode::ManualXvb,
+                                     XvbMode::ManualXvb.to_string())
                                 .on_hover_text(XVB_MODE_MANUAL_XVB_HELP);
-                                ui.selectable_value(&mut self.mode, XvbMode::ManualP2pool, "Manual P2pool")
+                                ui.selectable_value(&mut self.mode, XvbMode::ManualP2pool,
+                                     XvbMode::ManualP2pool.to_string())
                                 .on_hover_text(XVB_MODE_MANUAL_P2POOL_HELP);
-                                ui.selectable_value(&mut self.mode, XvbMode::ManualDonationLevel, "Manual Donation Level")
+                                ui.selectable_value(&mut self.mode, XvbMode::ManualDonationLevel,
+                                     XvbMode::ManualDonationLevel.to_string())
                                 .on_hover_text(XVB_MODE_MANUAL_DONATION_LEVEL_HELP);
                         });
                         if self.mode == XvbMode::ManualXvb || self.mode == XvbMode::ManualP2pool {

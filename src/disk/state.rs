@@ -265,6 +265,20 @@ pub enum XvbMode {
     ManualDonationLevel,
 }
 
+impl Display for XvbMode {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let text = match self {
+            Self::Auto => "Auto",
+            Self::Hero => "Hero",
+            Self::ManualXvb => "Manual Xvb",
+            Self::ManualP2pool => "Manual P2pool",
+            Self::ManualDonationLevel => "Manual Donation Level"
+        };
+
+        write!(f, "{}", text)
+    }
+}
+
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
 pub enum ManualDonationLevel {
     #[default]
@@ -405,11 +419,11 @@ impl Default for Xvb {
             simple: true,
             token: "".to_string(),
             simple_hero_mode: false,
-            mode: XvbMode::Auto,
+            mode: XvbMode::default(),
             manual_amount_raw: 0.0,
             manual_slider_amount: 0.0,
-            manual_donation_level: ManualDonationLevel::Donor,
-            manual_donation_metric: ManualDonationMetric::Hash,
+            manual_donation_level: ManualDonationLevel::default(),
+            manual_donation_metric: ManualDonationMetric::default(),
         }
     }
 }
