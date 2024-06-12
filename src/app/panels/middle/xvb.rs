@@ -151,7 +151,6 @@ impl crate::disk::state::Xvb {
             ui.group(|ui| {
                 ui.vertical_centered(|ui| {
                     ui.horizontal(|ui| {
-                        
                         egui::ComboBox::from_label("")
                         .selected_text(self.mode.to_string())
                         .show_ui(ui, |ui| {
@@ -221,13 +220,17 @@ impl crate::disk::state::Xvb {
                         }
 
                         if self.mode ==  XvbMode::ManualDonationLevel {
-                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::Donor, "Donor")
+                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::Donor,
+                                ManualDonationLevel::Donor.to_string())
                             .on_hover_text(XVB_DONATION_LEVEL_DONOR_HELP);
-                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorVIP, "Donor VIP")
+                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorVIP,
+                                ManualDonationLevel::DonorVIP.to_string())
                             .on_hover_text(XVB_DONATION_LEVEL_VIP_DONOR_HELP);
-                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorWhale, "Donor Whale")
+                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorWhale,
+                                ManualDonationLevel::DonorWhale.to_string())
                             .on_hover_text(XVB_DONATION_LEVEL_WHALE_DONOR_HELP);
-                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorMega, "Donor Mega")
+                            ui.radio_value(&mut self.manual_donation_level, ManualDonationLevel::DonorMega,
+                                ManualDonationLevel::DonorMega.to_string())
                             .on_hover_text(XVB_DONATION_LEVEL_MEGA_DONOR_HELP);
 
                             lock!(api).stats_priv.runtime_manual_donation_level = self.manual_donation_level.clone().into();

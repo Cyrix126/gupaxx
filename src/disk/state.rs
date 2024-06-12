@@ -272,7 +272,7 @@ impl Display for XvbMode {
             Self::Hero => "Hero",
             Self::ManualXvb => "Manual Xvb",
             Self::ManualP2pool => "Manual P2pool",
-            Self::ManualDonationLevel => "Manual Donation Level"
+            Self::ManualDonationLevel => "Manual Donation Level",
         };
 
         write!(f, "{}", text)
@@ -286,6 +286,19 @@ pub enum ManualDonationLevel {
     DonorVIP,
     DonorWhale,
     DonorMega,
+}
+
+impl Display for ManualDonationLevel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let text = match self {
+            Self::Donor => "Donor",
+            Self::DonorVIP => "Donor VIP",
+            Self::DonorWhale => "Donor Whale",
+            Self::DonorMega => "Donor Mega",
+        };
+
+        write!(f, "{}", text)
+    }
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
