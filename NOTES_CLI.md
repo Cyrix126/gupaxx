@@ -46,7 +46,5 @@ You are not the winner
 
 ## Technical implementation
 
-The CLI binary must be constructed by enabling the feature `cli`.  
-The feature enabled will adapt the code of the GUI.  
-
-It has also his own main source file.
+The cli args are managed by [clap](https://docs.rs/clap).
+The code for managing current args from upstream will be replaced to use this crate.
