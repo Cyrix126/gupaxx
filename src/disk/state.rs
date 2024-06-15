@@ -314,11 +314,10 @@ impl Display for ManualDonationMetric {
         let text = match self {
             Self::Hash => "H/s",
             Self::Kilo => "KH/s",
-            Self::Mega => "MH/s"
+            Self::Mega => "MH/s",
         };
 
         write!(f, "{}", text)
-        
     }
 }
 

@@ -442,7 +442,6 @@ pub const XVB_ROUND_DONOR_VIP_MIN_HR: u32 = 10000;
 pub const XVB_ROUND_DONOR_WHALE_MIN_HR: u32 = 100000;
 pub const XVB_ROUND_DONOR_MEGA_MIN_HR: u32 = 1000000;
 
-
 // Manual Mode
 pub const XVB_MODE_MANUAL_XVB_HELP: &str = "Manually set the amount to donate to XmrVsBeast, If value is more than xmrig hashrate it might be changed";
 pub const XVB_MODE_MANUAL_P2POOL_HELP: &str = "Manually set the amount to keep on P2pool, If value is more than xmrig hashrate it might be changed";
