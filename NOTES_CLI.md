@@ -23,7 +23,7 @@
 Example:
 
 ```
-gupaxx-cli --token xxxxx --address xxxxx --hero --p2pool="127.0.0.1:3333" --xmrig-add-args="--xxx --xxx" -t 8 -q --path-xmrig="/path/to/xmrig-binary"
+gupaxx --cli --token xxxxx --address xxxxx --hero --p2pool="127.0.0.1:3333" --xmrig-add-args="--xxx --xxx" -t 8 -q --path-xmrig="/path/to/xmrig-binary"
 ```
 
 ## Commands
