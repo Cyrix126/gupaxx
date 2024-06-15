@@ -13,17 +13,16 @@
 ## Launch args
 - XVB token
 - XMR address
-- p2pool address:port
 - optional: hero
-- optional: xmrig custom additional args 
 - optional: quiet algo
 - optional: quiet xmrig
 - optional: path of xmrig
+- optional: path of p2pool or p2pool address:port
 
 Example:
 
 ```
-gupaxx --cli --token xxxxx --address xxxxx --hero --p2pool="127.0.0.1:3333" --xmrig-add-args="--xxx --xxx" -t 8 -q --path-xmrig="/path/to/xmrig-binary"
+gupaxx --cli --token xxxxx --address xxxxx --hero --p2pool="127.0.0.1:3333" -t 8 -q --path-xmrig="/path/to/xmrig-binary"
 ```
 
 ## Commands
@@ -48,3 +47,10 @@ You are not the winner
 
 The cli args are managed by [clap](https://docs.rs/clap).
 The code for managing current args from upstream will be replaced to use this crate.
+
+The cli mode is enabled by passing the argument cli.
+It will autostart xmrig/xvb processes.
+p2pool process will be started if no address is given in args.
+Otherwise, it will watch p2pool data and mine on it.
+
+Each argument can be omitted if it's present in the state file.
