@@ -74,7 +74,7 @@ pub(crate) fn calcul_donated_time(
     let mode = lock!(gui_api_xvb).stats_priv.runtime_mode.clone();
 
     let default_spared_time = time_that_could_be_spared(lhr, min_hr);
-    let spared_time = match mode {
+    let mut spared_time = match mode {
         RuntimeMode::Auto => {
             info!("RuntimeMode::Auto - calculating spared_time");
             // calculate how much time needed to be spared to be in most round type minimum HR + buffer
@@ -109,6 +109,9 @@ pub(crate) fn calcul_donated_time(
     };
 
     info!("Final spared_time is {spared_time}");
+    if spared_time > XVB_TIME_ALGO {
+        spared_time = XVB_TIME_ALGO;
+    }
 
     spared_time
 }
