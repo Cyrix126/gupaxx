@@ -1,111 +1,4 @@
 //---------------------------------------------------------------------------------------------------- Misc functions
-#[cold]
-#[inline(never)]
-pub fn parse_args<S: Into<String>>(mut app: App, panic: S) -> App {
-    info!("Parsing CLI arguments...");
-    let mut args: Vec<String> = env::args().collect();
-    if args.len() == 1 {
-        info!("No args ... OK");
-        return app;
-    } else {
-        args.remove(0);
-        info!("Args ... {:?}", args);
-    }
-    // [help/version], exit early
-    for arg in &args {
-        match arg.as_str() {
-            "--help" => {
-                println!("{}", ARG_HELP);
-                exit(0);
-            }
-            "--version" => {
-                println!("Gupaxx {} [OS: {}, Commit: {}]\nThis Gupax was originally bundled with:\n    - P2Pool {}\n    - XMRig {}\n\n{}", GUPAX_VERSION, OS_NAME, &COMMIT[..40], P2POOL_VERSION, XMRIG_VERSION, ARG_COPYRIGHT);
-                exit(0);
-            }
-            "--ferris" => {
-                println!("{}", FERRIS_ANSI);
-                exit(0);
-            }
-            _ => (),
-        }
-    }
-    // Abort on panic
-    let panic = panic.into();
-    if !panic.is_empty() {
-        info!("[Gupax error] {}", panic);
-        exit(1);
-    }
-
-    // Everything else
-    for arg in args {
-        match arg.as_str() {
-            "--state" => {
-                info!("Printing state...");
-                print_disk_file(&app.state_path);
-            }
-            "--nodes" => {
-                info!("Printing node list...");
-                print_disk_file(&app.node_path);
-            }
-            "--payouts" => {
-                info!("Printing payouts...\n");
-                print_gupax_p2pool_api(&app.gupax_p2pool_api);
-            }
-            "--reset-state" => {
-                if let Ok(()) = reset_state(&app.state_path) {
-                    println!("\nState reset ... OK");
-                    exit(0);
-                } else {
-                    eprintln!("\nState reset ... FAIL");
-                    exit(1)
-                }
-            }
-            "--reset-nodes" => {
-                if let Ok(()) = reset_nodes(&app.node_path) {
-                    println!("\nNode reset ... OK");
-                    exit(0)
-                } else {
-                    eprintln!("\nNode reset ... FAIL");
-                    exit(1)
-                }
-            }
-            "--reset-pools" => {
-                if let Ok(()) = reset_pools(&app.pool_path) {
-                    println!("\nPool reset ... OK");
-                    exit(0)
-                } else {
-                    eprintln!("\nPool reset ... FAIL");
-                    exit(1)
-                }
-            }
-            "--reset-payouts" => {
-                if let Ok(()) = reset_gupax_p2pool_api(&app.gupax_p2pool_api_path) {
-                    println!("\nGupaxP2poolApi reset ... OK");
-                    exit(0)
-                } else {
-                    eprintln!("\nGupaxP2poolApi reset ... FAIL");
-                    exit(1)
-                }
-            }
-            "--reset-all" => reset(
-                &app.os_data_path,
-                &app.state_path,
-                &app.node_path,
-                &app.pool_path,
-                &app.gupax_p2pool_api_path,
-            ),
-            "--no-startup" => app.no_startup = true,
-            _ => {
-                eprintln!(
-                    "\n[Gupax error] Invalid option: [{}]\nFor help, use: [--help]",
-                    arg
-                );
-                exit(1);
-            }
-        }
-    }
-    app
-}
 
 // Get absolute [Gupax] binary path
 #[cold]
@@ -167,7 +60,7 @@ pub fn clean_dir() -> Result<(), anyhow::Error> {
 // Print disk files to console
 #[cold]
 #[inline(never)]
-fn print_disk_file(path: &PathBuf) {
+pub fn print_disk_file(path: &PathBuf) {
     match std::fs::read_to_string(path) {
         Ok(string) => {
             print!("{}", string);
@@ -240,21 +133,14 @@ use log::error;
 use log::warn;
 use regex::Regex;
 use std::path::PathBuf;
+use std::process::exit;
 use std::sync::Arc;
 use std::sync::Mutex;
-use std::{env, process::exit};
 
 use log::info;
 
 //---------------------------------------------------------------------------------------------------- Use
-use crate::{
-    app::App,
-    constants::*,
-    utils::{
-        ferris::FERRIS_ANSI,
-        resets::{reset, reset_gupax_p2pool_api, reset_nodes, reset_pools, reset_state},
-    },
-};
+use crate::constants::*;
 
 //----------------------------------------------------------------------------------------------------
 #[cold]

@@ -1,3 +1,5 @@
+use crate::cli::parse_args;
+use crate::cli::Cli;
 use crate::components::gupax::FileWindow;
 use crate::components::node::Ping;
 use crate::components::node::RemoteNode;
@@ -27,7 +29,6 @@ use crate::inits::init_text_styles;
 use crate::miscs::cmp_f64;
 use crate::miscs::get_exe;
 use crate::miscs::get_exe_dir;
-use crate::miscs::parse_args;
 use crate::utils::constants::VISUALS;
 use crate::utils::macros::arc_mut;
 use crate::utils::macros::lock;
@@ -170,7 +171,7 @@ impl App {
 
     #[cold]
     #[inline(never)]
-    pub fn new(now: Instant) -> Self {
+    pub fn new(now: Instant, args: Cli) -> Self {
         info!("Initializing App Struct...");
         info!("App Init | P2Pool & XMRig processes...");
         let p2pool = arc_mut!(Process::new(
@@ -336,7 +337,7 @@ impl App {
         // It's not safe to [--reset] if any of the previous variables
         // are unset (null path), so make sure we just abort if the [panic] String contains something.
         info!("App Init | Applying argument state...");
-        let mut app = parse_args(app, panic);
+        let mut app = parse_args(app, args, panic);
 
         use crate::disk::errors::TomlError::*;
         // Read disk state
