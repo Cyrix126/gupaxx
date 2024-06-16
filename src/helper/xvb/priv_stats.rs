@@ -9,12 +9,15 @@ use reqwest::{Client, StatusCode};
 use serde::Deserialize;
 use tokio::time::sleep;
 
-use crate::disk::state::XvbMode;
 use crate::{
     disk::state::ManualDonationLevel,
     helper::{xvb::output_console, Process, ProcessState},
     macros::lock,
     XVB_URL,
+};
+use crate::{
+    disk::state::XvbMode, XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR,
+    XVB_ROUND_DONOR_VIP_MIN_HR, XVB_ROUND_DONOR_WHALE_MIN_HR,
 };
 
 use super::{nodes::XvbNode, rounds::XvbRound, PubXvbApi};
@@ -36,6 +39,17 @@ pub enum RuntimeDonationLevel {
     DonorVIP,
     DonorWhale,
     DonorMega,
+}
+
+impl RuntimeDonationLevel {
+    pub fn get_hashrate(&self) -> f32 {
+        match &self {
+            Self::Donor => XVB_ROUND_DONOR_MIN_HR as f32,
+            Self::DonorVIP => XVB_ROUND_DONOR_VIP_MIN_HR as f32,
+            Self::DonorWhale => XVB_ROUND_DONOR_WHALE_MIN_HR as f32,
+            Self::DonorMega => XVB_ROUND_DONOR_MEGA_MIN_HR as f32,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Default, Deserialize)]
