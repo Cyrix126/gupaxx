@@ -92,6 +92,8 @@ impl<'a> Algorithm<'a> {
         time_donated: &'a Arc<Mutex<u32>>,
         rig: &'a str,
     ) -> Self {
+        info!("XvB Process | Starting Algorithm - Algorithm State:",);
+
         let hashrate_xmrig = {
             if lock!(gui_api_xmrig).hashrate_raw_15m > 0.0 {
                 lock!(gui_api_xmrig).hashrate_raw_15m
@@ -104,8 +106,8 @@ impl<'a> Algorithm<'a> {
 
         let address = state_p2pool.address.clone();
 
-        let xvb_24h_avg = lock!(gui_api_xvb).stats_priv.donor_24hr_avg;
-        let xvb_1h_avg = lock!(gui_api_xvb).stats_priv.donor_1hr_avg;
+        let xvb_24h_avg = lock!(gui_api_xvb).stats_priv.donor_24hr_avg * 1000.0;
+        let xvb_1h_avg = lock!(gui_api_xvb).stats_priv.donor_1hr_avg * 1000.0;
 
         let runtime_mode = lock!(gui_api_xvb).stats_priv.runtime_mode.clone();
         let runtime_donation_level = lock!(gui_api_xvb)
@@ -171,7 +173,6 @@ impl<'a> Algorithm<'a> {
             / (new_instace.stats.hashrate_xmrig as u32))
             * XVB_TIME_ALGO;
 
-        info!("XvB Process | Starting Algorithm - Algorithm State:",);
         info!("{:#?}", new_instace.stats);
 
         new_instace
@@ -187,11 +188,6 @@ impl<'a> Algorithm<'a> {
 
     fn xvb_1h_fulfilled(&self) -> bool {
         self.stats.xvb_1h_avg > self.stats.target_donation_hashrate
-    }
-
-    async fn fulfill_xvb_1h(&self) {
-        self.mine_p2pool().await;
-        self.sleep_then_update_node_xmrig().await;
     }
 
     async fn mine_p2pool(&self) {
@@ -398,11 +394,14 @@ impl<'a> Algorithm<'a> {
             );
             output_console(self.gui_api_xvb, "Calculating donation time for XvB...");
 
-            self.fulfill_xvb_1h().await
+            *lock!(self.time_donated) = self.stats.spared_time;
+            self.mine_p2pool().await;
+            self.sleep_then_update_node_xmrig().await;
         } else if self.is_share_fulfilled() {
             output_console(self.gui_api_xvb, "24H avg XvB target not achieved.");
             output_console(self.gui_api_xvb, "Sending all hashrate to XvB");
 
+            *lock!(self.time_donated) = XVB_TIME_ALGO;
             self.mine_xvb().await
         } else {
             output_console(self.gui_api_xvb, "There are no shares in p2pool");
