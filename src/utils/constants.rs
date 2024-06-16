@@ -457,28 +457,6 @@ pub const XVB_DONATION_LEVEL_WHALE_DONOR_HELP: &str =
 pub const XVB_DONATION_LEVEL_MEGA_DONOR_HELP: &str =
     "To qualify at least 1000 kH/s will be actively donated (1hr and 24hr avg.)";
 
-// CLI argument messages
-pub const ARG_HELP: &str = r#"USAGE: ./gupaxx [--flag]
-
-    --help            Print this help message
-    --version         Print version and build info
-    --state           Print Gupaxxstate
-    --nodes           Print the manual node list
-    --payouts         Print the P2Pool payout log, payout count, and total XMR mined
-    --no-startup      Disable all auto-startup settings for this instance (auto-update, auto-ping, etc)
-    --reset-state     Reset all Gupaxxstate (your settings)
-    --reset-nodes     Reset the manual node list in the [P2Pool] tab
-    --reset-pools     Reset the manual pool list in the [XMRig] tab
-    --reset-payouts   Reset the permanent P2Pool stats that appear in the [Status] tab
-    --reset-all       Reset the state, manual node list, manual pool list, and P2Pool stats
-
-To view more detailed console debug information, start Gupaxxwith
-the environment variable [RUST_LOG] set to a log level like so:
-    RUST_LOG=(trace|debug|info|warn|error) ./gupaxx"#;
-pub const ARG_COPYRIGHT: &str = r#"Gupaxxis licensed under GPLv3.
-For more information, see link below:
-<https://github.com/Cyrix126/gupaxx>"#;
-
 // Unknown Data, replace HumanNumlber::unknown()
 pub const UNKNOWN_DATA: &str = "???";
 // Time PPLNS WINDOW in seconds

@@ -204,7 +204,7 @@ impl crate::disk::state::Xvb {
                             };
 
                             ui.horizontal(|ui| {
-                                
+
                                 if ui.add(egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Hash, "Hash")).clicked() {
                                     self.manual_donation_metric = ManualDonationMetric::Hash;
                                     self.manual_slider_amount = self.manual_amount_raw;
@@ -217,7 +217,7 @@ impl crate::disk::state::Xvb {
                                     self.manual_donation_metric = ManualDonationMetric::Mega;
                                     self.manual_slider_amount = self.manual_amount_raw / 1_000_000.0;
                                 };
-                                
+
                                 ui.spacing_mut().slider_width = width * 0.5;
                                 ui.add_sized(
                                     [width, text_edit],

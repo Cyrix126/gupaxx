@@ -23,7 +23,7 @@
 Example:
 
 ```
-gupaxx-cli --token xxxxx --address xxxxx --hero --p2pool="127.0.0.1:3333" --xmrig-add-args="--xxx --xxx" -t 8 -q --path-xmrig="/path/to/xmrig-binary"
+gupaxx --cli --token xxxxx --address xxxxx --hero --p2pool="127.0.0.1:3333" --xmrig-add-args="--xxx --xxx" -t 8 -q --path-xmrig="/path/to/xmrig-binary"
 ```
 
 ## Commands
@@ -46,7 +46,5 @@ You are not the winner
 
 ## Technical implementation
 
-The CLI binary must be constructed by enabling the feature `cli`.  
-The feature enabled will adapt the code of the GUI.  
-
-It has also his own main source file.
+The cli args are managed by [clap](https://docs.rs/clap).
+The code for managing current args from upstream will be replaced to use this crate.

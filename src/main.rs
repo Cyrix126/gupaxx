@@ -26,6 +26,7 @@ compile_error!("gupax is only compatible with 64-bit CPUs");
 compile_error!("gupax is only built for windows/macos/linux");
 
 use crate::app::App;
+use crate::cli::Cli;
 //---------------------------------------------------------------------------------------------------- Imports
 use crate::constants::*;
 use crate::inits::init_auto;
@@ -33,12 +34,14 @@ use crate::inits::init_logger;
 use crate::inits::init_options;
 use crate::miscs::clean_dir;
 use crate::utils::*;
+use clap::Parser;
 use egui::Vec2;
 use log::info;
 use log::warn;
 use std::time::Instant;
 
 mod app;
+mod cli;
 mod components;
 mod disk;
 mod helper;
@@ -52,6 +55,7 @@ extern crate sudo as sudo_check;
 
 //---------------------------------------------------------------------------------------------------- Main [App] frame
 fn main() {
+    let args = Cli::parse();
     let now = Instant::now();
 
     // Set custom panic hook.
@@ -59,7 +63,7 @@ fn main() {
 
     // Init logger.
     init_logger(now);
-    let mut app = App::new(now);
+    let mut app = App::new(now, args);
     init_auto(&mut app);
 
     // Init GUI stuff.
