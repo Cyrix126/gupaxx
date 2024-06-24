@@ -47,6 +47,7 @@ For advanced users, a CLI could be made to use the algorithm without a GUI
 It would allow the user to do automation and installation on headless environment and save a few HR from the Gupaxx process.
 This CLI would still offer a way to the user to pass options to xmrig and to start his p2pool server or to use another one already running.  
 #### Integrate XMRig-Proxy
+started by [Cyrix](https://github.com/Cyrix126)
 The algorithm of distribution of HR can't control HR outside of his instance.
 It must estimate external HR, which can be approximative.
 If a user control multiples miners, it could connect all of them to a xmrig-proxy instance.
