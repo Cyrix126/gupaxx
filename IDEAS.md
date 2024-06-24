@@ -34,6 +34,8 @@ Add repository/AUR for Gupaxx and a status of packaging distro/version on the RE
 Add on README a table with minimum hardware/software requirements.
 ### Add more target
 Gupaxx could add support for linux arm64 since p2pool and xmrig can compile on this target. 
+### Refactor size of text
+Gupax/x currently resize texts/widgets based on the window size. Instead, the text/widget size should be decided by the OS/config, scroll bar should be used when there is not enough space. It will allow to use Gupaxx on different ratio of screen.
 
 ## More Powerful
 ### Optimization for xmrig
