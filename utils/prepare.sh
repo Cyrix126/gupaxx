@@ -18,6 +18,7 @@ OLD_VER_NUM="$(grep -m1 "version" Cargo.toml | grep -o "[0-9].[0-9].[0-9]")"
 # get p2pool/xmrig version
 P2POOL_VERSION="$(grep "P2POOL_VERSION" src/constants.rs | grep -o "\"v[0-9].*\"")"
 XMRIG_VERSION="$(grep "XMRIG_VERSION" src/constants.rs | grep -o "\"v[0-9].*\"")"
+XMRIG_PROXY_VERSION="$(grep "XMRIG_PROXY_VERSION" src/constants.rs | grep -o "\"v[0-9].*\"")"
 
 # sed change
 sed -i "s/$OLD_VER/$1/g" README.md
@@ -35,6 +36,7 @@ cat << EOM > CHANGELOG.md.new
 ## Bundled Versions
 * [\`P2Pool ${P2POOL_VERSION//\"/}\`](https://github.com/SChernykh/p2pool/releases/tag/${P2POOL_VERSION//\"/})
 * [\`XMRig ${XMRIG_VERSION//\"/}\`](https://github.com/xmrig/xmrig/releases/tag/${XMRIG_VERSION//\"/})
+* [\`XMRig_Proxy ${XMRIG_PROXY_VERSION//\"/}\`](https://github.com/xmrig/xmrig-proxy/releases/tag/${XMRIG_PROXY_VERSION//\"/})
 
 
 ---
