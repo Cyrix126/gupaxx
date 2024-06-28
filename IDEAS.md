@@ -26,6 +26,8 @@ If Gupaxx could register the user automaticcly to the raffle, it would remove a 
 It could be an option to ask at first start.  
 ### Setup Guide
 At first start, a guide could ask the user what it intends to do with Gupaxx (create node, create wallet, use xmrig-proxy, participate in raffle...) and do the setup for him and show him what it must do manually. An option to skip this guide would be present for advanced users.
+### Very noob mode
+At first start, a mode is suggested for very noob users. It would only shows the seed phrase of the wallet generated and configure all options for the user.
 
 ## Supporting more environnements
 ### Packaging
@@ -44,12 +46,10 @@ On linux, we can activate 1GB pages after detecting cpu flags. We can also add c
 #### Manual optimizations
 On the XMRig tab, inform users about manual optimizations that Gupaxx can't control. For example, disabling hyper-threading in BIOS is recommended.
 ### CLI for Algorithm
-started by [Cyrix126](https://github.com/Cyrix126)
-For advanced users, a CLI could be made to use the algorithm without a GUI
-It would allow the user to do automation and installation on headless environment and save a few HR from the Gupaxx process.
-This CLI would still offer a way to the user to pass options to xmrig and to start his p2pool server or to use another one already running.  
+A simple script could be made to reproduce the algorithm who would take args for every other needed programs.
+Gupaxx itself doesn't have any features that bundled programs don't offers. 
 #### Integrate XMRig-Proxy
-started by [Cyrix](https://github.com/Cyrix126)
+[Done](https://github.com/Cyrix126/gupaxx/releases/tag/v1.2.0)  
 The algorithm of distribution of HR can't control HR outside of his instance.
 It must estimate external HR, which can be approximative.
 If a user control multiples miners, it could connect all of them to a xmrig-proxy instance.
