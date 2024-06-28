@@ -39,7 +39,7 @@ title "macOS-x64 folder check"
 [[ -d macos-x64_b/Gupaxx.app ]]; check "macos-x64_b/Gupaxx.app"
 [[ -f macos-x64_b/Gupaxx.app/Contents/MacOS/p2pool/p2pool ]]; check "macos-x64_b/p2pool/p2pool"
 [[ -f macos-x64_b/Gupaxx.app/Contents/MacOS/xmrig/xmrig ]]; check "macos-x64_b/xmrig/xmrig"
-[[ -f macos-x64_b/Gupaxx.app/Contents/MacOS/xmrig-proxy/xmrig-proxy ]]; check "macos-x64_b/xmrig/xmrig-proxy"
+[[ -f macos-x64_b/Gupaxx.app/Contents/MacOS/xmrig-proxy/xmrig-proxy ]]; check "macos-x64_b/xmrig-proxy/xmrig-proxy"
 title "macOS-arm64 folder check"
 [[ -d macos-arm64/Gupaxx.app ]]; check "macos-arm64/Gupaxx.app"
 [[ -d macos-arm64_b/Gupaxx.app ]]; check "macos-arm64_b/Gupaxx.app"
@@ -62,7 +62,7 @@ chmod +x linux/gupaxx
 chmod +x linux_b/gupaxx
 chmod +x linux_b/p2pool/p2pool
 chmod +x linux_b/xmrig/xmrig
-chmod +x linux_b/xmrig/xmrig-proxy
+chmod +x linux_b/xmrig-proxy/xmrig-proxy
 mv linux_b "gupaxx-$NEW_VER-linux-x64-bundle"; check "linux -> gupaxx-$NEW_VER-linux-x64-bundle"
 tar -czpf "gupaxx-${NEW_VER}-linux-x64-bundle.tar.gz" "gupaxx-$NEW_VER-linux-x64-bundle" --owner=lm --group=lm ; check "tar linux-bundle"
 # Tar Linux Standalone
