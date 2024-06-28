@@ -32,12 +32,15 @@ mod test {
 			auto_p2pool = false
 			auto_xmrig = false
             auto_xvb = false
+            auto_xp = false
 			ask_before_quit = true
 			save_before_quit = true
 			p2pool_path = "p2pool/p2pool"
 			xmrig_path = "xmrig/xmrig"
+			xmrig_proxy_path = "xmrig-proxy/xmrig-proxy"
 			absolute_p2pool_path = "/home/hinto/p2pool/p2pool"
 			absolute_xmrig_path = "/home/hinto/xmrig/xmrig"
+			absolute_xp_path = "/home/hinto/xmrig/xmrig-proxy/xmrig-proxy"
 			selected_width = 1280
 			selected_height = 960
 			selected_scale = 0.0
@@ -98,10 +101,34 @@ mod test {
 			selected_port = "3333"
             token = "testtoken"
 
+            [xmrig_proxy]
+            simple = true
+            arguments = ""
+			address = ""
+			simple_rig = ""
+			tls = false
+			name = "linux"
+			rig = "Gupaxx"
+			keepalive = false
+            ip = "localhost"
+            port = "30948"
+			api_ip = "localhost"
+			api_port = "18088"
+			p2pool_ip = "localhost"
+			p2pool_port = "18088"
+            token = "testtoken"
+			selected_index = 1
+			selected_name = "linux"
+			selected_rig = "Gupaxx"
+			selected_ip = "192.168.1.122"
+			selected_port = "3333"
+            redirect_local_xmrig = true
+
             [xvb]
             token = ""
             hero = false
             node = "Europe"
+
 			[version]
 			gupax = "v1.3.0"
 			p2pool = "v2.5"

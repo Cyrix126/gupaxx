@@ -40,8 +40,12 @@ pub const DEFAULT_P2POOL_PATH: &str = r"P2Pool\p2pool.exe";
 pub const DEFAULT_P2POOL_PATH: &str = "p2pool/p2pool";
 #[cfg(target_os = "windows")]
 pub const DEFAULT_XMRIG_PATH: &str = r"XMRig\xmrig.exe";
+#[cfg(target_os = "windows")]
+pub const DEFAULT_XMRIG_PROXY_PATH: &str = r"XMRig-Proxy\xmrig-proxy.exe";
 #[cfg(target_os = "macos")]
 pub const DEFAULT_XMRIG_PATH: &str = "xmrig/xmrig";
+#[cfg(target_os = "macos")]
+pub const DEFAULT_XMRIG_PROXY_PATH: &str = "xmrig-proxy/xmrig-proxy";
 
 // Default to [/usr/bin/] for Linux distro builds.
 #[cfg(target_os = "linux")]
@@ -51,8 +55,14 @@ pub const DEFAULT_P2POOL_PATH: &str = "p2pool/p2pool";
 #[cfg(not(feature = "distro"))]
 pub const DEFAULT_XMRIG_PATH: &str = "xmrig/xmrig";
 #[cfg(target_os = "linux")]
+#[cfg(not(feature = "distro"))]
+pub const DEFAULT_XMRIG_PROXY_PATH: &str = "xmrig/xmrig-proxy";
+#[cfg(target_os = "linux")]
 #[cfg(feature = "distro")]
 pub const DEFAULT_P2POOL_PATH: &str = "/usr/bin/p2pool";
 #[cfg(target_os = "linux")]
 #[cfg(feature = "distro")]
 pub const DEFAULT_XMRIG_PATH: &str = "/usr/bin/xmrig";
+#[cfg(target_os = "linux")]
+#[cfg(feature = "distro")]
+pub const DEFAULT_XMRIG_PROXY_PATH: &str = "/usr/bin/xmrig-proxy";

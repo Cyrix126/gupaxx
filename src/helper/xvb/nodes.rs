@@ -10,7 +10,7 @@ use tokio::spawn;
 
 use crate::{
     components::node::{GetInfo, TIMEOUT_NODE_PING},
-    helper::{xvb::output_console, Process, ProcessState},
+    helper::{xvb::output_console, Process, ProcessName, ProcessState},
     macros::lock,
     GUPAX_VERSION_UNDERSCORE, XVB_NODE_EU, XVB_NODE_NA, XVB_NODE_PORT, XVB_NODE_RPC,
 };
@@ -25,6 +25,8 @@ pub enum XvbNode {
     Europe,
     #[display(fmt = "Local P2pool")]
     P2pool,
+    #[display(fmt = "Xmrig Proxy")]
+    XmrigProxy,
 }
 impl XvbNode {
     pub fn url(&self) -> String {
@@ -32,12 +34,14 @@ impl XvbNode {
             Self::NorthAmerica => String::from(XVB_NODE_NA),
             Self::Europe => String::from(XVB_NODE_EU),
             Self::P2pool => String::from("127.0.0.1"),
+            Self::XmrigProxy => String::from("127.0.0.1"),
         }
     }
     pub fn port(&self) -> String {
         match self {
             Self::NorthAmerica | Self::Europe => String::from(XVB_NODE_PORT),
             Self::P2pool => String::from("3333"),
+            Self::XmrigProxy => String::from("3355"),
         }
     }
     pub fn user(&self, address: &str) -> String {
@@ -45,6 +49,7 @@ impl XvbNode {
             Self::NorthAmerica => address.chars().take(8).collect(),
             Self::Europe => address.chars().take(8).collect(),
             Self::P2pool => GUPAX_VERSION_UNDERSCORE.to_string(),
+            Self::XmrigProxy => GUPAX_VERSION_UNDERSCORE.to_string(),
         }
     }
     pub fn tls(&self) -> bool {
@@ -52,6 +57,7 @@ impl XvbNode {
             Self::NorthAmerica => true,
             Self::Europe => true,
             Self::P2pool => false,
+            Self::XmrigProxy => false,
         }
     }
     pub fn keepalive(&self) -> bool {
@@ -59,6 +65,7 @@ impl XvbNode {
             Self::NorthAmerica => true,
             Self::Europe => true,
             Self::P2pool => false,
+            Self::XmrigProxy => false,
         }
     }
 
@@ -105,16 +112,18 @@ impl XvbNode {
             // if both nodes are dead, then the state of the process must be NodesOffline
             info!("XvB node ping, all offline or ping failed, switching back to local p2pool",);
             output_console(
-                gui_api_xvb,
+                &mut lock!(gui_api_xvb).output,
                 "XvB node ping, all offline or ping failed, switching back to local p2pool",
+                ProcessName::Xvb,
             );
             lock!(process_xvb).state = ProcessState::OfflineNodesAll;
         } else {
             // if node is up and because update_fastest is used only if token/address is valid, it means XvB process is Alive.
             info!("XvB node ping, both online and best is {}", node.url());
             output_console(
-                gui_api_xvb,
+                &mut lock!(gui_api_xvb).output,
                 &format!("XvB node ping, {} is selected as the fastest.", node),
+                ProcessName::Xvb,
             );
             info!("ProcessState to Syncing after finding joignable node");
             // could be used by xmrig who signal that a node is not joignable

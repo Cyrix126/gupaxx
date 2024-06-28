@@ -20,6 +20,7 @@ impl State {
             p2pool: P2pool::default(),
             xmrig: Xmrig::with_threads(max_threads, current_threads),
             xvb: Xvb::default(),
+            xmrig_proxy: XmrigProxy::default(),
             version: arc_mut!(Version::default()),
         }
     }
@@ -27,6 +28,7 @@ impl State {
     pub fn update_absolute_path(&mut self) -> Result<(), TomlError> {
         self.gupax.absolute_p2pool_path = into_absolute_path(self.gupax.p2pool_path.clone())?;
         self.gupax.absolute_xmrig_path = into_absolute_path(self.gupax.xmrig_path.clone())?;
+        self.gupax.absolute_xp_path = into_absolute_path(self.gupax.xmrig_proxy_path.clone())?;
         Ok(())
     }
 
@@ -108,6 +110,7 @@ impl State {
         // Convert path to absolute
         self.gupax.absolute_p2pool_path = into_absolute_path(self.gupax.p2pool_path.clone())?;
         self.gupax.absolute_xmrig_path = into_absolute_path(self.gupax.xmrig_path.clone())?;
+        self.gupax.absolute_xp_path = into_absolute_path(self.gupax.xmrig_proxy_path.clone())?;
         let string = match toml::ser::to_string(&self) {
             Ok(string) => {
                 info!("State | Parse ... OK");
@@ -158,6 +161,7 @@ pub struct State {
     pub gupax: Gupax,
     pub p2pool: P2pool,
     pub xmrig: Xmrig,
+    pub xmrig_proxy: XmrigProxy,
     pub xvb: Xvb,
     pub version: Arc<Mutex<Version>>,
 }
@@ -178,14 +182,17 @@ pub struct Gupax {
     pub auto_update: bool,
     pub auto_p2pool: bool,
     pub auto_xmrig: bool,
+    pub auto_xp: bool,
     pub auto_xvb: bool,
     //	pub auto_monero: bool,
     pub ask_before_quit: bool,
     pub save_before_quit: bool,
     pub p2pool_path: String,
     pub xmrig_path: String,
+    pub xmrig_proxy_path: String,
     pub absolute_p2pool_path: PathBuf,
     pub absolute_xmrig_path: PathBuf,
+    pub absolute_xp_path: PathBuf,
     pub selected_width: u16,
     pub selected_height: u16,
     pub selected_scale: f32,
@@ -243,6 +250,64 @@ pub struct Xmrig {
     pub token: String,
 }
 
+// present for future.
+#[derive(Clone, Deserialize, Serialize, Debug)]
+pub struct XmrigProxy {
+    pub simple: bool,
+    pub arguments: String,
+    pub simple_rig: String,
+    pub tls: bool,
+    pub keepalive: bool,
+    pub address: String,
+    pub name: String,
+    pub rig: String,
+    pub ip: String,
+    pub port: String,
+    pub api_ip: String,
+    pub api_port: String,
+    pub p2pool_ip: String,
+    pub p2pool_port: String,
+    pub selected_index: usize,
+    pub selected_name: String,
+    pub selected_rig: String,
+    pub selected_ip: String,
+    pub selected_port: String,
+    pub token: String,
+    pub redirect_local_xmrig: bool,
+}
+
+impl Default for XmrigProxy {
+    fn default() -> Self {
+        XmrigProxy {
+            simple: true,
+            arguments: Default::default(),
+            token: thread_rng()
+                .sample_iter(Alphanumeric)
+                .take(16)
+                .map(char::from)
+                .collect(),
+            redirect_local_xmrig: true,
+            address: String::with_capacity(96),
+            name: "Local P2Pool".to_string(),
+            rig: GUPAX_VERSION_UNDERSCORE.to_string(),
+            simple_rig: String::with_capacity(30),
+            ip: "0.0.0.0".to_string(),
+            port: "3355".to_string(),
+            p2pool_ip: "localhost".to_string(),
+            p2pool_port: "3333".to_string(),
+            selected_index: 0,
+            selected_name: "Local P2Pool".to_string(),
+            selected_ip: "localhost".to_string(),
+            selected_rig: GUPAX_VERSION_UNDERSCORE.to_string(),
+            selected_port: "3333".to_string(),
+            api_ip: "localhost".to_string(),
+            api_port: "18089".to_string(),
+            tls: false,
+            keepalive: false,
+        }
+    }
+}
+
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
 pub struct Xvb {
     pub token: String,
@@ -277,13 +342,16 @@ impl Default for Gupax {
             auto_update: false,
             auto_p2pool: false,
             auto_xmrig: false,
+            auto_xp: false,
             auto_xvb: false,
             ask_before_quit: true,
             save_before_quit: true,
             p2pool_path: DEFAULT_P2POOL_PATH.to_string(),
             xmrig_path: DEFAULT_XMRIG_PATH.to_string(),
+            xmrig_proxy_path: DEFAULT_XMRIG_PROXY_PATH.to_string(),
             absolute_p2pool_path: into_absolute_path(DEFAULT_P2POOL_PATH.to_string()).unwrap(),
             absolute_xmrig_path: into_absolute_path(DEFAULT_XMRIG_PATH.to_string()).unwrap(),
+            absolute_xp_path: into_absolute_path(DEFAULT_XMRIG_PROXY_PATH.to_string()).unwrap(),
             selected_width: APP_DEFAULT_WIDTH as u16,
             selected_height: APP_DEFAULT_HEIGHT as u16,
             selected_scale: APP_DEFAULT_SCALE,

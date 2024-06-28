@@ -214,6 +214,23 @@ pub fn init_auto(app: &mut App) {
     } else {
         info!("Skipping auto-xmrig...");
     }
+    // [Auto-XMRig-Proxy]
+    if app.state.gupax.auto_xp {
+        if !Gupax::path_is_file(&app.state.gupax.xmrig_proxy_path) {
+            warn!("Gupaxx | Xmrig-Proxy path is not a file! Skipping auto-xmrig_proxy...");
+        } else if !crate::components::update::check_xp_path(&app.state.gupax.xmrig_proxy_path) {
+            warn!("Gupaxx | Xmrig-Proxy path is not valid! Skipping auto-xmrig_proxy...");
+        } else {
+            Helper::start_xp(
+                &app.helper,
+                &app.state.xmrig_proxy,
+                &app.state.xmrig,
+                &app.state.gupax.absolute_xp_path,
+            );
+        }
+    } else {
+        info!("Skipping auto-XMRig-Proxy...");
+    }
     // [Auto-XvB]
     if app.state.gupax.auto_xvb {
         Helper::start_xvb(
@@ -221,6 +238,7 @@ pub fn init_auto(app: &mut App) {
             &app.state.xvb,
             &app.state.p2pool,
             &app.state.xmrig,
+            &app.state.xmrig_proxy,
         );
     } else {
         info!("Skipping auto-xvb...");

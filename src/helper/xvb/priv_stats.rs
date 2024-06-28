@@ -10,7 +10,7 @@ use serde::Deserialize;
 use tokio::time::sleep;
 
 use crate::{
-    helper::{xvb::output_console, Process, ProcessState},
+    helper::{xvb::output_console, Process, ProcessName, ProcessState},
     macros::lock,
     XVB_URL,
 };
@@ -92,14 +92,16 @@ impl XvbPrivStats {
                     XVB_URL, err
                 );
                 output_console(
-                    gui_api,
+                    &mut lock!(gui_api).output,
                     &format!("Failure to retrieve private stats from {}", XVB_URL),
+                    ProcessName::Xvb,
                 );
                 lock!(process).state = ProcessState::Retry;
                 // sleep here because it is in a spawn and will not block the user stopping or restarting the service.
                 output_console(
-                    gui_api,
+                    &mut lock!(gui_api).output,
                     "Waiting 10 seconds before trying to get stats again.",
+                    ProcessName::Xvb,
                 );
                 sleep(Duration::from_secs(10)).await;
             }

@@ -1,6 +1,7 @@
 //---------------------------------------------------------------------------------------------------- Misc functions
 
 // Get absolute [Gupax] binary path
+use std::fmt::Write;
 #[cold]
 #[inline(never)]
 pub fn get_exe() -> Result<String, std::io::Error> {
@@ -128,7 +129,9 @@ pub fn cmp_f64(a: f64, b: f64) -> std::cmp::Ordering {
 // Free functions.
 
 use crate::disk::gupax_p2pool_api::GupaxP2poolApi;
+use crate::helper::ProcessName;
 use crate::utils::macros::lock;
+use chrono::Local;
 use log::error;
 use log::warn;
 use regex::Regex;
@@ -154,4 +157,17 @@ pub fn clamp_scale(scale: f32) -> f32 {
 
     // Clamp between valid range.
     scale.clamp(APP_MIN_SCALE, APP_MAX_SCALE)
+}
+pub fn output_console(output: &mut String, msg: &str, p_name: ProcessName) {
+    if let Err(e) = writeln!(output, "{}{msg}", datetimeonsole()) {
+        error!("{} Watchdog | GUI status write failed: {}", p_name, e);
+    }
+}
+pub fn output_console_without_time(output: &mut String, msg: &str, p_name: ProcessName) {
+    if let Err(e) = writeln!(output, "{msg}") {
+        error!("{} Watchdog | GUI status write failed: {}", p_name, e);
+    }
+}
+fn datetimeonsole() -> String {
+    format!("[{}]  ", Local::now().format("%Y-%m-%d %H:%M:%S%.3f"))
 }

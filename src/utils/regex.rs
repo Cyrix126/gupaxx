@@ -17,7 +17,7 @@
 
 // Some regexes used throughout Gupax.
 
-use log::error;
+use log::{error, warn};
 use once_cell::sync::Lazy;
 use regex::Regex;
 
@@ -116,13 +116,22 @@ impl P2poolRegex {
 pub struct XmrigRegex {
     pub not_mining: Regex,
     pub new_job: Regex,
+    pub timeout: Regex,
+    pub valid_conn: Regex,
+    pub invalid_conn: Regex,
+    pub error: Regex,
 }
 
 impl XmrigRegex {
     fn new() -> Self {
         Self {
             not_mining: Regex::new("no active pools, stop mining").unwrap(),
+            timeout: Regex::new("timeout").unwrap(),
             new_job: Regex::new("new job").unwrap(),
+            valid_conn: Regex::new("upstreams active: 1").unwrap(),
+            invalid_conn: Regex::new("error: 1").unwrap(),
+            // we don't want to include connections status from xmrig-proxy that show the number of errors
+            error: Regex::new(r"error: \D").unwrap(),
         }
     }
 }
@@ -154,11 +163,11 @@ pub fn nb_current_shares(s: &str) -> Option<u32> {
 }
 pub fn detect_new_node_xmrig(s: &str) -> Option<XvbNode> {
     static CURRENT_SHARE: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"net      use pool (?P<pool>.*?) ").unwrap());
+        Lazy::new(|| Regex::new(r"use pool (?P<pool>.*?) ").unwrap());
     if let Some(c) = CURRENT_SHARE.captures(s) {
         if let Some(m) = c.name("pool") {
             match m.as_str() {
-                // if user change address of local p2pool, it could create issue ?
+                // if user change address of local p2pool, it could create issue
                 "127.0.0.1:3333" => {
                     return Some(XvbNode::P2pool);
                 }
@@ -172,7 +181,7 @@ pub fn detect_new_node_xmrig(s: &str) -> Option<XvbNode> {
             }
         }
     }
-    error!("a line on xmrig console was detected as using a new pool but the syntax was not recognized.");
+    warn!("a line on xmrig console was detected as using a new pool but the syntax was not recognized or it was not a pool useable for the algorithm.");
     None
 }
 pub fn estimated_hr(s: &str) -> Option<f32> {
@@ -209,6 +218,11 @@ pub fn estimated_hr(s: &str) -> Option<f32> {
         }
     }
     None
+}
+
+pub fn contains_timeout(l: &str) -> bool {
+    static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"timeout").unwrap());
+    LINE_SHARE.is_match(l)
 }
 pub fn contains_error(l: &str) -> bool {
     static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"error").unwrap());

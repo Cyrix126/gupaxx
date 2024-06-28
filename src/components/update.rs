@@ -62,6 +62,7 @@ cfg_if::cfg_if! {
     pub(super) const GUPAX_BINARY: &str = "gupaxx";
     pub(super) const P2POOL_BINARY: &str = "p2pool";
     pub(super) const XMRIG_BINARY: &str = "xmrig";
+    pub(super) const XMRIG_PROXY_BINARY: &str = "xmrig-proxy";
      }
 }
 cfg_if::cfg_if! {
@@ -71,6 +72,7 @@ cfg_if::cfg_if! {
     pub(super) const GUPAX_BINARY: &str = "Gupaxx.exe";
     pub(super) const P2POOL_BINARY: &str = "p2pool.exe";
     pub(super) const XMRIG_BINARY: &str = "xmrig.exe";
+    pub(super) const XMRIG_PROXY_BINARY: &str = "xmrig-proxy.exe";
      } else if #[cfg(target_os = "linux")] {
     pub(super) const OS_TARGET: &str = "linux";
     pub(super) const ARCHIVE_EXT: &str = "tar.gz";
@@ -165,6 +167,20 @@ pub fn check_xmrig_path(path: &str) -> bool {
     };
     path == XMRIG_BINARY
 }
+pub fn check_xp_path(path: &str) -> bool {
+    let path = match crate::disk::into_absolute_path(path.to_string()) {
+        Ok(p) => p,
+        Err(_) => return false,
+    };
+    let path = match path.file_name() {
+        Some(p) => p,
+        None => {
+            error!("Couldn't get XMRig-Proxy file name");
+            return false;
+        }
+    };
+    path == XMRIG_PROXY_BINARY
+}
 
 //---------------------------------------------------------------------------------------------------- Update struct/impl
 // Contains values needed during update
@@ -183,6 +199,7 @@ pub struct Update {
     pub path_gupax: String,         // Full path to current gupax
     pub path_p2pool: String,        // Full path to current p2pool
     pub path_xmrig: String,         // Full path to current xmrig
+    pub path_xp: String,            // Full path to current xmrig
     pub updating: Arc<Mutex<bool>>, // Is an update in progress?
     pub prog: Arc<Mutex<f32>>,      // Holds the 0-100% progress bar number
     pub msg: Arc<Mutex<String>>,    // Message to display on [Gupax] tab while updating
@@ -190,11 +207,17 @@ pub struct Update {
 
 impl Update {
     // Takes in current paths from [State]
-    pub fn new(path_gupax: String, path_p2pool: PathBuf, path_xmrig: PathBuf) -> Self {
+    pub fn new(
+        path_gupax: String,
+        path_p2pool: PathBuf,
+        path_xmrig: PathBuf,
+        path_xp: PathBuf,
+    ) -> Self {
         Self {
             path_gupax,
             path_p2pool: path_p2pool.display().to_string(),
             path_xmrig: path_xmrig.display().to_string(),
+            path_xp: path_xp.display().to_string(),
             updating: arc_mut!(false),
             prog: arc_mut!(0.0),
             msg: arc_mut!(MSG_NONE.to_string()),
@@ -242,7 +265,7 @@ impl Update {
         error!("Update | This is the [Linux distro] version of Gupax, updates are disabled");
         #[cfg(feature = "distro")]
         return;
-        // verify validity of absolute path for p2pool and xmrig only if we want to update them.
+        // verify validity of absolute path for p2pool, xmrig and xmrig-proxy only if we want to update them.
         if lock!(og).gupax.bundled {
             // Check P2Pool path for safety
             // Attempt relative to absolute path
@@ -276,8 +299,24 @@ impl Update {
                     return;
                 }
             };
+            // Check XMRig-Proxy path for safety
+            let xmrig_proxy_path = match into_absolute_path(gupax.xmrig_proxy_path.clone()) {
+                Ok(p) => p,
+                Err(e) => {
+                    error_state.set(
+                        format!(
+                            "Provided XMRig-Proxy path could not be turned into an absolute path: {}",
+                            e
+                        ),
+                        ErrorFerris::Error,
+                        ErrorButtons::Okay,
+                    );
+                    return;
+                }
+            };
             lock!(update).path_p2pool = p2pool_path.display().to_string();
             lock!(update).path_xmrig = xmrig_path.display().to_string();
+            lock!(update).path_xp = xmrig_proxy_path.display().to_string();
         }
 
         // Clone before thread spawn
@@ -471,7 +510,7 @@ impl Update {
         info!("Update | Extract ... OK ... {}%", *lock2!(update, prog));
 
         //---------------------------------------------------------------------------------------------------- Upgrade
-        // if bundled, directories p2pool and xmrig will exist.
+        // if bundled, directories p2pool, xmrig and xmrig-proxy will exist.
         // if not, only gupaxx binary will be present.
         // 1. Walk directories
         //
@@ -496,6 +535,7 @@ impl Update {
                 GUPAX_BINARY => lock!(update).path_gupax.clone(),
                 P2POOL_BINARY => lock!(update).path_p2pool.clone(),
                 XMRIG_BINARY => lock!(update).path_xmrig.clone(),
+                XMRIG_PROXY_BINARY => lock!(update).path_xp.clone(),
                 _ => continue,
             };
             found = true;
@@ -511,6 +551,7 @@ impl Update {
                     GUPAX_BINARY => tmp_dir.clone() + "gupaxx_old.exe",
                     P2POOL_BINARY => tmp_dir.clone() + "p2pool_old.exe",
                     XMRIG_BINARY => tmp_dir.clone() + "xmrig_old.exe",
+                    XMRIG_PROXY_BINARY => tmp_dir.clone() + "xmrig-proxy_old.exe",
                     _ => continue,
                 };
                 info!(
@@ -525,8 +566,10 @@ impl Update {
                 entry.path().display(),
                 path.display()
             );
-            // if bundled, create directory for p2pool and xmrig if not present
-            if lock!(og).gupax.bundled && (name == P2POOL_BINARY || name == XMRIG_BINARY) {
+            // if bundled, create directory for p2pool, xmrig and xmrig-proxy if not present
+            if lock!(og).gupax.bundled
+                && (name == P2POOL_BINARY || name == XMRIG_BINARY || name == XMRIG_PROXY_BINARY)
+            {
                 std::fs::create_dir_all(
                     path.parent()
                         .ok_or_else(|| anyhow!(format!("{} path failed", name)))?,

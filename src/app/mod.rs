@@ -18,8 +18,9 @@ use crate::errors::ErrorFerris;
 use crate::errors::ErrorState;
 use crate::helper::p2pool::ImgP2pool;
 use crate::helper::p2pool::PubP2poolApi;
-use crate::helper::xmrig::ImgXmrig;
-use crate::helper::xmrig::PubXmrigApi;
+use crate::helper::xrig::xmrig::ImgXmrig;
+use crate::helper::xrig::xmrig::PubXmrigApi;
+use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
 use crate::helper::xvb::PubXvbApi;
 use crate::helper::Helper;
 use crate::helper::Process;
@@ -104,15 +105,18 @@ pub struct App {
     pub pub_sys: Arc<Mutex<Sys>>,   // [Sys] state, read by [Status], mutated by [Helper]
     pub p2pool: Arc<Mutex<Process>>, // [P2Pool] process state
     pub xmrig: Arc<Mutex<Process>>, // [XMRig] process state
+    pub xmrig_proxy: Arc<Mutex<Process>>, // [XMRig-Proxy] process state
     pub xvb: Arc<Mutex<Process>>,   // [Xvb] process state
     pub p2pool_api: Arc<Mutex<PubP2poolApi>>, // Public ready-to-print P2Pool API made by the "helper" thread
     pub xmrig_api: Arc<Mutex<PubXmrigApi>>, // Public ready-to-print XMRig API made by the "helper" thread
-    pub xvb_api: Arc<Mutex<PubXvbApi>>,     // Public XvB API
-    pub p2pool_img: Arc<Mutex<ImgP2pool>>,  // A one-time snapshot of what data P2Pool started with
-    pub xmrig_img: Arc<Mutex<ImgXmrig>>,    // A one-time snapshot of what data XMRig started with
+    pub xmrig_proxy_api: Arc<Mutex<PubXmrigProxyApi>>, // Public ready-to-print XMRigProxy API made by the "helper" thread
+    pub xvb_api: Arc<Mutex<PubXvbApi>>,                // Public XvB API
+    pub p2pool_img: Arc<Mutex<ImgP2pool>>, // A one-time snapshot of what data P2Pool started with
+    pub xmrig_img: Arc<Mutex<ImgXmrig>>,   // A one-time snapshot of what data XMRig started with
     // STDIN Buffer
     pub p2pool_stdin: String, // The buffer between the p2pool console and the [Helper]
     pub xmrig_stdin: String,  // The buffer between the xmrig console and the [Helper]
+    pub xmrig_proxy_stdin: String, // The buffer between the xmrig-proxy console and the [Helper]
     // Sudo State
     pub sudo: Arc<Mutex<SudoState>>, // This is just a dummy struct on [Windows].
     // State from [--flags]
@@ -184,6 +188,11 @@ impl App {
             String::new(),
             PathBuf::new()
         ));
+        let xmrig_proxy = arc_mut!(Process::new(
+            ProcessName::Xmrig,
+            String::new(),
+            PathBuf::new()
+        ));
         let xvb = arc_mut!(Process::new(
             ProcessName::Xvb,
             String::new(),
@@ -191,6 +200,7 @@ impl App {
         ));
         let p2pool_api = arc_mut!(PubP2poolApi::new());
         let xmrig_api = arc_mut!(PubXmrigApi::new());
+        let xmrig_proxy_api = arc_mut!(PubXmrigProxyApi::new());
         let xvb_api = arc_mut!(PubXvbApi::new());
         let p2pool_img = arc_mut!(ImgP2pool::new());
         let xmrig_img = arc_mut!(ImgXmrig::new());
@@ -232,7 +242,12 @@ impl App {
             must_resize: false,
             og: arc_mut!(State::new()),
             state: State::new(),
-            update: arc_mut!(Update::new(String::new(), PathBuf::new(), PathBuf::new(),)),
+            update: arc_mut!(Update::new(
+                String::new(),
+                PathBuf::new(),
+                PathBuf::new(),
+                PathBuf::new()
+            )),
             file_window: FileWindow::new(),
             og_node_vec: Node::new_vec(),
             node_vec: Node::new_vec(),
@@ -246,24 +261,29 @@ impl App {
                 pub_sys.clone(),
                 p2pool.clone(),
                 xmrig.clone(),
+                xmrig_proxy.clone(),
                 xvb.clone(),
                 p2pool_api.clone(),
                 xmrig_api.clone(),
                 xvb_api.clone(),
+                xmrig_proxy_api.clone(),
                 p2pool_img.clone(),
                 xmrig_img.clone(),
                 arc_mut!(GupaxP2poolApi::new())
             )),
             p2pool,
             xmrig,
+            xmrig_proxy,
             xvb,
             p2pool_api,
             xvb_api,
             xmrig_api,
+            xmrig_proxy_api,
             p2pool_img,
             xmrig_img,
             p2pool_stdin: String::with_capacity(10),
             xmrig_stdin: String::with_capacity(10),
+            xmrig_proxy_stdin: String::with_capacity(10),
             sudo: arc_mut!(SudoState::new()),
             resizing: false,
             alpha: 0,
@@ -508,13 +528,38 @@ impl App {
             app.state.xmrig.selected_name = name;
             app.state.xmrig.selected_ip = pool.ip;
             app.state.xmrig.selected_port = pool.port;
+            if og.xmrig_proxy.selected_index > app.og_pool_vec.len() {
+                warn!(
+                    "App | Overflowing manual pool index [{} > {}], resetting to 1",
+                    og.xmrig_proxy.selected_index,
+                    app.og_pool_vec.len()
+                );
+                let (name, pool) = match app.og_pool_vec.first() {
+                    Some(zero) => zero.clone(),
+                    None => Pool::new_tuple(),
+                };
+                og.xmrig_proxy.selected_index = 0;
+                og.xmrig_proxy.selected_name.clone_from(&name);
+                og.xmrig_proxy.selected_ip.clone_from(&pool.ip);
+                og.xmrig_proxy.selected_port.clone_from(&pool.port);
+                app.state.xmrig_proxy.selected_index = 0;
+                app.state.xmrig_proxy.selected_name = name;
+                app.state.xmrig_proxy.selected_ip = pool.ip;
+                app.state.xmrig_proxy.selected_port = pool.port;
+            }
         }
 
         // Apply TOML values to [Update]
         info!("App Init | Applying TOML values to [Update]...");
         let p2pool_path = og.gupax.absolute_p2pool_path.clone();
         let xmrig_path = og.gupax.absolute_xmrig_path.clone();
-        app.update = arc_mut!(Update::new(app.exe.clone(), p2pool_path, xmrig_path));
+        let xmrig_proxy_path = og.gupax.absolute_xp_path.clone();
+        app.update = arc_mut!(Update::new(
+            app.exe.clone(),
+            p2pool_path,
+            xmrig_path,
+            xmrig_proxy_path
+        ));
 
         // Set state version as compiled in version
         info!("App Init | Setting state Gupax version...");
@@ -640,6 +685,7 @@ pub enum Tab {
     Gupax,
     P2pool,
     Xmrig,
+    XmrigProxy,
     Xvb,
 }
 

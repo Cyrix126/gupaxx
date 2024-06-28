@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use crate::{app::Benchmark, disk::state::Status, helper::xmrig::PubXmrigApi};
+use crate::{app::Benchmark, disk::state::Status, helper::xrig::xmrig::PubXmrigApi};
 use egui::{Hyperlink, ProgressBar, ScrollArea, Spinner, Vec2};
 use egui_extras::{Column, TableBuilder};
 use readable::num::{Float, Percent, Unsigned};

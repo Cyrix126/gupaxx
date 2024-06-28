@@ -11,8 +11,10 @@ mod gupax;
 mod p2pool;
 mod status;
 mod xmrig;
+mod xmrig_proxy;
 mod xvb;
 impl crate::app::App {
+    #[allow(clippy::too_many_arguments)]
     pub fn middle_panel(
         &mut self,
         ctx: &egui::Context,
@@ -20,6 +22,7 @@ impl crate::app::App {
         key: KeyPressed,
         p2pool_is_alive: bool,
         xmrig_is_alive: bool,
+        xmrig_proxy_is_alive: bool,
         xvb_is_alive: bool,
     ) {
         // Middle panel, contents of the [Tab]
@@ -41,11 +44,13 @@ impl crate::app::App {
 						let distro = false;
 						let p2pool_gui_len = lock!(self.p2pool_api).output.len();
 						let xmrig_gui_len = lock!(self.xmrig_api).output.len();
+						let xmrig_proxy_gui_len = lock!(self.xmrig_proxy_api).output.len();
 						let gupax_p2pool_api = lock!(self.gupax_p2pool_api);
 						let debug_info = format!(
 "Gupax version: {}\n
 Bundled P2Pool version: {}\n
 Bundled XMRig version: {}\n
+Bundled XMRig-Proxy version: {}\n
 Gupax uptime: {} seconds\n
 Selected resolution: {}x{}\n
 Internal resolution: {}x{}\n
@@ -64,8 +69,10 @@ OS Data PATH: {}\n
 Gupax PATH: {}\n
 P2Pool PATH: {}\n
 XMRig PATH: {}\n
+XMRig-Proxy PATH: {}\n
 P2Pool console byte length: {}\n
 XMRig console byte length: {}\n
+XMRig-Proxy console byte length: {}\n
 ------------------------------------------ P2POOL IMAGE ------------------------------------------
 {:#?}\n
 ------------------------------------------ XMRIG IMAGE ------------------------------------------
@@ -84,6 +91,7 @@ path_xmr: {:#?}\n
 							GUPAX_VERSION,
 							P2POOL_VERSION,
 							XMRIG_VERSION,
+							XMRIG_PROXY_VERSION,
 							self.now.elapsed().as_secs_f32(),
 							self.state.gupax.selected_width,
 							self.state.gupax.selected_height,
@@ -104,8 +112,10 @@ path_xmr: {:#?}\n
 							self.exe,
 							self.state.gupax.absolute_p2pool_path.display(),
 							self.state.gupax.absolute_xmrig_path.display(),
+							self.state.gupax.absolute_xp_path.display(),
 							p2pool_gui_len,
 							xmrig_gui_len,
+							xmrig_proxy_gui_len,
 							lock!(self.p2pool_img),
 							lock!(self.xmrig_img),
 							gupax_p2pool_api.payout,
@@ -146,7 +156,7 @@ path_xmr: {:#?}\n
 				}
 				Tab::Status => {
 					debug!("App | Entering [Status] Tab");
-					crate::disk::state::Status::show(&mut self.state.status, &self.pub_sys, &self.p2pool_api, &self.xmrig_api, &self.xvb_api,&self.p2pool_img, &self.xmrig_img, p2pool_is_alive, xmrig_is_alive,  xvb_is_alive, self.max_threads, &self.gupax_p2pool_api, &self.benchmarks, self.size, ctx, ui);
+					crate::disk::state::Status::show(&mut self.state.status, &self.pub_sys, &self.p2pool_api, &self.xmrig_api,&self.xmrig_proxy_api, &self.xvb_api,&self.p2pool_img, &self.xmrig_img, p2pool_is_alive, xmrig_is_alive,  xmrig_proxy_is_alive,xvb_is_alive, self.max_threads, &self.gupax_p2pool_api, &self.benchmarks, self.size, ctx, ui);
 				}
 				Tab::Gupax => {
 					debug!("App | Entering [Gupax] Tab");
@@ -159,6 +169,10 @@ path_xmr: {:#?}\n
 				Tab::Xmrig => {
 					debug!("App | Entering [XMRig] Tab");
 					crate::disk::state::Xmrig::show(&mut self.state.xmrig, &mut self.pool_vec, &self.xmrig, &self.xmrig_api, &mut self.xmrig_stdin, self.size, ctx, ui);
+				}
+				Tab::XmrigProxy => {
+					debug!("App | Entering [XMRig-Proxy] Tab");
+					crate::disk::state::XmrigProxy::show(&mut self.state.xmrig_proxy, &self.xmrig_proxy, &mut self.pool_vec, &self.xmrig_proxy_api, &mut self.xmrig_proxy_stdin, self.size,  ui);
 				}
 				Tab::Xvb => {
 					debug!("App | Entering [XvB] Tab");

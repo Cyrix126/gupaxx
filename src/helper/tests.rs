@@ -472,7 +472,7 @@ Uptime         = 0h 2m 4s
 		    },
 		    "hugepages": true
 		}"#;
-        use crate::helper::xmrig::PrivXmrigApi;
+        use crate::helper::xrig::xmrig::PrivXmrigApi;
         let priv_api = serde_json::from_str::<PrivXmrigApi>(data).unwrap();
         let json = serde_json::ser::to_string_pretty(&priv_api).unwrap();
         println!("{}", json);
@@ -509,7 +509,7 @@ Uptime         = 0h 2m 4s
 
     use crate::{
         disk::state::P2pool,
-        helper::{p2pool::PubP2poolApi, xmrig::PubXmrigApi, xvb::rounds::XvbRound},
+        helper::{p2pool::PubP2poolApi, xrig::xmrig::PubXmrigApi, xvb::rounds::XvbRound},
         macros::lock,
         XVB_TIME_ALGO,
     };
