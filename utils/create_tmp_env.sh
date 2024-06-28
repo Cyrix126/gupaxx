@@ -42,11 +42,11 @@ rm -r xmrig-6.21.1
 rm xmrig-6.21.1-msvc-win64.zip
 
 ## Download XMRig-Proxy Binaries
-wget https://github.com/xmrig/xmrig-proxy/releases/download/v6.21.1/xmrig-proxy-6.21.1-linux-jammy-x64.tar.gz
-tar -xf xmrig-proxy-6.21.1-linux-jammy-x64.tar.gz
+wget https://github.com/xmrig/xmrig-proxy/releases/download/v6.21.1/xmrig-proxy-6.21.1-jammy-x64.tar.gz
+tar -xf xmrig-proxy-6.21.1-jammy-x64.tar.gz
 mv xmrig-proxy-6.21.1/xmrig-proxy /tmp/${FOLDER}/skel/linux_b/xmrig-proxy/xmrig-proxy
 rm -r xmrig-proxy-6.21.1
-rm xmrig-proxy-6.21.1-linux-jammy-x64.tar.gz 
+rm xmrig-proxy-6.21.1-jammy-x64.tar.gz 
 ## no release for arm64 mac-osx xmrig-proxy, todo make CI build it.
 # download xmrig into directory macos-arm64
 # wget https://github.com/xmrig/xmrig-proxy/releases/download/v6.21.1/xmrig-proxy-6.21.1-macos-arm64.tar.gz
