@@ -430,7 +430,7 @@ impl Helper {
                             "Failure to update xmrig config with HTTP API.\nError: {}",
                             err
                         ),
-                        ProcessName::Xvb,
+                        ProcessName::XmrigProxy,
                     );
                 } else {
                     lock!(gui_api_xmrig).node = XvbNode::XmrigProxy.to_string();

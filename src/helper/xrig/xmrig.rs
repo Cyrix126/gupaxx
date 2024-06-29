@@ -1,6 +1,8 @@
+use crate::helper::xrig::update_xmrig_config;
 use crate::helper::{check_died, check_user_input, sleep_end_loop, Process};
 use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
 use crate::helper::{PubXvbApi, XvbNode};
+use crate::miscs::output_console;
 use crate::regex::{contains_error, contains_usepool, detect_new_node_xmrig, XMRIG_REGEX};
 use crate::utils::human::HumanNumber;
 use crate::utils::sudo::SudoState;
@@ -400,7 +402,7 @@ impl Helper {
         let reader = pair.master.try_clone_reader().unwrap(); // Get STDOUT/STDERR before moving the PTY
         let output_parse = Arc::clone(&lock!(process).output_parse);
         let output_pub = Arc::clone(&lock!(process).output_pub);
-        spawn(enclose!((pub_api_xvb) async move {
+        spawn(enclose!((pub_api_xvb, process_xp) async move {
             Self::read_pty_xmrig(output_parse, output_pub, reader, process_xvb, process_xp, &pub_api_xvb).await;
         }));
         // 1b. Create command
@@ -536,7 +538,36 @@ impl Helper {
                     );
                 }
             }
-
+            // if mining on proxy and proxy is not alive, switch back to p2pool node
+            if lock!(gui_api).node == XvbNode::XmrigProxy.to_string()
+                && !lock!(process_xp).is_alive()
+            {
+                info!("XMRig Process |  redirect xmrig to p2pool since XMRig-Proxy is not alive anymore");
+                if let Err(err) = update_xmrig_config(
+                    &client,
+                    XMRIG_CONFIG_URL,
+                    token,
+                    &XvbNode::P2pool,
+                    "",
+                    GUPAX_VERSION_UNDERSCORE,
+                )
+                .await
+                {
+                    // show to console error about updating xmrig config
+                    warn!("XMRig Process | Failed request HTTP API Xmrig");
+                    output_console(
+                        &mut lock!(gui_api).output,
+                        &format!(
+                            "Failure to update xmrig config with HTTP API.\nError: {}",
+                            err
+                        ),
+                        ProcessName::Xmrig,
+                    );
+                } else {
+                    lock!(gui_api).node = XvbNode::P2pool.to_string();
+                    debug!("XMRig Process | mining on P2Pool pool");
+                }
+            }
             // Sleep (only if 900ms hasn't passed)
             sleep_end_loop(now, ProcessName::Xmrig).await;
         }
