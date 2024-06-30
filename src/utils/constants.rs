@@ -445,6 +445,7 @@ pub const XMRIG_PATH_NOT_FILE:  &str = "XMRig binary not found at the given PATH
 pub const XMRIG_PATH_NOT_VALID: &str = "XMRig binary at the given PATH in the Gupaxxtab doesn't look like XMRig! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where XMRig is located.";
 pub const XMRIG_PATH_OK: &str = "XMRig was found at the given PATH";
 pub const XMRIG_PATH_EMPTY:     &str = "XMRig PATH is empty! To fix: goto the [GupaxxAdvanced] tab, select [Open] and specify where XMRig is located.";
+pub const XMRIG_PROXY_URL: &str = "https://github.com/xmrig/xmrig-proxy";
 
 // XvB
 pub const XVB_HELP: &str = "You need to register an account by clicking on the link above to get your token with the same p2pool XMR address you use for payment.";

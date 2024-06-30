@@ -14,7 +14,7 @@ use crate::utils::macros::lock;
 use crate::{
     GREEN, LIGHT_GRAY, LIST_ADD, LIST_CLEAR, LIST_DELETE, LIST_SAVE, RED, SPACE, XMRIG_API_IP,
     XMRIG_API_PORT, XMRIG_IP, XMRIG_KEEPALIVE, XMRIG_NAME, XMRIG_PORT, XMRIG_PROXY_ARGUMENTS,
-    XMRIG_PROXY_INPUT, XMRIG_PROXY_REDIRECT, XMRIG_RIG, XMRIG_TLS,
+    XMRIG_PROXY_INPUT, XMRIG_PROXY_REDIRECT, XMRIG_PROXY_URL, XMRIG_RIG, XMRIG_TLS,
 };
 
 impl XmrigProxy {
@@ -32,6 +32,14 @@ impl XmrigProxy {
         let height = size.y;
         let space_h = height / 48.0;
         let text_edit = size.y / 25.0;
+        ui.vertical_centered(|ui| {
+            ui.add_space(space_h);
+            ui.style_mut().override_text_style = Some(TextStyle::Heading);
+            ui.hyperlink_to("XMRig-Proxy", XMRIG_PROXY_URL);
+            ui.style_mut().override_text_style = Some(TextStyle::Body);
+            ui.add(Label::new("High performant proxy for your miners"));
+            ui.add_space(space_h);
+        });
         // console output for log
         debug!("XvB Tab | Rendering [Console]");
         ui.group(|ui| {
