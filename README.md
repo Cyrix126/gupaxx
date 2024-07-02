@@ -95,7 +95,7 @@ There is no plan to upstream changes as the owner of Gupax said he won't have ti
 
 ## Troubleshooting
 
-If you have any issue, feel free to ask for support in the [xmrvsbeast matrix room](#xmrvsbeast:monero.social) or to open an issue in this repo. You can also contact me through [email](email:gupaxx@baermail.fr).
+If you have any issue, feel free to ask for support in the [xmrvsbeast matrix room](#xmrvsbeast:monero.social) [![Chat on Matrix](https://matrix.to/img/matrix-badge.svg)](https://matrix.to/#/#xmrvsbeast:monero.social) or to open an issue in this repo. You can also contact me through [email](mailto:gupaxx@baermail.fr).
 
 ### Windows
 
