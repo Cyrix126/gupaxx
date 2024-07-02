@@ -54,6 +54,10 @@ title "Windows folder check"
 [[ -f windows_b/XMRig/xmrig.exe ]]; check "windows_b/XMRig/xmrig.exe"
 [[ -f windows_b/XMRig-Proxy/xmrig-proxy.exe ]]; check "windows_b/XMRig-Proxy/xmrig-proxy.exe"
 
+# Get random date for tar/zip
+title "RNG Date"
+RNG=$((EPOCHSECONDS-RANDOM*4)); check "RNG ... $RNG"
+DATE=$(date -d @${RNG}); check "DATE ... $DATE"
 
 # Tar Linux Bundle
 title "Tar Linux"
