@@ -22,7 +22,7 @@ Gupax may not run on machines with:
 * [XvB Tab](#xvb-tab) 
 	- [Console](#console-of-xvb) 
 	- [Token Input](#token-input) 
-	- [Private stats](#private-stats) 
+	- [Account stats](#account-stats) 
 * [XvB Raffle](#xvb-raffle-status) 
 * [Other changes](#other-changes) 
 * [License](#license) 
@@ -73,9 +73,9 @@ The output of console will show useful information on the status of the XvB proc
 
 You need to put the token received when you registered your XMR payout address.
 
-### Private stats
+### Account stats
 
-Private information about your address on XMRvsBeast can be found here after the process is started with your token provided.
+Account stats about your address on XMRvsBeast can be found here after the process is started with your token provided.
 
 
 ## XvB Raffle Status
@@ -89,7 +89,9 @@ This column will be active if the XvB process is started even partially, it does
 ## Other changes
 
 This fork brings upgrades of dependence and some bugfixes about visual, performance and security that you can find in [DIFFERENCES](DIFFERENCES.md).  
-I will eventually (meaning when I'll have time) create pull requests for upstream about these differences.
+~~I will eventually (meaning when I'll have time) create pull requests for upstream about these differences.~~  
+**Edit**:  
+There is no plan to upstream changes as the owner of Gupax said he won't have time to review the PR.
 
 ## Troubleshooting
 
