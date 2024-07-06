@@ -16,6 +16,7 @@ use egui::TextStyle::{Body, Button, Heading, Monospace, Name};
 use egui::*;
 use env_logger::fmt::style::Style;
 use env_logger::{Builder, WriteStyle};
+use flexi_logger::{FileSpec, Logger};
 use log::LevelFilter;
 use std::sync::Arc;
 use std::time::Instant;
@@ -74,18 +75,25 @@ pub fn init_text_styles(ctx: &egui::Context, width: f32, pixels_per_point: f32) 
 
 #[cold]
 #[inline(never)]
-pub fn init_logger(now: Instant) {
-    let filter_env = std::env::var("RUST_LOG").unwrap_or_else(|_| "INFO".to_string());
-    let filter = match filter_env.as_str() {
-        "error" | "Error" | "ERROR" => LevelFilter::Error,
-        "warn" | "Warn" | "WARN" => LevelFilter::Warn,
-        "debug" | "Debug" | "DEBUG" => LevelFilter::Debug,
-        "trace" | "Trace" | "TRACE" => LevelFilter::Trace,
-        _ => LevelFilter::Info,
-    };
-    std::env::set_var("RUST_LOG", format!("off,gupax={}", filter_env));
+pub fn init_logger(now: Instant, logfile: bool) {
+    if logfile {
+        Logger::try_with_env_or_str("info")
+            .unwrap()
+            .log_to_file(FileSpec::default())
+            .start()
+            .unwrap();
+    } else {
+        let filter_env = std::env::var("RUST_LOG").unwrap_or_else(|_| "INFO".to_string());
+        let filter = match filter_env.as_str() {
+            "error" | "Error" | "ERROR" => LevelFilter::Error,
+            "warn" | "Warn" | "WARN" => LevelFilter::Warn,
+            "debug" | "Debug" | "DEBUG" => LevelFilter::Debug,
+            "trace" | "Trace" | "TRACE" => LevelFilter::Trace,
+            _ => LevelFilter::Info,
+        };
+        std::env::set_var("RUST_LOG", format!("off,gupax={}", filter_env));
 
-    Builder::new()
+        Builder::new()
         .format(move |buf, record| {
             let level = record.level();
             let level_style = buf.default_level_style(level);
@@ -105,8 +113,9 @@ pub fn init_logger(now: Instant) {
         .parse_default_env()
         .format_timestamp_millis()
         .init();
+        info!("Log level ... {}", filter);
+    }
     info!("init_logger() ... OK");
-    info!("Log level ... {}", filter);
 }
 
 #[cold]

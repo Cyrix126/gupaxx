@@ -1,5 +1,3 @@
-use std::process::exit;
-
 use clap::crate_authors;
 use clap::crate_description;
 use clap::crate_name;
@@ -9,6 +7,7 @@ use clap::Subcommand;
 use log::debug;
 use log::info;
 use log::warn;
+use std::process::exit;
 
 use crate::app::App;
 use crate::miscs::print_disk_file;
@@ -29,6 +28,8 @@ use crate::resets::reset_state;
 pub struct Cli {
     #[command(subcommand)]
     pub info: Option<GupaxxData>,
+    #[clap(long, short, action)]
+    pub logfile: bool,
 }
 
 #[derive(Subcommand)]

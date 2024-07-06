@@ -62,7 +62,7 @@ fn main() {
     crate::panic::set_panic_hook(now);
 
     // Init logger.
-    init_logger(now);
+    init_logger(now, args.logfile);
     let mut app = App::new(now, args);
     init_auto(&mut app);
 
