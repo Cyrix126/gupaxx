@@ -727,7 +727,7 @@ fn signal_interrupt(
                             // a node is failing. We need to first verify if a node is available
                         XvbNode::update_fastest_node(&client, &gui_api, &pub_api, &process).await;
                             if lock!(process).state == ProcessState::OfflineNodesAll {
-                                // No available nodes, so launch a process to verify periodicly.
+                                // No available nodes, so launch a process to verify periodically.
                     sleep(Duration::from_secs(10)).await;
                     warn!("node fail, set spawn that will retry nodes and update state.");
                     while lock!(process).state == ProcessState::OfflineNodesAll {
