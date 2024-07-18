@@ -471,18 +471,22 @@ impl Helper {
         info!("XMRig | Entering watchdog mode... woof!");
         // needs xmrig to be in belownormal priority or else Gupaxx will be in trouble if it does not have enough cpu time.
         #[cfg(target_os = "windows")]
-        std::process::Command::new("cmd")
-            .args(["/c", "/q", "wmic"])
-            .args([
-                "process",
-                "where",
-                "name='xmrig.exe'",
-                "CALL",
-                "setpriority",
-                "below normal",
-            ])
-            .spawn()
-            .expect("failure to execute command wmic");
+        {
+            use std::os::windows::process::CommandExt;
+            std::process::Command::new("cmd")
+                .creation_flags(0x08000000)
+                .args(["/c", "wmic"])
+                .args([
+                    "process",
+                    "where",
+                    "name='xmrig.exe'",
+                    "CALL",
+                    "setpriority",
+                    "below normal",
+                ])
+                .spawn()
+                .expect("failure to execute command wmic");
+        }
         loop {
             // Set timer
             let now = Instant::now();
