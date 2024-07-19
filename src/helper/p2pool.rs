@@ -491,13 +491,15 @@ impl Helper {
 
         // 4. Loop as watchdog
         let mut first_loop = true;
+        let mut last_p2pool_request = Arc::new(Mutex::new(tokio::time::Instant::now()));
+        let mut last_status_request = Arc::new(Mutex::new(tokio::time::Instant::now()));
+
         info!("P2Pool | Entering watchdog mode... woof!");
         loop {
             // Set timer
             let now = Instant::now();
             debug!("P2Pool Watchdog | ----------- Start of loop -----------");
-            lock!(gui_api).tick += 1;
-            lock!(gui_api).tick_status += 1;
+            lock!(gui_api).tick = (lock!(last_p2pool_request).elapsed().as_secs() % 60) as u8;
 
             // Check if the process is secretly died without us knowing :)
             if check_died(
@@ -541,7 +543,10 @@ impl Helper {
                 }
             }
             // If more than 1 minute has passed, read the other API files.
-            if lock!(gui_api).tick >= 60 {
+            let last_p2pool_request_expired =
+                lock!(last_p2pool_request).elapsed() >= Duration::from_secs(60);
+
+            if last_p2pool_request_expired {
                 debug!("P2Pool Watchdog | Attempting [network] & [pool] API file read");
                 if let (Ok(network_api), Ok(pool_api)) = (
                     Self::path_to_string(&api_path_network, ProcessName::P2pool),
@@ -552,11 +557,15 @@ impl Helper {
                         PrivP2poolPoolApi::from_str(&pool_api),
                     ) {
                         PubP2poolApi::update_from_network_pool(&pub_api, network_api, pool_api);
-                        lock!(gui_api).tick = 0;
+                        last_p2pool_request = Arc::new(Mutex::new(tokio::time::Instant::now()));
                     }
                 }
             }
-            if (lock!(gui_api).tick_status >= 60 || first_loop)
+
+            let last_status_request_expired =
+                lock!(last_status_request).elapsed() >= Duration::from_secs(60);
+
+            if (last_status_request_expired || first_loop)
                 && lock!(process).state == ProcessState::Alive
             {
                 debug!("P2Pool Watchdog | Reading status output of p2pool node");
@@ -572,7 +581,7 @@ impl Helper {
                 if let Err(e) = stdin.flush() {
                     error!("P2Pool Watchdog | STDIN flush error: {}", e);
                 }
-                lock!(gui_api).tick_status = 0;
+                last_status_request = Arc::new(Mutex::new(tokio::time::Instant::now()));
             }
 
             // Sleep (only if 900ms hasn't passed)
@@ -663,9 +672,6 @@ pub struct PubP2poolApi {
     // Tick. Every loop this gets incremented.
     // At 60, it indicated we should read the below API files.
     pub tick: u8,
-    // Tick. Every loop this gets incremented.
-    // At 10, it indicated we should fetch data from status
-    pub tick_status: u8,
     // Network API
     pub monero_difficulty: HumanNumber, // e.g: [15,000,000]
     pub monero_hashrate: HumanNumber,   // e.g: [1.000 GH/s]
@@ -716,7 +722,6 @@ impl PubP2poolApi {
             current_effort: HumanNumber::unknown(),
             connections: HumanNumber::unknown(),
             tick: 0,
-            tick_status: 0,
             user_p2pool_hashrate_u64: 0,
             p2pool_difficulty_u64: 0,
             monero_difficulty_u64: 0,
@@ -755,7 +760,6 @@ impl PubP2poolApi {
         *gui_api = Self {
             output,
             tick: std::mem::take(&mut gui_api.tick),
-            tick_status: std::mem::take(&mut gui_api.tick_status),
             sidechain_shares: std::mem::take(&mut gui_api.sidechain_shares),
             sidechain_ehr: std::mem::take(&mut gui_api.sidechain_ehr),
             ..pub_api.clone()
