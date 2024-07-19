@@ -31,11 +31,13 @@ use std::{
 // The opened file picker is started in a new
 // thread so main() needs to be in sync.
 pub struct FileWindow {
-    pub thread: bool,        // Is there already a FileWindow thread?
-    pub picked_p2pool: bool, // Did the user pick a path for p2pool?
-    pub picked_xmrig: bool,  // Did the user pick a path for xmrig?
-    pub p2pool_path: String, // The picked p2pool path
-    pub xmrig_path: String,  // The picked p2pool path
+    pub thread: bool,             // Is there already a FileWindow thread?
+    pub picked_p2pool: bool,      // Did the user pick a path for p2pool?
+    pub picked_xmrig: bool,       // Did the user pick a path for xmrig?
+    pub picked_xp: bool,          // Did the user pick a path for xmrig-proxy?
+    pub p2pool_path: String,      // The picked p2pool path
+    pub xmrig_path: String,       // The picked xmrig path
+    pub xmrig_proxy_path: String, // The picked xmrig-proxy path
 }
 
 impl FileWindow {
@@ -44,8 +46,10 @@ impl FileWindow {
             thread: false,
             picked_p2pool: false,
             picked_xmrig: false,
+            picked_xp: false,
             p2pool_path: String::new(),
             xmrig_path: String::new(),
+            xmrig_proxy_path: String::new(),
         })
     }
 }
@@ -54,6 +58,7 @@ impl FileWindow {
 pub enum FileType {
     P2pool,
     Xmrig,
+    XmrigProxy,
 }
 
 //---------------------------------------------------------------------------------------------------- Ratio Lock
@@ -83,6 +88,7 @@ impl Gupax {
         let name = match file_type {
             P2pool => "P2Pool",
             Xmrig => "XMRig",
+            XmrigProxy => "XMRigProxy",
         };
         let file_window = file_window.clone();
         lock!(file_window).thread = true;
@@ -101,6 +107,10 @@ impl Gupax {
                         Xmrig => {
                             lock!(file_window).xmrig_path = path.display().to_string();
                             lock!(file_window).picked_xmrig = true;
+                        }
+                        XmrigProxy => {
+                            lock!(file_window).xmrig_proxy_path = path.display().to_string();
+                            lock!(file_window).picked_xp = true;
                         }
                     };
                 }

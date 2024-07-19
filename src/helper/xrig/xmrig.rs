@@ -1,17 +1,20 @@
-use crate::helper::{ProcessName, ProcessSignal, ProcessState};
+use crate::helper::xrig::update_xmrig_config;
+use crate::helper::{check_died, check_user_input, sleep_end_loop, Process};
+use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
+use crate::helper::{PubXvbApi, XvbNode};
+use crate::miscs::output_console;
 use crate::regex::{contains_error, contains_usepool, detect_new_node_xmrig, XMRIG_REGEX};
 use crate::utils::human::HumanNumber;
 use crate::utils::sudo::SudoState;
 use crate::{constants::*, macros::*};
-use anyhow::{anyhow, Result};
 use enclose::enclose;
 use log::*;
+use portable_pty::Child;
 use readable::num::Unsigned;
 use readable::up::Uptime;
 use reqwest::header::AUTHORIZATION;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 use std::path::Path;
 use std::{
     fmt::Write,
@@ -23,17 +26,17 @@ use std::{
 };
 use tokio::spawn;
 
-use super::xvb::nodes::XvbNode;
-use super::xvb::PubXvbApi;
-use super::{Helper, Process};
+use super::Hashrate;
+
 impl Helper {
     #[cold]
     #[inline(never)]
-    async fn read_pty_xmrig(
+    pub async fn read_pty_xmrig(
         output_parse: Arc<Mutex<String>>,
         output_pub: Arc<Mutex<String>>,
         reader: Box<dyn std::io::Read + Send>,
         process_xvb: Arc<Mutex<Process>>,
+        process_xp: Arc<Mutex<Process>>,
         pub_api_xvb: &Arc<Mutex<PubXvbApi>>,
     ) {
         use std::io::BufRead;
@@ -59,27 +62,30 @@ impl Helper {
         while let Some(Ok(line)) = stdout.next() {
             // need to verify if node still working
             // for that need to catch "connect error"
-            if contains_error(&line) {
-                let current_node = lock!(pub_api_xvb).current_node;
-                if let Some(current_node) = current_node {
-                    // updating current node to None, will stop sending signal of FailedNode until new node is set
-                    // send signal to update node.
-                    warn!("XMRig PTY Parse | node is offline, sending signal to update nodes.");
-                    lock!(process_xvb).signal = ProcessSignal::UpdateNodes(current_node);
-                    lock!(pub_api_xvb).current_node = None;
+            // only check if xvb process is used and xmrig-proxy is not.
+            if lock!(process_xvb).is_alive() && !lock!(process_xp).is_alive() {
+                if contains_error(&line) {
+                    let current_node = lock!(pub_api_xvb).current_node;
+                    if let Some(current_node) = current_node {
+                        // updating current node to None, will stop sending signal of FailedNode until new node is set
+                        // send signal to update node.
+                        warn!("XMRig PTY Parse | node is offline, sending signal to update nodes.");
+                        lock!(process_xvb).signal = ProcessSignal::UpdateNodes(current_node);
+                        lock!(pub_api_xvb).current_node = None;
+                    }
                 }
-            }
-            if contains_usepool(&line) {
-                info!("XMRig PTY Parse | new pool detected");
-                // need to update current node because it was updated.
-                // if custom node made by user, it is not supported because algo is deciding which node to use.
-                let node = detect_new_node_xmrig(&line);
-                if node.is_none() {
-                    error!("XMRig PTY Parse | node is not understood, switching to backup.");
-                    // update with default will choose which XvB to prefer. Will update XvB to use p2pool.
-                    lock!(process_xvb).signal = ProcessSignal::UpdateNodes(XvbNode::default());
+                if contains_usepool(&line) {
+                    info!("XMRig PTY Parse | new pool detected");
+                    // need to update current node because it was updated.
+                    // if custom node made by user, it is not supported because algo is deciding which node to use.
+                    let node = detect_new_node_xmrig(&line);
+                    if node.is_none() {
+                        error!("XMRig PTY Parse | node is not understood, switching to backup.");
+                        // update with default will choose which XvB to prefer. Will update XvB to use p2pool.
+                        lock!(process_xvb).signal = ProcessSignal::UpdateNodes(XvbNode::default());
+                    }
+                    lock!(pub_api_xvb).current_node = node;
                 }
-                lock!(pub_api_xvb).current_node = node;
             }
             //			println!("{}", line); // For debugging.
             if let Err(e) = writeln!(lock!(output_parse), "{}", line) {
@@ -178,6 +184,7 @@ impl Helper {
         let gui_api = Arc::clone(&lock!(helper).gui_api_xmrig);
         let pub_api = Arc::clone(&lock!(helper).pub_api_xmrig);
         let process_xvb = Arc::clone(&lock!(helper).xvb);
+        let process_xp = Arc::clone(&lock!(helper).xmrig_proxy);
         let path = path.to_path_buf();
         let token = state.token.clone();
         let img_xmrig = Arc::clone(&lock!(helper).img_xmrig);
@@ -193,6 +200,7 @@ impl Helper {
                 api_ip_port,
                 &token,
                 process_xvb,
+                process_xp,
                 &img_xmrig,
                 &pub_api_xvb,
             );
@@ -374,6 +382,7 @@ impl Helper {
         mut api_ip_port: String,
         token: &str,
         process_xvb: Arc<Mutex<Process>>,
+        process_xp: Arc<Mutex<Process>>,
         img_xmrig: &Arc<Mutex<ImgXmrig>>,
         pub_api_xvb: &Arc<Mutex<PubXvbApi>>,
     ) {
@@ -393,8 +402,8 @@ impl Helper {
         let reader = pair.master.try_clone_reader().unwrap(); // Get STDOUT/STDERR before moving the PTY
         let output_parse = Arc::clone(&lock!(process).output_parse);
         let output_pub = Arc::clone(&lock!(process).output_pub);
-        spawn(enclose!((pub_api_xvb) async move {
-            Self::read_pty_xmrig(output_parse, output_pub, reader, process_xvb, &pub_api_xvb).await;
+        spawn(enclose!((pub_api_xvb, process_xp) async move {
+            Self::read_pty_xmrig(output_parse, output_pub, reader, process_xvb, process_xp, &pub_api_xvb).await;
         }));
         // 1b. Create command
         debug!("XMRig | Creating command...");
@@ -449,7 +458,7 @@ impl Helper {
             if !api_ip_port.ends_with('/') {
                 api_ip_port.push('/');
             }
-            "http://".to_owned() + &api_ip_port + XMRIG_API_URI
+            "http://".to_owned() + &api_ip_port + XMRIG_API_SUMMARY_URI
         };
         info!("XMRig | Final API URI: {}", api_uri);
 
@@ -462,156 +471,48 @@ impl Helper {
         info!("XMRig | Entering watchdog mode... woof!");
         // needs xmrig to be in belownormal priority or else Gupaxx will be in trouble if it does not have enough cpu time.
         #[cfg(target_os = "windows")]
-        std::process::Command::new("cmd")
-            .args(["/c", "/q", "wmic"])
-            .args([
-                "process",
-                "where",
-                "name='xmrig.exe'",
-                "CALL",
-                "setpriority",
-                "below normal",
-            ])
-            .spawn()
-            .expect("failure to execute command wmic");
+        {
+            use std::os::windows::process::CommandExt;
+            std::process::Command::new("cmd")
+                .creation_flags(0x08000000)
+                .args(["/c", "wmic"])
+                .args([
+                    "process",
+                    "where",
+                    "name='xmrig.exe'",
+                    "CALL",
+                    "setpriority",
+                    "below normal",
+                ])
+                .spawn()
+                .expect("failure to execute command wmic");
+        }
         loop {
             // Set timer
             let now = Instant::now();
             debug!("XMRig Watchdog | ----------- Start of loop -----------");
 
             // Check if the process secretly died without us knowing :)
-            if let Ok(Some(code)) = lock!(child_pty).try_wait() {
-                debug!("XMRig Watchdog | Process secretly died on us! Getting exit status...");
-                let exit_status = match code.success() {
-                    true => {
-                        lock!(process).state = ProcessState::Dead;
-                        "Successful"
-                    }
-                    false => {
-                        lock!(process).state = ProcessState::Failed;
-                        "Failed"
-                    }
-                };
-                let uptime = Uptime::from(start.elapsed());
-                info!(
-                    "XMRig | Stopped ... Uptime was: [{}], Exit status: [{}]",
-                    uptime, exit_status
-                );
-                if let Err(e) = writeln!(
-                    lock!(gui_api).output,
-                    "{}\nXMRig stopped | Uptime: [{}] | Exit status: [{}]\n{}\n\n\n\n",
-                    HORI_CONSOLE,
-                    uptime,
-                    exit_status,
-                    HORI_CONSOLE
-                ) {
-                    error!(
-                        "XMRig Watchdog | GUI Uptime/Exit status write failed: {}",
-                        e
-                    );
-                }
-                lock!(process).signal = ProcessSignal::None;
-                debug!("XMRig Watchdog | Secret dead process reap OK, breaking");
+            if check_died(
+                &child_pty,
+                &mut lock!(process),
+                &start,
+                &mut lock!(gui_api).output,
+            ) {
                 break;
             }
-
             // Stop on [Stop/Restart] SIGNAL
-            let signal = lock!(process).signal;
-            if signal == ProcessSignal::Stop || signal == ProcessSignal::Restart {
-                debug!("XMRig Watchdog | Stop/Restart SIGNAL caught");
-                // macOS requires [sudo] again to kill [XMRig]
-                if cfg!(target_os = "macos") {
-                    // If we're at this point, that means the user has
-                    // entered their [sudo] pass again, after we wiped it.
-                    // So, we should be able to find it in our [Arc<Mutex<SudoState>>].
-                    Self::sudo_kill(lock!(child_pty).process_id().unwrap(), &sudo);
-                    // And... wipe it again (only if we're stopping full).
-                    // If we're restarting, the next start will wipe it for us.
-                    if signal != ProcessSignal::Restart {
-                        SudoState::wipe(&sudo);
-                    }
-                } else if let Err(e) = lock!(child_pty).kill() {
-                    error!("XMRig Watchdog | Kill error: {}", e);
-                }
-                let exit_status = match lock!(child_pty).wait() {
-                    Ok(e) => {
-                        let mut process = lock!(process);
-                        if e.success() {
-                            if process.signal == ProcessSignal::Stop {
-                                process.state = ProcessState::Dead;
-                            }
-                            "Successful"
-                        } else {
-                            if process.signal == ProcessSignal::Stop {
-                                process.state = ProcessState::Failed;
-                            }
-                            "Failed"
-                        }
-                    }
-                    _ => {
-                        let mut process = lock!(process);
-                        if process.signal == ProcessSignal::Stop {
-                            process.state = ProcessState::Failed;
-                        }
-                        "Unknown Error"
-                    }
-                };
-                let uptime = Uptime::from(start.elapsed());
-                info!(
-                    "XMRig | Stopped ... Uptime was: [{}], Exit status: [{}]",
-                    uptime, exit_status
-                );
-                if let Err(e) = writeln!(
-                    lock!(gui_api).output,
-                    "{}\nXMRig stopped | Uptime: [{}] | Exit status: [{}]\n{}\n\n\n\n",
-                    HORI_CONSOLE,
-                    uptime,
-                    exit_status,
-                    HORI_CONSOLE
-                ) {
-                    error!(
-                        "XMRig Watchdog | GUI Uptime/Exit status write failed: {}",
-                        e
-                    );
-                }
-                let mut process = lock!(process);
-                match process.signal {
-                    ProcessSignal::Stop => process.signal = ProcessSignal::None,
-                    ProcessSignal::Restart => process.state = ProcessState::Waiting,
-                    _ => (),
-                }
-                debug!("XMRig Watchdog | Stop/Restart SIGNAL done, breaking");
+            if Self::xmrig_signal_end(
+                &process,
+                &child_pty,
+                &start,
+                &mut lock!(gui_api).output,
+                &sudo,
+            ) {
                 break;
             }
-
             // Check vector of user input
-            {
-                let mut lock = lock!(process);
-                if !lock.input.is_empty() {
-                    let input = std::mem::take(&mut lock.input);
-                    for line in input {
-                        if line.is_empty() {
-                            continue;
-                        }
-                        debug!(
-                            "XMRig Watchdog | User input not empty, writing to STDIN: [{}]",
-                            line
-                        );
-                        #[cfg(target_os = "windows")]
-                        if let Err(e) = write!(stdin, "{}\r\n", line) {
-                            error!("XMRig Watchdog | STDIN error: {}", e);
-                        }
-                        #[cfg(target_family = "unix")]
-                        if let Err(e) = writeln!(stdin, "{}", line) {
-                            error!("XMRig Watchdog | STDIN error: {}", e);
-                        }
-                        // Flush.
-                        if let Err(e) = stdin.flush() {
-                            error!("XMRig Watchdog | STDIN flush error: {}", e);
-                        }
-                    }
-                }
-            }
+            check_user_input(&process, &mut stdin);
             // Check if logs need resetting
             debug!("XMRig Watchdog | Attempting GUI log reset check");
             {
@@ -641,24 +542,115 @@ impl Helper {
                     );
                 }
             }
-
-            // Sleep (only if 900ms hasn't passed)
-            let elapsed = now.elapsed().as_millis();
-            // Since logic goes off if less than 1000, casting should be safe
-            if elapsed < 900 {
-                let sleep = (900 - elapsed) as u64;
-                debug!(
-                    "XMRig Watchdog | END OF LOOP - Sleeping for [{}]ms...",
-                    sleep
-                );
-                tokio::time::sleep(Duration::from_millis(sleep)).await;
-            } else {
-                debug!("XMRig Watchdog | END OF LOOP - Not sleeping!");
+            // if mining on proxy and proxy is not alive, switch back to p2pool node
+            if lock!(gui_api).node == XvbNode::XmrigProxy.to_string()
+                && !lock!(process_xp).is_alive()
+            {
+                info!("XMRig Process |  redirect xmrig to p2pool since XMRig-Proxy is not alive anymore");
+                if let Err(err) = update_xmrig_config(
+                    &client,
+                    XMRIG_CONFIG_URL,
+                    token,
+                    &XvbNode::P2pool,
+                    "",
+                    GUPAX_VERSION_UNDERSCORE,
+                )
+                .await
+                {
+                    // show to console error about updating xmrig config
+                    warn!("XMRig Process | Failed request HTTP API Xmrig");
+                    output_console(
+                        &mut lock!(gui_api).output,
+                        &format!(
+                            "Failure to update xmrig config with HTTP API.\nError: {}",
+                            err
+                        ),
+                        ProcessName::Xmrig,
+                    );
+                } else {
+                    lock!(gui_api).node = XvbNode::P2pool.to_string();
+                    debug!("XMRig Process | mining on P2Pool pool");
+                }
             }
+            // Sleep (only if 900ms hasn't passed)
+            sleep_end_loop(now, ProcessName::Xmrig).await;
         }
 
         // 5. If loop broke, we must be done here.
         info!("XMRig Watchdog | Watchdog thread exiting... Goodbye!");
+    }
+    fn xmrig_signal_end(
+        process: &Arc<Mutex<Process>>,
+        child_pty: &Arc<Mutex<Box<dyn Child + Sync + Send>>>,
+        start: &Instant,
+        gui_api_output_raw: &mut String,
+        sudo: &Arc<Mutex<SudoState>>,
+    ) -> bool {
+        let signal = lock!(process).signal;
+        if signal == ProcessSignal::Stop || signal == ProcessSignal::Restart {
+            debug!("XMRig Watchdog | Stop/Restart SIGNAL caught");
+            // macOS requires [sudo] again to kill [XMRig]
+            if cfg!(target_os = "macos") {
+                // If we're at this point, that means the user has
+                // entered their [sudo] pass again, after we wiped it.
+                // So, we should be able to find it in our [Arc<Mutex<SudoState>>].
+                Self::sudo_kill(lock!(child_pty).process_id().unwrap(), sudo);
+                // And... wipe it again (only if we're stopping full).
+                // If we're restarting, the next start will wipe it for us.
+                if signal != ProcessSignal::Restart {
+                    SudoState::wipe(sudo);
+                }
+            } else if let Err(e) = lock!(child_pty).kill() {
+                error!("XMRig Watchdog | Kill error: {}", e);
+            }
+            let exit_status = match lock!(child_pty).wait() {
+                Ok(e) => {
+                    let mut process = lock!(process);
+                    if e.success() {
+                        if process.signal == ProcessSignal::Stop {
+                            process.state = ProcessState::Dead;
+                        }
+                        "Successful"
+                    } else {
+                        if process.signal == ProcessSignal::Stop {
+                            process.state = ProcessState::Failed;
+                        }
+                        "Failed"
+                    }
+                }
+                _ => {
+                    let mut process = lock!(process);
+                    if process.signal == ProcessSignal::Stop {
+                        process.state = ProcessState::Failed;
+                    }
+                    "Unknown Error"
+                }
+            };
+            let uptime = Uptime::from(start.elapsed());
+            info!(
+                "XMRig | Stopped ... Uptime was: [{}], Exit status: [{}]",
+                uptime, exit_status
+            );
+            if let Err(e) = writeln!(
+                gui_api_output_raw,
+                "{}\nXMRig stopped | Uptime: [{}] | Exit status: [{}]\n{}\n\n\n\n",
+                HORI_CONSOLE, uptime, exit_status, HORI_CONSOLE
+            ) {
+                error!(
+                    "XMRig Watchdog | GUI Uptime/Exit status write failed: {}",
+                    e
+                );
+            }
+            let mut process = lock!(process);
+            match process.signal {
+                ProcessSignal::Stop => process.signal = ProcessSignal::None,
+                ProcessSignal::Restart => process.state = ProcessState::Waiting,
+                _ => (),
+            }
+            debug!("XMRig Watchdog | Stop/Restart SIGNAL done, breaking");
+            return true;
+        }
+        false
     }
 }
 //---------------------------------------------------------------------------------------------------- [ImgXmrig]
@@ -726,7 +718,7 @@ impl PubXmrigApi {
     }
 
     #[inline]
-    pub(super) fn combine_gui_pub_api(gui_api: &mut Self, pub_api: &mut Self) {
+    pub fn combine_gui_pub_api(gui_api: &mut Self, pub_api: &mut Self) {
         let output = std::mem::take(&mut gui_api.output);
         let node = std::mem::take(&mut gui_api.node);
         let buf = std::mem::take(&mut pub_api.output);
@@ -742,7 +734,7 @@ impl PubXmrigApi {
 
     // This combines the buffer from the PTY thread [output_pub]
     // with the actual [PubApiXmrig] output field.
-    pub(super) fn update_from_output(
+    pub fn update_from_output(
         public: &Arc<Mutex<Self>>,
         output_parse: &Arc<Mutex<String>>,
         output_pub: &Arc<Mutex<String>>,
@@ -811,7 +803,7 @@ impl PubXmrigApi {
 // XMRig doesn't initialize stats at 0 (or 0.0) and instead opts for [null]
 // which means some elements need to be wrapped in an [Option] or else serde will [panic!].
 #[derive(Debug, Serialize, Deserialize, Clone)]
-pub(super) struct PrivXmrigApi {
+pub struct PrivXmrigApi {
     worker_id: String,
     resources: Resources,
     connection: Connection,
@@ -836,57 +828,6 @@ impl PrivXmrigApi {
             .json()
             .await?)
     }
-    #[inline]
-    // // Replace config with new node
-    pub async fn update_xmrig_config(
-        client: &Client,
-        api_uri: &str,
-        token: &str,
-        node: &XvbNode,
-        address: &str,
-        pub_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
-        rig: &str,
-    ) -> Result<()> {
-        // get config
-        let request = client
-            .get(api_uri)
-            .header(AUTHORIZATION, ["Bearer ", token].concat());
-        let mut config = request.send().await?.json::<Value>().await?;
-        // modify node configuration
-        let uri = [node.url(), ":".to_string(), node.port()].concat();
-        info!("replace xmrig config with node {}", uri);
-        *config
-            .pointer_mut("/pools/0/url")
-            .ok_or_else(|| anyhow!("pools/0/url does not exist in xmrig config"))? = uri.into();
-        *config
-            .pointer_mut("/pools/0/user")
-            .ok_or_else(|| anyhow!("pools/0/user does not exist in xmrig config"))? = node
-            .user(&address.chars().take(8).collect::<String>())
-            .into();
-        *config
-            .pointer_mut("/pools/0/rig-id")
-            .ok_or_else(|| anyhow!("pools/0/rig-id does not exist in xmrig config"))? = rig.into();
-        *config
-            .pointer_mut("/pools/0/tls")
-            .ok_or_else(|| anyhow!("pools/0/tls does not exist in xmrig config"))? =
-            node.tls().into();
-        *config
-            .pointer_mut("/pools/0/keepalive")
-            .ok_or_else(|| anyhow!("pools/0/keepalive does not exist in xmrig config"))? =
-            node.keepalive().into();
-        // send new config
-        client
-            .put(api_uri)
-            .header("Authorization", ["Bearer ", token].concat())
-            .header("Content-Type", "application/json")
-            .timeout(std::time::Duration::from_secs(5))
-            .body(config.to_string())
-            .send()
-            .await?;
-        // update process status
-        lock!(pub_api_xmrig).node = node.to_string();
-        anyhow::Ok(())
-    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
@@ -899,9 +840,4 @@ struct Connection {
     diff: u128,
     accepted: u128,
     rejected: u128,
-}
-
-#[derive(Debug, Serialize, Deserialize, Clone, Copy)]
-struct Hashrate {
-    total: [Option<f32>; 3],
 }

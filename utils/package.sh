@@ -33,22 +33,31 @@ title "Linux folder check"
 [[ -f linux_b/gupaxx ]]; check "linux_b/gupaxx"
 [[ -f linux_b/p2pool/p2pool ]]; check "linux_b/p2pool/p2pool"
 [[ -f linux_b/xmrig/xmrig ]]; check "linux_b/xmrig/xmrig"
+[[ -f linux_b/xmrig-proxy/xmrig-proxy ]]; check "linux_b/xmrig-proxy/xmrig-proxy"
 title "macOS-x64 folder check"
 [[ -d macos-x64/Gupaxx.app ]]; check "macos-x64/Gupaxx.app"
 [[ -d macos-x64_b/Gupaxx.app ]]; check "macos-x64_b/Gupaxx.app"
 [[ -f macos-x64_b/Gupaxx.app/Contents/MacOS/p2pool/p2pool ]]; check "macos-x64_b/p2pool/p2pool"
 [[ -f macos-x64_b/Gupaxx.app/Contents/MacOS/xmrig/xmrig ]]; check "macos-x64_b/xmrig/xmrig"
+[[ -f macos-x64_b/Gupaxx.app/Contents/MacOS/xmrig-proxy/xmrig-proxy ]]; check "macos-x64_b/xmrig-proxy/xmrig-proxy"
 title "macOS-arm64 folder check"
 [[ -d macos-arm64/Gupaxx.app ]]; check "macos-arm64/Gupaxx.app"
 [[ -d macos-arm64_b/Gupaxx.app ]]; check "macos-arm64_b/Gupaxx.app"
 [[ -f macos-arm64_b/Gupaxx.app/Contents/MacOS/p2pool/p2pool ]]; check "macos-arm64_b/p2pool/p2pool"
 [[ -f macos-arm64_b/Gupaxx.app/Contents/MacOS/xmrig/xmrig ]]; check "macos-arm64_b/xmrig/xmrig"
+## no macos-arm64 xmrig-proxy released todo
+# [[ -f macos-arm64_b/Gupaxx.app/Contents/MacOS/xmrig-proxy/xmrig-proxy ]]; check "macos-arm64_b/xmrig-proxy/xmrig-proxy"
 title "Windows folder check"
 [[ -f windows/Gupaxx.exe ]]; check "windows/Gupaxx.exe"
 [[ -f windows_b/Gupaxx.exe ]]; check "windows_b/Gupaxx.exe"
 [[ -f windows_b/P2Pool/p2pool.exe ]]; check "windows_b/P2Pool/p2pool.exe"
 [[ -f windows_b/XMRig/xmrig.exe ]]; check "windows_b/XMRig/xmrig.exe"
+[[ -f windows_b/XMRig-Proxy/xmrig-proxy.exe ]]; check "windows_b/XMRig-Proxy/xmrig-proxy.exe"
 
+# Get random date for tar/zip
+title "RNG Date"
+RNG=$((EPOCHSECONDS-RANDOM*4)); check "RNG ... $RNG"
+DATE=$(date -d @${RNG}); check "DATE ... $DATE"
 
 # Tar Linux Bundle
 title "Tar Linux"
@@ -57,6 +66,7 @@ chmod +x linux/gupaxx
 chmod +x linux_b/gupaxx
 chmod +x linux_b/p2pool/p2pool
 chmod +x linux_b/xmrig/xmrig
+chmod +x linux_b/xmrig-proxy/xmrig-proxy
 mv linux_b "gupaxx-$NEW_VER-linux-x64-bundle"; check "linux -> gupaxx-$NEW_VER-linux-x64-bundle"
 tar -czpf "gupaxx-${NEW_VER}-linux-x64-bundle.tar.gz" "gupaxx-$NEW_VER-linux-x64-bundle" --owner=lm --group=lm ; check "tar linux-bundle"
 # Tar Linux Standalone

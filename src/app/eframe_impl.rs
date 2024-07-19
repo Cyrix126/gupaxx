@@ -36,6 +36,12 @@ impl eframe::App for App {
         let xmrig_is_waiting = xmrig.is_waiting();
         let xmrig_state = xmrig.state;
         drop(xmrig);
+        debug!("App | Locking and collecting XMRig-Proxy state...");
+        let xmrig_proxy = lock!(self.xmrig_proxy);
+        let xmrig_proxy_is_alive = xmrig_proxy.is_alive();
+        let xmrig_proxy_is_waiting = xmrig_proxy.is_waiting();
+        let xmrig_proxy_state = xmrig_proxy.state;
+        drop(xmrig_proxy);
         debug!("App | Locking and collecting XvB state...");
         let xvb = lock!(self.xvb);
         let xvb_is_alive = xvb.is_alive();
@@ -84,14 +90,17 @@ impl eframe::App for App {
             ctx,
             p2pool_state,
             xmrig_state,
+            xmrig_proxy_state,
             xvb_state,
             &key,
             wants_input,
             p2pool_is_waiting,
             xmrig_is_waiting,
+            xmrig_proxy_is_waiting,
             xvb_is_waiting,
             p2pool_is_alive,
             xmrig_is_alive,
+            xmrig_proxy_is_alive,
             xvb_is_alive,
         );
         // xvb_is_alive is not the same for bottom and for middle.
@@ -104,6 +113,7 @@ impl eframe::App for App {
             key,
             p2pool_is_alive,
             xmrig_is_alive,
+            xmrig_proxy_is_alive,
             xvb_is_alive,
         );
     }

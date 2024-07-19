@@ -16,8 +16,9 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub const GUPAX_VERSION: &str = concat!("v", env!("CARGO_PKG_VERSION")); // e.g: v1.0.0
-pub const P2POOL_VERSION: &str = "v3.10";
+pub const P2POOL_VERSION: &str = "v4.0";
 pub const XMRIG_VERSION: &str = "v6.21.1";
+pub const XMRIG_PROXY_VERSION: &str = "v6.21.1";
 pub const COMMIT: &str = env!("COMMIT"); // set in build.rs
                                          // e.g: Gupax_v1_0_0
                                          // Would have been [Gupax_v1.0.0] but P2Pool truncates everything after [.]
@@ -85,8 +86,13 @@ pub const P2POOL_API_PATH_LOCAL: &str = "local/stratum";
 pub const P2POOL_API_PATH_NETWORK: &str = "network/stats";
 #[cfg(target_family = "unix")]
 pub const P2POOL_API_PATH_POOL: &str = "pool/stats";
-pub const XMRIG_API_URI: &str = "1/summary"; // The default relative URI of XMRig's API
-pub const XMRIG_CONFIG_URI: &str = "http://127.0.0.1:18088/1/config"; // The default relative URI of XMRig's API config
+pub const XMRIG_API_SUMMARY_URI: &str = "1/summary"; // The default relative URI of XMRig's API summary
+                                                     // pub const XMRIG_API_CONFIG_URI: &str = "1/config"; // The default relative URI of XMRig's API config
+                                                     // todo allow user to change the port of the http api for xmrig and xmrig-proxy
+pub const XMRIG_CONFIG_URL: &str = "http://127.0.0.1:18088/1/config"; // The default relative URI of XMRig's API config
+pub const XMRIG_PROXY_CONFIG_URL: &str = "http://127.0.0.1:18089/1/config"; // The default relative URI of XMRig Proxy's API config
+pub const XMRIG_SUMMARY_URL: &str = "http://127.0.0.1:18088/1/summary"; // The default relative URI of XMRig's API config
+pub const XMRIG_PROXY_SUMMARY_URL: &str = "http://127.0.0.1:18089/1/summary"; // The default relative URI of XMRig Proxy's API config
 
 // Process state tooltips (online, offline, etc)
 pub const P2POOL_ALIVE: &str = "P2Pool is online and fully synchronized";
@@ -101,6 +107,35 @@ pub const XMRIG_DEAD: &str = "XMRig is offline";
 pub const XMRIG_FAILED: &str = "XMRig is offline and failed when exiting";
 pub const XMRIG_MIDDLE: &str = "XMRig is in the middle of (re)starting/stopping";
 pub const XMRIG_NOT_MINING: &str = "XMRig is online, but not mining to any pool";
+
+pub const XMRIG_PROXY_ALIVE: &str = "XMRig-Proxy is online and mining";
+pub const XMRIG_PROXY_DEAD: &str = "XMRig-Proxy is offline";
+pub const XMRIG_PROXY_FAILED: &str = "XMRig-Proxy is offline and failed when exiting";
+pub const XMRIG_PROXY_MIDDLE: &str = "XMRig-Proxy is in the middle of (re)starting/stopping";
+pub const XMRIG_PROXY_NOT_MINING: &str = "XMRig-Proxy is online, but not mining to any pool";
+pub const XMRIG_PROXY_REDIRECT: &str = "point local xmrig instance on this proxy instead of the p2pool instance (recommended if using XvB)";
+pub const XMRIG_PROXY_ARGUMENTS: &str = r#"WARNING: Use [--no-color] and make sure to set [--http-host <IP>] & [--http-port <PORT>] so that the [Status] tab can work!
+
+Start XMRig-Proxy with these arguments"#;
+pub const XMRIG_PROXY_INPUT: &str = "Send a command to XMRig-Proxy";
+pub const XMRIG_PROXY_SIMPLE: &str = r#"Use simple XMRig-Proxy settings:
+  - Mine to local P2Pool (localhost:3333)
+  - redirect Xmrig local instance to the proxy
+  - HTTP API @ localhost:18089"#;
+pub const XMRIG_PROXY_ADVANCED: &str = r#"Use advanced XMRig-Proxy settings:
+  - Terminal input
+  - disable/enable local xmrig instance redirection
+  - Overriding command arguments
+  - Custom HTTP API IP/Port
+  - TLS setting
+  - Keepalive setting"#;
+pub const XMRIG_PROXY_PATH_NOT_FILE:  &str = "XMRig-Proxy binary not found at the given PATH in the Gupaxx tab! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where XMRig-Proxy is located.";
+pub const XMRIG_PROXY_PATH_NOT_VALID: &str = "XMRig-Proxy binary at the given PATH in the Gupaxx tab doesn't look like XMRig-Proxy! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where XMRig-Proxy is located.";
+pub const XMRIG_PROXY_PATH_OK: &str = "XMRig-Proxy was found at the given PATH";
+pub const XMRIG_PROXY_PATH_EMPTY:     &str = "XMRig-Proxy PATH is empty! To fix: goto the [GupaxxAdvanced] tab, select [Open] and specify where XMRig is located.";
+pub const STATUS_XMRIG_PROXY_UPTIME: &str = "How long XMRig-Proxy has been online";
+pub const STATUS_XMRIG_PROXY_POOL: &str = "The pool XMRig-Proxy is currently mining to";
+pub const STATUS_XMRIG_PROXY_HASHRATE: &str = "The average hashrate of XMRig-Proxy";
 
 pub const XVB_ALIVE: &str =
     "XvB process is configured and distributing hashrate, XvB node is online";
@@ -186,7 +221,6 @@ pub const STATUS_P2POOL_POOL: &str = "The P2Pool sidechain you're currently conn
 pub const STATUS_P2POOL_ADDRESS: &str = "The Monero address P2Pool will send payouts to";
 //--
 pub const STATUS_XMRIG_UPTIME: &str = "How long XMRig has been online";
-pub const STATUS_XMRIG_CPU:         &str = "The average CPU load of XMRig. [1.0] represents 1 thread is maxed out, e.g: If you have 8 threads, [4.0] means half your threads are maxed out.";
 pub const STATUS_XMRIG_HASHRATE: &str = "The average hashrate of XMRig";
 pub const STATUS_XMRIG_DIFFICULTY: &str = "The current difficulty of the job XMRig is working on";
 pub const STATUS_XMRIG_SHARES: &str = "The amount of accepted and rejected shares";
@@ -278,6 +312,7 @@ pub const GUPAX_ASK_BEFORE_QUIT: &str = "Ask before quitting Gupaxx";
 pub const GUPAX_SAVE_BEFORE_QUIT: &str = "Automatically save any changed settings before quitting";
 pub const GUPAX_AUTO_P2POOL:      &str = "Automatically start P2Pool on Gupaxx startup. If you are using [P2Pool Simple], this will NOT wait for your [Auto-Ping] to finish, it will start P2Pool on the pool you already have selected. This option will fail if your P2Pool settings aren't valid!";
 pub const GUPAX_AUTO_XMRIG:       &str = "Automatically start XMRig on Gupaxx startup. This option will fail if your XMRig settings aren't valid!";
+pub const GUPAX_AUTO_XMRIG_PROXY: &str = "Automatically start XMRig-Proxy on Gupaxx startup.";
 pub const GUPAX_AUTO_XVB:       &str = "Automatically start XvB on Gupaxx startup. This option will fail if your XvB settings aren't valid!";
 pub const GUPAX_ADJUST: &str = "Adjust and set the width/height of the Gupaxx window";
 pub const GUPAX_WIDTH: &str = "Set the width of the Gupaxx window";
@@ -310,6 +345,7 @@ pub const GUPAX_ADVANCED: &str = r#"Use advanced Gupaxx settings:
 pub const GUPAX_SELECT: &str = "Open a file explorer to select a file";
 pub const GUPAX_PATH_P2POOL: &str = "The location of the P2Pool binary: Both absolute and relative paths are accepted; A red [X] will appear if there is no file found at the given path";
 pub const GUPAX_PATH_XMRIG: &str = "The location of the XMRig binary: Both absolute and relative paths are accepted; A red [X] will appear if there is no file found at the given path";
+pub const GUPAX_PATH_XMRIG_PROXY: &str = "The location of the XMRig-Proxy binary: Both absolute and relative paths are accepted; A red [X] will appear if there is no file found at the given path";
 
 // P2Pool
 pub const P2POOL_MAIN:                   &str = "Use the P2Pool main-chain. This P2Pool finds blocks faster, but has a higher difficulty. Suitable for miners with more than 50kH/s";
@@ -409,6 +445,7 @@ pub const XMRIG_PATH_NOT_FILE:  &str = "XMRig binary not found at the given PATH
 pub const XMRIG_PATH_NOT_VALID: &str = "XMRig binary at the given PATH in the Gupaxxtab doesn't look like XMRig! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where XMRig is located.";
 pub const XMRIG_PATH_OK: &str = "XMRig was found at the given PATH";
 pub const XMRIG_PATH_EMPTY:     &str = "XMRig PATH is empty! To fix: goto the [GupaxxAdvanced] tab, select [Open] and specify where XMRig is located.";
+pub const XMRIG_PROXY_URL: &str = "https://github.com/xmrig/xmrig-proxy";
 
 // XvB
 pub const XVB_HELP: &str = "You need to register an account by clicking on the link above to get your token with the same p2pool XMR address you use for payment.";

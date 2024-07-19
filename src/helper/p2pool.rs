@@ -2,6 +2,10 @@ use super::Helper;
 use super::Process;
 use crate::components::node::RemoteNode;
 use crate::disk::state::P2pool;
+use crate::helper::check_died;
+use crate::helper::check_user_input;
+use crate::helper::signal_end;
+use crate::helper::sleep_end_loop;
 use crate::helper::ProcessName;
 use crate::helper::ProcessSignal;
 use crate::helper::ProcessState;
@@ -213,7 +217,6 @@ impl Helper {
             );
         });
     }
-
     // Takes in a 95-char Monero address, returns the first and last
     // 8 characters separated with dots like so: [4abcdefg...abcdefgh]
     pub fn head_tail_of_monero_address(address: &str) -> String {
@@ -394,6 +397,7 @@ impl Helper {
     #[cold]
     #[inline(never)]
     // The P2Pool watchdog. Spawns 1 OS thread for reading a PTY (STDOUT+STDERR), and combines the [Child] with a PTY so STDIN actually works.
+    // or if P2Pool simple is false and extern is true, only prints data from stratum api.
     #[allow(clippy::too_many_arguments)]
     #[allow(clippy::await_holding_lock)]
     #[tokio::main]
@@ -496,165 +500,21 @@ impl Helper {
             lock!(gui_api).tick_status += 1;
 
             // Check if the process is secretly died without us knowing :)
-            if let Ok(Some(code)) = lock!(child_pty).try_wait() {
-                debug!("P2Pool Watchdog | Process secretly died! Getting exit status");
-                let exit_status = match code.success() {
-                    true => {
-                        lock!(process).state = ProcessState::Dead;
-                        "Successful"
-                    }
-                    false => {
-                        lock!(process).state = ProcessState::Failed;
-                        "Failed"
-                    }
-                };
-                let uptime = HumanTime::into_human(start.elapsed());
-                info!(
-                    "P2Pool Watchdog | Stopped ... Uptime was: [{}], Exit status: [{}]",
-                    uptime, exit_status
-                );
-                // This is written directly into the GUI, because sometimes the 900ms event loop can't catch it.
-                if let Err(e) = writeln!(
-                    lock!(gui_api).output,
-                    "{}\nP2Pool stopped | Uptime: [{}] | Exit status: [{}]\n{}\n\n\n\n",
-                    HORI_CONSOLE,
-                    uptime,
-                    exit_status,
-                    HORI_CONSOLE
-                ) {
-                    error!(
-                        "P2Pool Watchdog | GUI Uptime/Exit status write failed: {}",
-                        e
-                    );
-                }
-                lock!(process).signal = ProcessSignal::None;
-                debug!("P2Pool Watchdog | Secret dead process reap OK, breaking");
+            if check_died(
+                &child_pty,
+                &mut lock!(process),
+                &start,
+                &mut lock!(gui_api).output,
+            ) {
                 break;
             }
 
             // Check SIGNAL
-            if lock!(process).signal == ProcessSignal::Stop {
-                debug!("P2Pool Watchdog | Stop SIGNAL caught");
-                // This actually sends a SIGHUP to p2pool (closes the PTY, hangs up on p2pool)
-                if let Err(e) = lock!(child_pty).kill() {
-                    error!("P2Pool Watchdog | Kill error: {}", e);
-                }
-                // Wait to get the exit status
-                let exit_status = match lock!(child_pty).wait() {
-                    Ok(e) => {
-                        if e.success() {
-                            lock!(process).state = ProcessState::Dead;
-                            "Successful"
-                        } else {
-                            lock!(process).state = ProcessState::Failed;
-                            "Failed"
-                        }
-                    }
-                    _ => {
-                        lock!(process).state = ProcessState::Failed;
-                        "Unknown Error"
-                    }
-                };
-                let uptime = HumanTime::into_human(start.elapsed());
-                info!(
-                    "P2Pool Watchdog | Stopped ... Uptime was: [{}], Exit status: [{}]",
-                    uptime, exit_status
-                );
-                // This is written directly into the GUI API, because sometimes the 900ms event loop can't catch it.
-                if let Err(e) = writeln!(
-                    lock!(gui_api).output,
-                    "{}\nP2Pool stopped | Uptime: [{}] | Exit status: [{}]\n{}\n\n\n\n",
-                    HORI_CONSOLE,
-                    uptime,
-                    exit_status,
-                    HORI_CONSOLE
-                ) {
-                    error!(
-                        "P2Pool Watchdog | GUI Uptime/Exit status write failed: {}",
-                        e
-                    );
-                }
-                lock!(process).signal = ProcessSignal::None;
-                debug!("P2Pool Watchdog | Stop SIGNAL done, breaking");
-                break;
-            // Check RESTART
-            } else if lock!(process).signal == ProcessSignal::Restart {
-                debug!("P2Pool Watchdog | Restart SIGNAL caught");
-                // This actually sends a SIGHUP to p2pool (closes the PTY, hangs up on p2pool)
-                if let Err(e) = lock!(child_pty).kill() {
-                    error!("P2Pool Watchdog | Kill error: {}", e);
-                }
-                // Wait to get the exit status
-                let exit_status = match lock!(child_pty).wait() {
-                    Ok(e) => {
-                        if e.success() {
-                            "Successful"
-                        } else {
-                            "Failed"
-                        }
-                    }
-                    _ => "Unknown Error",
-                };
-                let uptime = HumanTime::into_human(start.elapsed());
-                info!(
-                    "P2Pool Watchdog | Stopped ... Uptime was: [{}], Exit status: [{}]",
-                    uptime, exit_status
-                );
-                // This is written directly into the GUI API, because sometimes the 900ms event loop can't catch it.
-                if let Err(e) = writeln!(
-                    lock!(gui_api).output,
-                    "{}\nP2Pool stopped | Uptime: [{}] | Exit status: [{}]\n{}\n\n\n\n",
-                    HORI_CONSOLE,
-                    uptime,
-                    exit_status,
-                    HORI_CONSOLE
-                ) {
-                    error!(
-                        "P2Pool Watchdog | GUI Uptime/Exit status write failed: {}",
-                        e
-                    );
-                }
-                lock!(process).state = ProcessState::Waiting;
-                debug!("P2Pool Watchdog | Restart SIGNAL done, breaking");
+            if signal_end(&process, &child_pty, &start, &mut lock!(gui_api).output) {
                 break;
             }
-
             // Check vector of user input
-            let mut lock = lock!(process);
-            if !lock.input.is_empty() {
-                let input = std::mem::take(&mut lock.input);
-                for line in input {
-                    if line.is_empty() {
-                        continue;
-                    }
-                    debug!(
-                        "P2Pool Watchdog | User input not empty, writing to STDIN: [{}]",
-                        line
-                    );
-                    // Windows terminals (or at least the PTY abstraction I'm using, portable_pty)
-                    // requires a [\r\n] to end a line, whereas Unix is okay with just a [\n].
-                    //
-                    // I have literally read all of [portable_pty]'s source code, dug into Win32 APIs,
-                    // even rewrote some of the actual PTY code in order to understand why STDIN doesn't work
-                    // on Windows. It's because of a fucking missing [\r]. Another reason to hate Windows :D
-                    //
-                    // XMRig did actually work before though, since it reads STDIN directly without needing a newline.
-                    #[cfg(target_os = "windows")]
-                    if let Err(e) = write!(stdin, "{}\r\n", line) {
-                        error!("P2Pool Watchdog | STDIN error: {}", e);
-                    }
-                    #[cfg(target_family = "unix")]
-                    if let Err(e) = writeln!(stdin, "{}", line) {
-                        error!("P2Pool Watchdog | STDIN error: {}", e);
-                    }
-                    // Flush.
-                    if let Err(e) = stdin.flush() {
-                        error!("P2Pool Watchdog | STDIN flush error: {}", e);
-                    }
-                }
-            }
-            drop(lock);
-
+            check_user_input(&process, &mut stdin);
             // Check if logs need resetting
             debug!("P2Pool Watchdog | Attempting GUI log reset check");
             let mut lock = lock!(gui_api);
@@ -716,25 +576,14 @@ impl Helper {
             }
 
             // Sleep (only if 900ms hasn't passed)
-            let elapsed = now.elapsed().as_millis();
             if first_loop {
                 first_loop = false;
             }
-            // Since logic goes off if less than 1000, casting should be safe
-            if elapsed < 900 {
-                let sleep = (900 - elapsed) as u64;
-                debug!(
-                    "P2Pool Watchdog | END OF LOOP -  Tick: [{}/60] - Sleeping for [{}]ms...",
-                    lock!(gui_api).tick,
-                    sleep
-                );
-                tokio::time::sleep(Duration::from_millis(sleep)).await;
-            } else {
-                debug!(
-                    "P2Pool Watchdog | END OF LOOP - Tick: [{}/60] Not sleeping!",
-                    lock!(gui_api).tick
-                );
-            }
+            sleep_end_loop(now, ProcessName::P2pool).await;
+            debug!(
+                "P2Pool Watchdog | END OF LOOP -  Tick: [{}/60]",
+                lock!(gui_api).tick,
+            );
         }
 
         // 5. If loop broke, we must be done here.

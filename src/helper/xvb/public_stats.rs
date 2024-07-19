@@ -10,7 +10,7 @@ use serde_this_or_that::as_u64;
 use tokio::time::sleep;
 
 use crate::{
-    helper::{xvb::output_console, Process, ProcessState},
+    helper::{xvb::output_console, Process, ProcessName, ProcessState},
     macros::lock,
     XVB_URL_PUBLIC_API,
 };
@@ -69,8 +69,9 @@ impl XvbPubStats {
                 if lock!(process).state == ProcessState::Retry {
                     lock!(process).state = ProcessState::Syncing;
                     output_console(
-                        gui_api,
+                        &mut lock!(gui_api).output,
                         "Stats are now working again after last successful request.",
+                        ProcessName::Xvb,
                     );
                 }
             }
@@ -83,19 +84,21 @@ impl XvbPubStats {
                 // if error already present, no need to print it multiple times.
                 if lock!(process).state != ProcessState::Retry {
                     output_console(
-                        gui_api,
+                        &mut lock!(gui_api).output,
                         &format!(
                             "Failure to retrieve public stats from {}\nWill retry shortly...",
                             XVB_URL_PUBLIC_API
                         ),
+                        ProcessName::Xvb,
                     );
                 }
                 // we stop the algo (will be stopped by the check status on next loop) because we can't make the rest work without public stats. (winner in xvb private stats).
                 lock!(process).state = ProcessState::Retry;
                 // sleep here because it is in a spawn and will not block the user stopping or restarting the service.
                 output_console(
-                    gui_api,
+                    &mut lock!(gui_api).output,
                     "Waiting 10 seconds before trying to get stats again.",
+                    ProcessName::Xvb,
                 );
                 sleep(Duration::from_secs(10)).await;
             }

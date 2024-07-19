@@ -1,11 +1,17 @@
 # Differences with upstream [Gupax](https://github.com/hinto-janai/gupax)
 
-## Integration of the XvB Raffle
+## Added functionalities
+
+### Integration of the XvB Raffle
 
 A new fancy tab to apply an algorithm of distribution of HR to xmrig (see [NOTES_ALGORITHM](NOTES_ALGORITHMS)) with your token from XvB.  
 This tab also includes a console output to let you track if everything is working and what are the decision of the algorithm, and show you personal stats from XvB.
 
 A new column in Status Tab to see public stats from the raffle.
+
+### Xmrig-Proxy
+
+You can now point all your external miners and get all the juicy stats in Gupaxx. XvB algorithm is able to control Xmrig-Proxy when it is enabled.
 
 ## Removed functionality
 

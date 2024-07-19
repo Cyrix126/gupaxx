@@ -1,60 +1,52 @@
-// Gupax - GUI Uniting P2Pool And XMRig
-//
-// Copyright (c) 2022-2023 hinto-janai
-//
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <https://www.gnu.org/licenses/>.
-
-use crate::disk::pool::Pool;
-use crate::disk::state::Xmrig;
-use crate::helper::xrig::xmrig::PubXmrigApi;
-use crate::helper::Process;
-use crate::regex::{num_lines, REGEXES};
-use crate::utils::regex::Regexes;
-use crate::{constants::*, macros::*};
-use egui::{
-    vec2, Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, Slider, TextEdit,
-    TextStyle::{self, *},
-    Vec2,
-};
-use log::*;
-
+use egui::{vec2, Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, TextEdit, Vec2};
 use std::sync::{Arc, Mutex};
 
-impl Xmrig {
+use egui::TextStyle::{self, Name};
+use log::{debug, info};
+
+use crate::disk::pool::Pool;
+use crate::disk::state::XmrigProxy;
+use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
+use crate::helper::Process;
+use crate::regex::{num_lines, REGEXES};
+use crate::utils::constants::DARK_GRAY;
+use crate::utils::macros::lock;
+use crate::{
+    GREEN, LIGHT_GRAY, LIST_ADD, LIST_CLEAR, LIST_DELETE, LIST_SAVE, RED, SPACE, XMRIG_API_IP,
+    XMRIG_API_PORT, XMRIG_IP, XMRIG_KEEPALIVE, XMRIG_NAME, XMRIG_PORT, XMRIG_PROXY_ARGUMENTS,
+    XMRIG_PROXY_INPUT, XMRIG_PROXY_REDIRECT, XMRIG_PROXY_URL, XMRIG_RIG, XMRIG_TLS,
+};
+
+impl XmrigProxy {
     #[inline(always)] // called once
-    #[allow(clippy::too_many_arguments)]
     pub fn show(
         &mut self,
-        pool_vec: &mut Vec<(String, Pool)>,
         process: &Arc<Mutex<Process>>,
-        api: &Arc<Mutex<PubXmrigApi>>,
+        pool_vec: &mut Vec<(String, Pool)>,
+        api: &Arc<Mutex<PubXmrigProxyApi>>,
         buffer: &mut String,
         size: Vec2,
-        _ctx: &egui::Context,
         ui: &mut egui::Ui,
     ) {
+        let width = size.x;
+        let height = size.y;
+        let space_h = height / 48.0;
         let text_edit = size.y / 25.0;
-        //---------------------------------------------------------------------------------------------------- [Simple] Console
-        debug!("XMRig Tab | Rendering [Console]");
+        ui.vertical_centered(|ui| {
+            ui.add_space(space_h);
+            ui.style_mut().override_text_style = Some(TextStyle::Heading);
+            ui.hyperlink_to("XMRig-Proxy", XMRIG_PROXY_URL);
+            ui.style_mut().override_text_style = Some(TextStyle::Body);
+            ui.add(Label::new("High performant proxy for your miners"));
+            ui.add_space(space_h);
+        });
+        // console output for log
+        debug!("XvB Tab | Rendering [Console]");
         ui.group(|ui| {
             let text = &lock!(api).output;
             let nb_lines = num_lines(text);
-            let (height, width) = if self.simple {
-                (size.y / 1.5, size.x - SPACE)
-            } else {
-                (size.y / 2.8, size.x - SPACE)
-            };
+            let height = size.y / 2.8;
+            let width = size.x - (space_h / 2.0);
             egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
                 ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
                 egui::ScrollArea::vertical()
@@ -76,32 +68,30 @@ impl Xmrig {
                         },
                     );
             });
-            //---------------------------------------------------------------------------------------------------- [Advanced] Console
-            if !self.simple {
-                ui.separator();
-                let response = ui
-                    .add_sized(
-                        [width, text_edit],
-                        TextEdit::hint_text(
-                            TextEdit::singleline(buffer),
-                            r#"Commands: [h]ashrate, [p]ause, [r]esume, re[s]ults, [c]onnection"#,
-                        ),
-                    )
-                    .on_hover_text(XMRIG_INPUT);
-                // If the user pressed enter, dump buffer contents into the process STDIN
-                if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
-                    response.request_focus(); // Get focus back
-                    let buffer = std::mem::take(buffer); // Take buffer
-                    let mut process = lock!(process); // Lock
-                    if process.is_alive() {
-                        process.input.push(buffer);
-                    } // Push only if alive
-                }
-            }
         });
-
-        //---------------------------------------------------------------------------------------------------- Arguments
+        //---------------------------------------------------------------------------------------------------- [Advanced] Console
         if !self.simple {
+            ui.separator();
+            let response = ui
+                .add_sized(
+                    [width, text_edit],
+                    TextEdit::hint_text(
+                        TextEdit::singleline(buffer),
+                        r#"Commands: [h]ashrate, [c]onnections, [v]erbose, [w]orkers"#,
+                    ),
+                )
+                .on_hover_text(XMRIG_PROXY_INPUT);
+            // If the user pressed enter, dump buffer contents into the process STDIN
+            if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
+                response.request_focus(); // Get focus back
+                let buffer = std::mem::take(buffer); // Take buffer
+                let mut process = lock!(process); // Lock
+                if process.is_alive() {
+                    process.input.push(buffer);
+                } // Push only if alive
+            }
+
+            //---------------------------------------------------------------------------------------------------- Arguments
             debug!("XMRig Tab | Rendering [Arguments]");
             ui.group(|ui| {
                 ui.horizontal(|ui| {
@@ -114,76 +104,27 @@ impl Xmrig {
                             r#"--url <...> --user <...> --config <...>"#,
                         ),
                     )
-                    .on_hover_text(XMRIG_ARGUMENTS);
+                    .on_hover_text(XMRIG_PROXY_ARGUMENTS);
                     self.arguments.truncate(1024);
                 })
             });
             ui.set_enabled(self.arguments.is_empty());
-            //---------------------------------------------------------------------------------------------------- Address
-            debug!("XMRig Tab | Rendering [Address]");
-            ui.group(|ui| {
-                let width = size.x - SPACE;
-                ui.spacing_mut().text_edit_width = (width) - (SPACE * 3.0);
-                let text;
-                let color;
-                let len = format!("{:02}", self.address.len());
-                if self.address.is_empty() {
-                    text = format!("Monero Address [{}/95] ➖", len);
-                    color = LIGHT_GRAY;
-                } else if Regexes::addr_ok(&self.address) {
-                    text = format!("Monero Address [{}/95] ✔", len);
-                    color = GREEN;
-                } else {
-                    text = format!("Monero Address [{}/95] ❌", len);
-                    color = RED;
-                }
-                ui.add_sized(
-                    [width, text_edit],
-                    Label::new(RichText::new(text).color(color)),
-                );
-                ui.add_sized(
-                    [width, text_edit],
-                    TextEdit::hint_text(TextEdit::singleline(&mut self.address), "4..."),
-                )
-                .on_hover_text(XMRIG_ADDRESS);
-                self.address.truncate(95);
-            });
-        }
+            ui.add_space(space_h);
+            ui.style_mut().spacing.icon_width_inner = width / 45.0;
+            ui.style_mut().spacing.icon_width = width / 35.0;
+            ui.style_mut().spacing.icon_spacing = space_h;
+            ui.checkbox(
+                &mut self.redirect_local_xmrig,
+                "Auto Redirect local Xmrig to Xmrig-Proxy",
+            )
+            .on_hover_text(XMRIG_PROXY_REDIRECT);
 
-        //---------------------------------------------------------------------------------------------------- Threads
-        if self.simple {
-            ui.add_space(SPACE);
-        }
-        debug!("XMRig Tab | Rendering [Threads]");
-        ui.vertical(|ui| {
-            let width = size.x / 10.0;
-            let text_width = width * 2.4;
-            ui.spacing_mut().slider_width = width * 6.5;
-            ui.spacing_mut().icon_width = width / 25.0;
-            ui.horizontal(|ui| {
-                ui.add_sized(
-                    [text_width, text_edit],
-                    Label::new(format!("Threads [1-{}]:", self.max_threads)),
-                );
-                ui.add_sized(
-                    [width, text_edit],
-                    Slider::new(&mut self.current_threads, 1..=self.max_threads),
-                )
-                .on_hover_text(XMRIG_THREADS);
-            });
-            #[cfg(not(target_os = "linux"))] // Pause on active isn't supported on Linux
-            ui.horizontal(|ui| {
-                ui.add_sized(
-                    [text_width, text_edit],
-                    Label::new("Pause on active [0-255]:".to_string()),
-                );
-                ui.add_sized([width, text_edit], Slider::new(&mut self.pause, 0..=255))
-                    .on_hover_text(format!("{} [{}] seconds.", XMRIG_PAUSE, self.pause));
-            });
-        });
+            // idea
+            // need to warn the user if local firewall is blocking port
+            // need to warn the user if NAT is blocking port
+            // need to show local ip address
+            // need to show public ip
 
-        //---------------------------------------------------------------------------------------------------- Simple
-        if !self.simple {
             debug!("XMRig Tab | Rendering [Pool List] elements");
             let width = ui.available_width() - 10.0;
             let mut incorrect_input = false; // This will disable [Add/Delete] on bad input
@@ -216,12 +157,12 @@ impl Xmrig {
 			ui.horizontal(|ui| {
 				let text;
 				let color;
-				let len = format!("{:03}", self.ip.len());
-				if self.ip.is_empty() {
+				let len = format!("{:03}", self.p2pool_ip.len());
+				if self.p2pool_ip.is_empty() {
 					text = format!("  IP [{}/255]➖", len);
 					color = LIGHT_GRAY;
 					incorrect_input = true;
-				} else if self.ip == "localhost" || REGEXES.ipv4.is_match(&self.ip) || REGEXES.domain.is_match(&self.ip) {
+				} else if self.p2pool_ip == "localhost" || REGEXES.ipv4.is_match(&self.p2pool_ip) || REGEXES.domain.is_match(&self.p2pool_ip) {
 					text = format!("  IP [{}/255]✔", len);
 					color = GREEN;
 				} else {
@@ -230,18 +171,18 @@ impl Xmrig {
 					incorrect_input = true;
 				}
 				ui.add_sized([width, text_edit], Label::new(RichText::new(text).color(color)));
-				ui.text_edit_singleline(&mut self.ip).on_hover_text(XMRIG_IP);
-				self.ip.truncate(255);
+				ui.text_edit_singleline(&mut self.p2pool_ip).on_hover_text(XMRIG_IP);
+				self.p2pool_ip.truncate(255);
 			});
 			ui.horizontal(|ui| {
 				let text;
 				let color;
-				let len = self.port.len();
-				if self.port.is_empty() {
+				let len = self.p2pool_port.len();
+				if self.p2pool_port.is_empty() {
 					text = format!("Port [  {}/5  ]➖", len);
 					color = LIGHT_GRAY;
 					incorrect_input = true;
-				} else if REGEXES.port.is_match(&self.port) {
+				} else if REGEXES.port.is_match(&self.p2pool_port) {
 					text = format!("Port [  {}/5  ]✔", len);
 					color = GREEN;
 				} else {
@@ -250,8 +191,8 @@ impl Xmrig {
 					incorrect_input = true;
 				}
 				ui.add_sized([width, text_edit], Label::new(RichText::new(text).color(color)));
-				ui.text_edit_singleline(&mut self.port).on_hover_text(XMRIG_PORT);
-				self.port.truncate(5);
+				ui.text_edit_singleline(&mut self.p2pool_port).on_hover_text(XMRIG_PORT);
+				self.p2pool_port.truncate(5);
 			});
 			ui.horizontal(|ui| {
 				let text;
@@ -295,8 +236,8 @@ impl Xmrig {
 						self.selected_port.clone_from(&pool.port);
 						self.name.clone_from(name);
 						self.rig = pool.rig;
-						self.ip = pool.ip;
-						self.port = pool.port;
+						self.p2pool_ip = pool.ip;
+						self.p2pool_port = pool.port;
 					}
 				}
 			});
@@ -308,7 +249,7 @@ impl Xmrig {
 			for (name, pool) in pool_vec.iter() {
 				if *name == self.name {
 					exists = true;
-					if self.rig == pool.rig && self.ip == pool.ip && self.port == pool.port {
+					if self.rig == pool.rig && self.p2pool_ip == pool.ip && self.p2pool_port == pool.port {
 						save_diff = false;
 					}
 					break
@@ -324,15 +265,15 @@ impl Xmrig {
 					if ui.add_sized([width, text_edit], Button::new("Save")).on_hover_text(text).clicked() {
 						let pool = Pool {
 							rig: self.rig.clone(),
-							ip: self.ip.clone(),
-							port: self.port.clone(),
+							ip: self.p2pool_ip.clone(),
+							port: self.p2pool_port.clone(),
 						};
 						pool_vec[existing_index].1 = pool;
 						self.selected_name.clone_from(&self.name);
 						self.selected_rig.clone_from(&self.rig);
-						self.selected_ip.clone_from(&self.ip);
-						self.selected_port.clone_from(&self.port);
-						info!("Node | S | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig: \"{}\"]", existing_index+1, self.name, self.ip, self.port, self.rig);
+						self.selected_ip.clone_from(&self.p2pool_ip);
+						self.selected_port.clone_from(&self.p2pool_port);
+						info!("Node | S | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig: \"{}\"]", existing_index+1, self.name, self.p2pool_ip, self.p2pool_port, self.rig);
 					}
 				// Else, add to the list
 				} else {
@@ -340,16 +281,16 @@ impl Xmrig {
 					if ui.add_sized([width, text_edit], Button::new("Add")).on_hover_text(text).clicked() {
 						let pool = Pool {
 							rig: self.rig.clone(),
-							ip: self.ip.clone(),
-							port: self.port.clone(),
+							ip: self.p2pool_ip.clone(),
+							port: self.p2pool_port.clone(),
 						};
 						pool_vec.push((self.name.clone(), pool));
 						self.selected_index = pool_vec_len;
 						self.selected_name.clone_from(&self.name);
 						self.selected_rig.clone_from(&self.rig);
-						self.selected_ip.clone_from(&self.ip);
-						self.selected_port.clone_from(&self.port);
-						info!("Node | A | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig: \"{}\"]", pool_vec_len, self.name, self.ip, self.port, self.rig);
+						self.selected_ip.clone_from(&self.p2pool_ip);
+						self.selected_port.clone_from(&self.p2pool_port);
+						info!("Node | A | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig: \"{}\"]", pool_vec_len, self.name, self.p2pool_ip, self.p2pool_port, self.rig);
 					}
 				}
 			});
@@ -379,18 +320,18 @@ impl Xmrig {
 					self.selected_port.clone_from(&new_pool.port);
 					self.name = new_name;
 					self.rig = new_pool.rig;
-					self.ip = new_pool.ip;
-					self.port = new_pool.port;
+					self.p2pool_ip = new_pool.ip;
+					self.p2pool_port = new_pool.port;
 					info!("Node | D | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig\"{}\"]", self.selected_index, self.selected_name, self.selected_ip, self.selected_port, self.selected_rig);
 				}
 			});
 			ui.horizontal(|ui| {
-				ui.set_enabled(!self.name.is_empty() || !self.ip.is_empty() || !self.port.is_empty());
+				ui.set_enabled(!self.name.is_empty() || !self.p2pool_ip.is_empty() || !self.p2pool_port.is_empty());
 				if ui.add_sized([width, text_edit], Button::new("Clear")).on_hover_text(LIST_CLEAR).clicked() {
 					self.name.clear();
 					self.rig.clear();
-					self.ip.clear();
-					self.port.clear();
+					self.p2pool_ip.clear();
+					self.p2pool_port.clear();
 				}
 			});
 		});

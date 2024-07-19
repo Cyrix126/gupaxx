@@ -23,14 +23,17 @@ impl crate::app::App {
         ctx: &egui::Context,
         p2pool_state: ProcessState,
         xmrig_state: ProcessState,
+        xmrig_proxy_state: ProcessState,
         xvb_state: ProcessState,
         key: &KeyPressed,
         wants_input: bool,
         p2pool_is_waiting: bool,
         xmrig_is_waiting: bool,
+        xmrig_proxy_is_waiting: bool,
         xvb_is_waiting: bool,
         p2pool_is_alive: bool,
         xmrig_is_alive: bool,
+        xmrig_proxy_is_alive: bool,
         xvb_is_alive: bool,
     ) {
         // Bottom: app info + state/process buttons
@@ -74,6 +77,8 @@ impl crate::app::App {
                     ui.separator();
                     status_xmrig(xmrig_state, ui, size);
                     ui.separator();
+                    status_xp(xmrig_proxy_state, ui, size);
+                    ui.separator();
                     status_xvb(xvb_state, ui, size);
                 });
 
@@ -112,6 +117,17 @@ impl crate::app::App {
                                 wants_input,
                             );
                         }
+                        Tab::XmrigProxy => {
+                            self.xmrig_proxy_submenu(ui, size);
+                            self.xmrig_proxy_run_actions(
+                                ui,
+                                height,
+                                xmrig_proxy_is_waiting,
+                                xmrig_proxy_is_alive,
+                                key,
+                                wants_input,
+                            );
+                        }
                         Tab::Xvb => {
                             self.xvb_submenu(ui, size);
                             self.xvb_run_actions(
@@ -121,7 +137,7 @@ impl crate::app::App {
                                 xvb_is_alive,
                                 key,
                                 wants_input,
-                            );
+                            )
                         }
                         Tab::About => {}
                     }
@@ -145,6 +161,7 @@ impl crate::app::App {
                 self.state.gupax = og.gupax;
                 self.state.p2pool = og.p2pool;
                 self.state.xmrig = og.xmrig;
+                self.state.xmrig_proxy = og.xmrig_proxy;
                 self.state.xvb = og.xvb;
                 self.node_vec.clone_from(&self.og_node_vec);
                 self.pool_vec.clone_from(&self.og_pool_vec);
@@ -162,6 +179,7 @@ impl crate::app::App {
                         og.gupax = self.state.gupax.clone();
                         og.p2pool = self.state.p2pool.clone();
                         og.xmrig = self.state.xmrig.clone();
+                        og.xmrig_proxy = self.state.xmrig_proxy.clone();
                         og.xvb = self.state.xvb.clone();
                     }
                     Err(e) => {
@@ -408,6 +426,33 @@ impl crate::app::App {
             }
         });
     }
+    fn xmrig_proxy_submenu(&mut self, ui: &mut Ui, size: Vec2) {
+        ui.group(|ui| {
+            let width = size.x / 1.5;
+            let size = vec2(width, size.y);
+            if ui
+                .add_sized(
+                    size,
+                    SelectableLabel::new(!self.state.xmrig_proxy.simple, "Advanced"),
+                )
+                .on_hover_text(XMRIG_PROXY_ADVANCED)
+                .clicked()
+            {
+                self.state.xmrig_proxy.simple = false;
+            }
+            ui.separator();
+            if ui
+                .add_sized(
+                    size,
+                    SelectableLabel::new(self.state.xmrig_proxy.simple, "Simple"),
+                )
+                .on_hover_text(XMRIG_PROXY_SIMPLE)
+                .clicked()
+            {
+                self.state.xmrig_proxy.simple = true;
+            }
+        });
+    }
     fn xmrig_run_actions(
         &mut self,
         ui: &mut Ui,
@@ -566,6 +611,7 @@ impl crate::app::App {
                         &self.state.xvb,
                         &self.state.p2pool,
                         &self.state.xmrig,
+                        &self.state.xmrig_proxy,
                     );
                 }
                 if key.is_down() && !wants_input
@@ -605,6 +651,97 @@ impl crate::app::App {
                         &self.state.xvb,
                         &self.state.p2pool,
                         &self.state.xmrig,
+                        &self.state.xmrig_proxy,
+                    );
+                }
+            }
+        });
+    }
+
+    fn xmrig_proxy_run_actions(
+        &mut self,
+        ui: &mut Ui,
+        height: f32,
+        xmrig_proxy_is_waiting: bool,
+        xmrig_proxy_is_alive: bool,
+        key: &KeyPressed,
+        wants_input: bool,
+    ) {
+        ui.group(|ui| {
+            let width = (ui.available_width() / 3.0) - 5.0;
+            let size = vec2(width, height);
+            if xmrig_proxy_is_waiting {
+                ui.add_enabled_ui(false, |ui| {
+                    ui.add_sized(size, Button::new("⟲"))
+                        .on_disabled_hover_text(XMRIG_PROXY_MIDDLE);
+                    ui.add_sized(size, Button::new("⏹"))
+                        .on_disabled_hover_text(XMRIG_PROXY_MIDDLE);
+                    ui.add_sized(size, Button::new("▶"))
+                        .on_disabled_hover_text(XMRIG_PROXY_MIDDLE);
+                });
+            } else if xmrig_proxy_is_alive {
+                if key.is_up() && !wants_input
+                    || ui
+                        .add_sized(size, Button::new("⟲"))
+                        .on_hover_text("Restart XMRig-Proxy")
+                        .clicked()
+                {
+                    let _ = lock!(self.og).update_absolute_path();
+                    let _ = self.state.update_absolute_path();
+                    Helper::restart_xp(
+                        &self.helper,
+                        &self.state.xmrig_proxy,
+                        &self.state.xmrig,
+                        &self.state.gupax.absolute_xp_path,
+                    );
+                }
+                if key.is_down() && !wants_input
+                    || ui
+                        .add_sized(size, Button::new("⏹"))
+                        .on_hover_text("Stop XMRig-Proxy")
+                        .clicked()
+                {
+                    Helper::stop_xp(&self.helper);
+                }
+                ui.add_enabled_ui(false, |ui| {
+                    ui.add_sized(size, Button::new("▶"))
+                        .on_disabled_hover_text("Start XMRig-Proxy");
+                });
+            } else {
+                ui.add_enabled_ui(false, |ui| {
+                    ui.add_sized(size, Button::new("⟲"))
+                        .on_disabled_hover_text("Restart XMRig-Proxy");
+                    ui.add_sized(size, Button::new("⏹"))
+                        .on_disabled_hover_text("Stop XMRig-Proxy");
+                });
+
+                let mut text = String::new();
+                let mut ui_enabled = true;
+                if !Gupax::path_is_file(&self.state.gupax.xmrig_proxy_path) {
+                    ui_enabled = false;
+                    text = format!("Error: {}", XMRIG_PROXY_PATH_NOT_FILE);
+                } else if !crate::components::update::check_xp_path(
+                    &self.state.gupax.xmrig_proxy_path,
+                ) {
+                    ui_enabled = false;
+                    text = format!("Error: {}", XMRIG_PROXY_PATH_NOT_VALID);
+                }
+                ui.set_enabled(ui_enabled);
+                let color = if ui_enabled { GREEN } else { RED };
+                if (ui_enabled && key.is_up() && !wants_input)
+                    || ui
+                        .add_sized(size, Button::new(RichText::new("▶").color(color)))
+                        .on_hover_text("Start XMRig-Proxy")
+                        .on_disabled_hover_text(text)
+                        .clicked()
+                {
+                    let _ = lock!(self.og).update_absolute_path();
+                    let _ = self.state.update_absolute_path();
+                    Helper::start_xp(
+                        &self.helper,
+                        &self.state.xmrig_proxy,
+                        &self.state.xmrig,
+                        &self.state.gupax.absolute_xp_path,
                     );
                 }
             }
@@ -664,6 +801,33 @@ fn status_xmrig(state: ProcessState, ui: &mut Ui, size: Vec2) {
         }
     };
     status(ui, color, hover_text, size, "XMRig  ⏺");
+}
+
+fn status_xp(state: ProcessState, ui: &mut Ui, size: Vec2) {
+    let color;
+    let hover_text = match state {
+        Alive => {
+            color = GREEN;
+            XMRIG_PROXY_ALIVE
+        }
+        Dead => {
+            color = GRAY;
+            XMRIG_PROXY_DEAD
+        }
+        Failed => {
+            color = RED;
+            XMRIG_PROXY_FAILED
+        }
+        NotMining | OfflineNodesAll => {
+            color = ORANGE;
+            XMRIG_PROXY_NOT_MINING
+        }
+        Middle | Waiting | Syncing | Retry => {
+            color = YELLOW;
+            XMRIG_PROXY_MIDDLE
+        }
+    };
+    status(ui, color, hover_text, size, "Proxy ⏺");
 }
 fn status_xvb(state: ProcessState, ui: &mut Ui, size: Vec2) {
     let color;

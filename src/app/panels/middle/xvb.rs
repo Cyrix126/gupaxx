@@ -7,7 +7,7 @@ use readable::num::Float;
 use readable::up::Uptime;
 
 use crate::disk::state::{ManualDonationLevel, ManualDonationMetric, XvbMode};
-use crate::helper::xmrig::PubXmrigApi;
+use crate::helper::xrig::xmrig::PubXmrigApi;
 use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::helper::xvb::PubXvbApi;
 use crate::regex::num_lines;

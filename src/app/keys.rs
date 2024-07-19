@@ -128,7 +128,8 @@ impl App {
                 Tab::Gupax => self.tab = Tab::Status,
                 Tab::P2pool => self.tab = Tab::Gupax,
                 Tab::Xmrig => self.tab = Tab::P2pool,
-                Tab::Xvb => self.tab = Tab::Xmrig,
+                Tab::XmrigProxy => self.tab = Tab::Xmrig,
+                Tab::Xvb => self.tab = Tab::XmrigProxy,
             };
         // Change Tabs RIGHT
         } else if key.is_x() && !wants_input {
@@ -137,7 +138,8 @@ impl App {
                 Tab::Status => self.tab = Tab::Gupax,
                 Tab::Gupax => self.tab = Tab::P2pool,
                 Tab::P2pool => self.tab = Tab::Xmrig,
-                Tab::Xmrig => self.tab = Tab::Xvb,
+                Tab::Xmrig => self.tab = Tab::XmrigProxy,
+                Tab::XmrigProxy => self.tab = Tab::Xvb,
                 Tab::Xvb => self.tab = Tab::About,
             };
         // Change Submenu LEFT
