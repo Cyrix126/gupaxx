@@ -91,6 +91,7 @@ struct Stats {
     spareable_hashrate: f32,
     spared_time: u32,
     api_url: String,
+    msg_xmrig_or_xp: &str,
 }
 
 impl<'a> Algorithm<'a> {
@@ -140,6 +141,9 @@ impl<'a> Algorithm<'a> {
 
         let api_url = api_url_xmrig(xp_alive, true);
 
+        let msg_xmrig_or_xp = if xp_alive { "XMRig-Proxy" } else { "XMRig" };
+        info!("xp alive: {:?}", xp_alive);
+
         // TODO consider printing algorithm stats instead of spreadout print statements
         let stats = Stats {
             share,
@@ -158,6 +162,7 @@ impl<'a> Algorithm<'a> {
             spareable_hashrate,
             spared_time: u32::default(),
             api_url,
+            msg_xmrig_or_xp,
         };
 
         let mut new_instace = Self {
@@ -232,11 +237,6 @@ impl<'a> Algorithm<'a> {
     }
 
     async fn target_xvb_node(&self) {
-        let msg_xmrig_or_xp = if self.xp_alive {
-            "XMRig-Proxy"
-        } else {
-            "XMRig"
-        };
         let node = lock!(self.gui_api_xvb).stats_priv.node;
 
         debug!("Xvb Process | request {msg_xmrig_or_xp} to mine on XvB");
