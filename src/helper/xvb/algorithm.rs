@@ -283,7 +283,7 @@ pub(crate) async fn algorithm(
     // request XMrig to mine on P2pool
     // if share is in PW,
     let msg_xmrig_or_xp = if xp_alive { "XMRig-Proxy" } else { "XMRig" };
-
+    info!("xp alive: {:?}", xp_alive);
     let api_url = api_url_xmrig(xp_alive, true);
     if share > 0 {
         debug!("Xvb Process | Algorithm share is in current window");
