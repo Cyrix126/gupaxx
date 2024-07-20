@@ -822,8 +822,10 @@ fn update_indicator_algo(
                 // algo is mining on p2pool but will switch to XvB after
                 // show time remaining on p2pool
                 lock!(pub_api).stats_priv.time_switch_node = XVB_TIME_ALGO
-                    - last_algorithm.lock().unwrap().elapsed().as_secs() as u32
-                    - time_donated;
+                    .checked_sub(last_algorithm.lock().unwrap().elapsed().as_secs() as u32)
+                    .unwrap_or_default()
+                    .checked_sub(time_donated)
+                    .unwrap_or_default();
                 "time until switch to mining on XvB".to_string()
             }
             _ => {
