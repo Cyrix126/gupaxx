@@ -91,7 +91,7 @@ struct Stats {
     spareable_hashrate: f32,
     spared_time: u32,
     api_url: String,
-    msg_xmrig_or_xp: &str,
+    msg_xmrig_or_xp: String,
 }
 
 impl<'a> Algorithm<'a> {
@@ -131,7 +131,7 @@ impl<'a> Algorithm<'a> {
             p2pool_external_hashrate = 0.0;
         }
 
-        let mut share_min_hashrate = Self::minimum_hashrate_share(
+        let share_min_hashrate = Self::minimum_hashrate_share(
             lock!(gui_api_p2pool).p2pool_difficulty_u64,
             state_p2pool.mini,
             p2pool_external_hashrate,
@@ -141,7 +141,7 @@ impl<'a> Algorithm<'a> {
 
         let api_url = api_url_xmrig(xp_alive, true);
 
-        let msg_xmrig_or_xp = if xp_alive { "XMRig-Proxy" } else { "XMRig" };
+        let msg_xmrig_or_xp = (if xp_alive { "XMRig-Proxy" } else { "XMRig" }).to_string();
         info!("xp alive: {:?}", xp_alive);
 
         // TODO consider printing algorithm stats instead of spreadout print statements
@@ -202,14 +202,11 @@ impl<'a> Algorithm<'a> {
     }
 
     async fn target_p2pool_node(&self) {
-        let msg_xmrig_or_xp = if self.xp_alive {
-            "XMRig-Proxy"
-        } else {
-            "XMRig"
-        };
-
         if lock!(self.gui_api_xvb).current_node != Some(XvbNode::P2pool) {
-            info!("Xvb Process | request {msg_xmrig_or_xp} to mine on p2pool");
+            info!(
+                "Xvb Process | request {} to mine on p2pool",
+                self.stats.msg_xmrig_or_xp
+            );
 
             if let Err(err) = update_xmrig_config(
                 self.client,
@@ -221,17 +218,23 @@ impl<'a> Algorithm<'a> {
             )
             .await
             {
-                warn!("Xvb Process | Failed request HTTP API {msg_xmrig_or_xp}");
+                warn!(
+                    "Xvb Process | Failed request HTTP API {}",
+                    self.stats.msg_xmrig_or_xp
+                );
                 output_console(
                     &mut lock!(self.gui_api_xvb).output,
                     &format!(
-                        "Failure to update {msg_xmrig_or_xp} config with HTTP API.\nError: {}",
-                        err
+                        "Failure to update {} config with HTTP API.\nError: {}",
+                        self.stats.msg_xmrig_or_xp, err
                     ),
                     crate::helper::ProcessName::Xvb,
                 );
             } else {
-                debug!("Xvb Process | {msg_xmrig_or_xp} mining on p2pool pool");
+                debug!(
+                    "Xvb Process | {} mining on p2pool pool",
+                    self.stats.msg_xmrig_or_xp
+                );
             }
         }
     }
@@ -239,7 +242,10 @@ impl<'a> Algorithm<'a> {
     async fn target_xvb_node(&self) {
         let node = lock!(self.gui_api_xvb).stats_priv.node;
 
-        debug!("Xvb Process | request {msg_xmrig_or_xp} to mine on XvB");
+        debug!(
+            "Xvb Process | request {} to mine on XvB",
+            self.stats.msg_xmrig_or_xp
+        );
 
         if lock!(self.gui_api_xvb).current_node.is_none()
             || lock!(self.gui_api_xvb)
@@ -258,12 +264,15 @@ impl<'a> Algorithm<'a> {
             .await
             {
                 // show to console error about updating xmrig config
-                warn!("Xvb Process | Failed request HTTP API {msg_xmrig_or_xp}");
+                warn!(
+                    "Xvb Process | Failed request HTTP API {}",
+                    self.stats.msg_xmrig_or_xp
+                );
                 output_console(
                     &mut lock!(self.gui_api_xvb).output,
                     &format!(
-                        "Failure to update {msg_xmrig_or_xp} config with HTTP API.\nError: {}",
-                        err
+                        "Failure to update {} config with HTTP API.\nError: {}",
+                        self.stats.msg_xmrig_or_xp, err
                     ),
                     crate::helper::ProcessName::Xvb,
                 );
@@ -273,7 +282,10 @@ impl<'a> Algorithm<'a> {
                 } else {
                     lock!(self.gui_api_xmrig).node = node.to_string();
                 }
-                debug!("Xvb Process | {msg_xmrig_or_xp} mining on XvB pool");
+                debug!(
+                    "Xvb Process | {} mining on XvB pool",
+                    self.stats.msg_xmrig_or_xp
+                );
             }
         }
     }
