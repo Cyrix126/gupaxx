@@ -186,7 +186,7 @@ impl Helper {
             state_xvb,
         )
         .await;
-        let xp_alive = lock!(process_xp).state == ProcessState::Alive;
+        let mut xp_alive = false;
         // uptime for log of signal check ?
         let start = lock!(process).start;
         // uptime of last run of algo
@@ -208,8 +208,12 @@ impl Helper {
             debug!("XvB Watchdog | ----------- Start of loop -----------");
             // Set timer of loop
             let start_loop = std::time::Instant::now();
+            // check if first loop the state of Xmrig-Proxy
+            if first_loop {
+                xp_alive = lock!(process_xp).state == ProcessState::Alive;
+            }
             // verify if p2pool and xmrig are running, else XvB must be reloaded with another token/address to start verifying the other process.
-            check_state_outcauses_xvb(
+            if check_state_outcauses_xvb(
                 &client,
                 gui_api,
                 pub_api,
@@ -224,8 +228,12 @@ impl Helper {
                 state_p2pool,
                 state_xmrig,
                 state_xp,
+                xp_alive,
             )
-            .await;
+            .await
+            {
+                continue;
+            }
 
             // check signal
             debug!("XvB | check signal");
@@ -508,6 +516,7 @@ async fn check_conditions_for_start(
     lock!(process_xvb).signal = ProcessSignal::UpdateNodes(XvbNode::default());
     lock!(process_xvb).state = state;
 }
+/// return a bool to continue to next loop if needed.
 #[allow(clippy::too_many_arguments)]
 async fn check_state_outcauses_xvb(
     client: &Client,
@@ -524,7 +533,8 @@ async fn check_state_outcauses_xvb(
     state_p2pool: &crate::disk::state::P2pool,
     state_xmrig: &crate::disk::state::Xmrig,
     state_xp: &crate::disk::state::XmrigProxy,
-) {
+    xp_start_alive: bool,
+) -> bool {
     // will check if the state can stay as it is.
     // p2pool and xmrig are alive if ready and running (syncing is not alive).
     let state = lock!(process).state;
@@ -532,7 +542,18 @@ async fn check_state_outcauses_xvb(
     let xp_is_alive = lock!(process_xp).state == ProcessState::Alive;
     let msg_xmrig_or_proxy = if xp_is_alive { "Xmrig-Proxy" } else { "Xmrig" };
     // if state is not alive, the algo should stop if it was running and p2pool should be used by xmrig.
+
     if let Some(handle) = lock!(handle_algo).as_ref() {
+        // XvB should stop the algo if the state of xp is different from the start.
+        if xp_is_alive != xp_start_alive && !handle.is_finished() {
+            warn!("XvB Process | stop the algorithm because Xmrig-Proxy state changed");
+            output_console(
+                &mut lock!(gui_api).output,
+                "Algorithm stopped because Xmrig-Proxy state changed",
+                ProcessName::Xvb,
+            );
+            handle.abort();
+        }
         if state != ProcessState::Alive && !handle.is_finished() {
             handle.abort();
             output_console(
@@ -592,6 +613,12 @@ async fn check_state_outcauses_xvb(
             }
         }
     }
+    // if state of Xmrig-Proxy changed, go back to first loop
+    if xp_start_alive != xp_is_alive {
+        *first_loop = true;
+        return true;
+    }
+
     let is_xmrig_alive = lock!(process_xp).state == ProcessState::Alive
         || lock!(process_xmrig).state == ProcessState::Alive;
     let is_p2pool_alive = lock!(process_p2pool).state == ProcessState::Alive;
@@ -641,6 +668,7 @@ async fn check_state_outcauses_xvb(
         // nothing to do, we don't want to change other state
         _ => {}
     };
+    false
 }
 #[allow(clippy::too_many_arguments)]
 fn signal_interrupt(
