@@ -32,6 +32,7 @@ impl XmrigProxy {
         let height = size.y;
         let space_h = height / 48.0;
         let text_edit = size.y / 25.0;
+        egui::ScrollArea::vertical().show(ui, |ui| {
         ui.vertical_centered(|ui| {
             ui.add_space(space_h);
             ui.style_mut().override_text_style = Some(TextStyle::Heading);
@@ -424,5 +425,6 @@ impl XmrigProxy {
                 });
             });
         }
+    });
     }
 }

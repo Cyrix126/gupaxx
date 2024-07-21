@@ -36,6 +36,7 @@ impl crate::disk::state::Xvb {
         let width = size.x;
         let height = size.y;
         let space_h = height / 48.0;
+        egui::ScrollArea::vertical().show(ui, |ui| {
         // logo and website link
         ui.vertical_centered(|ui| {
             ui.add_sized(
@@ -253,5 +254,6 @@ impl crate::disk::state::Xvb {
             ui.hyperlink_to("Rules", XVB_URL_RULES)
                 .on_hover_text("Click here to read the rules and understand how the raffle works.");
         });
+    });
     }
 }
