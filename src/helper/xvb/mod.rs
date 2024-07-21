@@ -328,6 +328,7 @@ impl Helper {
                     };
                                         algorithm(
                                             &client,
+                                            &pub_api,
                                             &gui_api,
                                             &gui_api_xmrig,
                                             &gui_api_xp,
@@ -827,13 +828,6 @@ fn update_indicator_algo(
             Some(XvbNode::P2pool) if time_donated > 0 => {
                 // algo is mining on p2pool but will switch to XvB after
                 // show time remaining on p2pool
-
-                debug!(
-                    "Crash | XVB_TIME_ALGO({})-last_algorithm({})-time_donated({})",
-                    XVB_TIME_ALGO,
-                    last_algorithm.lock().unwrap().elapsed().as_secs() as u32,
-                    time_donated
-                );
 
                 lock!(pub_api).stats_priv.time_switch_node = XVB_TIME_ALGO
                     .checked_sub(last_algorithm.lock().unwrap().elapsed().as_secs() as u32)

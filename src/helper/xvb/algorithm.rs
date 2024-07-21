@@ -8,7 +8,7 @@ use std::{
     time::Duration,
 };
 
-use log::{debug, info, warn};
+use log::{info, warn};
 use reqwest::Client;
 use tokio::time::sleep;
 
@@ -32,6 +32,7 @@ use super::{priv_stats::RuntimeDonationLevel, PubXvbApi, SamplesAverageHour};
 #[allow(clippy::too_many_arguments)]
 pub(crate) async fn algorithm(
     client: &Client,
+    pub_api: &Arc<Mutex<PubXvbApi>>,
     gui_api_xvb: &Arc<Mutex<PubXvbApi>>,
     gui_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
     gui_api_xp: &Arc<Mutex<PubXmrigProxyApi>>,
@@ -45,6 +46,7 @@ pub(crate) async fn algorithm(
 ) {
     let mut algorithm = Algorithm::new(
         client,
+        pub_api,
         gui_api_xvb,
         gui_api_xmrig,
         gui_api_xp,
@@ -61,6 +63,7 @@ pub(crate) async fn algorithm(
 
 struct Algorithm<'a> {
     client: &'a Client,
+    pub_api: &'a Arc<Mutex<PubXvbApi>>,
     gui_api_xvb: &'a Arc<Mutex<PubXvbApi>>,
     gui_api_xmrig: &'a Arc<Mutex<PubXmrigApi>>,
     gui_api_xp: &'a Arc<Mutex<PubXmrigProxyApi>>,
@@ -97,6 +100,7 @@ struct Stats {
 impl<'a> Algorithm<'a> {
     fn new(
         client: &'a Client,
+        pub_api: &'a Arc<Mutex<PubXvbApi>>,
         gui_api_xvb: &'a Arc<Mutex<PubXvbApi>>,
         gui_api_xmrig: &'a Arc<Mutex<PubXmrigApi>>,
         gui_api_xp: &'a Arc<Mutex<PubXmrigProxyApi>>,
@@ -111,9 +115,6 @@ impl<'a> Algorithm<'a> {
         let hashrate_xmrig = current_controllable_hr(xp_alive, gui_api_xp, gui_api_xmrig);
 
         let address = state_p2pool.address.clone();
-
-        let xvb_24h_avg = lock!(gui_api_xvb).stats_priv.donor_24hr_avg * 1000.0;
-        let xvb_1h_avg = lock!(gui_api_xvb).stats_priv.donor_1hr_avg * 1000.0;
 
         let runtime_mode = lock!(gui_api_xvb).stats_priv.runtime_mode.clone();
         let runtime_donation_level = lock!(gui_api_xvb)
@@ -144,6 +145,9 @@ impl<'a> Algorithm<'a> {
         let msg_xmrig_or_xp = (if xp_alive { "XMRig-Proxy" } else { "XMRig" }).to_string();
         info!("xp alive: {:?}", xp_alive);
 
+        let xvb_24h_avg = lock!(pub_api).stats_priv.donor_24hr_avg * 1000.0;
+        let xvb_1h_avg = lock!(pub_api).stats_priv.donor_1hr_avg * 1000.0;
+
         // TODO consider printing algorithm stats instead of spreadout print statements
         let stats = Stats {
             share,
@@ -167,6 +171,7 @@ impl<'a> Algorithm<'a> {
 
         let mut new_instace = Self {
             client,
+            pub_api,
             gui_api_xvb,
             gui_api_xmrig,
             gui_api_xp,
@@ -190,21 +195,40 @@ impl<'a> Algorithm<'a> {
     }
 
     fn is_share_fulfilled(&self) -> bool {
-        self.stats.share > 0
+        let is_criteria_fulfilled = self.stats.share > 0;
+
+        info!(
+            "Algorithm | shares({}) > 0 : {}",
+            self.stats.share, is_criteria_fulfilled,
+        );
+
+        is_criteria_fulfilled
     }
 
     fn is_xvb_24h_fulfilled(&self) -> bool {
-        self.stats.xvb_24h_avg > self.stats.target_donation_hashrate
+        let is_criteria_fulfilled = self.stats.xvb_24h_avg > self.stats.target_donation_hashrate;
+        info!(
+            "Algorithm | xvb_24h_avg({}) > target_donation_hashrate({}) : {}",
+            self.stats.xvb_24h_avg, self.stats.target_donation_hashrate, is_criteria_fulfilled
+        );
+        is_criteria_fulfilled
     }
 
     fn xvb_1h_fulfilled(&self) -> bool {
-        self.stats.xvb_1h_avg > self.stats.target_donation_hashrate
+        let is_criteria_fulfilled = self.stats.xvb_1h_avg > self.stats.target_donation_hashrate;
+
+        info!(
+            "Algorithm | xvb_1h_avg({}) > target_donation_hashrate({}) : {}",
+            self.stats.xvb_1h_avg, self.stats.target_donation_hashrate, is_criteria_fulfilled
+        );
+
+        is_criteria_fulfilled
     }
 
     async fn target_p2pool_node(&self) {
         if lock!(self.gui_api_xvb).current_node != Some(XvbNode::P2pool) {
             info!(
-                "Xvb Process | request {} to mine on p2pool",
+                "Algorithm | request {} to mine on p2pool",
                 self.stats.msg_xmrig_or_xp
             );
 
@@ -219,7 +243,7 @@ impl<'a> Algorithm<'a> {
             .await
             {
                 warn!(
-                    "Xvb Process | Failed request HTTP API {}",
+                    "Algorithm | Failed request HTTP API {}",
                     self.stats.msg_xmrig_or_xp
                 );
                 output_console(
@@ -231,8 +255,8 @@ impl<'a> Algorithm<'a> {
                     crate::helper::ProcessName::Xvb,
                 );
             } else {
-                debug!(
-                    "Xvb Process | {} mining on p2pool pool",
+                info!(
+                    "Algorithm | {} mining on p2pool pool",
                     self.stats.msg_xmrig_or_xp
                 );
             }
@@ -242,8 +266,8 @@ impl<'a> Algorithm<'a> {
     async fn target_xvb_node(&self) {
         let node = lock!(self.gui_api_xvb).stats_priv.node;
 
-        debug!(
-            "Xvb Process | request {} to mine on XvB",
+        info!(
+            "Algorithm | request {} to mine on XvB",
             self.stats.msg_xmrig_or_xp
         );
 
@@ -265,7 +289,7 @@ impl<'a> Algorithm<'a> {
             {
                 // show to console error about updating xmrig config
                 warn!(
-                    "Xvb Process | Failed request HTTP API {}",
+                    "Algorithm | Failed request HTTP API {}",
                     self.stats.msg_xmrig_or_xp
                 );
                 output_console(
@@ -282,8 +306,8 @@ impl<'a> Algorithm<'a> {
                 } else {
                     lock!(self.gui_api_xmrig).node = node.to_string();
                 }
-                debug!(
-                    "Xvb Process | {} mining on XvB pool",
+                info!(
+                    "Algorithm | {} mining on XvB pool",
                     self.stats.msg_xmrig_or_xp
                 );
             }
@@ -293,7 +317,7 @@ impl<'a> Algorithm<'a> {
     async fn send_all_p2pool(&self) {
         self.target_p2pool_node().await;
 
-        debug!(
+        info!(
             "Algorithm | algo sleep for {} while mining on P2pool",
             XVB_TIME_ALGO
         );
@@ -312,7 +336,7 @@ impl<'a> Algorithm<'a> {
     async fn send_all_xvb(&self) {
         self.target_xvb_node().await;
 
-        debug!(
+        info!(
             "Algorithm | algo sleep for {} while mining on XvB",
             XVB_TIME_ALGO
         );
@@ -329,7 +353,7 @@ impl<'a> Algorithm<'a> {
     }
 
     async fn sleep_then_update_node_xmrig(&self) {
-        debug!(
+        info!(
             "Algorithm | algo sleep for {} while mining on P2pool",
             XVB_TIME_ALGO - self.stats.spared_time
         );
@@ -339,14 +363,14 @@ impl<'a> Algorithm<'a> {
         .await;
 
         // only update xmrig config if it is actually mining.
-        debug!("Algorithm | request xmrig to mine on XvB");
+        info!("Algorithm | request xmrig to mine on XvB");
 
         self.target_xvb_node().await;
 
         // will not quit the process until it is really done.
         // xvb process watch this algo handle to see if process is finished or not.
 
-        debug!(
+        info!(
             "Algorithm | algo sleep for {} while mining on P2pool",
             self.stats.spared_time
         );
@@ -373,7 +397,7 @@ impl<'a> Algorithm<'a> {
             RuntimeMode::Auto => self.get_auto_mode_target_donation_hashrate(),
             RuntimeMode::Hero => self.get_hero_mode_target_donation_hashrate(),
             RuntimeMode::ManualXvb => {
-                debug!(
+                info!(
                     "Algorithm | ManualXvBMode target_donation_hashrate=runtime_amount({})",
                     self.stats.runtime_amount
                 );
@@ -384,7 +408,7 @@ impl<'a> Algorithm<'a> {
                 let target_donation_hashrate =
                     (XVB_TIME_ALGO as f32) - (self.stats.runtime_amount as f32);
 
-                debug!("Algorithm | ManualP2poolMode target_donation_hashrate({})=hashrate_xmrig({})-runtime_amount({})",
+                info!("Algorithm | ManualP2poolMode target_donation_hashrate({})=hashrate_xmrig({})-runtime_amount({})",
                 target_donation_hashrate,
                 self.stats.hashrate_xmrig,
                 self.stats.runtime_amount);
@@ -394,7 +418,7 @@ impl<'a> Algorithm<'a> {
             RuntimeMode::ManualDonationLevel => {
                 let target_donation_hashrate = self.stats.runtime_donation_level.get_hashrate();
 
-                debug!("Algorithm | ManualDonationLevelMode target_donation_hashrate({})={:#?}.get_hashrate()",
+                info!("Algorithm | ManualDonationLevelMode target_donation_hashrate({})={:#?}.get_hashrate()",
                 target_donation_hashrate,
                 self.stats.runtime_donation_level);
 
@@ -420,7 +444,7 @@ impl<'a> Algorithm<'a> {
             _ => None,
         };
 
-        debug!(
+        info!(
             "Algorithm | AutoMode target_donation_level detected ({:#?})",
             donation_level
         );
@@ -431,7 +455,7 @@ impl<'a> Algorithm<'a> {
             0.0
         };
 
-        debug!(
+        info!(
             "Algorithm | AutoMode target_donation_hashrate ({})",
             target_donation_hashrate
         );
@@ -444,7 +468,7 @@ impl<'a> Algorithm<'a> {
         // TODO consider using a large buffer size
         // TODO consider manually setting the share count to aim for on hero mode
 
-        debug!(
+        info!(
             "Algorithm | HeroMode target_donation_hashrate=spareable_hashrate({})",
             self.stats.spareable_hashrate
         );
@@ -468,7 +492,7 @@ impl<'a> Algorithm<'a> {
         info!("Algorithm | (difficulty / (window pplns blocks * seconds per p2pool block) * BUFFER) - outside HR = minimum HR to keep a share\n({difficulty} / ({pws} * {SECOND_PER_BLOCK_P2POOL}) * {XVB_BUFFER}) - {p2pool_external_hashrate} = {minimum_hr}");
 
         if minimum_hr.is_sign_negative() {
-            debug!("Algorithm| if minimum HR is negative, it is 0.");
+            info!("Algorithm| if minimum HR is negative, it is 0.");
             minimum_hr = 0.0;
         }
 
@@ -482,7 +506,7 @@ impl<'a> Algorithm<'a> {
             crate::helper::ProcessName::Xvb,
         );
 
-        debug!("Algorithm | There are no shares in p2pool. Sending all hashrate to p2pool!");
+        info!("Algorithm | There are no shares in p2pool. Sending all hashrate to p2pool!");
 
         self.send_all_p2pool().await
     }
@@ -494,7 +518,7 @@ impl<'a> Algorithm<'a> {
             crate::helper::ProcessName::Xvb,
         );
 
-        debug!("Algorithm | 24H avg XvB target not achieved. Sending all hashrate to XvB!");
+        info!("Algorithm | 24H avg XvB target not achieved. Sending all hashrate to XvB!");
 
         *lock!(self.time_donated) = XVB_TIME_ALGO;
 
@@ -508,7 +532,7 @@ impl<'a> Algorithm<'a> {
             crate::helper::ProcessName::Xvb,
         );
 
-        debug!("Algorithm | There is a share in p2pool and 24H avg XvB is achieved. Sending {} to XvB!", self.stats.spared_time);
+        info!("Algorithm | There is a share in p2pool and 24H avg XvB is achieved. Sending {} to XvB!", self.stats.spared_time);
 
         *lock!(self.time_donated) = self.stats.spared_time;
 
@@ -523,7 +547,8 @@ impl<'a> Algorithm<'a> {
             crate::helper::ProcessName::Xvb,
         );
 
-        debug!("Algorithm | {:#?}", self.stats);
+        info!("Algorithm | Starting...");
+        info!("Algorithm | {:#?}", self.stats);
 
         if !self.is_share_fulfilled() {
             self.fulfill_share().await
@@ -543,7 +568,7 @@ impl<'a> Algorithm<'a> {
     fn get_spared_time(target_donation_hashrate: f32, hashrate_xmrig: f32) -> u32 {
         let spared_time = target_donation_hashrate / hashrate_xmrig * (XVB_TIME_ALGO as f32);
 
-        debug!("Algorithm | Calculating... spared_time({})=target_donation_hashrate({})/hashrate_xmrig({})*XVB_TIME_ALGO({})",
+        info!("Algorithm | Calculating... spared_time({})=target_donation_hashrate({})/hashrate_xmrig({})*XVB_TIME_ALGO({})",
         spared_time,
         target_donation_hashrate,
         hashrate_xmrig,
