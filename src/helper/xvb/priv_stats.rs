@@ -93,7 +93,10 @@ impl XvbPrivStats {
                 );
                 output_console(
                     &mut lock!(gui_api).output,
-                    &format!("Failure to retrieve private stats from {}", XVB_URL),
+                    &format!(
+                        "Failure to retrieve private stats from {} because of this error: {}",
+                        XVB_URL, err
+                    ),
                     ProcessName::Xvb,
                 );
                 lock!(process).state = ProcessState::Retry;
