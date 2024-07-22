@@ -47,6 +47,7 @@ impl Xmrig {
         let text_edit = size.y / 25.0;
         //---------------------------------------------------------------------------------------------------- [Simple] Console
         debug!("XMRig Tab | Rendering [Console]");
+        egui::ScrollArea::vertical().show(ui, |ui| {
         ui.group(|ui| {
             let text = &lock!(api).output;
             let nb_lines = num_lines(text);
@@ -483,5 +484,6 @@ impl Xmrig {
                 });
             });
         }
+    });
     }
 }

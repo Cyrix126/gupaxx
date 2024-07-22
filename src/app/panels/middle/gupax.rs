@@ -99,11 +99,8 @@ impl Gupax {
                     ui.add_sized(size, Checkbox::new(&mut self.auto_xmrig, "Auto-XMRig"))
                         .on_hover_text(GUPAX_AUTO_XMRIG);
                     ui.separator();
-                    ui.add_sized(
-                        size,
-                        Checkbox::new(&mut self.auto_xmrig, "Auto-XMRig-Proxy"),
-                    )
-                    .on_hover_text(GUPAX_AUTO_XMRIG_PROXY);
+                    ui.add_sized(size, Checkbox::new(&mut self.auto_xp, "Auto-Proxy"))
+                        .on_hover_text(GUPAX_AUTO_XMRIG_PROXY);
                     ui.separator();
                     ui.add_sized(size, Checkbox::new(&mut self.auto_xvb, "Auto-XvB"))
                         .on_hover_text(GUPAX_AUTO_XVB);
