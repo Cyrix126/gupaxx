@@ -1,12 +1,11 @@
 #[cfg(test)]
 mod test {
 
+    use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
+    use crate::helper::xvb::algorithm::Algorithm;
     use crate::helper::{
         p2pool::{PrivP2poolLocalApi, PrivP2poolNetworkApi},
-        xvb::{
-            algorithm::calcul_donated_time, priv_stats::RuntimeDonationLevel,
-            priv_stats::RuntimeMode, rounds::round_type,
-        },
+        xvb::{priv_stats::RuntimeDonationLevel, priv_stats::RuntimeMode, rounds::round_type},
         Helper, Process, ProcessName, ProcessState,
     };
 
@@ -532,296 +531,209 @@ Uptime         = 0h 2m 4s
     }
 
     #[test]
-    fn algorithm_time_given() {
+    fn test_manual_xvb_mode() {
+        let client = reqwest::Client::new();
+        let pub_api = Arc::new(Mutex::new(PubXvbApi::new()));
         let gui_api_xvb = Arc::new(Mutex::new(PubXvbApi::new()));
-        let gui_api_p2pool = Arc::new(Mutex::new(PubP2poolApi::new()));
         let gui_api_xmrig = Arc::new(Mutex::new(PubXmrigApi::new()));
+        let gui_api_xp = Arc::new(Mutex::new(PubXmrigProxyApi::new()));
+        let gui_api_p2pool = Arc::new(Mutex::new(PubP2poolApi::new()));
+        let token_xmrig = "12345678";
         let state_p2pool = P2pool::default();
-        lock!(gui_api_p2pool).p2pool_difficulty_u64 = 95000000;
+        let time_donated = Arc::new(Mutex::new(u32::default()));
+        let rig = "test_rig";
+        let xp_alive = false;
         let share = 1;
-        // verify that if one share found (enough for vip round) but not enough for donor round, no time will be given to xvb, except if in hero mode.
-        // 15mn average HR of xmrig is 5kH/s
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
-        lock!(gui_api_xmrig).hashrate_raw_15m = 5000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
-            &gui_api_p2pool,
+
+        lock!(gui_api_xmrig).hashrate_raw_15m = 10000.0;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualXvb;
+        lock!(gui_api_xvb).stats_priv.runtime_manual_amount = 1000.0;
+
+        let algo = Algorithm::new(
+            &client,
+            &pub_api,
             &gui_api_xvb,
-            &state_p2pool,
-        );
-        // verify that default mode will give x seconds
-        assert_eq!(given_time, 0);
-        // given time should always be less than XVB_TIME_ALGO
-        assert!(given_time < XVB_TIME_ALGO);
-        // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::Vip));
-        // verify that hero mode will give x seconds
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
+            &gui_api_xmrig,
+            &gui_api_xp,
             &gui_api_p2pool,
-            &gui_api_xvb,
+            token_xmrig,
             &state_p2pool,
+            share,
+            &time_donated,
+            rig,
+            xp_alive,
         );
-        assert_eq!(given_time, 45);
-        // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::Vip));
-        // verify that if one share and not enough for donor vip round (should be in donor round), right amount of time will be given to xvb for default and hero mode
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
-        lock!(gui_api_xmrig).hashrate_raw_15m = 8000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
-            &gui_api_p2pool,
-            &gui_api_xvb,
-            &state_p2pool,
-        );
-        // verify that default mode will give x seconds
-        assert_eq!(given_time, 75);
-        // given time should always be less than XVB_TIME_ALGO
-        assert!(given_time < XVB_TIME_ALGO);
-        // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::Donor));
-        // verify that hero mode will give x seconds
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
-            &gui_api_p2pool,
-            &gui_api_xvb,
-            &state_p2pool,
-        );
-        assert_eq!(given_time, 253);
-        // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::Donor));
-        // verify that if one share and not enough for donor whale round(should be in donor vip), right amount of time will be given to xvb for default and hero mode
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
-        lock!(gui_api_xmrig).hashrate_raw_15m = 19000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
-            &gui_api_p2pool,
-            &gui_api_xvb,
-            &state_p2pool,
-        );
-        // verify that default mode will give x seconds
-        assert_eq!(given_time, 316);
-        // given time should always be less than XVB_TIME_ALGO
-        assert!(given_time < XVB_TIME_ALGO);
-        // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorVip));
-        // verify that hero mode will give x seconds
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
-            &gui_api_p2pool,
-            &gui_api_xvb,
-            &state_p2pool,
-        );
-        assert_eq!(given_time, 454);
-        // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorVip));
-        // verify that if one share and not enough for donor mega round, right amount of time will be given to xvb for default and hero mode
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
-        lock!(gui_api_xmrig).hashrate_raw_15m = 105000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
-            &gui_api_p2pool,
-            &gui_api_xvb,
-            &state_p2pool,
-        );
-        // verify that default mode will give x seconds
-        assert_eq!(given_time, 572);
-        // given time should always be less than XVB_TIME_ALGO
-        assert!(given_time < XVB_TIME_ALGO);
-        // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorWhale));
-        // verify that hero mode will give x seconds
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
-            &gui_api_p2pool,
-            &gui_api_xvb,
-            &state_p2pool,
-        );
-        assert_eq!(given_time, 573);
-        // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorWhale));
-        // verify that if one share and enough for donor mega round, right amount of time will be given to xvb for default and hero mode
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
-        lock!(gui_api_xmrig).hashrate_raw_15m = 1205000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
-            &gui_api_p2pool,
-            &gui_api_xvb,
-            &state_p2pool,
-        );
-        // verify that default mode will give x seconds
-        assert_eq!(given_time, 498);
-        // given time should always be less than XVB_TIME_ALGO
-        assert!(given_time < XVB_TIME_ALGO);
-        // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorMega));
-        // verify that hero mode will give x seconds
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
-            &gui_api_p2pool,
-            &gui_api_xvb,
-            &state_p2pool,
-        );
-        assert_eq!(given_time, 597);
-        // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg = ((given_time as f32 / XVB_TIME_ALGO as f32)
-            * lock!(gui_api_xmrig).hashrate_raw_15m)
-            / 1000.0;
-        assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorMega));
-        // verify that if one share and enough for donor vp round if XvB oHR is given, right amount of time will be given to xvb for default and hero mode
-        lock!(gui_api_xvb).output.clear();
-        lock!(gui_api_xmrig).hashrate_raw_15m = 12500.0;
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 5.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
-            &gui_api_p2pool,
-            &gui_api_xvb,
-            &state_p2pool,
-        );
-        // verify that default mode will give x seconds
-        assert_eq!(given_time, 240);
-        // given time should always be less than XVB_TIME_ALGO
-        assert!(given_time < XVB_TIME_ALGO);
-        // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                + 5000.0)
-                / 1000.0;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                + 5000.0)
-                / 1000.0;
-        assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorVip));
-        // verify that hero mode will give x seconds
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 5.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
-            &gui_api_p2pool,
-            &gui_api_xvb,
-            &state_p2pool,
-        );
-        assert_eq!(given_time, 378);
-        // verify that right round should be detected.
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                + 5000.0)
-                / 1000.0;
-        lock!(gui_api_xvb).stats_priv.donor_24hr_avg =
-            (((given_time as f32 / XVB_TIME_ALGO as f32) * lock!(gui_api_xmrig).hashrate_raw_15m)
-                + 5000.0)
-                / 1000.0;
-        assert_eq!(round_type(share, &gui_api_xvb), Some(XvbRound::DonorVip));
+
+        assert_eq!(algo.stats.target_donation_hashrate, 1000.0);
     }
 
     #[test]
-    fn test_xvb_advanced_options() {
+    fn test_manual_p2pool_mode() {
+        let client = reqwest::Client::new();
+        let pub_api = Arc::new(Mutex::new(PubXvbApi::new()));
         let gui_api_xvb = Arc::new(Mutex::new(PubXvbApi::new()));
-        let gui_api_p2pool = Arc::new(Mutex::new(PubP2poolApi::new()));
         let gui_api_xmrig = Arc::new(Mutex::new(PubXmrigApi::new()));
+        let gui_api_xp = Arc::new(Mutex::new(PubXmrigProxyApi::new()));
+        let gui_api_p2pool = Arc::new(Mutex::new(PubP2poolApi::new()));
+        let token_xmrig = "12345678";
         let state_p2pool = P2pool::default();
-        lock!(gui_api_p2pool).p2pool_difficulty_u64 = 95000000;
-        lock!(gui_api_xvb).stats_priv.donor_1hr_avg = 0.0;
-        lock!(gui_api_xmrig).hashrate_raw_15m = 5000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualXvb;
-        lock!(gui_api_xvb).stats_priv.runtime_manual_amount = 500.0;
+        let time_donated = Arc::new(Mutex::new(u32::default()));
+        let rig = "test_rig";
+        let xp_alive = false;
+        let share = 1;
 
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
-            &gui_api_p2pool,
-            &gui_api_xvb,
-            &state_p2pool,
-        );
-
-        assert_eq!(given_time, 60);
-
+        lock!(gui_api_xmrig).hashrate_raw_15m = 10000.0;
         lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualP2pool;
+        lock!(gui_api_xvb).stats_priv.runtime_manual_amount = 1000.0;
 
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
-            &gui_api_p2pool,
+        let algo = Algorithm::new(
+            &client,
+            &pub_api,
             &gui_api_xvb,
+            &gui_api_xmrig,
+            &gui_api_xp,
+            &gui_api_p2pool,
+            token_xmrig,
             &state_p2pool,
+            share,
+            &time_donated,
+            rig,
+            xp_alive,
         );
-        assert_eq!(given_time, 540);
 
+        assert_eq!(algo.stats.target_donation_hashrate, 9000.0);
+    }
+
+    #[test]
+    fn test_manual_donor_level_mode_donor() {
+        let client = reqwest::Client::new();
+        let pub_api = Arc::new(Mutex::new(PubXvbApi::new()));
+        let gui_api_xvb = Arc::new(Mutex::new(PubXvbApi::new()));
+        let gui_api_xmrig = Arc::new(Mutex::new(PubXmrigApi::new()));
+        let gui_api_xp = Arc::new(Mutex::new(PubXmrigProxyApi::new()));
+        let gui_api_p2pool = Arc::new(Mutex::new(PubP2poolApi::new()));
+        let token_xmrig = "12345678";
+        let state_p2pool = P2pool::default();
+        let time_donated = Arc::new(Mutex::new(u32::default()));
+        let rig = "test_rig";
+        let xp_alive = false;
+        let share = 1;
+
+        lock!(gui_api_xmrig).hashrate_raw_15m = 10000.0;
         lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualDonationLevel;
+        lock!(gui_api_xvb).stats_priv.runtime_manual_amount = 1000.0;
         lock!(gui_api_xvb).stats_priv.runtime_manual_donation_level = RuntimeDonationLevel::Donor;
 
-        let given_time = calcul_donated_time(
-            lock!(gui_api_xmrig).hashrate_raw_15m,
-            &gui_api_p2pool,
+        let algo = Algorithm::new(
+            &client,
+            &pub_api,
             &gui_api_xvb,
+            &gui_api_xmrig,
+            &gui_api_xp,
+            &gui_api_p2pool,
+            token_xmrig,
             &state_p2pool,
+            share,
+            &time_donated,
+            rig,
+            xp_alive,
         );
-        assert_eq!(given_time, 120);
+
+        assert_eq!(algo.stats.target_donation_hashrate, 1000.0);
+    }
+
+    #[test]
+    fn test_auto_mode() {
+        let client = reqwest::Client::new();
+        let pub_api = Arc::new(Mutex::new(PubXvbApi::new()));
+        let gui_api_xvb = Arc::new(Mutex::new(PubXvbApi::new()));
+        let gui_api_xmrig = Arc::new(Mutex::new(PubXmrigApi::new()));
+        let gui_api_xp = Arc::new(Mutex::new(PubXmrigProxyApi::new()));
+        let gui_api_p2pool = Arc::new(Mutex::new(PubP2poolApi::new()));
+        let token_xmrig = "12345678";
+        let state_p2pool = P2pool::default();
+        let time_donated = Arc::new(Mutex::new(u32::default()));
+        let rig = "test_rig";
+        let xp_alive = false;
+        let share = 1;
+
+        lock!(gui_api_p2pool).p2pool_difficulty_u64 = 9_000_000;
+        lock!(gui_api_xmrig).hashrate_raw_15m = 20000.0;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
+
+        let algo = Algorithm::new(
+            &client,
+            &pub_api,
+            &gui_api_xvb,
+            &gui_api_xmrig,
+            &gui_api_xp,
+            &gui_api_p2pool,
+            token_xmrig,
+            &state_p2pool,
+            share,
+            &time_donated,
+            rig,
+            xp_alive,
+        );
+
+        assert_eq!(algo.stats.target_donation_hashrate, 10000.0);
+
+        lock!(gui_api_p2pool).p2pool_difficulty_u64 = 9_000_000;
+        lock!(gui_api_xmrig).hashrate_raw_15m = 10000.0;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
+
+        let algo = Algorithm::new(
+            &client,
+            &pub_api,
+            &gui_api_xvb,
+            &gui_api_xmrig,
+            &gui_api_xp,
+            &gui_api_p2pool,
+            token_xmrig,
+            &state_p2pool,
+            share,
+            &time_donated,
+            rig,
+            xp_alive,
+        );
+
+        assert_eq!(algo.stats.target_donation_hashrate, 1000.0);
+    }
+
+    #[test]
+    fn test_hero_mode() {
+        let client = reqwest::Client::new();
+        let pub_api = Arc::new(Mutex::new(PubXvbApi::new()));
+        let gui_api_xvb = Arc::new(Mutex::new(PubXvbApi::new()));
+        let gui_api_xmrig = Arc::new(Mutex::new(PubXmrigApi::new()));
+        let gui_api_xp = Arc::new(Mutex::new(PubXmrigProxyApi::new()));
+        let gui_api_p2pool = Arc::new(Mutex::new(PubP2poolApi::new()));
+        let token_xmrig = "12345678";
+        let state_p2pool = P2pool::default();
+        let time_donated = Arc::new(Mutex::new(u32::default()));
+        let rig = "test_rig";
+        let xp_alive = false;
+        let share = 1;
+
+        lock!(gui_api_p2pool).p2pool_difficulty_u64 = 9_000_000;
+        lock!(gui_api_xmrig).hashrate_raw_15m = 20000.0;
+        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
+
+        let algo = Algorithm::new(
+            &client,
+            &pub_api,
+            &gui_api_xvb,
+            &gui_api_xmrig,
+            &gui_api_xp,
+            &gui_api_p2pool,
+            token_xmrig,
+            &state_p2pool,
+            share,
+            &time_donated,
+            rig,
+            xp_alive,
+        );
+
+        assert_eq!(algo.stats.target_donation_hashrate, 10000.0);
     }
 }

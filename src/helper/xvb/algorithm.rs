@@ -61,7 +61,7 @@ pub(crate) async fn algorithm(
     algorithm.run().await;
 }
 
-struct Algorithm<'a> {
+pub struct Algorithm<'a> {
     client: &'a Client,
     pub_api: &'a Arc<Mutex<PubXvbApi>>,
     gui_api_xvb: &'a Arc<Mutex<PubXvbApi>>,
@@ -73,14 +73,14 @@ struct Algorithm<'a> {
     time_donated: &'a Arc<Mutex<u32>>,
     rig: &'a str,
     xp_alive: bool,
-    stats: Stats,
+    pub stats: Stats,
 }
 
 #[derive(Debug)]
-struct Stats {
+pub struct Stats {
     share: u32,
     hashrate_xmrig: f32,
-    target_donation_hashrate: f32,
+    pub target_donation_hashrate: f32,
     xvb_24h_avg: f32,
     xvb_1h_avg: f32,
     address: String,
@@ -98,7 +98,7 @@ struct Stats {
 }
 
 impl<'a> Algorithm<'a> {
-    fn new(
+    pub fn new(
         client: &'a Client,
         pub_api: &'a Arc<Mutex<PubXvbApi>>,
         gui_api_xvb: &'a Arc<Mutex<PubXvbApi>>,
@@ -135,7 +135,6 @@ impl<'a> Algorithm<'a> {
         let share_min_hashrate = Self::minimum_hashrate_share(
             lock!(gui_api_p2pool).p2pool_difficulty_u64,
             state_p2pool.mini,
-            p2pool_external_hashrate,
         );
 
         let spareable_hashrate = hashrate_xmrig - share_min_hashrate;
@@ -392,7 +391,7 @@ impl<'a> Algorithm<'a> {
             );
     }
 
-    fn get_target_donation_hashrate(&self) -> f32 {
+    pub fn get_target_donation_hashrate(&self) -> f32 {
         let target_donation_hashrate = match self.stats.runtime_mode {
             RuntimeMode::Auto => self.get_auto_mode_target_donation_hashrate(),
             RuntimeMode::Hero => self.get_hero_mode_target_donation_hashrate(),
@@ -406,7 +405,7 @@ impl<'a> Algorithm<'a> {
             }
             RuntimeMode::ManualP2pool => {
                 let target_donation_hashrate =
-                    (XVB_TIME_ALGO as f32) - (self.stats.runtime_amount as f32);
+                    (self.stats.hashrate_xmrig as f32) - (self.stats.runtime_amount as f32);
 
                 info!("Algorithm | ManualP2poolMode target_donation_hashrate({})=hashrate_xmrig({})-runtime_amount({})",
                 target_donation_hashrate,
@@ -430,17 +429,15 @@ impl<'a> Algorithm<'a> {
     }
 
     fn get_auto_mode_target_donation_hashrate(&self) -> f32 {
-        // TODO fix wrong target hashrate being selected
-        // TODO consider using xvb_24h_avg for calculations
         // TODO consider using dynamic buffer size buffer gets smaller as gupaxx runs for longer to provide more stability
 
         let donation_level = match self.stats.spareable_hashrate {
-            x if x > (XVB_ROUND_DONOR_MIN_HR as f32) => Some(RuntimeDonationLevel::Donor),
-            x if x > (XVB_ROUND_DONOR_VIP_MIN_HR as f32) => Some(RuntimeDonationLevel::DonorVIP),
+            x if x > (XVB_ROUND_DONOR_MEGA_MIN_HR as f32) => Some(RuntimeDonationLevel::DonorMega),
             x if x > (XVB_ROUND_DONOR_WHALE_MIN_HR as f32) => {
                 Some(RuntimeDonationLevel::DonorWhale)
             }
-            x if x > (XVB_ROUND_DONOR_MEGA_MIN_HR as f32) => Some(RuntimeDonationLevel::DonorMega),
+            x if x > (XVB_ROUND_DONOR_VIP_MIN_HR as f32) => Some(RuntimeDonationLevel::DonorVIP),
+            x if x > (XVB_ROUND_DONOR_MIN_HR as f32) => Some(RuntimeDonationLevel::Donor),
             _ => None,
         };
 
@@ -481,18 +478,17 @@ impl<'a> Algorithm<'a> {
         samples.0.iter().sum::<f32>() / samples.0.len() as f32
     }
 
-    fn minimum_hashrate_share(difficulty: u64, mini: bool, p2pool_external_hashrate: f32) -> f32 {
+    fn minimum_hashrate_share(difficulty: u64, mini: bool) -> f32 {
         let pws = if mini {
             BLOCK_PPLNS_WINDOW_MINI
         } else {
             BLOCK_PPLNS_WINDOW_MAIN
         };
-        let mut minimum_hr = ((difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32 * XVB_BUFFER)
-            - p2pool_external_hashrate;
+        let mut minimum_hr = (difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32 * XVB_BUFFER;
         info!("Algorithm | (difficulty / (window pplns blocks * seconds per p2pool block) * BUFFER) - outside HR = minimum HR to keep a share\n({difficulty} / ({pws} * {SECOND_PER_BLOCK_P2POOL}) * {XVB_BUFFER}) - {p2pool_external_hashrate} = {minimum_hr}");
 
         if minimum_hr.is_sign_negative() {
-            info!("Algorithm| if minimum HR is negative, it is 0.");
+            info!("Algorithm | if minimum HR is negative, it is 0.");
             minimum_hr = 0.0;
         }
 
