@@ -125,6 +125,13 @@ mod test {
             redirect_local_xmrig = true
 
             [xvb]
+			simple = true
+			simple_hero_mode = true
+			mode = "Hero"
+			manual_amount_raw = 1000.0
+			manual_slider_amount = 1000.0
+			manual_donation_level = "Donor"
+      		manual_donation_metric = "Hash"
             token = ""
             hero = false
             node = "Europe"
