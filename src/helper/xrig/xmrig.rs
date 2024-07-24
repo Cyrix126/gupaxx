@@ -70,7 +70,11 @@ impl Helper {
                         // updating current node to None, will stop sending signal of FailedNode until new node is set
                         // send signal to update node.
                         warn!("XMRig PTY Parse | node is offline, sending signal to update nodes.");
-                        lock!(process_xvb).signal = ProcessSignal::UpdateNodes(current_node);
+                        // update nodes only if we were not mining on p2pool.
+                        // if xmrig stop, xvb will react in any case.
+                        if current_node != XvbNode::P2pool {
+                            lock!(process_xvb).signal = ProcessSignal::UpdateNodes(current_node);
+                        }
                         lock!(pub_api_xvb).current_node = None;
                     }
                 }
