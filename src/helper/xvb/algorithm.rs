@@ -148,7 +148,6 @@ impl<'a> Algorithm<'a> {
         let xvb_24h_avg = lock!(pub_api).stats_priv.donor_24hr_avg * 1000.0;
         let xvb_1h_avg = lock!(pub_api).stats_priv.donor_1hr_avg * 1000.0;
 
-        // TODO consider printing algorithm stats instead of spreadout print statements
         let stats = Stats {
             share,
             hashrate_xmrig,
@@ -169,7 +168,7 @@ impl<'a> Algorithm<'a> {
             msg_xmrig_or_xp,
         };
 
-        let mut new_instace = Self {
+        let mut new_instance = Self {
             client,
             pub_api,
             gui_api_xvb,
@@ -184,14 +183,14 @@ impl<'a> Algorithm<'a> {
             stats,
         };
 
-        new_instace.stats.target_donation_hashrate = new_instace.get_target_donation_hashrate();
+        new_instance.stats.target_donation_hashrate = new_instance.get_target_donation_hashrate();
 
-        new_instace.stats.spared_time = Self::get_spared_time(
-            new_instace.stats.target_donation_hashrate,
-            new_instace.stats.hashrate_xmrig,
+        new_instance.stats.spared_time = Self::get_spared_time(
+            new_instance.stats.target_donation_hashrate,
+            new_instance.stats.hashrate_xmrig,
         );
 
-        new_instace
+        new_instance
     }
 
     fn is_share_fulfilled(&self) -> bool {
@@ -318,7 +317,7 @@ impl<'a> Algorithm<'a> {
         self.target_p2pool_node().await;
 
         info!(
-            "Algorithm | algo sleep for {} while mining on P2pool",
+            "Algorithm | algo sleep for {} seconds while mining on P2pool",
             XVB_TIME_ALGO
         );
         sleep(Duration::from_secs(XVB_TIME_ALGO.into())).await;
@@ -337,7 +336,7 @@ impl<'a> Algorithm<'a> {
         self.target_xvb_node().await;
 
         info!(
-            "Algorithm | algo sleep for {} while mining on XvB",
+            "Algorithm | algo sleep for {} seconds while mining on XvB",
             XVB_TIME_ALGO
         );
         sleep(Duration::from_secs(XVB_TIME_ALGO.into())).await;
@@ -354,7 +353,7 @@ impl<'a> Algorithm<'a> {
 
     async fn sleep_then_update_node_xmrig(&self) {
         info!(
-            "Algorithm | algo sleep for {} while mining on P2pool",
+            "Algorithm | algo sleep for {} seconds while mining on P2pool",
             XVB_TIME_ALGO - self.stats.spared_time
         );
         sleep(Duration::from_secs(
@@ -371,7 +370,7 @@ impl<'a> Algorithm<'a> {
         // xvb process watch this algo handle to see if process is finished or not.
 
         info!(
-            "Algorithm | algo sleep for {} while mining on P2pool",
+            "Algorithm | algo sleep for {} seconds while mining on P2pool",
             self.stats.spared_time
         );
         sleep(Duration::from_secs(self.stats.spared_time.into())).await;
@@ -398,7 +397,7 @@ impl<'a> Algorithm<'a> {
             RuntimeMode::Hero => self.get_hero_mode_target_donation_hashrate(),
             RuntimeMode::ManualXvb => {
                 info!(
-                    "Algorithm | ManualXvBMode target_donation_hashrate=runtime_amount({})",
+                    "Algorithm | ManualXvBMode target_donation_hashrate=runtime_amount({}H/s)",
                     self.stats.runtime_amount
                 );
 
@@ -430,8 +429,6 @@ impl<'a> Algorithm<'a> {
     }
 
     fn get_auto_mode_target_donation_hashrate(&self) -> f32 {
-        // TODO consider using dynamic buffer size buffer gets smaller as gupaxx runs for longer to provide more stability
-
         let donation_level = match self.stats.spareable_hashrate {
             x if x > (XVB_ROUND_DONOR_MEGA_MIN_HR as f32) => Some(RuntimeDonationLevel::DonorMega),
             x if x > (XVB_ROUND_DONOR_WHALE_MIN_HR as f32) => {
@@ -462,10 +459,6 @@ impl<'a> Algorithm<'a> {
     }
 
     fn get_hero_mode_target_donation_hashrate(&self) -> f32 {
-        // TODO improve selection method
-        // TODO consider using a large buffer size
-        // TODO consider manually setting the share count to aim for on hero mode
-
         info!(
             "Algorithm | HeroMode target_donation_hashrate=spareable_hashrate({})",
             self.stats.spareable_hashrate
@@ -487,7 +480,14 @@ impl<'a> Algorithm<'a> {
         };
         let mut minimum_hr = ((difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32 * XVB_BUFFER)
             - p2pool_external_hashrate;
-        info!("Algorithm | (difficulty / (window pplns blocks * seconds per p2pool block) * BUFFER) - outside HR = minimum HR to keep a share\n({difficulty} / ({pws} * {SECOND_PER_BLOCK_P2POOL}) * {XVB_BUFFER}) - {p2pool_external_hashrate} = {minimum_hr}");
+
+        info!("Algorithm | (difficulty({}) / (window pplns blocks({}) * seconds per p2pool block({})) * BUFFER({})) - outside HR({}H/s) = minimum HR({}H/s) to keep a share.",
+         difficulty,
+         pws,
+         SECOND_PER_BLOCK_P2POOL,
+         XVB_BUFFER,
+         p2pool_external_hashrate,
+         minimum_hr);
 
         if minimum_hr.is_sign_negative() {
             info!("Algorithm | if minimum HR is negative, it is 0.");
@@ -566,7 +566,7 @@ impl<'a> Algorithm<'a> {
     fn get_spared_time(target_donation_hashrate: f32, hashrate_xmrig: f32) -> u32 {
         let spared_time = target_donation_hashrate / hashrate_xmrig * (XVB_TIME_ALGO as f32);
 
-        info!("Algorithm | Calculating... spared_time({})=target_donation_hashrate({})/hashrate_xmrig({})*XVB_TIME_ALGO({})",
+        info!("Algorithm | Calculating... spared_time({}seconds)=target_donation_hashrate({})/hashrate_xmrig({})*XVB_TIME_ALGO({})",
         spared_time,
         target_donation_hashrate,
         hashrate_xmrig,
@@ -575,5 +575,3 @@ impl<'a> Algorithm<'a> {
         spared_time as u32
     }
 }
-
-// TODO fix XvB 24H avg and 1H avg not shwoing properly and add debug logs
