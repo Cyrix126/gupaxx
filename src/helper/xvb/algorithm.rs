@@ -15,10 +15,7 @@ use tokio::time::sleep;
 use crate::{
     helper::{
         p2pool::PubP2poolApi,
-        xrig::{
-            update_xmrig_config,
-            xmrig::{PrivXmrigApi, PubXmrigApi},
-        },
+        xrig::{update_xmrig_config, xmrig::PubXmrigApi},
         xvb::{nodes::XvbNode, priv_stats::RuntimeMode},
     },
     macros::lock,
@@ -61,6 +58,7 @@ pub(crate) async fn algorithm(
     algorithm.run().await;
 }
 
+#[allow(dead_code)]
 pub struct Algorithm<'a> {
     client: &'a Client,
     pub_api: &'a Arc<Mutex<PubXvbApi>>,
@@ -77,6 +75,7 @@ pub struct Algorithm<'a> {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct Stats {
     share: u32,
     hashrate_xmrig: f32,
@@ -98,6 +97,7 @@ pub struct Stats {
 }
 
 impl<'a> Algorithm<'a> {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         client: &'a Client,
         pub_api: &'a Arc<Mutex<PubXvbApi>>,
@@ -392,7 +392,7 @@ impl<'a> Algorithm<'a> {
     }
 
     pub fn get_target_donation_hashrate(&self) -> f32 {
-        let target_donation_hashrate = match self.stats.runtime_mode {
+        match self.stats.runtime_mode {
             RuntimeMode::Auto => self.get_auto_mode_target_donation_hashrate(),
             RuntimeMode::Hero => self.get_hero_mode_target_donation_hashrate(),
             RuntimeMode::ManualXvb => {
@@ -405,7 +405,7 @@ impl<'a> Algorithm<'a> {
             }
             RuntimeMode::ManualP2pool => {
                 let target_donation_hashrate =
-                    (self.stats.hashrate_xmrig as f32) - (self.stats.runtime_amount as f32);
+                    self.stats.hashrate_xmrig - (self.stats.runtime_amount as f32);
 
                 info!("Algorithm | ManualP2poolMode target_donation_hashrate({})=hashrate_xmrig({})-runtime_amount({})",
                 target_donation_hashrate,
@@ -423,9 +423,7 @@ impl<'a> Algorithm<'a> {
 
                 target_donation_hashrate
             }
-        };
-
-        target_donation_hashrate
+        }
     }
 
     fn get_auto_mode_target_donation_hashrate(&self) -> f32 {
