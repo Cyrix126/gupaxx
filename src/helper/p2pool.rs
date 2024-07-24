@@ -163,7 +163,7 @@ impl Helper {
         let path = path.to_path_buf();
         // This thread lives to wait, start p2pool then die.
         thread::spawn(move || {
-            while lock2!(helper, p2pool).is_alive() {
+            while lock2!(helper, p2pool).state != ProcessState::Waiting {
                 warn!("P2Pool | Want to restart but process is still alive, waiting...");
                 sleep!(1000);
             }
@@ -545,8 +545,11 @@ impl Helper {
             // If more than 1 minute has passed, read the other API files.
             let last_p2pool_request_expired =
                 last_p2pool_request.elapsed() >= Duration::from_secs(60);
-
-            if last_p2pool_request_expired {
+            // need to reload fast to get the first right values after syncing.
+            if last_p2pool_request_expired
+                || (!lock!(pub_api).p2pool_difficulty_u64 > 100_000
+                    && lock!(process).state == ProcessState::Alive)
+            {
                 debug!("P2Pool Watchdog | Attempting [network] & [pool] API file read");
                 if let (Ok(network_api), Ok(pool_api)) = (
                     Self::path_to_string(&api_path_network, ProcessName::P2pool),

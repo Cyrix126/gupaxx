@@ -72,7 +72,9 @@ impl Helper {
                         warn!(
                         "XMRig-Proxy PTY Parse | node is offline, sending signal to update nodes."
                     );
-                        lock!(process_xvb).signal = ProcessSignal::UpdateNodes(current_node);
+                        if current_node != XvbNode::P2pool {
+                            lock!(process_xvb).signal = ProcessSignal::UpdateNodes(current_node);
+                        }
                         lock!(pub_api_xvb).current_node = None;
                     }
                 }
@@ -212,7 +214,7 @@ impl Helper {
         state_xmrig: &Xmrig,
         path: &Path,
     ) {
-        info!("XMRig | Attempting to restart...");
+        info!("XMRig-Proxy | Attempting to restart...");
         lock2!(helper, xmrig_proxy).state = ProcessState::Middle;
         lock2!(helper, xmrig_proxy).signal = ProcessSignal::Restart;
 
@@ -227,10 +229,10 @@ impl Helper {
                 sleep!(1000);
             }
             // Ok, process is not alive, start the new one!
-            info!("XMRig_proxy | Old process seems dead, starting new one!");
+            info!("XMRig-Proxy | Old process seems dead, starting new one!");
             Self::start_xp(&helper, &state, &state_xmrig, &path);
         });
-        info!("XMRig | Restart ... OK");
+        info!("XMRig-Proxy | Restart ... OK");
     }
     pub fn start_xp(
         helper: &Arc<Mutex<Self>>,
@@ -354,7 +356,7 @@ impl Helper {
         if let Err(e) = writeln!(stdin, "c") {
             error!("P2Pool Watchdog | STDIN error: {}", e);
         }
-        info!("XMRig | Entering watchdog mode... woof!");
+        info!("XMRig-Proxy | Entering watchdog mode... woof!");
         loop {
             let now = Instant::now();
             debug!("XMRig-Proxy Watchdog | ----------- Start of loop -----------");
