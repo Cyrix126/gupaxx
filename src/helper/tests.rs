@@ -5,7 +5,7 @@ mod test {
     use crate::helper::xvb::algorithm::Algorithm;
     use crate::helper::{
         p2pool::{PrivP2poolLocalApi, PrivP2poolNetworkApi},
-        xvb::{priv_stats::RuntimeDonationLevel, priv_stats::RuntimeMode, rounds::round_type},
+        xvb::{priv_stats::RuntimeDonationLevel, priv_stats::RuntimeMode},
         Helper, Process, ProcessName, ProcessState,
     };
 
@@ -511,9 +511,8 @@ Uptime         = 0h 2m 4s
 
     use crate::{
         disk::state::P2pool,
-        helper::{p2pool::PubP2poolApi, xrig::xmrig::PubXmrigApi, xvb::rounds::XvbRound},
+        helper::{p2pool::PubP2poolApi, xrig::xmrig::PubXmrigApi},
         macros::lock,
-        XVB_TIME_ALGO,
     };
 
     use crate::helper::xvb::{public_stats::XvbPubStats, PubXvbApi};

@@ -782,43 +782,41 @@ fn signal_interrupt(
                                 // can update xmrig and check status of state in the same time.
                             // Need to set XMRig to P2Pool if it wasn't. XMRig should have populated this value at his start.
                             // but if xmrig didn't start, don't update it.
-                if lock!(process_xrig).state == ProcessState::Alive {
-                if lock!(gui_api).current_node != Some(XvbNode::P2pool) {
-                                spawn(enc!((client, token_xmrig, address, gui_api_xmrig, gui_api_xp, gui_api) async move{
-                    let url_api = api_url_xmrig(xp_alive, true);
-                        warn!("update xmrig to use node ?");
-                    if let Err(err) = update_xmrig_config(
-                        &client,
-                        &url_api,
-                        &token_xmrig,
-                        &XvbNode::P2pool,
-                        &address,
-                        &rig
-                    )
-                    .await {
-                                    let msg_xmrig_or_proxy = if xp_alive {
-                                        "XMRig-Proxy"
-                                    } else {
-                                        "XMRig"
-                                    };
-                        output_console(
-                            &mut lock!(gui_api).output,
-                            &format!(
-                                "Failure to update {msg_xmrig_or_proxy} config with HTTP API.\nError: {}",
-                                err
-                            ), ProcessName::Xvb
-                        );
+                if lock!(process_xrig).state == ProcessState::Alive && lock!(gui_api).current_node != Some(XvbNode::P2pool) {
+                            spawn(enc!((client, token_xmrig, address, gui_api_xmrig, gui_api_xp, gui_api) async move{
+                let url_api = api_url_xmrig(xp_alive, true);
+                    warn!("update xmrig to use node ?");
+                if let Err(err) = update_xmrig_config(
+                    &client,
+                    &url_api,
+                    &token_xmrig,
+                    &XvbNode::P2pool,
+                    &address,
+                    &rig
+                )
+                .await {
+                                let msg_xmrig_or_proxy = if xp_alive {
+                                    "XMRig-Proxy"
                                 } else {
-                                    // update node xmrig
-                                    if xp_alive {
-                                    lock!(gui_api_xp).node = XvbNode::P2pool.to_string();
-                                    } else {
-                                    lock!(gui_api_xmrig).node = XvbNode::P2pool.to_string();
-                                    };
-                                }
+                                    "XMRig"
+                                };
+                    output_console(
+                        &mut lock!(gui_api).output,
+                        &format!(
+                            "Failure to update {msg_xmrig_or_proxy} config with HTTP API.\nError: {}",
+                            err
+                        ), ProcessName::Xvb
+                    );
+                            } else {
+                                // update node xmrig
+                                if xp_alive {
+                                lock!(gui_api_xp).node = XvbNode::P2pool.to_string();
+                                } else {
+                                lock!(gui_api_xmrig).node = XvbNode::P2pool.to_string();
+                                };
                             }
-                                ));}
-                                }
+                        }
+                            ));}
             },
                         _ => {}
                 } } ),
