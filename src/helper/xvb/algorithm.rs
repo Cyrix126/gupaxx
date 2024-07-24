@@ -213,17 +213,6 @@ impl<'a> Algorithm<'a> {
         is_criteria_fulfilled
     }
 
-    fn xvb_1h_fulfilled(&self) -> bool {
-        let is_criteria_fulfilled = self.stats.xvb_1h_avg > self.stats.target_donation_hashrate;
-
-        info!(
-            "Algorithm | xvb_1h_avg({}) > target_donation_hashrate({}) : {}",
-            self.stats.xvb_1h_avg, self.stats.target_donation_hashrate, is_criteria_fulfilled
-        );
-
-        is_criteria_fulfilled
-    }
-
     async fn target_p2pool_node(&self) {
         if lock!(self.gui_api_xvb).current_node != Some(XvbNode::P2pool) {
             info!(
