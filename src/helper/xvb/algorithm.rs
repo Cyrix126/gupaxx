@@ -135,6 +135,7 @@ impl<'a> Algorithm<'a> {
         let share_min_hashrate = Self::minimum_hashrate_share(
             lock!(gui_api_p2pool).p2pool_difficulty_u64,
             state_p2pool.mini,
+            p2pool_external_hashrate,
         );
 
         let spareable_hashrate = hashrate_xmrig - share_min_hashrate;
@@ -478,13 +479,14 @@ impl<'a> Algorithm<'a> {
         samples.0.iter().sum::<f32>() / samples.0.len() as f32
     }
 
-    fn minimum_hashrate_share(difficulty: u64, mini: bool) -> f32 {
+    fn minimum_hashrate_share(difficulty: u64, mini: bool, p2pool_external_hashrate: f32) -> f32 {
         let pws = if mini {
             BLOCK_PPLNS_WINDOW_MINI
         } else {
             BLOCK_PPLNS_WINDOW_MAIN
         };
-        let mut minimum_hr = (difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32 * XVB_BUFFER;
+        let mut minimum_hr = ((difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32 * XVB_BUFFER)
+            - p2pool_external_hashrate;
         info!("Algorithm | (difficulty / (window pplns blocks * seconds per p2pool block) * BUFFER) - outside HR = minimum HR to keep a share\n({difficulty} / ({pws} * {SECOND_PER_BLOCK_P2POOL}) * {XVB_BUFFER}) - {p2pool_external_hashrate} = {minimum_hr}");
 
         if minimum_hr.is_sign_negative() {

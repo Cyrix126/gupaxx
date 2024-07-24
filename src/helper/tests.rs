@@ -678,7 +678,7 @@ Uptime         = 0h 2m 4s
 
         assert_eq!(algo.stats.target_donation_hashrate, 10000.0);
 
-        lock!(gui_api_p2pool).p2pool_difficulty_u64 = 9_000_000;
+        lock!(gui_api_p2pool).p2pool_difficulty_u64 = 95_000_000;
         lock!(gui_api_xmrig).hashrate_raw_15m = 10000.0;
         lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
 
@@ -715,7 +715,7 @@ Uptime         = 0h 2m 4s
         let xp_alive = false;
         let share = 1;
 
-        lock!(gui_api_p2pool).p2pool_difficulty_u64 = 9_000_000;
+        lock!(gui_api_p2pool).p2pool_difficulty_u64 = 95_000_000;
         lock!(gui_api_xmrig).hashrate_raw_15m = 20000.0;
         lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
 
@@ -734,6 +734,25 @@ Uptime         = 0h 2m 4s
             xp_alive,
         );
 
-        assert_eq!(algo.stats.target_donation_hashrate, 10000.0);
+        assert_eq!(algo.stats.target_donation_hashrate, 15382.1);
+
+        lock!(gui_api_p2pool).sidechain_ehr = 25000.0;
+
+        let algo = Algorithm::new(
+            &client,
+            &pub_api,
+            &gui_api_xvb,
+            &gui_api_xmrig,
+            &gui_api_xp,
+            &gui_api_p2pool,
+            token_xmrig,
+            &state_p2pool,
+            share,
+            &time_donated,
+            rig,
+            xp_alive,
+        );
+
+        assert_eq!(algo.stats.target_donation_hashrate, 20000.0);
     }
 }
