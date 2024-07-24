@@ -163,7 +163,7 @@ impl Helper {
         let path = path.to_path_buf();
         // This thread lives to wait, start p2pool then die.
         thread::spawn(move || {
-            while lock2!(helper, p2pool).is_alive() {
+            while lock2!(helper, p2pool).state != ProcessState::Waiting {
                 warn!("P2Pool | Want to restart but process is still alive, waiting...");
                 sleep!(1000);
             }
