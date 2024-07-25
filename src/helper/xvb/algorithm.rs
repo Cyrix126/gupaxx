@@ -513,7 +513,10 @@ impl<'a> Algorithm<'a> {
     async fn fulfill_normal_cycles(&self) {
         output_console(
             &mut lock!(self.gui_api_xvb).output,
-            "There is a share in p2pool and 24H avg XvB is achieved. Sending {self.stats.spared_time} to XvB!",
+            &format!(
+                "There is a share in p2pool and 24H avg XvB is achieved. Sending {} to XvB!",
+                self.stats.spared_time
+            ),
             crate::helper::ProcessName::Xvb,
         );
 
