@@ -273,7 +273,7 @@ pub const STATUS_SUBMENU_YOUR_P2POOL_DOMINANCE: &str =
     "The percent of hashrate you account for in P2Pool";
 pub const STATUS_SUBMENU_YOUR_MONERO_DOMINANCE: &str =
     "The percent of hashrate you account for in the entire Monero network";
-pub const STATUS_SUBMENU_PROGRESS_BAR:          &str = "The next time Gupaxx will update P2Pool stats. Each [*] is 900ms (updates roughly every 54 seconds)";
+pub const STATUS_SUBMENU_PROGRESS_BAR: &str = "The next time Gupaxx will update P2Pool stats.";
 //-- Benchmarks
 pub const STATUS_SUBMENU_YOUR_CPU: &str = "The CPU detected by Gupaxx";
 pub const STATUS_SUBMENU_YOUR_BENCHMARKS: &str =

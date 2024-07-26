@@ -546,11 +546,11 @@ impl Helper {
             let last_p2pool_request_expired =
                 last_p2pool_request.elapsed() >= Duration::from_secs(60);
             // need to reload fast to get the first right values after syncing.
-            if last_p2pool_request_expired
-                || (!lock!(pub_api).p2pool_difficulty_u64 > 100_000
-                    && lock!(process).state == ProcessState::Alive)
+            // check if value is 100k or under and request immediately if that's the case. fixed in release of p2pool including commit https://github.com/SChernykh/p2pool/commit/64a199be6dec7924b41f857a401086f25e1ec9be
+            if (last_p2pool_request_expired || lock!(pub_api).p2pool_difficulty_u64 <= 100000)
+                && lock!(process).state == ProcessState::Alive
             {
-                debug!("P2Pool Watchdog | Attempting [network] & [pool] API file read");
+                info!("P2Pool Watchdog | Attempting [network] & [pool] API file read");
                 if let (Ok(network_api), Ok(pool_api)) = (
                     Self::path_to_string(&api_path_network, ProcessName::P2pool),
                     Self::path_to_string(&api_path_pool, ProcessName::P2pool),
