@@ -1,3 +1,40 @@
+# v1.3.0
+Stable release, bugfixes and new features.
+
+## Changes
+### UI
+- new big feature: Advanced tab for XvB, manual control options for the Algorithm.  
+- rename Xmrig-Proxy to Proxy
+- title and description Proxy tab
+- enable vertical scrollbar for every tab when needed
+- add command line arg --logfile
+- show the error when request fails for account stats on XvB console 
+### Internal
+- remove xmrnode.facspro.net node from list
+- refactor of the algorithm code
+- update tests
+- bump deps
+- update bundled version of p2pool to 4.0
+## Fixes
+- fix https://github.com/Cyrix126/gupaxx/issues/12
+- fix Xmrig-Proxy auto were enabling xmrig instead.
+- fix middle panel could overlap on bottom on some ratio/resolution.
+- fix p2pool restart could hang in middle of restarting
+- wait for p2pool difficulty data to be ready (before https://github.com/SChernykh/p2pool/commit/64a199be6dec7924b41f857a401086f25e1ec9be is in release)
+- fix XvB could be stuck in middle state when xmrig/proxy were restarting
+- fix time left "mining on" could overflow
+- fix XvB was not taking into account a xmrig-proxy change of state without a restart, which would lead to always mine on p2pool.
+
+## Credits 
+Big shout-out to [mostafaei2002](https://github.com/mostafaei2002) who has taken his free time to make a very good work of refactoring the algorithm, which makes it easier to maintain, and to have added very wanted feature: manual control of the algorithm (see [PR](https://github.com/Cyrix126/gupaxx/pull/11)). If you appreciate his work, consider donating to this address: 
+```
+872ACXnM1VKiGGXqi9BPbQi6j1Aa3jAxPC3tZzAjtDg13KxS1qDqzaMYaHnkjURmdfGpKCC8giiA2Eq2nW9oQ3g55eSHt7d
+```
+## Bundled Versions
+* [`P2Pool v4.0`](https://github.com/SChernykh/p2pool/releases/tag/v4.0)  
+* [`XMRig v6.21.1`](https://github.com/xmrig/xmrig/releases/tag/v6.21.1)  
+* [`XMRig-Proxy v6.21.1](https://github.com/xmrig/xmrig-proxy/releases/tag/v6.21.1)
+
 # v1.2.0
 Stable release, bugfixes and new features.
 
