@@ -514,13 +514,13 @@ impl<'a> Algorithm<'a> {
         output_console(
             &mut lock!(self.gui_api_xvb).output,
             &format!(
-                "There is a share in p2pool and 24H avg XvB is achieved. Sending {} to XvB!",
+                "There is a share in p2pool and 24H avg XvB is achieved. Sending {} seconds to XvB!",
                 self.stats.spared_time
             ),
             crate::helper::ProcessName::Xvb,
         );
 
-        info!("Algorithm | There is a share in p2pool and 24H avg XvB is achieved. Sending {} to XvB!", self.stats.spared_time);
+        info!("Algorithm | There is a share in p2pool and 24H avg XvB is achieved. Sending seconds {} to XvB!", self.stats.spared_time);
 
         *lock!(self.time_donated) = self.stats.spared_time;
 
