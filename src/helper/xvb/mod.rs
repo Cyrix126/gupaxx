@@ -447,12 +447,14 @@ impl PubXvbApi {
         }
         let runtime_mode = std::mem::take(&mut gui_api.stats_priv.runtime_mode);
         let runtime_manual_amount = std::mem::take(&mut gui_api.stats_priv.runtime_manual_amount);
-
+        let runtime_manual_donation_level =
+            std::mem::take(&mut gui_api.stats_priv.runtime_manual_donation_level);
         *gui_api = Self {
             output,
             stats_priv: XvbPrivStats {
                 runtime_mode,
                 runtime_manual_amount,
+                runtime_manual_donation_level,
                 ..pub_api.stats_priv.clone()
             },
             p2pool_sent_last_hour_samples: std::mem::take(
