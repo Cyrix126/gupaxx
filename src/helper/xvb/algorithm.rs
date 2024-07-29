@@ -271,7 +271,7 @@ impl<'a> Algorithm<'a> {
                 self.token_xmrig,
                 &node,
                 &self.stats.address,
-                self.rig,
+                "",
             )
             .await
             {
