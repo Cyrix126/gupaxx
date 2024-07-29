@@ -550,7 +550,7 @@ impl Helper {
             if (last_p2pool_request_expired || lock!(pub_api).p2pool_difficulty_u64 <= 100000)
                 && lock!(process).state == ProcessState::Alive
             {
-                info!("P2Pool Watchdog | Attempting [network] & [pool] API file read");
+                debug!("P2Pool Watchdog | Attempting [network] & [pool] API file read");
                 if let (Ok(network_api), Ok(pool_api)) = (
                     Self::path_to_string(&api_path_network, ProcessName::P2pool),
                     Self::path_to_string(&api_path_pool, ProcessName::P2pool),
