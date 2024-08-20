@@ -12,18 +12,18 @@ use super::PubXvbApi;
 #[derive(Debug, Clone, Default, Display, Deserialize, PartialEq)]
 pub enum XvbRound {
     #[default]
-    #[display(fmt = "VIP")]
+    #[display("VIP")]
     #[serde(alias = "vip")]
     Vip,
     #[serde(alias = "donor")]
     Donor,
-    #[display(fmt = "VIP Donor")]
+    #[display("VIP Donor")]
     #[serde(alias = "donor_vip")]
     DonorVip,
-    #[display(fmt = "Whale Donor")]
+    #[display("Whale Donor")]
     #[serde(alias = "donor_whale")]
     DonorWhale,
-    #[display(fmt = "Mega Donor")]
+    #[display("Mega Donor")]
     #[serde(alias = "donor_mega")]
     DonorMega,
 }

@@ -120,12 +120,13 @@ impl Status {
                     ui.add_sized([width, text], ProgressBar::new(percent / 100.0));
                 }
             } else {
-                ui.set_enabled(xmrig_alive);
-                ui.add_sized(
-                    [width, double],
-                    Label::new("XMRig is offline. Hashrate cannot be determined."),
-                );
-                ui.add_sized([width, text], ProgressBar::new(0.0));
+                ui.add_enabled_ui(xmrig_alive, |ui| {
+                    ui.add_sized(
+                        [width, double],
+                        Label::new("XMRig is offline. Hashrate cannot be determined."),
+                    );
+                    ui.add_sized([width, text], ProgressBar::new(0.0));
+                });
             }
         });
 

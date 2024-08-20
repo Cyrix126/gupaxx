@@ -281,7 +281,7 @@ impl crate::app::App {
                         let hide = sudo.hide;
                         if sudo.testing {
                             ui.add_sized([width, height], Spinner::new().size(height));
-                            ui.set_enabled(false);
+                            ui.disable()
                         } else {
                             ui.add_sized([width, height], Label::new(&sudo.msg));
                         }

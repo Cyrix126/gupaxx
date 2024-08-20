@@ -20,10 +20,10 @@
 
 // Only (windows|macos|linux) + (x64|arm64) are supported.
 #[cfg(not(target_pointer_width = "64"))]
-compile_error!("gupax is only compatible with 64-bit CPUs");
+compile_error!("gupaxx is only compatible with 64-bit CPUs");
 
 #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux",)))]
-compile_error!("gupax is only built for windows/macos/linux");
+compile_error!("gupaxx is only built for windows/macos/linux");
 
 use crate::app::App;
 use crate::cli::Cli;
@@ -96,7 +96,7 @@ fn main() {
         options,
         Box::new(move |cc| {
             egui_extras::install_image_loaders(&cc.egui_ctx);
-            Box::new(App::cc(cc, resolution, app))
+            Ok(Box::new(App::cc(cc, resolution, app)))
         }),
     )
     .unwrap();

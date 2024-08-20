@@ -130,7 +130,9 @@ impl P2pool {
                         self.arguments.truncate(1024);
                     })
                 });
-                ui.set_enabled(self.arguments.is_empty());
+                if !self.arguments.is_empty() {
+                    ui.disable()
+                }
             }
 
             //---------------------------------------------------------------------------------------------------- Address

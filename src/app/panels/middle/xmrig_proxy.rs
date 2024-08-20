@@ -109,7 +109,9 @@ impl XmrigProxy {
                     self.arguments.truncate(1024);
                 })
             });
-            ui.set_enabled(self.arguments.is_empty());
+            if !self.arguments.is_empty() {
+            	ui.disable();
+            }
             ui.add_space(space_h);
             ui.style_mut().spacing.icon_width_inner = width / 45.0;
             ui.style_mut().spacing.icon_width = width / 35.0;
@@ -262,7 +264,7 @@ impl XmrigProxy {
 				let text = format!("{}\n    Currently selected pool: {}. {}\n    Current amount of pools: {}/1000", text, self.selected_index+1, self.selected_name, pool_vec_len);
 				// If the pool already exists, show [Save] and mutate the already existing pool
 				if exists {
-					ui.set_enabled(!incorrect_input && save_diff);
+					ui.add_enabled_ui(!incorrect_input && save_diff, |ui|{
 					if ui.add_sized([width, text_edit], Button::new("Save")).on_hover_text(text).clicked() {
 						let pool = Pool {
 							rig: self.rig.clone(),
@@ -276,9 +278,11 @@ impl XmrigProxy {
 						self.selected_port.clone_from(&self.p2pool_port);
 						info!("Node | S | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig: \"{}\"]", existing_index+1, self.name, self.p2pool_ip, self.p2pool_port, self.rig);
 					}
+						
+					});
 				// Else, add to the list
 				} else {
-					ui.set_enabled(!incorrect_input && pool_vec_len < 1000);
+					ui.add_enabled_ui(!incorrect_input && pool_vec_len < 1000, |ui|{
 					if ui.add_sized([width, text_edit], Button::new("Add")).on_hover_text(text).clicked() {
 						let pool = Pool {
 							rig: self.rig.clone(),
@@ -293,11 +297,13 @@ impl XmrigProxy {
 						self.selected_port.clone_from(&self.p2pool_port);
 						info!("Node | A | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig: \"{}\"]", pool_vec_len, self.name, self.p2pool_ip, self.p2pool_port, self.rig);
 					}
+						
+					});
 				}
 			});
 			// [Delete]
 			ui.horizontal(|ui| {
-				ui.set_enabled(pool_vec_len > 1);
+				ui.add_enabled_ui(pool_vec_len > 1, |ui|{
 				let text = format!("{}\n    Currently selected pool: {}. {}\n    Current amount of pools: {}/1000", LIST_DELETE, self.selected_index+1, self.selected_name, pool_vec_len);
 				if ui.add_sized([width, text_edit], Button::new("Delete")).on_hover_text(text).clicked() {
 					let new_name;
@@ -325,15 +331,17 @@ impl XmrigProxy {
 					self.p2pool_port = new_pool.port;
 					info!("Node | D | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig\"{}\"]", self.selected_index, self.selected_name, self.selected_ip, self.selected_port, self.selected_rig);
 				}
+				});
 			});
 			ui.horizontal(|ui| {
-				ui.set_enabled(!self.name.is_empty() || !self.p2pool_ip.is_empty() || !self.p2pool_port.is_empty());
+				ui.add_enabled_ui(!self.name.is_empty() || !self.p2pool_ip.is_empty() || !self.p2pool_port.is_empty(), |ui|{
 				if ui.add_sized([width, text_edit], Button::new("Clear")).on_hover_text(LIST_CLEAR).clicked() {
 					self.name.clear();
 					self.rig.clear();
 					self.p2pool_ip.clear();
 					self.p2pool_port.clear();
 				}
+				});
 			});
 		});
 		});

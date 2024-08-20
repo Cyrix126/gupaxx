@@ -138,21 +138,22 @@ impl P2pool {
             ui.vertical(|ui| {
                 let height = height / 2.0;
                 let pinging = lock!(ping).pinging;
-                ui.set_enabled(pinging);
-                let prog = lock!(ping).prog.round();
-                let msg = RichText::new(format!("{} ... {}%", lock!(ping).msg, prog));
-                let height = height / 1.25;
-                let size = vec2(size.x, height);
-                ui.add_space(space_h);
-                ui.add_sized(size, Label::new(msg));
-                ui.add_space(space_h);
-                if pinging {
-                    ui.add_sized(size, Spinner::new().size(height));
-                } else {
-                    ui.add_sized(size, Label::new("..."));
-                }
-                ui.add_sized(size, ProgressBar::new(prog.round() / 100.0));
-                ui.add_space(space_h);
+                ui.add_enabled_ui(pinging, |ui| {
+                    let prog = lock!(ping).prog.round();
+                    let msg = RichText::new(format!("{} ... {}%", lock!(ping).msg, prog));
+                    let height = height / 1.25;
+                    let size = vec2(size.x, height);
+                    ui.add_space(space_h);
+                    ui.add_sized(size, Label::new(msg));
+                    ui.add_space(space_h);
+                    if pinging {
+                        ui.add_sized(size, Spinner::new().size(height));
+                    } else {
+                        ui.add_sized(size, Label::new("..."));
+                    }
+                    ui.add_sized(size, ProgressBar::new(prog.round() / 100.0));
+                    ui.add_space(space_h);
+                });
             });
         });
 

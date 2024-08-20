@@ -119,7 +119,8 @@ impl Xmrig {
                     self.arguments.truncate(1024);
                 })
             });
-            ui.set_enabled(self.arguments.is_empty());
+            ui.add_enabled_ui(self.arguments.is_empty(), |ui|{
+                
             //---------------------------------------------------------------------------------------------------- Address
             debug!("XMRig Tab | Rendering [Address]");
             ui.group(|ui| {
@@ -148,6 +149,7 @@ impl Xmrig {
                 )
                 .on_hover_text(XMRIG_ADDRESS);
                 self.address.truncate(95);
+            });
             });
         }
 
@@ -321,7 +323,7 @@ impl Xmrig {
 				let text = format!("{}\n    Currently selected pool: {}. {}\n    Current amount of pools: {}/1000", text, self.selected_index+1, self.selected_name, pool_vec_len);
 				// If the pool already exists, show [Save] and mutate the already existing pool
 				if exists {
-					ui.set_enabled(!incorrect_input && save_diff);
+					ui.add_enabled_ui(!incorrect_input && save_diff, |ui|{
 					if ui.add_sized([width, text_edit], Button::new("Save")).on_hover_text(text).clicked() {
 						let pool = Pool {
 							rig: self.rig.clone(),
@@ -335,9 +337,10 @@ impl Xmrig {
 						self.selected_port.clone_from(&self.port);
 						info!("Node | S | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig: \"{}\"]", existing_index+1, self.name, self.ip, self.port, self.rig);
 					}
+					});
 				// Else, add to the list
 				} else {
-					ui.set_enabled(!incorrect_input && pool_vec_len < 1000);
+					ui.add_enabled_ui(!incorrect_input && pool_vec_len < 1000, |ui|{
 					if ui.add_sized([width, text_edit], Button::new("Add")).on_hover_text(text).clicked() {
 						let pool = Pool {
 							rig: self.rig.clone(),
@@ -352,12 +355,13 @@ impl Xmrig {
 						self.selected_port.clone_from(&self.port);
 						info!("Node | A | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig: \"{}\"]", pool_vec_len, self.name, self.ip, self.port, self.rig);
 					}
+					});
 				}
 			});
 			// [Delete]
 			ui.horizontal(|ui| {
-				ui.set_enabled(pool_vec_len > 1);
-				let text = format!("{}\n    Currently selected pool: {}. {}\n    Current amount of pools: {}/1000", LIST_DELETE, self.selected_index+1, self.selected_name, pool_vec_len);
+				ui.add_enabled_ui(pool_vec_len > 1, |ui|{
+					let text = format!("{}\n    Currently selected pool: {}. {}\n    Current amount of pools: {}/1000", LIST_DELETE, self.selected_index+1, self.selected_name, pool_vec_len);
 				if ui.add_sized([width, text_edit], Button::new("Delete")).on_hover_text(text).clicked() {
 					let new_name;
 					let new_pool;
@@ -383,16 +387,19 @@ impl Xmrig {
 					self.ip = new_pool.ip;
 					self.port = new_pool.port;
 					info!("Node | D | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig\"{}\"]", self.selected_index, self.selected_name, self.selected_ip, self.selected_port, self.selected_rig);
-				}
+				}			    
+				});
+
 			});
 			ui.horizontal(|ui| {
-				ui.set_enabled(!self.name.is_empty() || !self.ip.is_empty() || !self.port.is_empty());
+				ui.add_enabled_ui(!self.name.is_empty() || !self.ip.is_empty() || !self.port.is_empty(), |ui|{
 				if ui.add_sized([width, text_edit], Button::new("Clear")).on_hover_text(LIST_CLEAR).clicked() {
 					self.name.clear();
 					self.rig.clear();
 					self.ip.clear();
 					self.port.clear();
 				}
+				});
 			});
 		});
 		});

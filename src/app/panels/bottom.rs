@@ -147,66 +147,67 @@ impl crate::app::App {
     }
     fn save_reset_ui(&mut self, ui: &mut Ui, size: Vec2, key: &KeyPressed, wants_input: bool) {
         ui.group(|ui| {
-            ui.set_enabled(self.diff);
-            let width = size.x / 2.0;
-            let size = vec2(width, size.y);
-            if key.is_r() && !wants_input && self.diff
-                || ui
-                    .add_sized(size, Button::new("Reset"))
-                    .on_hover_text("Reset changes")
-                    .clicked()
-            {
-                let og = lock!(self.og).clone();
-                self.state.status = og.status;
-                self.state.gupax = og.gupax;
-                self.state.p2pool = og.p2pool;
-                self.state.xmrig = og.xmrig;
-                self.state.xmrig_proxy = og.xmrig_proxy;
-                self.state.xvb = og.xvb;
-                self.node_vec.clone_from(&self.og_node_vec);
-                self.pool_vec.clone_from(&self.og_pool_vec);
-            }
-            if key.is_s() && !wants_input && self.diff
-                || ui
-                    .add_sized(size, Button::new("Save"))
-                    .on_hover_text("Save changes")
-                    .clicked()
-            {
-                match State::save(&mut self.state, &self.state_path) {
-                    Ok(_) => {
-                        let mut og = lock!(self.og);
-                        og.status = self.state.status.clone();
-                        og.gupax = self.state.gupax.clone();
-                        og.p2pool = self.state.p2pool.clone();
-                        og.xmrig = self.state.xmrig.clone();
-                        og.xmrig_proxy = self.state.xmrig_proxy.clone();
-                        og.xvb = self.state.xvb.clone();
-                    }
-                    Err(e) => {
-                        self.error_state.set(
-                            format!("State file: {}", e),
+            ui.add_enabled_ui(self.diff, |ui| {
+                let width = size.x / 2.0;
+                let size = vec2(width, size.y);
+                if key.is_r() && !wants_input && self.diff
+                    || ui
+                        .add_sized(size, Button::new("Reset"))
+                        .on_hover_text("Reset changes")
+                        .clicked()
+                {
+                    let og = lock!(self.og).clone();
+                    self.state.status = og.status;
+                    self.state.gupax = og.gupax;
+                    self.state.p2pool = og.p2pool;
+                    self.state.xmrig = og.xmrig;
+                    self.state.xmrig_proxy = og.xmrig_proxy;
+                    self.state.xvb = og.xvb;
+                    self.node_vec.clone_from(&self.og_node_vec);
+                    self.pool_vec.clone_from(&self.og_pool_vec);
+                }
+                if key.is_s() && !wants_input && self.diff
+                    || ui
+                        .add_sized(size, Button::new("Save"))
+                        .on_hover_text("Save changes")
+                        .clicked()
+                {
+                    match State::save(&mut self.state, &self.state_path) {
+                        Ok(_) => {
+                            let mut og = lock!(self.og);
+                            og.status = self.state.status.clone();
+                            og.gupax = self.state.gupax.clone();
+                            og.p2pool = self.state.p2pool.clone();
+                            og.xmrig = self.state.xmrig.clone();
+                            og.xmrig_proxy = self.state.xmrig_proxy.clone();
+                            og.xvb = self.state.xvb.clone();
+                        }
+                        Err(e) => {
+                            self.error_state.set(
+                                format!("State file: {}", e),
+                                ErrorFerris::Error,
+                                ErrorButtons::Okay,
+                            );
+                        }
+                    };
+                    match Node::save(&self.node_vec, &self.node_path) {
+                        Ok(_) => self.og_node_vec.clone_from(&self.node_vec),
+                        Err(e) => self.error_state.set(
+                            format!("Node list: {}", e),
                             ErrorFerris::Error,
                             ErrorButtons::Okay,
-                        );
-                    }
-                };
-                match Node::save(&self.node_vec, &self.node_path) {
-                    Ok(_) => self.og_node_vec.clone_from(&self.node_vec),
-                    Err(e) => self.error_state.set(
-                        format!("Node list: {}", e),
-                        ErrorFerris::Error,
-                        ErrorButtons::Okay,
-                    ),
-                };
-                match Pool::save(&self.pool_vec, &self.pool_path) {
-                    Ok(_) => self.og_pool_vec.clone_from(&self.pool_vec),
-                    Err(e) => self.error_state.set(
-                        format!("Pool list: {}", e),
-                        ErrorFerris::Error,
-                        ErrorButtons::Okay,
-                    ),
-                };
-            }
+                        ),
+                    };
+                    match Pool::save(&self.pool_vec, &self.pool_path) {
+                        Ok(_) => self.og_pool_vec.clone_from(&self.pool_vec),
+                        Err(e) => self.error_state.set(
+                            format!("Pool list: {}", e),
+                            ErrorFerris::Error,
+                            ErrorButtons::Okay,
+                        ),
+                    };
+                }
+            })
         });
     }
     fn status_submenu(&mut self, ui: &mut Ui, height: f32) {
@@ -378,24 +379,25 @@ impl crate::app::App {
                     ui_enabled = false;
                     text = format!("Error: {}", P2POOL_PATH_NOT_VALID);
                 }
-                ui.set_enabled(ui_enabled);
-                let color = if ui_enabled { GREEN } else { RED };
-                if (ui_enabled && key.is_up() && !wants_input)
-                    || ui
-                        .add_sized(size, Button::new(RichText::new("▶").color(color)))
-                        .on_hover_text("Start P2Pool")
-                        .on_disabled_hover_text(text)
-                        .clicked()
-                {
-                    let _ = lock!(self.og).update_absolute_path();
-                    let _ = self.state.update_absolute_path();
-                    Helper::start_p2pool(
-                        &self.helper,
-                        &self.state.p2pool,
-                        &self.state.gupax.absolute_p2pool_path,
-                        self.gather_backup_hosts(),
-                    );
-                }
+                ui.add_enabled_ui(ui_enabled, |ui| {
+                    let color = if ui_enabled { GREEN } else { RED };
+                    if (ui_enabled && key.is_up() && !wants_input)
+                        || ui
+                            .add_sized(size, Button::new(RichText::new("▶").color(color)))
+                            .on_hover_text("Start P2Pool")
+                            .on_disabled_hover_text(text)
+                            .clicked()
+                    {
+                        let _ = lock!(self.og).update_absolute_path();
+                        let _ = self.state.update_absolute_path();
+                        Helper::start_p2pool(
+                            &self.helper,
+                            &self.state.p2pool,
+                            &self.state.gupax.absolute_p2pool_path,
+                            self.gather_backup_hosts(),
+                        );
+                    }
+                });
             }
         });
     }
@@ -529,29 +531,30 @@ impl crate::app::App {
                     ui_enabled = false;
                     text = format!("Error: {}", XMRIG_PATH_NOT_VALID);
                 }
-                ui.set_enabled(ui_enabled);
-                let color = if ui_enabled { GREEN } else { RED };
-                if (ui_enabled && key.is_up() && !wants_input)
-                    || ui
-                        .add_sized(size, Button::new(RichText::new("▶").color(color)))
-                        .on_hover_text("Start XMRig")
-                        .on_disabled_hover_text(text)
-                        .clicked()
-                {
-                    let _ = lock!(self.og).update_absolute_path();
-                    let _ = self.state.update_absolute_path();
-                    if cfg!(windows) {
-                        Helper::start_xmrig(
-                            &self.helper,
-                            &self.state.xmrig,
-                            &self.state.gupax.absolute_xmrig_path,
-                            Arc::clone(&self.sudo),
-                        );
-                    } else if cfg!(unix) {
-                        lock!(self.sudo).signal = ProcessSignal::Start;
-                        self.error_state.ask_sudo(&self.sudo);
+                ui.add_enabled_ui(ui_enabled, |ui| {
+                    let color = if ui_enabled { GREEN } else { RED };
+                    if (ui_enabled && key.is_up() && !wants_input)
+                        || ui
+                            .add_sized(size, Button::new(RichText::new("▶").color(color)))
+                            .on_hover_text("Start XMRig")
+                            .on_disabled_hover_text(text)
+                            .clicked()
+                    {
+                        let _ = lock!(self.og).update_absolute_path();
+                        let _ = self.state.update_absolute_path();
+                        if cfg!(windows) {
+                            Helper::start_xmrig(
+                                &self.helper,
+                                &self.state.xmrig,
+                                &self.state.gupax.absolute_xmrig_path,
+                                Arc::clone(&self.sudo),
+                            );
+                        } else if cfg!(unix) {
+                            lock!(self.sudo).signal = ProcessSignal::Start;
+                            self.error_state.ask_sudo(&self.sudo);
+                        }
                     }
-                }
+                });
             }
         });
     }
@@ -637,23 +640,24 @@ impl crate::app::App {
                 let ui_enabled = Regexes::addr_ok(&self.state.p2pool.address)
                     && self.state.xvb.token.len() == 9
                     && self.state.xvb.token.parse::<u32>().is_ok();
-                ui.set_enabled(ui_enabled);
-                let color = if ui_enabled { GREEN } else { RED };
-                if (ui_enabled && key.is_up() && !wants_input)
-                    || ui
-                        .add_sized(size, Button::new(RichText::new("▶").color(color)))
-                        .on_hover_text("Start Xvb")
-                        .on_disabled_hover_text(XVB_NOT_CONFIGURED)
-                        .clicked()
-                {
-                    Helper::start_xvb(
-                        &self.helper,
-                        &self.state.xvb,
-                        &self.state.p2pool,
-                        &self.state.xmrig,
-                        &self.state.xmrig_proxy,
-                    );
-                }
+                ui.add_enabled_ui(ui_enabled, |ui| {
+                    let color = if ui_enabled { GREEN } else { RED };
+                    if (ui_enabled && key.is_up() && !wants_input)
+                        || ui
+                            .add_sized(size, Button::new(RichText::new("▶").color(color)))
+                            .on_hover_text("Start Xvb")
+                            .on_disabled_hover_text(XVB_NOT_CONFIGURED)
+                            .clicked()
+                    {
+                        Helper::start_xvb(
+                            &self.helper,
+                            &self.state.xvb,
+                            &self.state.p2pool,
+                            &self.state.xmrig,
+                            &self.state.xmrig_proxy,
+                        );
+                    }
+                });
             }
         });
     }
@@ -726,24 +730,25 @@ impl crate::app::App {
                     ui_enabled = false;
                     text = format!("Error: {}", XMRIG_PROXY_PATH_NOT_VALID);
                 }
-                ui.set_enabled(ui_enabled);
-                let color = if ui_enabled { GREEN } else { RED };
-                if (ui_enabled && key.is_up() && !wants_input)
-                    || ui
-                        .add_sized(size, Button::new(RichText::new("▶").color(color)))
-                        .on_hover_text("Start XMRig-Proxy")
-                        .on_disabled_hover_text(text)
-                        .clicked()
-                {
-                    let _ = lock!(self.og).update_absolute_path();
-                    let _ = self.state.update_absolute_path();
-                    Helper::start_xp(
-                        &self.helper,
-                        &self.state.xmrig_proxy,
-                        &self.state.xmrig,
-                        &self.state.gupax.absolute_xp_path,
-                    );
-                }
+                ui.add_enabled_ui(ui_enabled, |ui| {
+                    let color = if ui_enabled { GREEN } else { RED };
+                    if (ui_enabled && key.is_up() && !wants_input)
+                        || ui
+                            .add_sized(size, Button::new(RichText::new("▶").color(color)))
+                            .on_hover_text("Start XMRig-Proxy")
+                            .on_disabled_hover_text(text)
+                            .clicked()
+                    {
+                        let _ = lock!(self.og).update_absolute_path();
+                        let _ = self.state.update_absolute_path();
+                        Helper::start_xp(
+                            &self.helper,
+                            &self.state.xmrig_proxy,
+                            &self.state.xmrig,
+                            &self.state.gupax.absolute_xp_path,
+                        );
+                    }
+                });
             }
         });
     }

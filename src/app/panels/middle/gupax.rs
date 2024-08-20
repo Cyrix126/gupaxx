@@ -45,34 +45,43 @@ impl Gupax {
                     // If [Gupax] is being built for a Linux distro,
                     // disable built-in updating completely.
                     #[cfg(feature = "distro")]
-                    ui.set_enabled(false);
+                    ui.disable(true);
                     #[cfg(feature = "distro")]
                     ui.add_sized([width, button], Button::new("Updates are disabled"))
                         .on_disabled_hover_text(DISTRO_NO_UPDATE);
                     #[cfg(not(feature = "distro"))]
-                    ui.set_enabled(!updating && *lock!(restart) == Restart::No);
-                    #[cfg(not(feature = "distro"))]
-                    if ui
-                        .add_sized([width, button], Button::new("Check for updates"))
-                        .on_hover_text(GUPAX_UPDATE)
-                        .clicked()
-                    {
-                        Update::spawn_thread(og, self, state_path, update, error_state, restart);
-                    }
+                    ui.add_enabled_ui(!updating && *lock!(restart) == Restart::No, |ui| {
+                        #[cfg(not(feature = "distro"))]
+                        if ui
+                            .add_sized([width, button], Button::new("Check for updates"))
+                            .on_hover_text(GUPAX_UPDATE)
+                            .clicked()
+                        {
+                            Update::spawn_thread(
+                                og,
+                                self,
+                                state_path,
+                                update,
+                                error_state,
+                                restart,
+                            );
+                        }
+                    });
                 });
                 ui.vertical(|ui| {
-                    ui.set_enabled(updating);
-                    let prog = *lock2!(update, prog);
-                    let msg = format!("{}\n{}{}", *lock2!(update, msg), prog, "%");
-                    ui.add_sized([width, height * 1.4], Label::new(RichText::new(msg)));
-                    let height = height / 2.0;
-                    let size = vec2(width, height);
-                    if updating {
-                        ui.add_sized(size, Spinner::new().size(height));
-                    } else {
-                        ui.add_sized(size, Label::new("..."));
-                    }
-                    ui.add_sized(size, ProgressBar::new(lock2!(update, prog).round() / 100.0));
+                    ui.add_enabled_ui(updating, |ui| {
+                        let prog = *lock2!(update, prog);
+                        let msg = format!("{}\n{}{}", *lock2!(update, msg), prog, "%");
+                        ui.add_sized([width, height * 1.4], Label::new(RichText::new(msg)));
+                        let height = height / 2.0;
+                        let size = vec2(width, height);
+                        if updating {
+                            ui.add_sized(size, Spinner::new().size(height));
+                        } else {
+                            ui.add_sized(size, Label::new("..."));
+                        }
+                        ui.add_sized(size, ProgressBar::new(lock2!(update, prog).round() / 100.0));
+                    });
                 });
             });
 
@@ -165,15 +174,16 @@ impl Gupax {
                         .on_hover_text(P2POOL_PATH_OK);
                     }
                     ui.spacing_mut().text_edit_width = ui.available_width() - SPACE;
-                    ui.set_enabled(!lock!(file_window).thread);
-                    if ui.button("Open").on_hover_text(GUPAX_SELECT).clicked() {
-                        Self::spawn_file_window_thread(file_window, FileType::P2pool);
-                    }
-                    ui.add_sized(
-                        [ui.available_width(), height],
-                        TextEdit::singleline(&mut self.p2pool_path),
-                    )
-                    .on_hover_text(GUPAX_PATH_P2POOL);
+                    ui.add_enabled_ui(!lock!(file_window).thread, |ui| {
+                        if ui.button("Open").on_hover_text(GUPAX_SELECT).clicked() {
+                            Self::spawn_file_window_thread(file_window, FileType::P2pool);
+                        }
+                        ui.add_sized(
+                            [ui.available_width(), height],
+                            TextEdit::singleline(&mut self.p2pool_path),
+                        )
+                        .on_hover_text(GUPAX_PATH_P2POOL);
+                    });
                 });
                 ui.horizontal(|ui| {
                     if self.xmrig_path.is_empty() {
@@ -202,15 +212,16 @@ impl Gupax {
                         .on_hover_text(XMRIG_PATH_OK);
                     }
                     ui.spacing_mut().text_edit_width = ui.available_width() - SPACE;
-                    ui.set_enabled(!lock!(file_window).thread);
-                    if ui.button("Open").on_hover_text(GUPAX_SELECT).clicked() {
-                        Self::spawn_file_window_thread(file_window, FileType::Xmrig);
-                    }
-                    ui.add_sized(
-                        [ui.available_width(), height],
-                        TextEdit::singleline(&mut self.xmrig_path),
-                    )
-                    .on_hover_text(GUPAX_PATH_XMRIG);
+                    ui.add_enabled_ui(!lock!(file_window).thread, |ui| {
+                        if ui.button("Open").on_hover_text(GUPAX_SELECT).clicked() {
+                            Self::spawn_file_window_thread(file_window, FileType::Xmrig);
+                        }
+                        ui.add_sized(
+                            [ui.available_width(), height],
+                            TextEdit::singleline(&mut self.xmrig_path),
+                        )
+                        .on_hover_text(GUPAX_PATH_XMRIG);
+                    });
                 });
                 ui.horizontal(|ui| {
                     if self.xmrig_proxy_path.is_empty() {
@@ -241,15 +252,16 @@ impl Gupax {
                         .on_hover_text(XMRIG_PROXY_PATH_OK);
                     }
                     ui.spacing_mut().text_edit_width = ui.available_width() - SPACE;
-                    ui.set_enabled(!lock!(file_window).thread);
-                    if ui.button("Open").on_hover_text(GUPAX_SELECT).clicked() {
-                        Self::spawn_file_window_thread(file_window, FileType::XmrigProxy);
-                    }
-                    ui.add_sized(
-                        [ui.available_width(), height],
-                        TextEdit::singleline(&mut self.xmrig_proxy_path),
-                    )
-                    .on_hover_text(GUPAX_PATH_XMRIG_PROXY);
+                    ui.add_enabled_ui(!lock!(file_window).thread, |ui| {
+                        if ui.button("Open").on_hover_text(GUPAX_SELECT).clicked() {
+                            Self::spawn_file_window_thread(file_window, FileType::XmrigProxy);
+                        }
+                        ui.add_sized(
+                            [ui.available_width(), height],
+                            TextEdit::singleline(&mut self.xmrig_proxy_path),
+                        )
+                        .on_hover_text(GUPAX_PATH_XMRIG_PROXY);
+                    });
                 });
             });
             let mut guard = lock!(file_window);
@@ -365,40 +377,42 @@ impl Gupax {
                     let height = height / 3.5;
                     let size = vec2(width, height);
                     ui.horizontal(|ui| {
-                        ui.set_enabled(self.ratio != Ratio::Height);
-                        ui.add_sized(
-                            size,
-                            Label::new(format!(
-                                " Width [{}-{}]:",
-                                APP_MIN_WIDTH as u16, APP_MAX_WIDTH as u16
-                            )),
-                        );
-                        ui.add_sized(
-                            size,
-                            Slider::new(
-                                &mut self.selected_width,
-                                APP_MIN_WIDTH as u16..=APP_MAX_WIDTH as u16,
-                            ),
-                        )
-                        .on_hover_text(GUPAX_WIDTH);
+                        ui.add_enabled_ui(self.ratio != Ratio::Height, |ui| {
+                            ui.add_sized(
+                                size,
+                                Label::new(format!(
+                                    " Width [{}-{}]:",
+                                    APP_MIN_WIDTH as u16, APP_MAX_WIDTH as u16
+                                )),
+                            );
+                            ui.add_sized(
+                                size,
+                                Slider::new(
+                                    &mut self.selected_width,
+                                    APP_MIN_WIDTH as u16..=APP_MAX_WIDTH as u16,
+                                ),
+                            )
+                            .on_hover_text(GUPAX_WIDTH);
+                        });
                     });
                     ui.horizontal(|ui| {
-                        ui.set_enabled(self.ratio != Ratio::Width);
-                        ui.add_sized(
-                            size,
-                            Label::new(format!(
-                                "Height [{}-{}]:",
-                                APP_MIN_HEIGHT as u16, APP_MAX_HEIGHT as u16
-                            )),
-                        );
-                        ui.add_sized(
-                            size,
-                            Slider::new(
-                                &mut self.selected_height,
-                                APP_MIN_HEIGHT as u16..=APP_MAX_HEIGHT as u16,
-                            ),
-                        )
-                        .on_hover_text(GUPAX_HEIGHT);
+                        ui.add_enabled_ui(self.ratio != Ratio::Width, |ui| {
+                            ui.add_sized(
+                                size,
+                                Label::new(format!(
+                                    "Height [{}-{}]:",
+                                    APP_MIN_HEIGHT as u16, APP_MAX_HEIGHT as u16
+                                )),
+                            );
+                            ui.add_sized(
+                                size,
+                                Slider::new(
+                                    &mut self.selected_height,
+                                    APP_MIN_HEIGHT as u16..=APP_MAX_HEIGHT as u16,
+                                ),
+                            )
+                            .on_hover_text(GUPAX_HEIGHT);
+                        });
                     });
                     ui.horizontal(|ui| {
                         ui.add_sized(

@@ -18,14 +18,14 @@ use crate::{
 use super::PubXvbApi;
 #[derive(Copy, Clone, Debug, Default, PartialEq, Display)]
 pub enum XvbNode {
-    #[display(fmt = "XvB North America Node")]
+    #[display("XvB North America Node")]
     NorthAmerica,
     #[default]
-    #[display(fmt = "XvB European Node")]
+    #[display("XvB European Node")]
     Europe,
-    #[display(fmt = "Local P2pool")]
+    #[display("Local P2pool")]
     P2pool,
-    #[display(fmt = "Xmrig Proxy")]
+    #[display("Xmrig Proxy")]
     XmrigProxy,
 }
 impl XvbNode {

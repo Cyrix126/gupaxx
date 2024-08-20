@@ -154,7 +154,7 @@ impl P2pool {
 				let text = format!("{}\n    Currently selected node: {}. {}\n    Current amount of nodes: {}/1000", text, self.selected_index+1, self.selected_name, node_vec_len);
 				// If the node already exists, show [Save] and mutate the already existing node
 				if exists {
-					ui.set_enabled(!incorrect_input && save_diff);
+					ui.add_enabled_ui(!incorrect_input && save_diff, |ui|{
 					if ui.add_sized([width, text_edit], Button::new("Save")).on_hover_text(text).clicked() {
 						let node = Node {
 							ip: self.ip.clone(),
@@ -168,9 +168,10 @@ impl P2pool {
 						self.selected_zmq.clone_from(&self.zmq);
 						info!("Node | S | [index: {}, name: \"{}\", ip: \"{}\", rpc: {}, zmq: {}]", existing_index+1, self.name, self.ip, self.rpc, self.zmq);
 					}
+					});
 				// Else, add to the list
 				} else {
-					ui.set_enabled(!incorrect_input && node_vec_len < 1000);
+					ui.add_enabled_ui(!incorrect_input && node_vec_len < 1000, |ui| {
 					if ui.add_sized([width, text_edit], Button::new("Add")).on_hover_text(text).clicked() {
 						let node = Node {
 							ip: self.ip.clone(),
@@ -185,11 +186,12 @@ impl P2pool {
 						self.selected_zmq.clone_from(&self.zmq);
 						info!("Node | A | [index: {}, name: \"{}\", ip: \"{}\", rpc: {}, zmq: {}]", node_vec_len, self.name, self.ip, self.rpc, self.zmq);
 					}
+					});
 				}
 			});
 			// [Delete]
 			ui.horizontal(|ui| {
-				ui.set_enabled(node_vec_len > 1);
+				ui.add_enabled_ui(node_vec_len > 1, |ui|{
 				let text = format!("{}\n    Currently selected node: {}. {}\n    Current amount of nodes: {}/1000", LIST_DELETE, self.selected_index+1, self.selected_name, node_vec_len);
 				if ui.add_sized([width, text_edit], Button::new("Delete")).on_hover_text(text).clicked() {
 					let new_name;
@@ -217,15 +219,18 @@ impl P2pool {
 					self.zmq = new_node.zmq;
 					info!("Node | D | [index: {}, name: \"{}\", ip: \"{}\", rpc: {}, zmq: {}]", self.selected_index, self.selected_name, self.selected_ip, self.selected_rpc, self.selected_zmq);
 				}
+				});
 			});
 			ui.horizontal(|ui| {
-				ui.set_enabled(!self.name.is_empty() || !self.ip.is_empty() || !self.rpc.is_empty() || !self.zmq.is_empty());
+				ui.add_enabled_ui(!self.name.is_empty() || !self.ip.is_empty() || !self.rpc.is_empty() || !self.zmq.is_empty(), |ui|{
 				if ui.add_sized([width, text_edit], Button::new("Clear")).on_hover_text(LIST_CLEAR).clicked() {
 					self.name.clear();
 					self.ip.clear();
 					self.rpc.clear();
 					self.zmq.clear();
 				}
+					
+				});
 			});
 		});
 		});

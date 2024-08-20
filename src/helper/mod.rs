@@ -512,7 +512,10 @@ impl Helper {
                 // 2. Selectively refresh [sysinfo] for only what we need (better performance).
                 sysinfo.refresh_cpu_specifics(sysinfo_cpu);
                 debug!("Helper | Sysinfo refresh (1/3) ... [cpu]");
-                sysinfo.refresh_processes_specifics(sysinfo_processes);
+                sysinfo.refresh_processes_specifics(
+                    sysinfo::ProcessesToUpdate::All,
+                    sysinfo_processes,
+                );
                 debug!("Helper | Sysinfo refresh (2/3) ... [processes]");
                 sysinfo.refresh_memory();
                 debug!("Helper | Sysinfo refresh (3/3) ... [memory]");
