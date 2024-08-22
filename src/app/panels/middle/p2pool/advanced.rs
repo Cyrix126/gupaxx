@@ -229,7 +229,7 @@ impl P2pool {
 					self.rpc.clear();
 					self.zmq.clear();
 				}
-					
+
 				});
 			});
 		});

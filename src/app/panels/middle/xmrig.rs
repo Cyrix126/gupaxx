@@ -120,7 +120,7 @@ impl Xmrig {
                 })
             });
             ui.add_enabled_ui(self.arguments.is_empty(), |ui|{
-                
+
             //---------------------------------------------------------------------------------------------------- Address
             debug!("XMRig Tab | Rendering [Address]");
             ui.group(|ui| {
@@ -387,7 +387,7 @@ impl Xmrig {
 					self.ip = new_pool.ip;
 					self.port = new_pool.port;
 					info!("Node | D | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig\"{}\"]", self.selected_index, self.selected_name, self.selected_ip, self.selected_port, self.selected_rig);
-				}			    
+}
 				});
 
 			});

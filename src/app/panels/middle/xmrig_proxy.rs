@@ -278,7 +278,7 @@ impl XmrigProxy {
 						self.selected_port.clone_from(&self.p2pool_port);
 						info!("Node | S | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig: \"{}\"]", existing_index+1, self.name, self.p2pool_ip, self.p2pool_port, self.rig);
 					}
-						
+
 					});
 				// Else, add to the list
 				} else {
@@ -297,7 +297,7 @@ impl XmrigProxy {
 						self.selected_port.clone_from(&self.p2pool_port);
 						info!("Node | A | [index: {}, name: \"{}\", ip: \"{}\", port: {}, rig: \"{}\"]", pool_vec_len, self.name, self.p2pool_ip, self.p2pool_port, self.rig);
 					}
-						
+
 					});
 				}
 			});
