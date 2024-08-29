@@ -256,7 +256,7 @@ impl crate::app::App {
     }
     fn gupax_submenu(&mut self, ui: &mut Ui, height: f32) {
         ui.group(|ui| {
-            let width = (ui.available_width() / 2.0) - 10.5;
+            let width = ((ui.available_width() / 2.0) - 10.5).max(0.0);
             let size = vec2(width, height);
             if ui
                 .add_sized(
@@ -465,7 +465,7 @@ impl crate::app::App {
         wants_input: bool,
     ) {
         ui.group(|ui| {
-            let width = (ui.available_width() / 3.0) - 5.0;
+            let width = ((ui.available_width() / 3.0) - 5.0).max(0.0);
             let size = vec2(width, height);
             if xmrig_is_waiting {
                 ui.add_enabled_ui(false, |ui| {
@@ -672,7 +672,7 @@ impl crate::app::App {
         wants_input: bool,
     ) {
         ui.group(|ui| {
-            let width = (ui.available_width() / 3.0) - 5.0;
+            let width = ((ui.available_width() / 3.0) - 5.0).max(0.0);
             let size = vec2(width, height);
             if xmrig_proxy_is_waiting {
                 ui.add_enabled_ui(false, |ui| {
