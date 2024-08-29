@@ -83,7 +83,7 @@ impl crate::app::App {
                 });
 
                 ui.with_layout(Layout::right_to_left(Align::RIGHT), |ui| {
-                    let width = (ui.available_width() / 3.0) - (SPACE * 3.0);
+                    let width = ((ui.available_width() / 3.0) - (SPACE * 3.0)).max(0.0);
                     let size = vec2(width, height);
                     // [Save/Reset]
                     self.save_reset_ui(ui, size, key, wants_input);
@@ -318,7 +318,7 @@ impl crate::app::App {
         key: &KeyPressed,
     ) {
         ui.group(|ui| {
-            let width = (ui.available_width() / 3.0) - 5.0;
+            let width = ((ui.available_width() / 3.0) - 5.0).max(0.0);
             let size = vec2(width, height);
             if p2pool_is_waiting {
                 ui.add_enabled_ui(false, |ui| {
@@ -591,7 +591,7 @@ impl crate::app::App {
         wants_input: bool,
     ) {
         ui.group(|ui| {
-            let width = (ui.available_width() / 3.0) - 5.0;
+            let width = ((ui.available_width() / 3.0) - 5.0).max(0.0);
             let size = vec2(width, height);
             if xvb_is_waiting {
                 ui.add_enabled_ui(false, |ui| {

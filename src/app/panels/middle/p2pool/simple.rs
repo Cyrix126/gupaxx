@@ -23,7 +23,7 @@ impl P2pool {
         // [Node]
         let height = size.y / 13.0;
         let space_h = size.y / 96.0;
-        ui.spacing_mut().slider_width = size.x - 16.0;
+        ui.spacing_mut().slider_width = (size.x - 16.0).max(0.0);
         ui.spacing_mut().icon_width = size.x / 25.0;
 
         // [Auto-select] if we haven't already.
@@ -78,7 +78,7 @@ impl P2pool {
 
             debug!("P2Pool Tab | Rendering [Select fastest ... Ping] buttons");
             ui.horizontal(|ui| {
-                let width = (size.x / 5.0) - 6.0;
+                let width = ((size.x / 5.0) - 6.0).max(0.0);
                 let size = vec2(width, height);
                 // [Select random node]
                 if ui
@@ -160,7 +160,7 @@ impl P2pool {
         debug!("P2Pool Tab | Rendering [Auto-*] buttons");
         ui.group(|ui| {
             ui.horizontal(|ui| {
-                let width = (size.x / 3.0) - (SPACE * 1.75);
+                let width = ((size.x / 3.0) - (SPACE * 1.75)).max(0.0);
                 let size = vec2(width, height);
                 // [Auto-node]
                 ui.add_sized(size, Checkbox::new(&mut self.auto_select, "Auto-select"))
