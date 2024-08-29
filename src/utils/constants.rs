@@ -17,8 +17,8 @@
 
 pub const GUPAX_VERSION: &str = concat!("v", env!("CARGO_PKG_VERSION")); // e.g: v1.0.0
 pub const P2POOL_VERSION: &str = "v4.1";
-pub const XMRIG_VERSION: &str = "v6.22.0";
-pub const XMRIG_PROXY_VERSION: &str = "v6.22.0";
+pub const XMRIG_VERSION: &str = "v6.21.1";
+pub const XMRIG_PROXY_VERSION: &str = "v6.21.1";
 pub const COMMIT: &str = env!("COMMIT"); // set in build.rs
                                          // e.g: Gupax_v1_0_0
                                          // Would have been [Gupax_v1.0.0] but P2Pool truncates everything after [.]
