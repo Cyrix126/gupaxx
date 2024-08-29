@@ -475,8 +475,7 @@ impl<'a> Algorithm<'a> {
             BLOCK_PPLNS_WINDOW_MAIN
         };
         let mut minimum_hr = ((difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32
-            * (1.0 + (p2pool_buffer as f32 / 100.0)) as f32)
-            // * 1.05)
+            * (1.0 + (p2pool_buffer as f32 / 100.0)))
             - p2pool_external_hashrate;
 
         info!("Algorithm | (difficulty({}) / (window pplns blocks({}) * seconds per p2pool block({})) * (BUFFER({})) / 100) - outside HR({}H/s) = minimum HR({}H/s) to keep a share.",
