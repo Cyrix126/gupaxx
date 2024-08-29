@@ -543,6 +543,7 @@ Uptime         = 0h 2m 4s
         let rig = "test_rig";
         let xp_alive = false;
         let share = 1;
+        let p2pool_buffer = 5;
 
         lock!(gui_api_xmrig).hashrate_raw_15m = 10000.0;
         lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualXvb;
@@ -561,6 +562,7 @@ Uptime         = 0h 2m 4s
             &time_donated,
             rig,
             xp_alive,
+            p2pool_buffer,
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 1000.0);
@@ -580,6 +582,7 @@ Uptime         = 0h 2m 4s
         let rig = "test_rig";
         let xp_alive = false;
         let share = 1;
+        let p2pool_buffer = 5;
 
         lock!(gui_api_xmrig).hashrate_raw_15m = 10000.0;
         lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualP2pool;
@@ -598,6 +601,7 @@ Uptime         = 0h 2m 4s
             &time_donated,
             rig,
             xp_alive,
+            p2pool_buffer,
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 9000.0);
@@ -617,6 +621,7 @@ Uptime         = 0h 2m 4s
         let rig = "test_rig";
         let xp_alive = false;
         let share = 1;
+        let p2pool_buffer = 5;
 
         lock!(gui_api_xmrig).hashrate_raw_15m = 10000.0;
         lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualDonationLevel;
@@ -636,6 +641,7 @@ Uptime         = 0h 2m 4s
             &time_donated,
             rig,
             xp_alive,
+            p2pool_buffer,
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 1000.0);
@@ -655,6 +661,7 @@ Uptime         = 0h 2m 4s
         let rig = "test_rig";
         let xp_alive = false;
         let share = 1;
+        let p2pool_buffer = 5;
 
         lock!(gui_api_p2pool).p2pool_difficulty_u64 = 9_000_000;
         lock!(gui_api_xmrig).hashrate_raw_15m = 20000.0;
@@ -673,6 +680,7 @@ Uptime         = 0h 2m 4s
             &time_donated,
             rig,
             xp_alive,
+            p2pool_buffer,
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 10000.0);
@@ -694,6 +702,7 @@ Uptime         = 0h 2m 4s
             &time_donated,
             rig,
             xp_alive,
+            p2pool_buffer,
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 1000.0);
@@ -713,6 +722,7 @@ Uptime         = 0h 2m 4s
         let rig = "test_rig";
         let xp_alive = false;
         let share = 1;
+        let p2pool_buffer = 5;
 
         lock!(gui_api_p2pool).p2pool_difficulty_u64 = 95_000_000;
         lock!(gui_api_xmrig).hashrate_raw_15m = 20000.0;
@@ -731,6 +741,7 @@ Uptime         = 0h 2m 4s
             &time_donated,
             rig,
             xp_alive,
+            p2pool_buffer,
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 15382.1);
@@ -750,6 +761,7 @@ Uptime         = 0h 2m 4s
             &time_donated,
             rig,
             xp_alive,
+            p2pool_buffer,
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 20000.0);

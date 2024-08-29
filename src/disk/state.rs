@@ -318,6 +318,7 @@ pub struct Xvb {
     pub manual_slider_amount: f64,
     pub manual_donation_level: ManualDonationLevel,
     pub manual_donation_metric: ManualDonationMetric,
+    pub p2pool_buffer: i8,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
@@ -517,6 +518,7 @@ impl Default for Xvb {
             manual_slider_amount: Default::default(),
             manual_donation_level: Default::default(),
             manual_donation_metric: Default::default(),
+            p2pool_buffer: 5,
         }
     }
 }

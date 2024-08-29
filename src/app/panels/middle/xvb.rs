@@ -265,6 +265,15 @@ impl crate::disk::state::Xvb {
             // Set runtime_mode & runtime_manual_amount
             lock!(api).stats_priv.runtime_mode = self.mode.clone().into();
             lock!(api).stats_priv.runtime_manual_amount = self.manual_amount_raw;
+         ui.add_space(space_h);
+
+            // allow user to modify the buffer for p2pool
+            // button
+            ui.add_sized(
+                [width, text_edit],
+                egui::Slider::new(&mut self.p2pool_buffer, -100..=100)
+                .text("% P2Pool Buffer" )
+            ).on_hover_text("Set the % amount of additional HR to send to p2pool. Will reduce (if positive) or augment (if negative) the chances to miss the p2pool window");
         }
 
          ui.add_space(space_h);

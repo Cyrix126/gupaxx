@@ -326,7 +326,7 @@ impl Helper {
                                     *lock!(retry) = false;
                                     // reset instant because algo will start.
                                     *lock!(last_algorithm) = Instant::now();
-                                    *lock!(handle_algo) = Some(spawn(enc!((client, gui_api, gui_api_xmrig, gui_api_xp, state_xmrig, state_xp, time_donated) async move {
+                                    *lock!(handle_algo) = Some(spawn(enc!((client, gui_api, gui_api_xmrig, gui_api_xp, state_xmrig, state_xp, time_donated, state_xvb) async move {
                     let token_xmrig = if xp_alive {
                         &state_xp.token
                     } else {
@@ -349,7 +349,8 @@ impl Helper {
                                             share,
                                             &time_donated,
                                             rig,
-                                            xp_alive
+                                            xp_alive,
+                                            state_xvb.p2pool_buffer
                                         ).await;
                                     })));
                                 } else {

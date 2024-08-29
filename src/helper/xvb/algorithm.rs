@@ -19,7 +19,7 @@ use crate::{
         xvb::{nodes::XvbNode, priv_stats::RuntimeMode},
     },
     macros::lock,
-    BLOCK_PPLNS_WINDOW_MAIN, BLOCK_PPLNS_WINDOW_MINI, SECOND_PER_BLOCK_P2POOL, XVB_BUFFER,
+    BLOCK_PPLNS_WINDOW_MAIN, BLOCK_PPLNS_WINDOW_MINI, SECOND_PER_BLOCK_P2POOL,
     XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR, XVB_ROUND_DONOR_VIP_MIN_HR,
     XVB_ROUND_DONOR_WHALE_MIN_HR, XVB_TIME_ALGO,
 };
@@ -40,6 +40,7 @@ pub(crate) async fn algorithm(
     time_donated: &Arc<Mutex<u32>>,
     rig: &str,
     xp_alive: bool,
+    p2pool_buffer: i8,
 ) {
     let mut algorithm = Algorithm::new(
         client,
@@ -54,6 +55,7 @@ pub(crate) async fn algorithm(
         time_donated,
         rig,
         xp_alive,
+        p2pool_buffer,
     );
     algorithm.run().await;
 }
@@ -111,6 +113,7 @@ impl<'a> Algorithm<'a> {
         time_donated: &'a Arc<Mutex<u32>>,
         rig: &'a str,
         xp_alive: bool,
+        p2pool_buffer: i8,
     ) -> Self {
         let hashrate_xmrig = current_controllable_hr(xp_alive, gui_api_xp, gui_api_xmrig);
 
@@ -136,6 +139,7 @@ impl<'a> Algorithm<'a> {
             lock!(gui_api_p2pool).p2pool_difficulty_u64,
             state_p2pool.mini,
             p2pool_external_hashrate,
+            p2pool_buffer,
         );
 
         let spareable_hashrate = hashrate_xmrig - share_min_hashrate;
@@ -459,20 +463,27 @@ impl<'a> Algorithm<'a> {
         samples.0.iter().sum::<f32>() / samples.0.len() as f32
     }
 
-    fn minimum_hashrate_share(difficulty: u64, mini: bool, p2pool_external_hashrate: f32) -> f32 {
+    fn minimum_hashrate_share(
+        difficulty: u64,
+        mini: bool,
+        p2pool_external_hashrate: f32,
+        p2pool_buffer: i8,
+    ) -> f32 {
         let pws = if mini {
             BLOCK_PPLNS_WINDOW_MINI
         } else {
             BLOCK_PPLNS_WINDOW_MAIN
         };
-        let mut minimum_hr = ((difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32 * XVB_BUFFER)
+        let mut minimum_hr = ((difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32
+            * (1.0 + (p2pool_buffer as f32 / 100.0)) as f32)
+            // * 1.05)
             - p2pool_external_hashrate;
 
-        info!("Algorithm | (difficulty({}) / (window pplns blocks({}) * seconds per p2pool block({})) * BUFFER({})) - outside HR({}H/s) = minimum HR({}H/s) to keep a share.",
+        info!("Algorithm | (difficulty({}) / (window pplns blocks({}) * seconds per p2pool block({})) * (BUFFER({})) / 100) - outside HR({}H/s) = minimum HR({}H/s) to keep a share.",
          difficulty,
          pws,
          SECOND_PER_BLOCK_P2POOL,
-         XVB_BUFFER,
+         p2pool_buffer,
          p2pool_external_hashrate,
          minimum_hr);
 

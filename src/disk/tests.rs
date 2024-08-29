@@ -135,6 +135,7 @@ mod test {
             token = ""
             hero = false
             node = "Europe"
+            p2pool_buffer = 5
 
 			[version]
 			gupax = "v1.3.0"
