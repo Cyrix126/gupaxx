@@ -29,7 +29,7 @@ At first start, a guide could ask the user what it intends to do with Gupaxx (cr
 ### Very noob mode
 At first start, a mode is suggested for very noob users. It would only shows the seed phrase of the wallet generated and configure all options for the user.
 
-## Supporting more environnements
+## Supporting more environments
 ### Packaging
 Add repository/AUR for Gupaxx and a status of packaging distro/version on the README
 ### Minimum requirement
