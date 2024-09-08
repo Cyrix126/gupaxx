@@ -30,13 +30,13 @@ distro = []
 
 [dependencies]
 clap = {version="4.5", features=["cargo", "derive"]}
-anyhow = "1.0.86"
+anyhow = "1.0.87"
 benri = "0.1.12"
 bytes = "1.7.1"
 dirs = "5.0.1"
 #--------------------------------------------------------------------------------
-egui = {git="https://github.com/emilk/egui", rev="343c3d1"}
-egui_extras = {git="https://github.com/emilk/egui", rev="343c3d1", features = ["image"] }
+egui = {git="https://github.com/emilk/egui", rev="6b7f431"}
+egui_extras = {git="https://github.com/emilk/egui", rev="6b7f431", features = ["image"] }
 ## 2023-12-28: https://github.com/hinto-janai/gupax/issues/68
 ##
 ## 2024-03-18: Both `glow` and `wgpu` seem to crash:
@@ -59,11 +59,11 @@ portable-pty = "0.8.1"
 rand = "0.8.5"
 regex = { version = "1.10.6", default-features = false, features = ["perf"] }
 rfd = "0.14.1"
-serde = { version = "1.0.209", features = ["rc", "derive"] }
-serde_json = "1.0.127"
+serde = { version = "1.0.210", features = ["rc", "derive"] }
+serde_json = "1.0.128"
 sysinfo = { version = "0.31.4", default-features = false, features=["system"] }
 # tls-api = "0.9.0"
-tokio = { version = "1.39.3", features = ["rt", "time", "macros", "process", "rt-multi-thread"] }
+tokio = { version = "1.40.0", features = ["rt", "time", "macros", "process", "rt-multi-thread"] }
 toml = { version = "0.8.19", features = ["preserve_order"] }
 walkdir = "2.5.0"
 zeroize = "1.8.1"
@@ -78,7 +78,7 @@ bounded-vec-deque = {version="0.1.1", default-features=false}
 cfg-if = "1.0"
 flexi_logger = "0.29"
 # eframe = { version = "0.28.1", features = ["wgpu"] }
-eframe = {git="https://github.com/emilk/egui", rev="343c3d1", features=["wgpu"]}
+eframe = {git="https://github.com/emilk/egui", rev="6b7f431", features=["wgpu"]}
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
 tar = "0.4.41"
@@ -99,7 +99,7 @@ sudo = "0.6.0"
 # linked as well which causes problems, so statically link it.
 lzma-sys = { version = "0.1", features = ["static"] }
 [dev-dependencies]
-egui = {git="https://github.com/emilk/egui", rev="343c3d1", features=["callstack"]}
+egui = {git="https://github.com/emilk/egui", rev="6b7f431", features=["callstack"]}
 
 # [target.'cfg(not(target_os = "macos"))'.dependencies]
 # tls-api-native-tls = "0.9.0"

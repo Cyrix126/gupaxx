@@ -60,7 +60,7 @@ impl P2pool {
                 debug!("P2Pool Tab | Rendering [ComboBox] of Remote Nodes");
                 let ip_location = format_ip_location(&self.node, false);
                 let text = RichText::new(format!(" ⏺ {}ms | {}", ms, ip_location)).color(color);
-                ComboBox::from_id_source("remote_nodes")
+                ComboBox::from_id_salt("remote_nodes")
                     .selected_text(text)
                     .width(size.x)
                     .show_ui(ui, |ui| {

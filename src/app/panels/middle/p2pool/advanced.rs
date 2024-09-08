@@ -117,7 +117,7 @@ impl P2pool {
 			// [Ping List]
 			debug!("P2Pool Tab | Rendering [Node List]");
 			let text = RichText::new(format!("{}. {}", self.selected_index+1, self.selected_name));
-			ComboBox::from_id_source("manual_nodes").selected_text(text).width(width).show_ui(ui, |ui| {
+			ComboBox::from_id_salt("manual_nodes").selected_text(text).width(width).show_ui(ui, |ui| {
 				for (n, (name, node)) in node_vec.iter().enumerate() {
 					let text = RichText::new(format!("{}. {}\n     IP: {}\n    RPC: {}\n    ZMQ: {}", n+1, name, node.ip, node.rpc, node.zmq));
 					if ui.add(SelectableLabel::new(self.selected_name == *name, text)).clicked() {
