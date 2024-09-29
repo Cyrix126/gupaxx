@@ -42,7 +42,7 @@ impl XmrigProxy {
             ui.add_space(space_h);
         });
         // console output for log
-        debug!("XvB Tab | Rendering [Console]");
+        debug!("Xmrig-Proxy Tab | Rendering [Console]");
         ui.group(|ui| {
             let text = &lock!(api).output;
             let nb_lines = num_lines(text);
@@ -93,7 +93,7 @@ impl XmrigProxy {
             }
 
             //---------------------------------------------------------------------------------------------------- Arguments
-            debug!("XMRig Tab | Rendering [Arguments]");
+            debug!("XMRig-Proxy Tab | Rendering [Arguments]");
             ui.group(|ui| {
                 ui.horizontal(|ui| {
                     let width = (size.x / 10.0) - SPACE;
@@ -128,7 +128,7 @@ impl XmrigProxy {
             // need to show local ip address
             // need to show public ip
 
-            debug!("XMRig Tab | Rendering [Pool List] elements");
+            debug!("XMRig-Proxy Tab | Rendering [Pool List] elements");
             let width = ui.available_width() - 10.0;
             let mut incorrect_input = false; // This will disable [Add/Delete] on bad input
                                              // [Pool IP/Port]
@@ -225,7 +225,7 @@ impl XmrigProxy {
 			ui.spacing_mut().slider_width = width - 8.0;
 			ui.spacing_mut().icon_width = width / 25.0;
 			// [Node List]
-			debug!("XMRig Tab | Rendering [Node List] ComboBox");
+			debug!("XMRig-Proxy Tab | Rendering [Node List] ComboBox");
 			let text = RichText::new(format!("{}. {}", self.selected_index+1, self.selected_name));
 			ComboBox::from_id_salt("manual_pool").selected_text(text).width(width).show_ui(ui, |ui| {
 				for (n, (name, pool)) in pool_vec.iter().enumerate() {
@@ -348,7 +348,7 @@ impl XmrigProxy {
 		});
             ui.add_space(5.0);
 
-            debug!("XMRig Tab | Rendering [API] TextEdits");
+            debug!("XMRig-Proxy Tab | Rendering [API] TextEdits");
             // [HTTP API IP/Port]
             ui.group(|ui| {
                 ui.horizontal(|ui| {
@@ -411,7 +411,7 @@ impl XmrigProxy {
 
                     ui.separator();
 
-                    debug!("XMRig Tab | Rendering [TLS/Keepalive] buttons");
+                    debug!("XMRig-Proxy Tab | Rendering [TLS/Keepalive] buttons");
                     ui.vertical(|ui| {
                         // TLS/Keepalive
                         ui.horizontal(|ui| {
