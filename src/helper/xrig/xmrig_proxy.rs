@@ -229,7 +229,7 @@ impl Helper {
         // This thread lives to wait, start xmrig_proxy then die.
         thread::spawn(move || {
             while lock2!(helper, xmrig_proxy).state != ProcessState::Waiting {
-                warn!("XMRig_proxy | Want to restart but process is still alive, waiting...");
+                warn!("XMRig-proxy | Want to restart but process is still alive, waiting...");
                 sleep!(1000);
             }
             // Ok, process is not alive, start the new one!
@@ -349,16 +349,16 @@ impl Helper {
         }
         #[cfg(target_family = "unix")]
         if let Err(e) = writeln!(stdin, "v") {
-            error!("P2Pool Watchdog | STDIN error: {}", e);
+            error!("XMRig-Proxy Watchdog | STDIN error: {}", e);
         }
-        debug!("Xmrig-Proxy Watchdog | checking connections");
+        debug!("XMRig-Proxy Watchdog | checking connections");
         #[cfg(target_os = "windows")]
         if let Err(e) = write!(stdin, "c\r\n") {
-            error!("P2Pool Watchdog | STDIN error: {}", e);
+            error!("XMRig-Proxy Watchdog | STDIN error: {}", e);
         }
         #[cfg(target_family = "unix")]
         if let Err(e) = writeln!(stdin, "c") {
-            error!("P2Pool Watchdog | STDIN error: {}", e);
+            error!("XMRig-Proxy Watchdog | STDIN error: {}", e);
         }
         info!("XMRig-Proxy | Entering watchdog mode... woof!");
         loop {
@@ -382,14 +382,14 @@ impl Helper {
             // get data output/api
 
             // Check if logs need resetting
-            debug!("XMRig Watchdog | Attempting GUI log reset check");
+            debug!("XMRig-Proxy Watchdog | Attempting GUI log reset check");
             {
                 let mut lock = lock!(gui_api);
                 Self::check_reset_gui_output(&mut lock.output, ProcessName::XmrigProxy);
             }
             // Always update from output
             // todo: check difference with xmrig
-            debug!("XMRig Watchdog | Starting [update_from_output()]");
+            debug!("XMRig-Proxy Watchdog | Starting [update_from_output()]");
             PubXmrigProxyApi::update_from_output(
                 pub_api,
                 &output_pub,
