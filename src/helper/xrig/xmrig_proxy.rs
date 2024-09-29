@@ -112,7 +112,11 @@ impl Helper {
         let api_port;
         let ip;
         let port;
-
+        // custom args from user input
+        if !state.arguments.is_empty() {
+            args.push(state.arguments.clone());
+            return args;
+        }
         // [Simple]
         if state.simple {
             // Build the xmrig argument
