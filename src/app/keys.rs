@@ -153,7 +153,9 @@ impl App {
                 Tab::Gupax => flip!(self.state.gupax.simple),
                 Tab::P2pool => flip!(self.state.p2pool.simple),
                 Tab::Xmrig => flip!(self.state.xmrig.simple),
-                _ => (),
+                Tab::XmrigProxy => flip!(self.state.xmrig_proxy.simple),
+                Tab::Xvb => flip!(self.state.xvb.simple),
+                Tab::About => (),
             };
         // Change Submenu RIGHT
         } else if key.is_v() && !wants_input {
@@ -166,7 +168,9 @@ impl App {
                 Tab::Gupax => flip!(self.state.gupax.simple),
                 Tab::P2pool => flip!(self.state.p2pool.simple),
                 Tab::Xmrig => flip!(self.state.xmrig.simple),
-                _ => (),
+                Tab::XmrigProxy => flip!(self.state.xmrig_proxy.simple),
+                Tab::Xvb => flip!(self.state.xvb.simple),
+                Tab::About => (),
             };
         }
         (key, wants_input)
