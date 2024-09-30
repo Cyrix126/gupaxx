@@ -6,6 +6,8 @@ Some ideas could be done in a matter of hours, some could take months.
 
 ## More Decentralized
 ### Integrate a Monero Node
+
+Started by [Cyrix126](https://github.com/Cyrix126)
 If we want Gupaxx to help user mine in the most decentralized way, we should offer them to run a monero node.
 This would be optional and would check if the requirement are fulfilled before enabling the button to do so.
 ### Synchronize source code repository on p2p network
@@ -63,7 +65,7 @@ The algorithm would still check the estimation made by the p2pool instance of Gu
 Could also be an option in advanced tab of XvB warning the user that he should point all his miners to the p2pool instance of Gupaxx to take them into account.
 
 ### Manually set HR for XvB algo
-started by [Sina](https://github.com/mostafaei2002) [PR](https://github.com/Cyrix126/gupaxx/pull/11)
+Done by [Sina](https://github.com/mostafaei2002) [PR](https://github.com/Cyrix126/gupaxx/pull/11)
 An advanced tab on XvB tab with multiple tools to set the HR manually.
 The user can sometime better know the right decision from his HR than the algo that will take more time to get everything right, specially if resources are changing.
 
