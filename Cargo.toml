@@ -30,13 +30,13 @@ distro = []
 
 [dependencies]
 clap = {version="4.5", features=["cargo", "derive"]}
-anyhow = "1.0.87"
+anyhow = "1.0.89"
 benri = "0.1.12"
-bytes = "1.7.1"
+bytes = "1.7.2"
 dirs = "5.0.1"
 #--------------------------------------------------------------------------------
-egui = {git="https://github.com/emilk/egui", rev="6b7f431"}
-egui_extras = {git="https://github.com/emilk/egui", rev="6b7f431", features = ["image"] }
+egui = "0.29.0"
+egui_extras = {version="0.29.0", features = ["image"] }
 ## 2023-12-28: https://github.com/hinto-janai/gupax/issues/68
 ##
 ## 2024-03-18: Both `glow` and `wgpu` seem to crash:
@@ -54,11 +54,11 @@ reqwest = {version = "0.12.7", default-features=false, features=["json", "rustls
 image = { version = "0.25.2", features = ["png"] }
 log = "0.4.22"
 num-format = { version = "0.4.4", default-features = false }
-once_cell = "1.19.0"
+once_cell = "1.20.1"
 portable-pty = "0.8.1"
 rand = "0.8.5"
-regex = { version = "1.10.6", default-features = false, features = ["perf"] }
-rfd = "0.14.1"
+regex = { version = "1.11.0", default-features = false, features = ["perf"] }
+rfd = "0.15.0"
 serde = { version = "1.0.210", features = ["rc", "derive"] }
 serde_json = "1.0.128"
 sysinfo = { version = "0.31.4", default-features = false, features=["system"] }
@@ -77,11 +77,10 @@ enclose = "1.2.0"
 bounded-vec-deque = {version="0.1.1", default-features=false}
 cfg-if = "1.0"
 flexi_logger = "0.29"
-# eframe = { version = "0.28.1", features = ["wgpu"] }
-eframe = {git="https://github.com/emilk/egui", rev="6b7f431", features=["wgpu"]}
+eframe = {version="0.29.0", features=["wgpu"]}
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
-tar = "0.4.41"
+tar = "0.4.42"
 flate2 = "1.0"
 sudo = "0.6.0"
 # macOS
@@ -99,7 +98,7 @@ sudo = "0.6.0"
 # linked as well which causes problems, so statically link it.
 lzma-sys = { version = "0.1", features = ["static"] }
 [dev-dependencies]
-egui = {git="https://github.com/emilk/egui", rev="6b7f431", features=["callstack"]}
+egui = {version="0.29.0", features=["callstack"]}
 
 # [target.'cfg(not(target_os = "macos"))'.dependencies]
 # tls-api-native-tls = "0.9.0"
