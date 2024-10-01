@@ -113,7 +113,7 @@ impl Helper {
         let ip;
         let port;
         // custom args from user input
-        if !state.arguments.is_empty() {
+        if !state.arguments.is_empty() && !state.simple {
             args.push(state.arguments.clone());
             return args;
         }
