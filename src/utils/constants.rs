@@ -407,7 +407,6 @@ pub const LIST_ADD: &str = "Add the current values to the list";
 pub const LIST_SAVE: &str = "Save the current values to the already existing entry";
 pub const LIST_DELETE: &str = "Delete the currently selected entry";
 pub const LIST_CLEAR: &str = "Clear all current values";
-
 // XMRig
 pub const XMRIG_SIMPLE: &str = r#"Use simple XMRig settings:
   - Mine to local P2Pool (localhost:3333)
@@ -502,7 +501,8 @@ pub const BLOCK_PPLNS_WINDOW_MAIN: u64 = 363;
 pub const SECOND_PER_BLOCK_P2POOL: u64 = 10;
 // pub const TIME_PPLNS_WINDOW_MINI: Duration = Duration::from_secs(BLOCK_PPLNS_WINDOW_MINI * SECOND_PER_BLOCK_P2POOL);
 // pub const TIME_PPLNS_WINDOW_MAIN: Duration = Duration::from_secs(BLOCK_PPLNS_WINDOW_MAIN * SECOND_PER_BLOCK_P2POOL);
-
+pub const PROCESS_OUTSIDE: &str =
+    "This process is running outside of Gupaxx.\nYou need to stop it before starting it in Gupaxx.";
 //---------------------------------------------------------------------------------------------------- Visuals
 use egui::epaint::{Rounding, Shadow, Stroke};
 

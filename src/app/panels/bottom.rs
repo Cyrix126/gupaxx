@@ -5,6 +5,7 @@ use crate::disk::node::Node;
 use crate::disk::pool::Pool;
 use crate::disk::state::{Gupax, State};
 use crate::disk::status::Submenu;
+use crate::errors::process_running;
 use crate::helper::{Helper, ProcessSignal, ProcessState};
 use crate::utils::constants::*;
 use crate::utils::errors::{ErrorButtons, ErrorFerris};
@@ -378,6 +379,9 @@ impl crate::app::App {
                 ) {
                     ui_enabled = false;
                     text = format!("Error: {}", P2POOL_PATH_NOT_VALID);
+                } else if process_running(crate::helper::ProcessName::P2pool) {
+                    ui_enabled = false;
+                    text = format!("Error: {}", PROCESS_OUTSIDE);
                 }
                 ui.add_enabled_ui(ui_enabled, |ui| {
                     let color = if ui_enabled { GREEN } else { RED };
@@ -530,6 +534,9 @@ impl crate::app::App {
                 {
                     ui_enabled = false;
                     text = format!("Error: {}", XMRIG_PATH_NOT_VALID);
+                } else if process_running(crate::helper::ProcessName::Xmrig) {
+                    ui_enabled = false;
+                    text = format!("Error: {}", PROCESS_OUTSIDE);
                 }
                 ui.add_enabled_ui(ui_enabled, |ui| {
                     let color = if ui_enabled { GREEN } else { RED };
@@ -729,6 +736,9 @@ impl crate::app::App {
                 ) {
                     ui_enabled = false;
                     text = format!("Error: {}", XMRIG_PROXY_PATH_NOT_VALID);
+                } else if process_running(crate::helper::ProcessName::XmrigProxy) {
+                    ui_enabled = false;
+                    text = format!("Error: {}", PROCESS_OUTSIDE);
                 }
                 ui.add_enabled_ui(ui_enabled, |ui| {
                     let color = if ui_enabled { GREEN } else { RED };
