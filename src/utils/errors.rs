@@ -1,5 +1,11 @@
 use std::sync::{Arc, Mutex};
 
+#[cfg(target_os = "windows")]
+use sysinfo::System;
+
+#[cfg(target_os = "windows")]
+use crate::helper::ProcessName;
+
 use super::sudo::SudoState;
 
 //---------------------------------------------------------------------------------------------------- [ErrorState] struct
@@ -90,4 +96,20 @@ impl ErrorState {
         };
         SudoState::reset(state)
     }
+}
+
+#[cfg(target_os = "windows")]
+pub fn process_running(process_name: ProcessName) -> bool {
+    let name = match process_name {
+        ProcessName::P2pool => "p2pool",
+        ProcessName::Xmrig => "xmrig",
+        ProcessName::XmrigProxy => "xmrig-proxy",
+        ProcessName::Node => "monerod",
+        ProcessName::Xvb => panic!("XvB does not exist as a process outside of Gupaxx"),
+    };
+    let s = System::new_all();
+    if s.processes_by_name(name.as_ref()).next().is_some() {
+        return true;
+    }
+    false
 }

@@ -144,6 +144,8 @@ pub struct App {
     pub pool_path: PathBuf,             // Pool file path
     pub version: &'static str,          // Gupax version
     pub name_version: String,           // [Gupax vX.X.X]
+    #[cfg(target_os = "windows")]
+    pub xmrig_outside_warning_acknowledge: bool,
 }
 
 impl App {
@@ -306,6 +308,8 @@ impl App {
             pool_path: PathBuf::new(),
             version: GUPAX_VERSION,
             name_version: format!("Gupaxx {}", GUPAX_VERSION),
+            #[cfg(target_os = "windows")]
+            xmrig_outside_warning_acknowledge: false,
         };
         //---------------------------------------------------------------------------------------------------- App init data that *could* panic
         info!("App Init | Getting EXE path...");
@@ -601,7 +605,6 @@ impl App {
             error!("Unix | Regular user not detected: [{:?}]", id);
             app.error_state.set(format!("Gupaxx was launched as: [{:?}]\nPlease launch Gupax with regular user permissions.", id), ErrorFerris::Panic, ErrorButtons::Quit);
         }
-
         // macOS re-locates "dangerous" applications into some read-only "/private" directory.
         // It _seems_ to be fixed by moving [Gupax.app] into "/Applications".
         // So, detect if we are in in "/private" and warn the user.

@@ -1,4 +1,8 @@
 use super::App;
+#[cfg(target_os = "windows")]
+use crate::errors::{process_running, ErrorButtons, ErrorFerris};
+#[cfg(target_os = "windows")]
+use crate::helper::ProcessName;
 use crate::helper::ProcessState;
 use crate::macros::lock;
 use crate::SECOND;
@@ -63,7 +67,16 @@ impl eframe::App for App {
             self.size.y = ui.available_height();
         });
         self.resize(ctx);
-
+        // check for windows that a local instance of xmrig is not running outside of Gupaxx. Important because it could lead to crashes on this platform.
+        // Warn only once per restart of Gupaxx.
+        #[cfg(target_os = "windows")]
+        if !self.xmrig_outside_warning_acknowledge
+            && process_running(ProcessName::Xmrig)
+            && !xmrig_is_alive
+        {
+            self.error_state.set("An instance of xmrig is running outside of Gupaxx.\nThis is not supported and could lead to crashes on this platform.\nPlease stop your local instance and start xmrig from Gupaxx Xmrig tab.", ErrorFerris::Error, ErrorButtons::Okay);
+            self.xmrig_outside_warning_acknowledge = true;
+        }
         // If there's an error, display [ErrorState] on the whole screen until user responds
         debug!("App | Checking if there is an error in [ErrorState]");
         if self.error_state.error {
