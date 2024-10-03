@@ -8,7 +8,7 @@ assignees: ''
 ---
 
 ## OS & Version:
-e.g: Windows 11, Gupax v1.3.3
+e.g: Windows 11, Gupaxx v1.4.2
 
 ## Bug
 What is the bug?
@@ -23,11 +23,11 @@ Steps to reproduce the behavior:
 If possible, add screenshots to help explain the bug.
 
 ## Crash report
-If Gupax is crashing, you may have a file here:
+If Gupaxx is crashing, you may have a file here:
 
-- Windows: `C:\Users\YOUR_USER_NAME\AppData\Roaming\Gupax\crash.txt`
-- macOS: `/Users/YOUR_USER_NAME/Library/Application Support/Gupax/crash.txt`
-- Linux: `/home/YOUR_USER_NAME/.local/share/gupax/crash.txt`
+- Windows: `C:\Users\YOUR_USER_NAME\AppData\Roaming\Gupaxx\crash.txt`
+- macOS: `/Users/YOUR_USER_NAME/Library/Application Support/Gupaxx/crash.txt`
+- Linux: `/home/YOUR_USER_NAME/.local/share/gupaxx/crash.txt`
 
 If you do, please upload or copy-paste `crash.txt` here:
 ```
