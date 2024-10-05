@@ -49,7 +49,7 @@ pub const DEFAULT_XMRIG_PATH: &str = "xmrig/xmrig";
 #[cfg(target_os = "macos")]
 pub const DEFAULT_XMRIG_PROXY_PATH: &str = "xmrig-proxy/xmrig-proxy";
 #[cfg(target_os = "macos")]
-pub const DEFAULT_XMRIG_NODE_PATH: &str = "node/monerod";
+pub const DEFAULT_NODE_PATH: &str = "node/monerod";
 
 // Default to [/usr/bin/] for Linux distro builds.
 #[cfg(target_os = "linux")]
