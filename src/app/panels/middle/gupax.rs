@@ -139,6 +139,8 @@ impl Gupax {
 
             debug!("Gupaxx Tab | Rendering P2Pool/XMRig path selection");
             // P2Pool/XMRig binary path selection
+            // need to clone bool so file_window is not locked across a thread
+            let window_busy = lock!(file_window).thread.to_owned();
             let height = size.y / 28.0;
             let text_edit = (ui.available_width() / 10.0) - SPACE;
             ui.group(|ui| {
@@ -179,7 +181,7 @@ impl Gupax {
                         .on_hover_text(NODE_PATH_OK);
                     }
                     ui.spacing_mut().text_edit_width = ui.available_width() - SPACE;
-                    ui.add_enabled_ui(!lock!(file_window).thread, |ui| {
+                    ui.add_enabled_ui(!window_busy, |ui| {
                         if ui.button("Open").on_hover_text(GUPAX_SELECT).clicked() {
                             Self::spawn_file_window_thread(file_window, FileType::Node);
                         }
@@ -217,7 +219,7 @@ impl Gupax {
                         .on_hover_text(P2POOL_PATH_OK);
                     }
                     ui.spacing_mut().text_edit_width = ui.available_width() - SPACE;
-                    ui.add_enabled_ui(!lock!(file_window).thread, |ui| {
+                    ui.add_enabled_ui(!window_busy, |ui| {
                         if ui.button("Open").on_hover_text(GUPAX_SELECT).clicked() {
                             Self::spawn_file_window_thread(file_window, FileType::P2pool);
                         }
@@ -255,7 +257,7 @@ impl Gupax {
                         .on_hover_text(XMRIG_PATH_OK);
                     }
                     ui.spacing_mut().text_edit_width = ui.available_width() - SPACE;
-                    ui.add_enabled_ui(!lock!(file_window).thread, |ui| {
+                    ui.add_enabled_ui(!window_busy, |ui| {
                         if ui.button("Open").on_hover_text(GUPAX_SELECT).clicked() {
                             Self::spawn_file_window_thread(file_window, FileType::Xmrig);
                         }
@@ -295,7 +297,7 @@ impl Gupax {
                         .on_hover_text(XMRIG_PROXY_PATH_OK);
                     }
                     ui.spacing_mut().text_edit_width = ui.available_width() - SPACE;
-                    ui.add_enabled_ui(!lock!(file_window).thread, |ui| {
+                    ui.add_enabled_ui(!window_busy, |ui| {
                         if ui.button("Open").on_hover_text(GUPAX_SELECT).clicked() {
                             Self::spawn_file_window_thread(file_window, FileType::XmrigProxy);
                         }
