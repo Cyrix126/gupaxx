@@ -3,6 +3,7 @@ use readable::up::UptimeFull;
 use std::sync::{Arc, Mutex};
 
 use crate::disk::state::Status;
+use crate::helper::node::PubNodeApi;
 use crate::helper::p2pool::{ImgP2pool, PubP2poolApi};
 use crate::helper::xrig::xmrig::{ImgXmrig, PubXmrigApi};
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
@@ -21,6 +22,8 @@ impl Status {
         sys: &Arc<Mutex<Sys>>,
         size: Vec2,
         ui: &mut egui::Ui,
+        node_alive: bool,
+        node_api: &Arc<Mutex<PubNodeApi>>,
         p2pool_alive: bool,
         p2pool_api: &Arc<Mutex<PubP2poolApi>>,
         p2pool_img: &Arc<Mutex<ImgP2pool>>,
@@ -50,6 +53,8 @@ impl Status {
 
                 // [Gupax]
                 gupax(ui, min_size, size, sys);
+                // [Node]
+                node(ui, min_size, size, node_alive, node_api);
                 // [P2Pool]
                 p2pool(ui, min_size, size, p2pool_alive, p2pool_api, p2pool_img);
                 // [XMRig]
@@ -552,5 +557,96 @@ fn xvb(ui: &mut Ui, min_size: Vec2, size: Vec2, xvb_alive: bool, xvb_api: &Arc<M
             })
             // by round
         });
+    });
+}
+#[allow(clippy::too_many_arguments)]
+fn node(
+    ui: &mut Ui,
+    min_size: Vec2,
+    size: Vec2,
+    node_alive: bool,
+    node_api: &Arc<Mutex<PubNodeApi>>,
+) {
+    ui.group(|ui| {
+        ui.vertical(|ui| {
+            ui.set_min_height(min_size.y * 34.0);
+            debug!("Status Tab | Rendering [Node]");
+            ui.add_enabled_ui(node_alive, |ui| {
+                ui.set_min_size(min_size);
+                ui.add_sized(
+                    size,
+                    Label::new(
+                        RichText::new("[Node]")
+                            .color(LIGHT_GRAY)
+                            .text_style(TextStyle::Name("MonospaceLarge".into())),
+                    ),
+                )
+                .on_hover_text("Node is online")
+                .on_disabled_hover_text("Node is offline");
+                let api = lock!(node_api);
+                ui.add_sized(
+                    size,
+                    Label::new(RichText::new("Uptime").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_NODE_UPTIME);
+                ui.add_sized(size, Label::new(api.uptime.to_string()));
+
+                ui.add_sized(
+                    size,
+                    Label::new(RichText::new("Block Height").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_NODE_BLOCK_HEIGHT);
+                ui.add_sized(size, Label::new(api.blockheight.to_string()));
+                ui.add_sized(
+                    size,
+                    Label::new(RichText::new("Network Difficulty").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_NODE_DIFFICULTY);
+                ui.add_sized(size, Label::new(api.difficulty.to_string()));
+                ui.add_sized(
+                    size,
+                    Label::new(RichText::new("Database size").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_NODE_DB_SIZE);
+                ui.add_sized(size, Label::new(api.database_size.to_owned()));
+                ui.add_sized(
+                    size,
+                    Label::new(RichText::new("Free space").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_NODE_FREESPACE);
+                ui.add_sized(size, Label::new(api.free_space.to_owned()));
+                ui.add_sized(
+                    size,
+                    Label::new(RichText::new("Network Type").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_NODE_NETTYPE);
+                ui.add_sized(size, Label::new(api.nettype.to_string()));
+                ui.add_sized(
+                    size,
+                    Label::new(RichText::new("Outgoing peers").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_NODE_OUT);
+                ui.add_sized(size, Label::new(api.outgoing_connections.to_string()));
+                ui.add_sized(
+                    size,
+                    Label::new(RichText::new("Incoming peers").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_NODE_IN);
+                ui.add_sized(size, Label::new(api.incoming_connections.to_string()));
+                ui.add_sized(
+                    size,
+                    Label::new(RichText::new("Synchronized").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_NODE_SYNC);
+                ui.add_sized(size, Label::new(api.synchronized.to_string()));
+                ui.add_sized(
+                    size,
+                    Label::new(RichText::new("Status").underline().color(BONE)),
+                )
+                .on_hover_text(STATUS_NODE_STATUS);
+                ui.add_sized(size, Label::new(api.status.to_string()));
+                drop(api);
+            });
+        })
     });
 }

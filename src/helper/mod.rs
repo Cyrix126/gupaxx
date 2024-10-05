@@ -41,6 +41,7 @@ use crate::helper::{
 };
 use crate::{constants::*, disk::gupax_p2pool_api::GupaxP2poolApi, human::*, macros::*};
 use log::*;
+use node::PubNodeApi;
 use portable_pty::Child;
 use readable::up::Uptime;
 use std::fmt::Write;
@@ -53,6 +54,7 @@ use std::{
 };
 
 use self::xvb::{nodes::XvbNode, PubXvbApi};
+pub mod node;
 pub mod p2pool;
 pub mod tests;
 pub mod xrig;
@@ -76,6 +78,7 @@ pub struct Helper {
     pub uptime: HumanTime,                            // Gupax uptime formatting for humans
     pub pub_sys: Arc<Mutex<Sys>>, // The public API for [sysinfo] that the [Status] tab reads from
     pub p2pool: Arc<Mutex<Process>>, // P2Pool process state
+    pub node: Arc<Mutex<Process>>, // P2Pool process state
     pub xmrig: Arc<Mutex<Process>>, // XMRig process state
     pub xmrig_proxy: Arc<Mutex<Process>>, // XMRig process state
     pub xvb: Arc<Mutex<Process>>, // XvB process state
@@ -83,11 +86,13 @@ pub struct Helper {
     pub gui_api_xmrig: Arc<Mutex<PubXmrigApi>>, // XMRig API state (for GUI thread)
     pub gui_api_xp: Arc<Mutex<PubXmrigProxyApi>>, // XMRig-Proxy API state (for GUI thread)
     pub gui_api_xvb: Arc<Mutex<PubXvbApi>>, // XMRig API state (for GUI thread)
+    pub gui_api_node: Arc<Mutex<PubNodeApi>>, // Node API state (for GUI thread)
     pub img_p2pool: Arc<Mutex<ImgP2pool>>, // A static "image" of the data P2Pool started with
     pub img_xmrig: Arc<Mutex<ImgXmrig>>, // A static "image" of the data XMRig started with
     pub_api_p2pool: Arc<Mutex<PubP2poolApi>>, // P2Pool API state (for Helper/P2Pool thread)
     pub_api_xmrig: Arc<Mutex<PubXmrigApi>>, // XMRig API state (for Helper/XMRig thread)
     pub_api_xp: Arc<Mutex<PubXmrigProxyApi>>, // XMRig-Proxy API state (for Helper/XMRig-Proxy thread)
+    pub_api_node: Arc<Mutex<PubNodeApi>>,     // Node API state (for Helper/Node thread)
     pub_api_xvb: Arc<Mutex<PubXvbApi>>,       // XvB API state (for Helper/XvB thread)
     pub gupax_p2pool_api: Arc<Mutex<GupaxP2poolApi>>, //
 }
@@ -251,6 +256,7 @@ pub enum ProcessName {
     Xmrig,
     XmrigProxy,
     Xvb,
+    Node,
 }
 
 impl std::fmt::Display for ProcessState {
@@ -270,6 +276,7 @@ impl std::fmt::Display for ProcessName {
             ProcessName::Xmrig => write!(f, "XMRig"),
             ProcessName::XmrigProxy => write!(f, "XMRig-Proxy"),
             ProcessName::Xvb => write!(f, "XvB"),
+            ProcessName::Node => write!(f, "Node"),
         }
     }
 }
@@ -285,10 +292,12 @@ impl Helper {
         xmrig: Arc<Mutex<Process>>,
         xmrig_proxy: Arc<Mutex<Process>>,
         xvb: Arc<Mutex<Process>>,
+        node: Arc<Mutex<Process>>,
         gui_api_p2pool: Arc<Mutex<PubP2poolApi>>,
         gui_api_xmrig: Arc<Mutex<PubXmrigApi>>,
         gui_api_xvb: Arc<Mutex<PubXvbApi>>,
         gui_api_xp: Arc<Mutex<PubXmrigProxyApi>>,
+        gui_api_node: Arc<Mutex<PubNodeApi>>,
         img_p2pool: Arc<Mutex<ImgP2pool>>,
         img_xmrig: Arc<Mutex<ImgXmrig>>,
         gupax_p2pool_api: Arc<Mutex<GupaxP2poolApi>>,
@@ -301,15 +310,18 @@ impl Helper {
             pub_api_xmrig: arc_mut!(PubXmrigApi::new()),
             pub_api_xp: arc_mut!(PubXmrigProxyApi::new()),
             pub_api_xvb: arc_mut!(PubXvbApi::new()),
+            pub_api_node: arc_mut!(PubNodeApi::new()),
             // These are created when initializing [App], since it needs a handle to it as well
             p2pool,
             xmrig,
             xmrig_proxy,
             xvb,
+            node,
             gui_api_p2pool,
             gui_api_xmrig,
             gui_api_xvb,
             gui_api_xp,
+            gui_api_node,
             img_p2pool,
             img_xmrig,
             gupax_p2pool_api,
@@ -419,15 +431,18 @@ impl Helper {
 
         let helper = Arc::clone(helper);
         let lock = lock!(helper);
+        let node = Arc::clone(&lock.node);
         let p2pool = Arc::clone(&lock.p2pool);
         let xmrig = Arc::clone(&lock.xmrig);
         let xmrig_proxy = Arc::clone(&lock.xmrig_proxy);
         let xvb = Arc::clone(&lock.xvb);
         let pub_sys = Arc::clone(&lock.pub_sys);
+        let gui_api_node = Arc::clone(&lock.gui_api_node);
         let gui_api_p2pool = Arc::clone(&lock.gui_api_p2pool);
         let gui_api_xmrig = Arc::clone(&lock.gui_api_xmrig);
         let gui_api_xp = Arc::clone(&lock.gui_api_xp);
         let gui_api_xvb = Arc::clone(&lock.gui_api_xvb);
+        let pub_api_node = Arc::clone(&lock.pub_api_node);
         let pub_api_p2pool = Arc::clone(&lock.pub_api_p2pool);
         let pub_api_xmrig = Arc::clone(&lock.pub_api_xmrig);
         let pub_api_xp = Arc::clone(&lock.pub_api_xp);
@@ -451,35 +466,48 @@ impl Helper {
 
                 // 2. Lock... EVERYTHING!
                 let mut lock = lock!(helper);
-                debug!("Helper | Locking (1/12) ... [helper]");
+                debug!("Helper | Locking (1/15) ... [helper]");
+                let node = lock!(node);
+                debug!("Helper | Locking (2/15) ... [helper]");
                 let p2pool = lock!(p2pool);
-                debug!("Helper | Locking (2/12) ... [p2pool]");
+                debug!("Helper | Locking (3/15) ... [p2pool]");
                 let xmrig = lock!(xmrig);
-                debug!("Helper | Locking (3/12) ... [xmrig]");
+                debug!("Helper | Locking (4/15) ... [xmrig]");
                 let xmrig_proxy = lock!(xmrig_proxy);
-                debug!("Helper | Locking (3/12) ... [xmrig_proxy]");
+                debug!("Helper | Locking (5/15) ... [xmrig_proxy]");
                 let xvb = lock!(xvb);
-                debug!("Helper | Locking (4/12) ... [xvb]");
+                debug!("Helper | Locking (6/15) ... [xvb]");
                 let mut lock_pub_sys = lock!(pub_sys);
-                debug!("Helper | Locking (5/12) ... [pub_sys]");
+                debug!("Helper | Locking (8/15) ... [gui_api_node]");
+                let mut gui_api_node = lock!(gui_api_node);
+                debug!("Helper | Locking (7/15) ... [pub_sys]");
                 let mut gui_api_p2pool = lock!(gui_api_p2pool);
-                debug!("Helper | Locking (6/12) ... [gui_api_p2pool]");
+                debug!("Helper | Locking (8/15) ... [gui_api_p2pool]");
                 let mut gui_api_xmrig = lock!(gui_api_xmrig);
-                debug!("Helper | Locking (7/12) ... [gui_api_xmrig]");
+                debug!("Helper | Locking (9/15) ... [gui_api_xmrig]");
                 let mut gui_api_xp = lock!(gui_api_xp);
-                debug!("Helper | Locking (7/12) ... [gui_api_xp]");
+                debug!("Helper | Locking (10/15) ... [gui_api_xp]");
                 let mut gui_api_xvb = lock!(gui_api_xvb);
-                debug!("Helper | Locking (8/12) ... [gui_api_xvb]");
+                debug!("Helper | Locking (11/15) ... [gui_api_xvb]");
+                let mut pub_api_node = lock!(pub_api_node);
+                debug!("Helper | Locking (14/15) ... [pub_api_node]");
                 let mut pub_api_p2pool = lock!(pub_api_p2pool);
-                debug!("Helper | Locking (9/12) ... [pub_api_p2pool]");
+                debug!("Helper | Locking (14/15) ... [pub_api_p2pool]");
                 let mut pub_api_xmrig = lock!(pub_api_xmrig);
-                debug!("Helper | Locking (10/12) ... [pub_api_xmrig]");
+                debug!("Helper | Locking (13/15) ... [pub_api_xmrig]");
                 let mut pub_api_xp = lock!(pub_api_xp);
-                debug!("Helper | Locking (11/12) ... [pub_api_xp]");
+                debug!("Helper | Locking (14/15) ... [pub_api_xp]");
                 let mut pub_api_xvb = lock!(pub_api_xvb);
-                debug!("Helper | Locking (12/12) ... [pub_api_xvb]");
+                debug!("Helper | Locking (15/15) ... [pub_api_xvb]");
                 // Calculate Gupax's uptime always.
                 lock.uptime = HumanTime::into_human(lock.instant.elapsed());
+                // If [Node] is alive...
+                if node.is_alive() {
+                    debug!("Helper | Node is alive! Running [combine_gui_pub_api()]");
+                    PubNodeApi::combine_gui_pub_api(&mut gui_api_node, &mut pub_api_node);
+                } else {
+                    debug!("Helper | Node is dead! Skipping...");
+                }
                 // If [P2Pool] is alive...
                 if p2pool.is_alive() {
                     debug!("Helper | P2Pool is alive! Running [combine_gui_pub_api()]");
@@ -539,6 +567,8 @@ impl Helper {
                 debug!("Helper | Unlocking (3/12) ... [xmrig]");
                 drop(p2pool);
                 debug!("Helper | Unlocking (4/12) ... [p2pool]");
+                drop(node);
+                debug!("Helper | Unlocking (4/12) ... [node]");
                 drop(pub_api_xvb);
                 debug!("Helper | Unlocking (5/12) ... [pub_api_xvb]");
                 drop(pub_api_xp);
@@ -547,6 +577,8 @@ impl Helper {
                 debug!("Helper | Unlocking (6/12) ... [pub_api_xmrig]");
                 drop(pub_api_p2pool);
                 debug!("Helper | Unlocking (7/12) ... [pub_api_p2pool]");
+                drop(pub_api_node);
+                debug!("Helper | Unlocking (7/12) ... [node]");
                 drop(gui_api_xvb);
                 debug!("Helper | Unlocking (8/12) ... [gui_api_xvb]");
                 drop(gui_api_xp);
@@ -555,6 +587,8 @@ impl Helper {
                 debug!("Helper | Unlocking (10/12) ... [gui_api_xmrig]");
                 drop(gui_api_p2pool);
                 debug!("Helper | Unlocking (11/12) ... [gui_api_p2pool]");
+                drop(gui_api_node);
+                debug!("Helper | Unlocking (11/12) ... [node]");
                 drop(lock);
                 debug!("Helper | Unlocking (12/12) ... [helper]");
 

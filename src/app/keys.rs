@@ -126,7 +126,8 @@ impl App {
                 Tab::About => self.tab = Tab::Xvb,
                 Tab::Status => self.tab = Tab::About,
                 Tab::Gupax => self.tab = Tab::Status,
-                Tab::P2pool => self.tab = Tab::Gupax,
+                Tab::Node => self.tab = Tab::Gupax,
+                Tab::P2pool => self.tab = Tab::Node,
                 Tab::Xmrig => self.tab = Tab::P2pool,
                 Tab::XmrigProxy => self.tab = Tab::Xmrig,
                 Tab::Xvb => self.tab = Tab::XmrigProxy,
@@ -136,7 +137,8 @@ impl App {
             match self.tab {
                 Tab::About => self.tab = Tab::Status,
                 Tab::Status => self.tab = Tab::Gupax,
-                Tab::Gupax => self.tab = Tab::P2pool,
+                Tab::Gupax => self.tab = Tab::Node,
+                Tab::Node => self.tab = Tab::P2pool,
                 Tab::P2pool => self.tab = Tab::Xmrig,
                 Tab::Xmrig => self.tab = Tab::XmrigProxy,
                 Tab::XmrigProxy => self.tab = Tab::Xvb,
@@ -151,6 +153,7 @@ impl App {
                     Submenu::Benchmarks => self.state.status.submenu = Submenu::P2pool,
                 },
                 Tab::Gupax => flip!(self.state.gupax.simple),
+                Tab::Node => flip!(self.state.node.simple),
                 Tab::P2pool => flip!(self.state.p2pool.simple),
                 Tab::Xmrig => flip!(self.state.xmrig.simple),
                 Tab::XmrigProxy => flip!(self.state.xmrig_proxy.simple),
@@ -170,6 +173,7 @@ impl App {
                 Tab::Xmrig => flip!(self.state.xmrig.simple),
                 Tab::XmrigProxy => flip!(self.state.xmrig_proxy.simple),
                 Tab::Xvb => flip!(self.state.xvb.simple),
+                Tab::Node => flip!(self.state.node.simple),
                 Tab::About => (),
             };
         }

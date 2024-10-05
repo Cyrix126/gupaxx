@@ -22,6 +22,7 @@ impl crate::app::App {
     pub fn bottom_panel(
         &mut self,
         ctx: &egui::Context,
+        node_state: ProcessState,
         p2pool_state: ProcessState,
         xmrig_state: ProcessState,
         xmrig_proxy_state: ProcessState,
@@ -30,10 +31,12 @@ impl crate::app::App {
         wants_input: bool,
         p2pool_is_waiting: bool,
         xmrig_is_waiting: bool,
+        node_is_waiting: bool,
         xmrig_proxy_is_waiting: bool,
         xvb_is_waiting: bool,
         p2pool_is_alive: bool,
         xmrig_is_alive: bool,
+        node_is_alive: bool,
         xmrig_proxy_is_alive: bool,
         xvb_is_alive: bool,
     ) {
@@ -74,6 +77,8 @@ impl crate::app::App {
                     ui.label(self.os);
                     // ui.add_sized(size, Label::new(self.os));
                     ui.separator();
+                    status_node(node_state, ui, size);
+                    ui.separator();
                     status_p2pool(p2pool_state, ui, size);
                     ui.separator();
                     status_xmrig(xmrig_state, ui, size);
@@ -95,6 +100,17 @@ impl crate::app::App {
                         }
                         Tab::Gupax => {
                             self.gupax_submenu(ui, height);
+                        }
+                        Tab::Node => {
+                            self.node_submenu(ui, size);
+                            self.node_run_actions(
+                                ui,
+                                height,
+                                node_is_waiting,
+                                node_is_alive,
+                                wants_input,
+                                key,
+                            );
                         }
                         Tab::P2pool => {
                             self.p2pool_submenu(ui, size);
@@ -309,6 +325,30 @@ impl crate::app::App {
             }
         });
     }
+    fn node_submenu(&mut self, ui: &mut Ui, size: Vec2) {
+        ui.group(|ui| {
+            let width = size.x / 1.5;
+            let size = vec2(width, size.y);
+            if ui
+                .add_sized(
+                    size,
+                    SelectableLabel::new(!self.state.node.simple, "Advanced"),
+                )
+                .on_hover_text(NODE_ADVANCED)
+                .clicked()
+            {
+                self.state.node.simple = false;
+            }
+            ui.separator();
+            if ui
+                .add_sized(size, SelectableLabel::new(self.state.node.simple, "Simple"))
+                .on_hover_text(NODE_SIMPLE)
+                .clicked()
+            {
+                self.state.node.simple = true;
+            }
+        });
+    }
     fn p2pool_run_actions(
         &mut self,
         ui: &mut Ui,
@@ -399,6 +439,95 @@ impl crate::app::App {
                             &self.state.p2pool,
                             &self.state.gupax.absolute_p2pool_path,
                             self.gather_backup_hosts(),
+                        );
+                    }
+                });
+            }
+        });
+    }
+    fn node_run_actions(
+        &mut self,
+        ui: &mut Ui,
+        height: f32,
+        node_is_waiting: bool,
+        node_is_alive: bool,
+        wants_input: bool,
+        key: &KeyPressed,
+    ) {
+        ui.group(|ui| {
+            let width = ((ui.available_width() / 3.0) - 5.0).max(0.0);
+            let size = vec2(width, height);
+            if node_is_waiting {
+                ui.add_enabled_ui(false, |ui| {
+                    ui.add_sized(size, Button::new("⟲"))
+                        .on_disabled_hover_text(NODE_MIDDLE);
+                    ui.add_sized(size, Button::new("⏹"))
+                        .on_disabled_hover_text(NODE_MIDDLE);
+                    ui.add_sized(size, Button::new("▶"))
+                        .on_disabled_hover_text(NODE_MIDDLE);
+                });
+            } else if node_is_alive {
+                if key.is_up() && !wants_input
+                    || ui
+                        .add_sized(size, Button::new("⟲"))
+                        .on_hover_text("Restart node")
+                        .clicked()
+                {
+                    let _ = lock!(self.og).update_absolute_path();
+                    let _ = self.state.update_absolute_path();
+                    Helper::restart_node(
+                        &self.helper,
+                        &self.state.node,
+                        &self.state.gupax.absolute_node_path,
+                    );
+                }
+                if key.is_down() && !wants_input
+                    || ui
+                        .add_sized(size, Button::new("⏹"))
+                        .on_hover_text("Stop node")
+                        .clicked()
+                {
+                    Helper::stop_node(&self.helper);
+                }
+                ui.add_enabled_ui(false, |ui| {
+                    ui.add_sized(size, Button::new("▶"))
+                        .on_disabled_hover_text("Start node");
+                });
+            } else {
+                ui.add_enabled_ui(false, |ui| {
+                    ui.add_sized(size, Button::new("⟲"))
+                        .on_disabled_hover_text("Restart node");
+                    ui.add_sized(size, Button::new("⏹"))
+                        .on_disabled_hover_text("Stop node");
+                });
+                // Check if path is okay before allowing to start.
+                let mut text = String::new();
+                let mut ui_enabled = true;
+                if !Gupax::path_is_file(&self.state.gupax.node_path) {
+                    ui_enabled = false;
+                    text = format!("Error: {}", NODE_PATH_NOT_FILE);
+                } else if !crate::components::update::check_node_path(&self.state.gupax.node_path) {
+                    ui_enabled = false;
+                    text = format!("Error: {}", NODE_PATH_NOT_VALID);
+                } else if process_running(crate::helper::ProcessName::Node) {
+                    ui_enabled = false;
+                    text = format!("Error: {}", PROCESS_OUTSIDE);
+                }
+                ui.add_enabled_ui(ui_enabled, |ui| {
+                    let color = if ui_enabled { GREEN } else { RED };
+                    if (ui_enabled && key.is_up() && !wants_input)
+                        || ui
+                            .add_sized(size, Button::new(RichText::new("▶").color(color)))
+                            .on_hover_text("Start Node")
+                            .on_disabled_hover_text(text)
+                            .clicked()
+                    {
+                        let _ = lock!(self.og).update_absolute_path();
+                        let _ = self.state.update_absolute_path();
+                        Helper::start_node(
+                            &self.helper,
+                            &self.state.node,
+                            &self.state.gupax.absolute_node_path,
                         );
                     }
                 });
@@ -789,6 +918,32 @@ fn status_p2pool(state: ProcessState, ui: &mut Ui, size: Vec2) {
         }
     };
     status(ui, color, hover_text, size, "P2pool  ⏺");
+}
+fn status_node(state: ProcessState, ui: &mut Ui, size: Vec2) {
+    let color;
+    let hover_text = match state {
+        Alive => {
+            color = GREEN;
+            NODE_ALIVE
+        }
+        Dead => {
+            color = GRAY;
+            NODE_DEAD
+        }
+        Failed => {
+            color = RED;
+            NODE_FAILED
+        }
+        Syncing => {
+            color = ORANGE;
+            NODE_SYNCING
+        }
+        Middle | Waiting | NotMining | OfflineNodesAll | Retry => {
+            color = YELLOW;
+            NODE_MIDDLE
+        }
+    };
+    status(ui, color, hover_text, size, "Node  ⏺");
 }
 
 fn status_xmrig(state: ProcessState, ui: &mut Ui, size: Vec2) {

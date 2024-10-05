@@ -35,7 +35,11 @@ pub struct FileWindow {
     pub picked_p2pool: bool,      // Did the user pick a path for p2pool?
     pub picked_xmrig: bool,       // Did the user pick a path for xmrig?
     pub picked_xp: bool,          // Did the user pick a path for xmrig-proxy?
+    pub picked_node: bool,        // Did the user pick a path for node?
+    pub picked_nodedb: bool,      // Did the user pick a path for node?
     pub p2pool_path: String,      // The picked p2pool path
+    pub node_path: String,        // The picked node path
+    pub nodedb_path: String,      // The picked node path
     pub xmrig_path: String,       // The picked xmrig path
     pub xmrig_proxy_path: String, // The picked xmrig-proxy path
 }
@@ -47,7 +51,11 @@ impl FileWindow {
             picked_p2pool: false,
             picked_xmrig: false,
             picked_xp: false,
+            picked_node: false,
+            picked_nodedb: false,
             p2pool_path: String::new(),
+            node_path: String::new(),
+            nodedb_path: String::new(),
             xmrig_path: String::new(),
             xmrig_proxy_path: String::new(),
         })
@@ -59,6 +67,8 @@ pub enum FileType {
     P2pool,
     Xmrig,
     XmrigProxy,
+    Node,
+    NodeDB,
 }
 
 //---------------------------------------------------------------------------------------------------- Ratio Lock
@@ -80,6 +90,14 @@ impl Gupax {
             _ => false,
         }
     }
+    // Checks if a path is a valid path to a directory.
+    pub fn path_is_dir(path: &str) -> bool {
+        let path = path.to_string();
+        match crate::disk::into_absolute_path(path) {
+            Ok(path) => path.is_dir(),
+            _ => false,
+        }
+    }
 
     #[cold]
     #[inline(never)]
@@ -89,33 +107,48 @@ impl Gupax {
             P2pool => "P2Pool",
             Xmrig => "XMRig",
             XmrigProxy => "XMRigProxy",
+            Node => "Node",
+            NodeDB => "Node DB",
         };
         let file_window = file_window.clone();
         lock!(file_window).thread = true;
         thread::spawn(move || {
-            match rfd::FileDialog::new()
-                .set_title(format!("Select {} Binary for Gupaxx", name))
-                .pick_file()
-            {
-                Some(path) => {
-                    info!("Gupaxx | Path selected for {} ... {}", name, path.display());
-                    match file_type {
-                        P2pool => {
-                            lock!(file_window).p2pool_path = path.display().to_string();
-                            lock!(file_window).picked_p2pool = true;
-                        }
-                        Xmrig => {
-                            lock!(file_window).xmrig_path = path.display().to_string();
-                            lock!(file_window).picked_xmrig = true;
-                        }
-                        XmrigProxy => {
-                            lock!(file_window).xmrig_proxy_path = path.display().to_string();
-                            lock!(file_window).picked_xp = true;
-                        }
-                    };
-                }
-                None => info!("Gupaxx | No path selected for {}", name),
+            let path = match file_type {
+                NodeDB => rfd::FileDialog::new()
+                    .set_title("Select a directory for the DB of your Node")
+                    .pick_folder(),
+                _ => rfd::FileDialog::new()
+                    .set_title(format!("Select {} Binary for Gupaxx", name))
+                    .pick_file(),
             };
+            if let Some(path) = path {
+                info!("Gupaxx | Path selected for {} ... {}", name, path.display());
+                match file_type {
+                    P2pool => {
+                        lock!(file_window).p2pool_path = path.display().to_string();
+                        lock!(file_window).picked_p2pool = true;
+                    }
+                    Xmrig => {
+                        lock!(file_window).xmrig_path = path.display().to_string();
+                        lock!(file_window).picked_xmrig = true;
+                    }
+                    XmrigProxy => {
+                        lock!(file_window).xmrig_proxy_path = path.display().to_string();
+                        lock!(file_window).picked_xp = true;
+                    }
+                    Node => {
+                        lock!(file_window).node_path = path.display().to_string();
+                        lock!(file_window).picked_node = true;
+                    }
+                    NodeDB => {
+                        lock!(file_window).nodedb_path = path.display().to_string();
+                        lock!(file_window).picked_nodedb = true;
+                    }
+                };
+            } else {
+                info!("Gupaxx | No path selected for {}", name);
+            }
+
             lock!(file_window).thread = false;
         });
     }

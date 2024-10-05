@@ -88,43 +88,48 @@ impl Gupax {
             debug!("Gupaxx Tab | Rendering bool buttons");
             ui.horizontal(|ui| {
                 ui.group(|ui| {
-                    let width = (size.x - SPACE * 17.0) / 8.0;
-                    let height = if self.simple {
-                        size.y / 10.0
-                    } else {
-                        size.y / 15.0
-                    };
-                    let size = vec2(width, height);
-                    ui.style_mut().override_text_style = Some(egui::TextStyle::Small);
-                    ui.add_sized(size, Checkbox::new(&mut self.auto_update, "Auto-Update"))
-                        .on_hover_text(GUPAX_AUTO_UPDATE);
-                    ui.separator();
-                    ui.add_sized(size, Checkbox::new(&mut self.bundled, "Bundle"))
-                        .on_hover_text(GUPAX_BUNDLED_UPDATE);
-                    ui.separator();
-                    ui.add_sized(size, Checkbox::new(&mut self.auto_p2pool, "Auto-P2Pool"))
-                        .on_hover_text(GUPAX_AUTO_P2POOL);
-                    ui.separator();
-                    ui.add_sized(size, Checkbox::new(&mut self.auto_xmrig, "Auto-XMRig"))
-                        .on_hover_text(GUPAX_AUTO_XMRIG);
-                    ui.separator();
-                    ui.add_sized(size, Checkbox::new(&mut self.auto_xp, "Auto-Proxy"))
-                        .on_hover_text(GUPAX_AUTO_XMRIG_PROXY);
-                    ui.separator();
-                    ui.add_sized(size, Checkbox::new(&mut self.auto_xvb, "Auto-XvB"))
-                        .on_hover_text(GUPAX_AUTO_XVB);
-                    ui.separator();
-                    ui.add_sized(
-                        size,
-                        Checkbox::new(&mut self.ask_before_quit, "Confirm quit"),
-                    )
-                    .on_hover_text(GUPAX_ASK_BEFORE_QUIT);
-                    ui.separator();
-                    ui.add_sized(
-                        size,
-                        Checkbox::new(&mut self.save_before_quit, "Save on quit"),
-                    )
-                    .on_hover_text(GUPAX_SAVE_BEFORE_QUIT);
+                    egui::ScrollArea::horizontal().show(ui, |ui| {
+                        let width = (size.x - SPACE * 17.0) / 8.0;
+                        let height = if self.simple {
+                            size.y / 10.0
+                        } else {
+                            size.y / 15.0
+                        };
+                        let size = vec2(width, height);
+                        ui.style_mut().override_text_style = Some(egui::TextStyle::Small);
+                        ui.add_sized(size, Checkbox::new(&mut self.auto_update, "Auto-Update"))
+                            .on_hover_text(GUPAX_AUTO_UPDATE);
+                        ui.separator();
+                        ui.add_sized(size, Checkbox::new(&mut self.bundled, "Bundle"))
+                            .on_hover_text(GUPAX_BUNDLED_UPDATE);
+                        ui.separator();
+                        ui.add_sized(size, Checkbox::new(&mut self.auto_node, "Auto-Node"))
+                            .on_hover_text(GUPAX_AUTO_NODE);
+                        ui.separator();
+                        ui.add_sized(size, Checkbox::new(&mut self.auto_p2pool, "Auto-P2Pool"))
+                            .on_hover_text(GUPAX_AUTO_P2POOL);
+                        ui.separator();
+                        ui.add_sized(size, Checkbox::new(&mut self.auto_xmrig, "Auto-XMRig"))
+                            .on_hover_text(GUPAX_AUTO_XMRIG);
+                        ui.separator();
+                        ui.add_sized(size, Checkbox::new(&mut self.auto_xp, "Auto-Proxy"))
+                            .on_hover_text(GUPAX_AUTO_XMRIG_PROXY);
+                        ui.separator();
+                        ui.add_sized(size, Checkbox::new(&mut self.auto_xvb, "Auto-XvB"))
+                            .on_hover_text(GUPAX_AUTO_XVB);
+                        ui.separator();
+                        ui.add_sized(
+                            size,
+                            Checkbox::new(&mut self.ask_before_quit, "Confirm quit"),
+                        )
+                        .on_hover_text(GUPAX_ASK_BEFORE_QUIT);
+                        ui.separator();
+                        ui.add_sized(
+                            size,
+                            Checkbox::new(&mut self.save_before_quit, "Save on quit"),
+                        )
+                        .on_hover_text(GUPAX_SAVE_BEFORE_QUIT);
+                    });
                 });
             });
 
@@ -140,13 +145,51 @@ impl Gupax {
                 ui.add_sized(
                     [ui.available_width(), height / 2.0],
                     Label::new(
-                        RichText::new("P2Pool/XMRig/XMRig-Proxy PATHs")
+                        RichText::new("Node/P2Pool/XMRig/XMRig-Proxy PATHs")
                             .underline()
                             .color(LIGHT_GRAY),
                     ),
                 )
                 .on_hover_text("Gupaxx is online");
                 ui.separator();
+                ui.horizontal(|ui| {
+                    if self.node_path.is_empty() {
+                        ui.add_sized(
+                            [text_edit, height],
+                            Label::new(RichText::new("Node Binary Path ➖").color(LIGHT_GRAY)),
+                        )
+                        .on_hover_text(NODE_PATH_EMPTY);
+                    } else if !Self::path_is_file(&self.node_path) {
+                        ui.add_sized(
+                            [text_edit, height],
+                            Label::new(RichText::new("Node Binary Path ❌").color(RED)),
+                        )
+                        .on_hover_text(NODE_PATH_NOT_FILE);
+                    } else if !crate::components::update::check_node_path(&self.node_path) {
+                        ui.add_sized(
+                            [text_edit, height],
+                            Label::new(RichText::new("Node Binary Path ❌").color(RED)),
+                        )
+                        .on_hover_text(NODE_PATH_NOT_VALID);
+                    } else {
+                        ui.add_sized(
+                            [text_edit, height],
+                            Label::new(RichText::new("Node Binary Path ✔").color(GREEN)),
+                        )
+                        .on_hover_text(NODE_PATH_OK);
+                    }
+                    ui.spacing_mut().text_edit_width = ui.available_width() - SPACE;
+                    ui.add_enabled_ui(!lock!(file_window).thread, |ui| {
+                        if ui.button("Open").on_hover_text(GUPAX_SELECT).clicked() {
+                            Self::spawn_file_window_thread(file_window, FileType::Node);
+                        }
+                        ui.add_sized(
+                            [ui.available_width(), height],
+                            TextEdit::singleline(&mut self.node_path),
+                        )
+                        .on_hover_text(GUPAX_PATH_NODE);
+                    });
+                });
                 ui.horizontal(|ui| {
                     if self.p2pool_path.is_empty() {
                         ui.add_sized(
@@ -189,25 +232,25 @@ impl Gupax {
                     if self.xmrig_path.is_empty() {
                         ui.add_sized(
                             [text_edit, height],
-                            Label::new(RichText::new(" XMRig Binary Path ➖").color(LIGHT_GRAY)),
+                            Label::new(RichText::new("XMRig Binary Path ➖").color(LIGHT_GRAY)),
                         )
                         .on_hover_text(XMRIG_PATH_EMPTY);
                     } else if !Self::path_is_file(&self.xmrig_path) {
                         ui.add_sized(
                             [text_edit, height],
-                            Label::new(RichText::new(" XMRig Binary Path ❌").color(RED)),
+                            Label::new(RichText::new("XMRig Binary Path ❌").color(RED)),
                         )
                         .on_hover_text(XMRIG_PATH_NOT_FILE);
                     } else if !crate::components::update::check_xmrig_path(&self.xmrig_path) {
                         ui.add_sized(
                             [text_edit, height],
-                            Label::new(RichText::new(" XMRig Binary Path ❌").color(RED)),
+                            Label::new(RichText::new("XMRig Binary Path ❌").color(RED)),
                         )
                         .on_hover_text(XMRIG_PATH_NOT_VALID);
                     } else {
                         ui.add_sized(
                             [text_edit, height],
-                            Label::new(RichText::new(" XMRig Binary Path ✔").color(GREEN)),
+                            Label::new(RichText::new("XMRig Binary Path ✔").color(GREEN)),
                         )
                         .on_hover_text(XMRIG_PATH_OK);
                     }
@@ -228,26 +271,26 @@ impl Gupax {
                         ui.add_sized(
                             [text_edit, height],
                             Label::new(
-                                RichText::new(" XMRig-Proxy Binary Path ➖").color(LIGHT_GRAY),
+                                RichText::new("XMRig-Proxy Binary Path ➖").color(LIGHT_GRAY),
                             ),
                         )
                         .on_hover_text(XMRIG_PROXY_PATH_EMPTY);
                     } else if !Self::path_is_file(&self.xmrig_proxy_path) {
                         ui.add_sized(
                             [text_edit, height],
-                            Label::new(RichText::new(" XMRig-Proxy Binary Path ❌").color(RED)),
+                            Label::new(RichText::new("XMRig-Proxy Binary Path ❌").color(RED)),
                         )
                         .on_hover_text(XMRIG_PROXY_PATH_NOT_FILE);
                     } else if !crate::components::update::check_xp_path(&self.xmrig_proxy_path) {
                         ui.add_sized(
                             [text_edit, height],
-                            Label::new(RichText::new(" XMRig-Proxy Binary Path ❌").color(RED)),
+                            Label::new(RichText::new("XMRig-Proxy Binary Path ❌").color(RED)),
                         )
                         .on_hover_text(XMRIG_PROXY_PATH_NOT_VALID);
                     } else {
                         ui.add_sized(
                             [text_edit, height],
-                            Label::new(RichText::new(" XMRig-Proxy Binary Path ✔").color(GREEN)),
+                            Label::new(RichText::new("XMRig-Proxy Binary Path ✔").color(GREEN)),
                         )
                         .on_hover_text(XMRIG_PROXY_PATH_OK);
                     }
@@ -273,6 +316,14 @@ impl Gupax {
                 self.xmrig_path.clone_from(&guard.xmrig_path);
                 guard.picked_xmrig = false;
             }
+            if guard.picked_xp {
+                self.xmrig_proxy_path.clone_from(&guard.xmrig_proxy_path);
+                guard.picked_xp = false;
+            }
+            if guard.picked_node {
+                self.node_path.clone_from(&guard.node_path);
+                guard.picked_node = false;
+            }
             drop(guard);
 
             let height = ui.available_height() / 6.0;
@@ -280,7 +331,7 @@ impl Gupax {
             // Saved [Tab]
             debug!("Gupaxx Tab | Rendering [Tab] selector");
             ui.group(|ui| {
-                let width = (size.x / 6.0) - (SPACE * 1.93);
+                let width = (size.x / 7.0) - (SPACE * 1.93);
                 let size = vec2(width, height);
                 ui.add_sized(
                     [ui.available_width(), height / 2.0],
@@ -314,6 +365,14 @@ impl Gupax {
                         .clicked()
                     {
                         self.tab = Tab::Gupax;
+                    }
+                    ui.separator();
+                    if ui
+                        .add_sized(size, SelectableLabel::new(self.tab == Tab::Node, "Node"))
+                        .on_hover_text(GUPAX_TAB_NODE)
+                        .clicked()
+                    {
+                        self.tab = Tab::Node;
                     }
                     ui.separator();
                     if ui

@@ -21,6 +21,7 @@ impl State {
             xmrig: Xmrig::with_threads(max_threads, current_threads),
             xvb: Xvb::default(),
             xmrig_proxy: XmrigProxy::default(),
+            node: Node::default(),
             version: arc_mut!(Version::default()),
         }
     }
@@ -29,6 +30,7 @@ impl State {
         self.gupax.absolute_p2pool_path = into_absolute_path(self.gupax.p2pool_path.clone())?;
         self.gupax.absolute_xmrig_path = into_absolute_path(self.gupax.xmrig_path.clone())?;
         self.gupax.absolute_xp_path = into_absolute_path(self.gupax.xmrig_proxy_path.clone())?;
+        self.gupax.absolute_node_path = into_absolute_path(self.gupax.node_path.clone())?;
         Ok(())
     }
 
@@ -163,6 +165,7 @@ pub struct State {
     pub xmrig: Xmrig,
     pub xmrig_proxy: XmrigProxy,
     pub xvb: Xvb,
+    pub node: Node,
     pub version: Arc<Mutex<Version>>,
 }
 
@@ -181,16 +184,18 @@ pub struct Gupax {
     pub simple: bool,
     pub auto_update: bool,
     pub auto_p2pool: bool,
+    pub auto_node: bool,
     pub auto_xmrig: bool,
     pub auto_xp: bool,
     pub auto_xvb: bool,
-    //	pub auto_monero: bool,
     pub ask_before_quit: bool,
     pub save_before_quit: bool,
     pub p2pool_path: String,
+    pub node_path: String,
     pub xmrig_path: String,
     pub xmrig_proxy_path: String,
     pub absolute_p2pool_path: PathBuf,
+    pub absolute_node_path: PathBuf,
     pub absolute_xmrig_path: PathBuf,
     pub absolute_xp_path: PathBuf,
     pub selected_width: u16,
@@ -223,6 +228,43 @@ pub struct P2pool {
     pub selected_ip: String,
     pub selected_rpc: String,
     pub selected_zmq: String,
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
+pub struct Node {
+    pub simple: bool,
+    pub api_ip: String,
+    pub api_port: String,
+    pub out_peers: u16,
+    pub in_peers: u16,
+    pub log_level: u8,
+    pub arguments: String,
+    pub zmq_ip: String,
+    pub zmq_port: String,
+    pub pruned: bool,
+    pub dns_blocklist: bool,
+    pub disable_dns_checkpoint: bool,
+    pub path_db: String,
+}
+
+impl Default for Node {
+    fn default() -> Self {
+        Self {
+            simple: true,
+            api_ip: String::from("127.0.0.1"),
+            api_port: 18081.to_string(),
+            out_peers: 32,
+            in_peers: 64,
+            log_level: 0,
+            arguments: String::new(),
+            zmq_ip: String::from("127.0.0.1"),
+            zmq_port: 18083.to_string(),
+            pruned: true,
+            dns_blocklist: true,
+            disable_dns_checkpoint: true,
+            path_db: String::new(),
+        }
+    }
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
@@ -414,6 +456,7 @@ impl Default for Gupax {
             simple: true,
             auto_update: false,
             auto_p2pool: false,
+            auto_node: false,
             auto_xmrig: false,
             auto_xp: false,
             auto_xvb: false,
@@ -421,10 +464,12 @@ impl Default for Gupax {
             save_before_quit: true,
             p2pool_path: DEFAULT_P2POOL_PATH.to_string(),
             xmrig_path: DEFAULT_XMRIG_PATH.to_string(),
+            node_path: DEFAULT_NODE_PATH.to_string(),
             xmrig_proxy_path: DEFAULT_XMRIG_PROXY_PATH.to_string(),
             absolute_p2pool_path: into_absolute_path(DEFAULT_P2POOL_PATH.to_string()).unwrap(),
             absolute_xmrig_path: into_absolute_path(DEFAULT_XMRIG_PATH.to_string()).unwrap(),
             absolute_xp_path: into_absolute_path(DEFAULT_XMRIG_PROXY_PATH.to_string()).unwrap(),
+            absolute_node_path: into_absolute_path(DEFAULT_NODE_PATH.to_string()).unwrap(),
             selected_width: APP_DEFAULT_WIDTH as u16,
             selected_height: APP_DEFAULT_HEIGHT as u16,
             selected_scale: APP_DEFAULT_SCALE,

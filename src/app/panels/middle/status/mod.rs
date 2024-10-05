@@ -21,6 +21,7 @@ use crate::{
     app::Benchmark,
     disk::{gupax_p2pool_api::GupaxP2poolApi, state::Status, status::*},
     helper::{
+        node::PubNodeApi,
         p2pool::{ImgP2pool, PubP2poolApi},
         xrig::{
             xmrig::{ImgXmrig, PubXmrigApi},
@@ -42,12 +43,14 @@ impl Status {
     pub fn show(
         &mut self,
         sys: &Arc<Mutex<Sys>>,
+        node_api: &Arc<Mutex<PubNodeApi>>,
         p2pool_api: &Arc<Mutex<PubP2poolApi>>,
         xmrig_api: &Arc<Mutex<PubXmrigApi>>,
         xmrig_proxy_api: &Arc<Mutex<PubXmrigProxyApi>>,
         xvb_api: &Arc<Mutex<PubXvbApi>>,
         p2pool_img: &Arc<Mutex<ImgP2pool>>,
         xmrig_img: &Arc<Mutex<ImgXmrig>>,
+        node_alive: bool,
         p2pool_alive: bool,
         xmrig_alive: bool,
         xmrig_proxy_alive: bool,
@@ -65,6 +68,8 @@ impl Status {
                 sys,
                 size,
                 ui,
+                node_alive,
+                node_api,
                 p2pool_alive,
                 p2pool_api,
                 p2pool_img,

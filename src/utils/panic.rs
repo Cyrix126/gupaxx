@@ -1,5 +1,7 @@
 //---------------------------------------------------------------------------------------------------- Use
-use crate::constants::{COMMIT, GUPAX_VERSION, OS_NAME, P2POOL_VERSION, XMRIG_VERSION};
+use crate::constants::{
+    COMMIT, GUPAX_VERSION, NODE_VERSION, OS_NAME, P2POOL_VERSION, XMRIG_VERSION,
+};
 
 //----------------------------------------------------------------------------------------------------
 #[cold]
@@ -17,13 +19,15 @@ pub(crate) fn set_panic_hook(now: std::time::Instant) {
             "{panic_info:#?}
 
 info:
-   OS      | {OS_NAME}
-   args    | {args:?}
-   commit  | {COMMIT}
-   gupaxx   | {GUPAX_VERSION}
-   p2pool  | {P2POOL_VERSION} (bundled)
-   xmrig   | {XMRIG_VERSION} (bundled)
-   uptime  | {uptime} seconds
+   OS          | {OS_NAME}
+   args        | {args:?}
+   commit      | {COMMIT}
+   gupaxx      | {GUPAX_VERSION}
+   monerod     | {NODE_VERSION} (bundled) 
+   p2pool      | {P2POOL_VERSION} (bundled)
+   xmrig       | {XMRIG_VERSION} (bundled)
+   xmrig-proxy | {XMRIG_VERSION} (bundled)
+   uptime      | {uptime} seconds
 
 stack backtrace:\n{stack_trace}",
         );

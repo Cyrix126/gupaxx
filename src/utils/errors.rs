@@ -98,6 +98,7 @@ impl ErrorState {
 
 pub fn process_running(process_name: ProcessName) -> bool {
     let name = match process_name {
+        ProcessName::Node => "monerod",
         ProcessName::P2pool => "p2pool",
         ProcessName::Xmrig => "xmrig",
         ProcessName::XmrigProxy => "xmrig-proxy",

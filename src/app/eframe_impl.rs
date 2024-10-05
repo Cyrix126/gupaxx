@@ -52,6 +52,12 @@ impl eframe::App for App {
         let xvb_is_waiting = xvb.is_waiting();
         let xvb_state = xvb.state;
         drop(xvb);
+        debug!("App | Locking and collecting Node state...");
+        let node = lock!(self.node);
+        let node_is_alive = node.is_alive();
+        let node_is_waiting = node.is_waiting();
+        let node_state = node.state;
+        drop(node);
 
         // This sets the top level Ui dimensions.
         // Used as a reference for other uis.
@@ -101,6 +107,7 @@ impl eframe::App for App {
         self.top_panel(ctx);
         self.bottom_panel(
             ctx,
+            node_state,
             p2pool_state,
             xmrig_state,
             xmrig_proxy_state,
@@ -109,10 +116,12 @@ impl eframe::App for App {
             wants_input,
             p2pool_is_waiting,
             xmrig_is_waiting,
+            node_is_waiting,
             xmrig_proxy_is_waiting,
             xvb_is_waiting,
             p2pool_is_alive,
             xmrig_is_alive,
+            node_is_alive,
             xmrig_proxy_is_alive,
             xvb_is_alive,
         );
@@ -124,6 +133,7 @@ impl eframe::App for App {
             ctx,
             frame,
             key,
+            node_is_alive,
             p2pool_is_alive,
             xmrig_is_alive,
             xmrig_proxy_is_alive,

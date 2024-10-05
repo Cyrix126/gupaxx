@@ -19,6 +19,7 @@ pub const GUPAX_VERSION: &str = concat!("v", env!("CARGO_PKG_VERSION")); // e.g:
 pub const P2POOL_VERSION: &str = "v4.1";
 pub const XMRIG_VERSION: &str = "v6.21.1";
 pub const XMRIG_PROXY_VERSION: &str = "v6.21.1";
+pub const NODE_VERSION: &str = "v18.3.4";
 pub const COMMIT: &str = env!("COMMIT"); // set in build.rs
                                          // e.g: Gupax_v1_0_0
                                          // Would have been [Gupax_v1.0.0] but P2Pool truncates everything after [.]
@@ -102,6 +103,12 @@ pub const P2POOL_MIDDLE: &str = "P2Pool is in the middle of (re)starting/stoppin
 pub const P2POOL_SYNCING: &str =
     "P2Pool is still syncing. This indicator will turn GREEN when P2Pool is ready";
 
+pub const NODE_ALIVE: &str = "Node is online and fully synchronized";
+pub const NODE_DEAD: &str = "Node is offline";
+pub const NODE_FAILED: &str = "Node is offline and failed when exiting";
+pub const NODE_MIDDLE: &str = "Node is in the middle of (re)starting/stopping";
+pub const NODE_SYNCING: &str =
+    "Node is still syncing. This indicator will turn GREEN when Node is ready";
 pub const XMRIG_ALIVE: &str = "XMRig is online and mining";
 pub const XMRIG_DEAD: &str = "XMRig is offline";
 pub const XMRIG_FAILED: &str = "XMRig is offline and failed when exiting";
@@ -236,6 +243,17 @@ pub const STATUS_XVB_WINNER: &str = "Current Raffle Winner";
 pub const STATUS_XVB_SHARE: &str = "Share effort";
 pub const STATUS_XVB_BLOCK_REWARD: &str = "Block reward";
 pub const STATUS_XVB_YEARLY: &str = "Estimated Reward (Yearly)";
+// Status Node
+pub const STATUS_NODE_UPTIME: &str = "How long the Node has been online";
+pub const STATUS_NODE_BLOCK_HEIGHT: &str = "The height of where the node is synchronized";
+pub const STATUS_NODE_DIFFICULTY: &str = "current difficulty of the network";
+pub const STATUS_NODE_DB_SIZE: &str = "Size of the database";
+pub const STATUS_NODE_FREESPACE: &str = "Free space left on the partition storing the database";
+pub const STATUS_NODE_NETTYPE: &str = "Type of network (mainnet, stagenet, testnet)";
+pub const STATUS_NODE_OUT: &str = "Current number of active outbound connections";
+pub const STATUS_NODE_IN: &str = "Current number of active incoming connections";
+pub const STATUS_NODE_SYNC: &str = "Does the node is synchronized with the network ?";
+pub const STATUS_NODE_STATUS: &str = "General status of the node";
 // Status Submenus
 pub const STATUS_SUBMENU_PROCESSES: &str =
     "View the status of process related data for [Gupaxx|P2Pool|XMRig]";
@@ -311,6 +329,7 @@ pub const GUPAX_SHOULD_RESTART: &str =
 pub const GUPAX_ASK_BEFORE_QUIT: &str = "Ask before quitting Gupaxx";
 pub const GUPAX_SAVE_BEFORE_QUIT: &str = "Automatically save any changed settings before quitting";
 pub const GUPAX_AUTO_P2POOL:      &str = "Automatically start P2Pool on Gupaxx startup. If you are using [P2Pool Simple], this will NOT wait for your [Auto-Ping] to finish, it will start P2Pool on the pool you already have selected. This option will fail if your P2Pool settings aren't valid!";
+pub const GUPAX_AUTO_NODE:      &str = "Automatically start Node on Gupaxx startup. This option will fail if your P2Pool settings aren't valid!";
 pub const GUPAX_AUTO_XMRIG:       &str = "Automatically start XMRig on Gupaxx startup. This option will fail if your XMRig settings aren't valid!";
 pub const GUPAX_AUTO_XMRIG_PROXY: &str = "Automatically start XMRig-Proxy on Gupaxx startup.";
 pub const GUPAX_AUTO_XVB:       &str = "Automatically start XvB on Gupaxx startup. This option will fail if your XvB settings aren't valid!";
@@ -332,6 +351,7 @@ pub const GUPAX_TAB_GUPAX: &str = "Set the tab Gupaxx starts on to: Gupaxx";
 pub const GUPAX_TAB_P2POOL: &str = "Set the tab Gupaxx starts on to: P2Pool";
 pub const GUPAX_TAB_XMRIG: &str = "Set the tab Gupaxx starts on to: XMRig";
 pub const GUPAX_TAB_XVB: &str = "Set the tab Gupaxx starts on to: XvB";
+pub const GUPAX_TAB_NODE: &str = "Set the default tab Gupaxx starts on to: Node";
 
 pub const GUPAX_SIMPLE: &str = r#"Use simple Gupaxx settings:
   - Update button
@@ -407,6 +427,39 @@ pub const LIST_ADD: &str = "Add the current values to the list";
 pub const LIST_SAVE: &str = "Save the current values to the already existing entry";
 pub const LIST_DELETE: &str = "Delete the currently selected entry";
 pub const LIST_CLEAR: &str = "Clear all current values";
+// Node
+pub const NODE_ARGUMENTS: &str = r#"WARNING: Make sure to set [--zmq-pub <tcp://127.0.0.1:18081>] so that P2Pool can connect to it !"#;
+pub const NODE_INPUT: &str = "Send a command to Node";
+pub const NODE_PRUNNING: &str = "Reduce the database size to a third. Does not have any security/privacy impact.If you have enough storage, a full node is preferable to make the network even more decentralized.";
+pub const NODE_DB_PATH_EMPTY: &str =
+    "If the PATH of the DB is empty, the default ~/.bitmonero will be used.";
+pub const NODE_DB_DIR: &str = "The PATH needs to be a correct path to a directory";
+pub const NODE_SIMPLE: &str = r#"Use simple Node settings:
+  - Default Node settings"#;
+pub const NODE_ADVANCED: &str = r#"Use advanced Node settings:
+  - Prunning
+  - Custom path for database
+  - Terminal input
+  - Overriding command arguments
+  - Manual zmq port
+  - Out/In peer setting
+  - Log level setting
+  - Disable DNS checkpoint
+  - DNS blocking"#;
+pub const GUPAX_PATH_NODE: &str = "The location of the DB for the Node: Both absolute and relative paths are accepted; A red [X] will appear if there is no directory found at the given path";
+pub const NODE_PATH_OK: &str = "PATH for DB is valid.";
+pub const NODE_PATH_NOT_FILE: &str = "Node binary not found at the given PATH in the Gupaxx tab! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where NODE is located.";
+pub const NODE_PATH_NOT_VALID: &str = "Node binary at the given PATH in the Gupaxx tab doesn't look like Node! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where Node is located.";
+pub const NODE_PATH_EMPTY: &str = "Node PATH is empty! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where Node is located.";
+pub const NODE_URL: &str = "https://github.com/monero-project/monero";
+pub const NODE_DNS_BLOCKLIST: &str =
+    "Apply realtime blocklist from DNS to ban known malicious nodes. (recommended)";
+pub const NODE_DNS_CHECKPOINT: &str =
+    "Do not retrieve checkpoints from DNS to prevent periodic lags (recommended)";
+pub const NODE_API_BIND: &str = "bind address of RPC API";
+pub const NODE_API_PORT: &str = "RPC API listen port";
+pub const NODE_ZMQ_BIND: &str = "bind address of ZMQ API";
+pub const NODE_ZMQ_PORT: &str = "ZMQ API listen port";
 // XMRig
 pub const XMRIG_SIMPLE: &str = r#"Use simple XMRig settings:
   - Mine to local P2Pool (localhost:3333)

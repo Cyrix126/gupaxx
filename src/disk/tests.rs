@@ -30,6 +30,7 @@ mod test {
 			simple = true
 			auto_update = true
 			auto_p2pool = false
+			auto_node = false
 			auto_xmrig = false
             auto_xvb = false
             auto_xp = false
@@ -37,8 +38,10 @@ mod test {
 			save_before_quit = true
 			p2pool_path = "p2pool/p2pool"
 			xmrig_path = "xmrig/xmrig"
+			node_path = "node/monerod"
 			xmrig_proxy_path = "xmrig-proxy/xmrig-proxy"
 			absolute_p2pool_path = "/home/hinto/p2pool/p2pool"
+			absolute_node_path = "/home/hinto/node/monerod"
 			absolute_xmrig_path = "/home/hinto/xmrig/xmrig"
 			absolute_xp_path = "/home/hinto/xmrig/xmrig-proxy/xmrig-proxy"
 			selected_width = 1280
@@ -137,10 +140,26 @@ mod test {
             node = "Europe"
             p2pool_buffer = 5
 
+            [node]
+            simple = false
+            api_ip = "127.0.0.1"
+            api_port = "18081"
+            out_peers = 32
+            in_peers = 64
+            log_level = 0
+            arguments = ""
+            zmq_ip = "127.0.0.1"
+            zmq_port = "18083"
+            pruned = true
+            dns_blocklist = true
+            disable_dns_checkpoint = true
+            path_db = ""
+
 			[version]
 			gupax = "v1.3.0"
 			p2pool = "v2.5"
 			xmrig = "v6.18.0"
+			node = "v18.3.4"
 		"#;
         let state = State::from_str(state).unwrap();
         State::to_string(&state).unwrap();

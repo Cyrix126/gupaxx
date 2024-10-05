@@ -8,6 +8,7 @@ use egui::*;
 use log::debug;
 
 mod gupax;
+mod node;
 mod p2pool;
 mod status;
 mod xmrig;
@@ -20,6 +21,7 @@ impl crate::app::App {
         ctx: &egui::Context,
         frame: &mut eframe::Frame,
         key: KeyPressed,
+        node_is_alive: bool,
         p2pool_is_alive: bool,
         xmrig_is_alive: bool,
         xmrig_proxy_is_alive: bool,
@@ -156,11 +158,15 @@ path_xmr: {:#?}\n
 				}
 				Tab::Status => {
 					debug!("App | Entering [Status] Tab");
-					crate::disk::state::Status::show(&mut self.state.status, &self.pub_sys, &self.p2pool_api, &self.xmrig_api,&self.xmrig_proxy_api, &self.xvb_api,&self.p2pool_img, &self.xmrig_img, p2pool_is_alive, xmrig_is_alive,  xmrig_proxy_is_alive,xvb_is_alive, self.max_threads, &self.gupax_p2pool_api, &self.benchmarks, self.size, ctx, ui);
+					crate::disk::state::Status::show(&mut self.state.status, &self.pub_sys, &self.node_api, &self.p2pool_api, &self.xmrig_api,&self.xmrig_proxy_api, &self.xvb_api,&self.p2pool_img, &self.xmrig_img, node_is_alive, p2pool_is_alive, xmrig_is_alive,  xmrig_proxy_is_alive,xvb_is_alive, self.max_threads, &self.gupax_p2pool_api, &self.benchmarks, self.size, ctx, ui);
 				}
 				Tab::Gupax => {
 					debug!("App | Entering [Gupax] Tab");
 					crate::disk::state::Gupax::show(&mut self.state.gupax, &self.og, &self.state_path, &self.update, &self.file_window, &mut self.error_state, &self.restart, self.size,  frame, ctx, ui);
+				}
+				Tab::Node=> {
+					debug!("App | Entering [Node] Tab");
+					crate::disk::state::Node::show(&mut self.state.node, &self.node, &self.node_api, &mut self.node_stdin, self.size,  &self.file_window, ui);
 				}
 				Tab::P2pool => {
 					debug!("App | Entering [P2Pool] Tab");
