@@ -97,9 +97,11 @@ impl eframe::App for App {
         let og = lock!(self.og);
         self.diff = og.status != self.state.status
             || og.gupax != self.state.gupax
+            || og.node != self.state.node
             || og.p2pool != self.state.p2pool
             || og.xmrig != self.state.xmrig
             || og.xvb != self.state.xvb
+            // || og.node != self.state.node
             || self.og_node_vec != self.node_vec
             || self.og_pool_vec != self.pool_vec;
         drop(og);

@@ -176,6 +176,7 @@ impl crate::app::App {
                     let og = lock!(self.og).clone();
                     self.state.status = og.status;
                     self.state.gupax = og.gupax;
+                    self.state.node = og.node;
                     self.state.p2pool = og.p2pool;
                     self.state.xmrig = og.xmrig;
                     self.state.xmrig_proxy = og.xmrig_proxy;
@@ -194,6 +195,7 @@ impl crate::app::App {
                             let mut og = lock!(self.og);
                             og.status = self.state.status.clone();
                             og.gupax = self.state.gupax.clone();
+                            og.node = self.state.node.clone();
                             og.p2pool = self.state.p2pool.clone();
                             og.xmrig = self.state.xmrig.clone();
                             og.xmrig_proxy = self.state.xmrig_proxy.clone();
