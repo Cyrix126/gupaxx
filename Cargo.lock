@@ -2173,7 +2173,7 @@ dependencies = [
 
 [[package]]
 name = "gupaxx"
-version = "1.4.2"
+version = "1.5.0"
 dependencies = [
  "anyhow",
  "benri",
@@ -3862,7 +3862,7 @@ dependencies = [
  "paste",
  "regex",
  "seq-macro",
- "windows 0.57.0",
+ "windows 0.58.0",
 ]
 
 [[package]]
