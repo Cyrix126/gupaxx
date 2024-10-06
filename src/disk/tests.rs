@@ -61,6 +61,7 @@ mod test {
 
 			[p2pool]
 			simple = true
+			local_node = true
 			mini = true
 			auto_ping = true
 			auto_select = true
