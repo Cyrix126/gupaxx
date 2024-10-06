@@ -246,7 +246,7 @@ impl Helper {
         api_path.pop();
 
         // [Simple]
-        if state.simple {
+        if state.simple && !state.local_node {
             // Build the p2pool argument
             let (ip, rpc, zmq) = RemoteNode::get_ip_rpc_zmq(&state.node); // Get: (IP, RPC, ZMQ)
             args.push("--wallet".to_string());
@@ -287,9 +287,36 @@ impl Helper {
                 out_peers: "10".to_string(),
                 in_peers: "10".to_string(),
             };
+        } else if state.simple && state.local_node {
+            // use the local node
+            // Build the p2pool argument
+            args.push("--wallet".to_string());
+            args.push(state.address.clone()); // Wallet address
+            args.push("--host".to_string());
+            args.push("127.0.0.1".to_string()); // IP Address
+            args.push("--rpc-port".to_string());
+            args.push("18081".to_string()); // RPC Port
+            args.push("--zmq-port".to_string());
+            args.push("18083".to_string()); // ZMQ Port
+            args.push("--data-api".to_string());
+            args.push(api_path.display().to_string()); // API Path
+            args.push("--local-api".to_string()); // Enable API
+            args.push("--no-color".to_string()); // Remove color escape sequences, Gupax terminal can't parse it :(
+            args.push("--mini".to_string()); // P2Pool Mini
+            args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
 
+            *lock2!(helper, img_p2pool) = ImgP2pool {
+                mini: "P2Pool Mini".to_string(),
+                address: Self::head_tail_of_monero_address(&state.address),
+                host: "Local node".to_string(),
+                rpc: "18081".to_string(),
+                zmq: "18083".to_string(),
+                out_peers: "10".to_string(),
+                in_peers: "10".to_string(),
+            };
+        }
         // [Advanced]
-        } else {
+        else {
             // Overriding command arguments
             if !state.arguments.is_empty() {
                 // This parses the input and attempts to fill out
