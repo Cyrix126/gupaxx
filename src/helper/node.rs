@@ -263,6 +263,9 @@ impl Helper {
             match PrivNodeApi::request_api(&client, &state).await {
                 Ok(priv_api) => {
                     debug!("Node Watchdog | HTTP API request OK, attempting [update_from_priv()]");
+                    if priv_api.result.synchronized && priv_api.result.status == "OK" {
+                        lock!(process).state = ProcessState::Alive
+                    }
                     PubNodeApi::update_from_priv(pub_api, priv_api);
                 }
                 Err(err) => {
