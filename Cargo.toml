@@ -35,8 +35,8 @@ benri = "0.1.12"
 bytes = "1.7.2"
 dirs = "5.0.1"
 #--------------------------------------------------------------------------------
-egui = "0.29.0"
-egui_extras = {version="0.29.0", features = ["image"] }
+egui = "0.29.1"
+egui_extras = {version="0.29.1", features = ["image"] }
 ## 2023-12-28: https://github.com/hinto-janai/gupax/issues/68
 ##
 ## 2024-03-18: Both `glow` and `wgpu` seem to crash:
@@ -50,11 +50,11 @@ egui_extras = {version="0.29.0", features = ["image"] }
 #--------------------------------------------------------------------------------
 env_logger = "0.11.5"
 figment = { version = "0.10.19", features = ["toml"] }
-reqwest = {version = "0.12.7", default-features=false, features=["json", "rustls-tls"]}
+reqwest = {version = "0.12.8", default-features=false, features=["json", "rustls-tls"]}
 image = { version = "0.25.2", features = ["png"] }
 log = "0.4.22"
 num-format = { version = "0.4.4", default-features = false }
-once_cell = "1.20.1"
+once_cell = "1.20.2"
 portable-pty = "0.8.1"
 rand = "0.8.5"
 regex = { version = "1.11.0", default-features = false, features = ["perf"] }
@@ -77,7 +77,7 @@ enclose = "1.2.0"
 bounded-vec-deque = {version="0.1.1", default-features=false}
 cfg-if = "1.0"
 flexi_logger = "0.29"
-eframe = {version="0.29.0", features=["wgpu"]}
+eframe = {version="0.29.1", features=["wgpu"]}
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
 tar = "0.4.42"
@@ -98,7 +98,7 @@ sudo = "0.6.0"
 # linked as well which causes problems, so statically link it.
 lzma-sys = { version = "0.1", features = ["static"] }
 [dev-dependencies]
-egui = {version="0.29.0", features=["callstack"]}
+egui = {version="0.29.1", features=["callstack"]}
 
 # [target.'cfg(not(target_os = "macos"))'.dependencies]
 # tls-api-native-tls = "0.9.0"
