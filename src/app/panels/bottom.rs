@@ -46,12 +46,12 @@ impl crate::app::App {
             let height = self.size.y / 22.0;
             // let width = self.size.x;
             ui.style_mut().override_text_style = Some(Name("Bottom".into()));
+            ui.spacing_mut().item_spacing = ui.spacing().item_spacing / 2.0;
             ui.horizontal(|ui| {
                 ui.group(|ui| {
                     let size = vec2(0.0, height);
                     // [Gupax Version]
                     // Is yellow if the user updated and should (but isn't required to) restart.
-                    ui.spacing_mut().item_spacing = ui.spacing().item_spacing / 2.0;
                     match *lock!(self.restart) {
                         Restart::Yes => ui
                             .add_sized(
