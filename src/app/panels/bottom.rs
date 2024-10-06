@@ -51,6 +51,7 @@ impl crate::app::App {
                     let size = vec2(0.0, height);
                     // [Gupax Version]
                     // Is yellow if the user updated and should (but isn't required to) restart.
+                    ui.spacing_mut().item_spacing = ui.spacing().item_spacing / 2.0;
                     match *lock!(self.restart) {
                         Restart::Yes => ui
                             .add_sized(
