@@ -35,8 +35,7 @@ impl Helper {
         use std::io::BufRead;
         let mut stdout = std::io::BufReader::new(reader).lines();
 
-        // // Run a ANSI escape sequence filter for the first few lines.
-        let mut i = 0;
+        // Run a ANSI escape sequence filter.
         while let Some(Ok(line)) = stdout.next() {
             let line = strip_ansi_escapes::strip_str(line);
             if let Err(e) = writeln!(lock!(output_parse), "{}", line) {
@@ -44,11 +43,6 @@ impl Helper {
             }
             if let Err(e) = writeln!(lock!(output_pub), "{}", line) {
                 error!("Node PTY Pub | Output error: {}", e);
-            }
-            if i > 20 {
-                break;
-            } else {
-                i += 1;
             }
         }
         while let Some(Ok(line)) = stdout.next() {
