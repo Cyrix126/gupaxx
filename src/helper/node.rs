@@ -104,6 +104,8 @@ impl Helper {
             args.push(state.out_peers.to_string());
             args.push("--in-peers".to_string());
             args.push(state.in_peers.to_string());
+            args.push("--log-level".to_string());
+            args.push(state.log_level.to_string());
             args.push("--sync-pruned-blocks".to_string());
             if state.dns_blocklist {
                 args.push("--enable-dns-blocklist".to_string());
