@@ -13,6 +13,7 @@ use crate::regex::contains_end_status;
 use crate::regex::contains_statuscommand;
 use crate::regex::contains_yourhashrate;
 use crate::regex::contains_yourshare;
+use crate::regex::contains_zmq_connection_lost;
 use crate::regex::estimated_hr;
 use crate::regex::nb_current_shares;
 use crate::regex::P2POOL_REGEX;
@@ -831,6 +832,14 @@ impl PubP2poolApi {
                 lock!(process).state = ProcessState::Alive;
             }
         }
+        // check if zmq server still alive
+        if lock!(process).state == ProcessState::Alive
+            && contains_zmq_connection_lost(&output_parse)
+        {
+            // node zmq is not responding, p2pool is not ready
+            lock!(process).state = ProcessState::Syncing;
+        }
+
         // 3. Throw away [output_parse]
         output_parse.clear();
         drop(output_parse);

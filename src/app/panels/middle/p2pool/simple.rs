@@ -31,6 +31,10 @@ impl P2pool {
         // saves me the hassle of wrapping [state: State] completely
         // and [.lock().unwrap()]ing it everywhere.
         // Two atomic bools = enough to represent this data
+
+        // local or remote
+
+        // disable remote if local is checked.
         debug!("P2Pool Tab | Running [auto-select] check");
         if self.auto_select {
             let mut ping = lock!(ping);
