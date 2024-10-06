@@ -209,6 +209,7 @@ pub struct Gupax {
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct P2pool {
     pub simple: bool,
+    pub local_node: bool,
     pub mini: bool,
     pub auto_ping: bool,
     pub auto_select: bool,
@@ -487,6 +488,7 @@ impl Default for P2pool {
     fn default() -> Self {
         Self {
             simple: true,
+            local_node: true,
             mini: true,
             auto_ping: true,
             auto_select: true,
