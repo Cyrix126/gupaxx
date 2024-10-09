@@ -30,6 +30,8 @@ It could be an option to ask at first start.
 At first start, a guide could ask the user what it intends to do with Gupaxx (create node, create wallet, use xmrig-proxy, participate in raffle...) and do the setup for him and show him what it must do manually. An option to skip this guide would be present for advanced users.
 ### Very noob mode
 At first start, a mode is suggested for very noob users. It would only shows the seed phrase of the wallet generated and configure all options for the user.
+### Do not re-ask password if not needed
+On Linux, Do not re-ask for sudo to start xmrig when the user can use sudo without a password. It can happen if visudo has been configured to do so or if there is a delay specified in /etc/sudoers with "timestamp_timeout". 
 
 ## Supporting more environments
 ### Packaging
