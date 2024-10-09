@@ -45,6 +45,8 @@ Gupax/x currently resize texts/widgets based on the window size. Instead, the te
 ### CLI for Algorithm
 A simple script or a small binary could be made to reproduce the algorithm who would take args for every other needed programs.
 This script would need arguments to know how to control xmrig/xmrig-proxy and where to watch p2pool data plus the XvB token and xmr address.
+### Web UI
+To be able to control and watch Gupaxx from another device, a daemon mode could be built with a web UI front-end.
 
 ## More Powerful
 ### Optimization for xmrig
