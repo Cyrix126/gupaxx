@@ -24,7 +24,7 @@ It could be an option to ask at first start.
 The user could access this wallet on the same computer with the official GUI wallet.
 ### Auto register to XvB
 If Gupaxx could register the user automaticcly to the raffle, it would remove a manual step for the user.  
-Automatic registration could be done to prevent spam by checking if the registred address is in p2pool window or by giving a small HR to XvB.
+Automatic registration could be done to prevent spam by checking if the registered address is in p2pool window or by giving a small HR to XvB.
 It could be an option to ask at first start.  
 ### Setup Guide
 At first start, a guide could ask the user what it intends to do with Gupaxx (create node, create wallet, use xmrig-proxy, participate in raffle...) and do the setup for him and show him what it must do manually. An option to skip this guide would be present for advanced users.
