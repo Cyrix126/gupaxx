@@ -2,7 +2,10 @@ use std::sync::{Arc, Mutex};
 
 use sysinfo::System;
 
-use crate::helper::ProcessName;
+use crate::{
+    components::update::{NODE_BINARY, P2POOL_BINARY, XMRIG_BINARY, XMRIG_PROXY_BINARY},
+    helper::ProcessName,
+};
 
 use super::sudo::SudoState;
 
@@ -98,14 +101,14 @@ impl ErrorState {
 
 pub fn process_running(process_name: ProcessName) -> bool {
     let name = match process_name {
-        ProcessName::Node => "monerod",
-        ProcessName::P2pool => "p2pool",
-        ProcessName::Xmrig => "xmrig",
-        ProcessName::XmrigProxy => "xmrig-proxy",
+        ProcessName::Node => NODE_BINARY,
+        ProcessName::P2pool => P2POOL_BINARY,
+        ProcessName::Xmrig => XMRIG_BINARY,
+        ProcessName::XmrigProxy => XMRIG_PROXY_BINARY,
         ProcessName::Xvb => panic!("XvB does not exist as a process outside of Gupaxx"),
     };
     let s = System::new_all();
-    if s.processes_by_name(name.as_ref()).next().is_some() {
+    if s.processes_by_exact_name(name.as_ref()).next().is_some() {
         return true;
     }
     false

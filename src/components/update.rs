@@ -59,22 +59,22 @@ const GUPAX_METADATA: &str = "https://api.github.com/repos/Cyrix126/gupaxx/relea
 
 cfg_if::cfg_if! {
      if #[cfg(target_family = "unix")] {
-    pub(super) const GUPAX_BINARY: &str = "gupaxx";
-    pub(super) const P2POOL_BINARY: &str = "p2pool";
-    pub(super) const NODE_BINARY: &str = "monerod";
-    pub(super) const XMRIG_BINARY: &str = "xmrig";
-    pub(super) const XMRIG_PROXY_BINARY: &str = "xmrig-proxy";
+    pub const GUPAX_BINARY: &str = "gupaxx";
+    pub const P2POOL_BINARY: &str = "p2pool";
+    pub const NODE_BINARY: &str = "monerod";
+    pub const XMRIG_BINARY: &str = "xmrig";
+    pub const XMRIG_PROXY_BINARY: &str = "xmrig-proxy";
      }
 }
 cfg_if::cfg_if! {
      if #[cfg(target_os = "windows")] {
     pub(super) const OS_TARGET: &str = "windows";
     pub(super) const ARCHIVE_EXT: &str = "zip";
-    pub(super) const GUPAX_BINARY: &str = "Gupaxx.exe";
-    pub(super) const P2POOL_BINARY: &str = "p2pool.exe";
-    pub(super) const NODE_BINARY: &str = "monerod.exe";
-    pub(super) const XMRIG_BINARY: &str = "xmrig.exe";
-    pub(super) const XMRIG_PROXY_BINARY: &str = "xmrig-proxy.exe";
+    pub const GUPAX_BINARY: &str = "Gupaxx.exe";
+    pub const P2POOL_BINARY: &str = "p2pool.exe";
+    pub const NODE_BINARY: &str = "monerod.exe";
+    pub const XMRIG_BINARY: &str = "xmrig.exe";
+    pub const XMRIG_PROXY_BINARY: &str = "xmrig-proxy.exe";
      } else if #[cfg(target_os = "linux")] {
     pub(super) const OS_TARGET: &str = "linux";
     pub(super) const ARCHIVE_EXT: &str = "tar.gz";
