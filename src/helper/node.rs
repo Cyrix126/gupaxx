@@ -56,14 +56,7 @@ impl Helper {
     }
     pub fn build_node_args(state: &crate::disk::state::Node) -> Vec<String> {
         let mut args = Vec::with_capacity(500);
-        if !state.arguments.is_empty() && !state.simple {
-            // This parses the input
-            // todo: set the state if user change port and token
-            for arg in state.arguments.split_whitespace() {
-                let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
-                args.push(arg.to_string());
-            }
-        }
+        if !state.arguments.is_empty() && !state.simple {}
 
         // [Simple]
         if state.simple {
@@ -84,6 +77,13 @@ impl Helper {
             args.push("--prune-blockchain".to_string());
 
         // [Advanced]
+        } else if !state.arguments.is_empty() {
+            // This parses the input
+            // todo: set the state if user change port and token
+            for arg in state.arguments.split_whitespace() {
+                let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
+                args.push(arg.to_string());
+            }
         } else {
             let dir = if state.path_db.is_empty() {
                 String::from(".bitmonero")

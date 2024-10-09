@@ -112,15 +112,6 @@ impl Helper {
         let api_port;
         let ip;
         let port;
-        // custom args from user input
-        if !state.arguments.is_empty() && !state.simple {
-            // This parses the input
-            // todo: set the state if user change port and token
-            for arg in state.arguments.split_whitespace() {
-                let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
-                args.push(arg.to_string());
-            }
-        }
         // [Simple]
         if state.simple {
             // Build the xmrig argument
@@ -143,6 +134,14 @@ impl Helper {
             lock2!(helper, pub_api_xp).node = "127.0.0.1:3333 (Local P2Pool)".to_string();
 
         // [Advanced]
+        } else if !state.arguments.is_empty() {
+            // custom args from user input
+            // This parses the input
+            // todo: set the state if user change port and token
+            for arg in state.arguments.split_whitespace() {
+                let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
+                args.push(arg.to_string());
+            }
         } else {
             // XMRig doesn't understand [localhost]
             let p2pool_ip = if state.p2pool_ip == "localhost" || state.p2pool_ip.is_empty() {
