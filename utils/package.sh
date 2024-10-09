@@ -41,7 +41,7 @@ title "macOS-x64 folder check"
 [[ -f macos-x64_b/Gupaxx.app/Contents/MacOS/p2pool/p2pool ]]; check "macos-x64_b/p2pool/p2pool"
 [[ -f macos-x64_b/Gupaxx.app/Contents/MacOS/xmrig/xmrig ]]; check "macos-x64_b/xmrig/xmrig"
 [[ -f macos-x64_b/Gupaxx.app/Contents/MacOS/xmrig-proxy/xmrig-proxy ]]; check "macos-x64_b/xmrig-proxy/xmrig-proxy"
-[[ -f macos-x64_b/node/monerod ]]; check "macos-x64_b/node/monerod"
+[[ -f macos-x64_b/Gupaxx.app/Contents/MacOS/node/monerod ]]; check "macos-x64_b/node/monerod"
 title "macOS-arm64 folder check"
 [[ -d macos-arm64/Gupaxx.app ]]; check "macos-arm64/Gupaxx.app"
 [[ -d macos-arm64_b/Gupaxx.app ]]; check "macos-arm64_b/Gupaxx.app"
@@ -49,14 +49,14 @@ title "macOS-arm64 folder check"
 [[ -f macos-arm64_b/Gupaxx.app/Contents/MacOS/xmrig/xmrig ]]; check "macos-arm64_b/xmrig/xmrig"
 ## no macos-arm64 xmrig-proxy released todo
 # [[ -f macos-arm64_b/Gupaxx.app/Contents/MacOS/xmrig-proxy/xmrig-proxy ]]; check "macos-arm64_b/xmrig-proxy/xmrig-proxy"
-[[ -f macos-arm64_b/node/monerod ]]; check "macos-arm64_b/node/monerod"
+[[ -f macos-arm64_b/Gupaxx.app/Contents/MacOS/node/monerod ]]; check "macos-arm64_b/node/monerod"
 title "Windows folder check"
 [[ -f windows/Gupaxx.exe ]]; check "windows/Gupaxx.exe"
 [[ -f windows_b/Gupaxx.exe ]]; check "windows_b/Gupaxx.exe"
 [[ -f windows_b/P2Pool/p2pool.exe ]]; check "windows_b/P2Pool/p2pool.exe"
 [[ -f windows_b/XMRig/xmrig.exe ]]; check "windows_b/XMRig/xmrig.exe"
 [[ -f windows_b/XMRig-Proxy/xmrig-proxy.exe ]]; check "windows_b/XMRig-Proxy/xmrig-proxy.exe"
-[[ -f windows_b/node/monerod.exe ]]; check "windows_b/node/monerod.exe"
+[[ -f windows_b/Node/monerod.exe ]]; check "windows_b/Node/monerod.exe"
 
 # Get random date for tar/zip
 title "RNG Date"
@@ -71,7 +71,7 @@ chmod +x linux_b/gupaxx
 chmod +x linux_b/p2pool/p2pool
 chmod +x linux_b/xmrig/xmrig
 chmod +x linux_b/xmrig-proxy/xmrig-proxy
-chmod +x linux_b/node/monderod
+chmod +x linux_b/node/monerod
 mv linux_b "gupaxx-$NEW_VER-linux-x64-bundle"; check "linux -> gupaxx-$NEW_VER-linux-x64-bundle"
 tar -czpf "gupaxx-${NEW_VER}-linux-x64-bundle.tar.gz" "gupaxx-$NEW_VER-linux-x64-bundle" --owner=lm --group=lm ; check "tar linux-bundle"
 # Tar Linux Standalone
