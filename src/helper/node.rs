@@ -56,7 +56,6 @@ impl Helper {
     }
     pub fn build_node_args(state: &crate::disk::state::Node) -> Vec<String> {
         let mut args = Vec::with_capacity(500);
-        if !state.arguments.is_empty() && !state.simple {}
 
         // [Simple]
         if state.simple {
