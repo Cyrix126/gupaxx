@@ -114,8 +114,12 @@ impl Helper {
         let port;
         // custom args from user input
         if !state.arguments.is_empty() && !state.simple {
-            args.push(state.arguments.clone());
-            return args;
+            // This parses the input
+            // todo: set the state if user change port and token
+            for arg in state.arguments.split_whitespace() {
+                let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
+                args.push(arg.to_string());
+            }
         }
         // [Simple]
         if state.simple {
@@ -529,7 +533,7 @@ impl PubXmrigProxyApi {
         *gui_api = Self {
             output,
             node,
-            ..std::mem::take(pub_api)
+            ..pub_api.clone()
         };
         if !buf.is_empty() {
             gui_api.output.push_str(&buf);

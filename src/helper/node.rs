@@ -56,9 +56,13 @@ impl Helper {
     }
     pub fn build_node_args(state: &crate::disk::state::Node) -> Vec<String> {
         let mut args = Vec::with_capacity(500);
-        if !state.arguments.is_empty() {
-            args.push(state.arguments.clone());
-            return args;
+        if !state.arguments.is_empty() && !state.simple {
+            // This parses the input
+            // todo: set the state if user change port and token
+            for arg in state.arguments.split_whitespace() {
+                let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
+                args.push(arg.to_string());
+            }
         }
 
         // [Simple]
