@@ -371,91 +371,93 @@ impl Helper {
         loop {
             let now = Instant::now();
             debug!("XMRig-Proxy Watchdog | ----------- Start of loop -----------");
-            // check state
-            if check_died(
-                &child_pty,
-                &mut process.lock().unwrap(),
-                &start,
-                &mut gui_api.lock().unwrap().output,
-            ) {
-                break;
-            }
-            // check signal
-            if signal_end(
-                process,
-                &child_pty,
-                &start,
-                &mut gui_api.lock().unwrap().output,
-            ) {
-                break;
-            }
-            // check user input
-            check_user_input(process, &mut stdin);
-            // get data output/api
+            {
+                if check_died(
+                    &child_pty,
+                    &mut process.lock().unwrap(),
+                    &start,
+                    &mut gui_api.lock().unwrap().output,
+                ) {
+                    break;
+                }
+                // check signal
+                if signal_end(
+                    &mut process.lock().unwrap(),
+                    &child_pty,
+                    &start,
+                    &mut gui_api.lock().unwrap().output,
+                ) {
+                    break;
+                }
+                // check user input
+                check_user_input(process, &mut stdin);
+                // get data output/api
 
-            // Check if logs need resetting
-            debug!("XMRig-Proxy Watchdog | Attempting GUI log reset check");
-            {
-                let mut lock = gui_api.lock().unwrap();
-                Self::check_reset_gui_output(&mut lock.output, ProcessName::XmrigProxy);
-            }
-            // Always update from output
-            // todo: check difference with xmrig
-            debug!("XMRig-Proxy Watchdog | Starting [update_from_output()]");
-            PubXmrigProxyApi::update_from_output(
-                pub_api,
-                &output_pub,
-                &output_parse,
-                start.elapsed(),
-                process,
-            );
-            // update data from api
-            debug!("XMRig-Proxy Watchdog | Attempting HTTP API request...");
-            match PrivXmrigProxyApi::request_xp_api(&client, api_summary_xp, token_proxy).await {
-                Ok(priv_api) => {
-                    debug!("XMRig-Proxy Watchdog | HTTP API request OK, attempting [update_from_priv()]");
-                    PubXmrigProxyApi::update_from_priv(pub_api, priv_api);
-                }
-                Err(err) => {
-                    warn!(
-                        "XMRig-Proxy Watchdog | Could not send HTTP API request to: {}\n{}",
-                        api_summary_xp, err
-                    );
-                }
-            }
-            // update xmrig to use xmrig-proxy if option enabled and local xmrig alive
-            if xmrig_redirect
-                && gui_api_xmrig.lock().unwrap().node != XvbNode::XmrigProxy.to_string()
-                && (process_xmrig.lock().unwrap().state == ProcessState::Alive
-                    || process_xmrig.lock().unwrap().state == ProcessState::NotMining)
-            {
-                info!("redirect local xmrig instance to xmrig-proxy");
-                if let Err(err) = update_xmrig_config(
-                    &client,
-                    api_config_xmrig,
-                    &state_xmrig.token,
-                    &XvbNode::XmrigProxy,
-                    "",
-                    GUPAX_VERSION_UNDERSCORE,
-                )
-                .await
+                // Check if logs need resetting
+                debug!("XMRig-Proxy Watchdog | Attempting GUI log reset check");
+                Self::check_reset_gui_output(
+                    &mut gui_api.lock().unwrap().output,
+                    ProcessName::XmrigProxy,
+                );
+                // Always update from output
+                // todo: check difference with xmrig
+                debug!("XMRig-Proxy Watchdog | Starting [update_from_output()]");
+                PubXmrigProxyApi::update_from_output(
+                    pub_api,
+                    &output_pub,
+                    &output_parse,
+                    start.elapsed(),
+                    process,
+                );
+                // update data from api
+                debug!("XMRig-Proxy Watchdog | Attempting HTTP API request...");
+                match PrivXmrigProxyApi::request_xp_api(&client, api_summary_xp, token_proxy).await
                 {
-                    // show to console error about updating xmrig config
-                    warn!("XMRig-Proxy Process | Failed request HTTP API Xmrig");
-                    output_console(
-                        &mut gui_api.lock().unwrap().output,
-                        &format!(
-                            "Failure to update xmrig config with HTTP API.\nError: {}",
-                            err
-                        ),
-                        ProcessName::XmrigProxy,
-                    );
-                } else {
-                    gui_api_xmrig.lock().unwrap().node = XvbNode::XmrigProxy.to_string();
-                    debug!("XMRig-Proxy Process | mining on Xmrig-Proxy pool");
+                    Ok(priv_api) => {
+                        debug!("XMRig-Proxy Watchdog | HTTP API request OK, attempting [update_from_priv()]");
+                        PubXmrigProxyApi::update_from_priv(pub_api, priv_api);
+                    }
+                    Err(err) => {
+                        warn!(
+                            "XMRig-Proxy Watchdog | Could not send HTTP API request to: {}\n{}",
+                            api_summary_xp, err
+                        );
+                    }
                 }
-            }
-            // do not use more than 1 second for the loop
+                // update xmrig to use xmrig-proxy if option enabled and local xmrig alive
+                if xmrig_redirect
+                    && gui_api_xmrig.lock().unwrap().node != XvbNode::XmrigProxy.to_string()
+                    && (process_xmrig.lock().unwrap().state == ProcessState::Alive
+                        || process_xmrig.lock().unwrap().state == ProcessState::NotMining)
+                {
+                    info!("redirect local xmrig instance to xmrig-proxy");
+                    if let Err(err) = update_xmrig_config(
+                        &client,
+                        api_config_xmrig,
+                        &state_xmrig.token,
+                        &XvbNode::XmrigProxy,
+                        "",
+                        GUPAX_VERSION_UNDERSCORE,
+                    )
+                    .await
+                    {
+                        // show to console error about updating xmrig config
+                        warn!("XMRig-Proxy Process | Failed request HTTP API Xmrig");
+                        output_console(
+                            &mut gui_api.lock().unwrap().output,
+                            &format!(
+                                "Failure to update xmrig config with HTTP API.\nError: {}",
+                                err
+                            ),
+                            ProcessName::XmrigProxy,
+                        );
+                    } else {
+                        gui_api_xmrig.lock().unwrap().node = XvbNode::XmrigProxy.to_string();
+                        debug!("XMRig-Proxy Process | mining on Xmrig-Proxy pool");
+                    }
+                }
+            } // locked are dropped here
+              // do not use more than 1 second for the loop
             sleep_end_loop(now, ProcessName::XmrigProxy).await;
         }
 

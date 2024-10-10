@@ -116,8 +116,14 @@ Uptime         = 0h 2m 4s
             "".to_string(),
             PathBuf::new(),
         )));
-        PubP2poolApi::update_from_output(&public, &output_parse, &output_pub, elapsed, &process);
-        let public = public.lock().unwrap();
+        let mut public = public.lock().unwrap();
+        PubP2poolApi::update_from_output(
+            &mut public,
+            &output_parse,
+            &output_pub,
+            elapsed,
+            &mut process.lock().unwrap(),
+        );
         println!("{:#?}", public);
         assert_eq!(public.payouts, 3);
         assert_eq!(public.payouts_hour, 180.0);
@@ -161,8 +167,8 @@ Uptime         = 0h 2m 4s
             },
         };
         // Update Local
-        PubP2poolApi::update_from_local(&public, local);
-        let p = public.lock().unwrap();
+        let mut p = public.lock().unwrap();
+        PubP2poolApi::update_from_local(&mut p, local);
         println!("AFTER LOCAL: {:#?}", p);
         assert_eq!(p.hashrate_15m.to_string(), "10,000");
         assert_eq!(p.hashrate_1h.to_string(), "20,000");
@@ -175,10 +181,8 @@ Uptime         = 0h 2m 4s
         assert_eq!(p.current_effort.to_string(), "200.00%");
         assert_eq!(p.connections.to_string(), "1,234");
         assert_eq!(p.user_p2pool_hashrate_u64, 20000);
-        drop(p);
         // Update Network + Pool
-        PubP2poolApi::update_from_network_pool(&public, network, pool);
-        let p = public.lock().unwrap();
+        PubP2poolApi::update_from_network_pool(&mut p, network, pool);
         println!("AFTER NETWORK+POOL: {:#?}", p);
         assert_eq!(p.monero_difficulty.to_string(), "300,000,000,000");
         assert_eq!(p.monero_hashrate.to_string(), "2.500 GH/s");

@@ -1,12 +1,12 @@
+use crate::constants::*;
 use crate::helper::xrig::update_xmrig_config;
-use crate::helper::{check_died, check_user_input, sleep_end_loop, Process};
+use crate::helper::{arc_mut, check_died, check_user_input, sleep, sleep_end_loop, Process};
 use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
 use crate::helper::{PubXvbApi, XvbNode};
 use crate::miscs::output_console;
 use crate::regex::{contains_error, contains_usepool, detect_new_node_xmrig, XMRIG_REGEX};
 use crate::utils::human::HumanNumber;
 use crate::utils::sudo::SudoState;
-use crate::{constants::*, macros::*};
 use enclose::enclose;
 use log::*;
 use portable_pty::Child;
@@ -514,7 +514,7 @@ impl Helper {
             }
             // Stop on [Stop/Restart] SIGNAL
             if Self::xmrig_signal_end(
-                &process,
+                &mut process.lock().unwrap(),
                 &child_pty,
                 &start,
                 &mut gui_api.lock().unwrap().output,
@@ -591,13 +591,13 @@ impl Helper {
         info!("XMRig Watchdog | Watchdog thread exiting... Goodbye!");
     }
     fn xmrig_signal_end(
-        process: &Arc<Mutex<Process>>,
+        process: &mut Process,
         child_pty: &Arc<Mutex<Box<dyn Child + Sync + Send>>>,
         start: &Instant,
         gui_api_output_raw: &mut String,
         sudo: &Arc<Mutex<SudoState>>,
     ) -> bool {
-        let signal = process.lock().unwrap().signal;
+        let signal = process.signal;
         if signal == ProcessSignal::Stop || signal == ProcessSignal::Restart {
             debug!("XMRig Watchdog | Stop/Restart SIGNAL caught");
             // macOS requires [sudo] again to kill [XMRig]
@@ -616,7 +616,6 @@ impl Helper {
             }
             let exit_status = match child_pty.lock().unwrap().wait() {
                 Ok(e) => {
-                    let mut process = process.lock().unwrap();
                     if e.success() {
                         if process.signal == ProcessSignal::Stop {
                             process.state = ProcessState::Dead;
@@ -630,7 +629,6 @@ impl Helper {
                     }
                 }
                 _ => {
-                    let mut process = process.lock().unwrap();
                     if process.signal == ProcessSignal::Stop {
                         process.state = ProcessState::Failed;
                     }
@@ -652,7 +650,6 @@ impl Helper {
                     e
                 );
             }
-            let mut process = process.lock().unwrap();
             match process.signal {
                 ProcessSignal::Stop => process.signal = ProcessSignal::None,
                 ProcessSignal::Restart => process.state = ProcessState::Waiting,

@@ -27,6 +27,12 @@ impl eframe::App for App {
         // These values are checked multiple times so
         // might as well check only once here to save
         // on a bunch of [.lock().unwrap()]s.
+        debug!("App | Locking and collecting Node state...");
+        let node = self.node.lock().unwrap();
+        let node_is_alive = node.is_alive();
+        let node_is_waiting = node.is_waiting();
+        let node_state = node.state;
+        drop(node);
         debug!("App | Locking and collecting P2Pool state...");
         let p2pool = self.p2pool.lock().unwrap();
         let p2pool_is_alive = p2pool.is_alive();
@@ -49,14 +55,9 @@ impl eframe::App for App {
         let xvb = self.xvb.lock().unwrap();
         let xvb_is_alive = xvb.is_alive();
         let xvb_is_waiting = xvb.is_waiting();
+        let xvb_is_running = xvb.state == ProcessState::Alive;
         let xvb_state = xvb.state;
         drop(xvb);
-        debug!("App | Locking and collecting Node state...");
-        let node = self.node.lock().unwrap();
-        let node_is_alive = node.is_alive();
-        let node_is_waiting = node.is_waiting();
-        let node_state = node.state;
-        drop(node);
 
         // This sets the top level Ui dimensions.
         // Used as a reference for other uis.
@@ -139,6 +140,7 @@ impl eframe::App for App {
             xmrig_is_alive,
             xmrig_proxy_is_alive,
             xvb_is_alive,
+            xvb_is_running,
         );
     }
 }

@@ -208,203 +208,207 @@ impl Helper {
             debug!("XvB Watchdog | ----------- Start of loop -----------");
             // Set timer of loop
             let start_loop = std::time::Instant::now();
-            // check if first loop the state of Xmrig-Proxy
-            if first_loop {
-                xp_alive = process_xp.lock().unwrap().state == ProcessState::Alive;
-                msg_retry_done = false;
-                *retry.lock().unwrap() = false;
-            }
-            // verify if p2pool and xmrig are running, else XvB must be reloaded with another token/address to start verifying the other process.
-            if check_state_outcauses_xvb(
-                &client,
-                gui_api,
-                pub_api,
-                process,
-                process_xmrig,
-                process_xp,
-                process_p2pool,
-                &mut first_loop,
-                &handle_algo,
-                pub_api_xmrig,
-                pub_api_xp,
-                state_p2pool,
-                state_xmrig,
-                state_xp,
-                xp_alive,
-            )
-            .await
             {
-                continue;
-            }
-            // check signal
-            debug!("XvB | check signal");
-            if signal_interrupt(
-                process,
-                if xp_alive { process_xp } else { process_xmrig },
-                start.into(),
-                &client,
-                pub_api,
-                gui_api,
-                gui_api_xmrig,
-                gui_api_xp,
-                state_p2pool,
-                state_xmrig,
-                state_xp,
-                xp_alive,
-            ) {
-                info!("XvB Watchdog | Signal has stopped the loop");
-                break;
-            }
-            // let handle_algo_c = handle_algo.lock().unwrap();
-            let is_algo_started_once = handle_algo.lock().unwrap().is_some();
-            let is_algo_finished = handle_algo
-                .lock()
-                .unwrap()
-                .as_ref()
-                .is_some_and(|algo| algo.is_finished());
-            let is_request_finished = handle_request
-                .lock()
-                .unwrap()
-                .as_ref()
-                .is_some_and(|request: &JoinHandle<()>| request.is_finished())
-                || handle_request.lock().unwrap().is_none();
-            // Send an HTTP API request only if one minute is passed since the last request or if first loop or if algorithm need to retry or if request is finished and algo is finished or almost finished (only public and private stats). We make sure public and private stats are refreshed before doing another run of the algo.
-            // We make sure algo or request are not rerun when they are not over.
-            // in the case of quick refresh before new run of algo, make sure it doesn't happen multiple times.
-            let last_request_expired =
-                last_request.lock().unwrap().elapsed() >= Duration::from_secs(60);
-            let should_refresh_before_next_algo = is_algo_started_once
-                && last_algorithm.lock().unwrap().elapsed()
-                    >= Duration::from_secs((XVB_TIME_ALGO as f32 * 0.95) as u64)
-                && last_request.lock().unwrap().elapsed() >= Duration::from_secs(25);
-            let process_alive = process.lock().unwrap().state == ProcessState::Alive;
-            if ((last_request_expired || first_loop)
-                || (*retry.lock().unwrap() || is_algo_finished || should_refresh_before_next_algo)
-                    && process_alive)
-                && is_request_finished
-            {
-                // do not wait for the request to finish so that they are retrieved at exactly one minute interval and not block the thread.
-                // Private API will also use this instant if XvB is Alive.
-                // first_loop is false here but could be changed to true under some conditions.
-                // will send a stop signal if public stats failed or update data with new one.
-                *handle_request.lock().unwrap() = Some(spawn(
-                    enc!((client, pub_api, gui_api, gui_api_p2pool, gui_api_xmrig, gui_api_xp, state_xvb, state_p2pool, state_xmrig, state_xp, process, last_algorithm, retry, handle_algo, time_donated, last_request) async move {
-                            // needs to wait here for public stats to get private stats.
-                            if last_request_expired || first_loop || should_refresh_before_next_algo {
-                            XvbPubStats::update_stats(&client, &gui_api, &pub_api, &process).await;
-                                *last_request.lock().unwrap() = Instant::now();
-                            }
-                            // private stats needs valid token and address.
-                            // other stats needs everything to be alive, so just require alive here for now.
-                            // maybe later differentiate to add a way to get private stats without running the algo ?
-                            if process.lock().unwrap().state == ProcessState::Alive {
-                                // get current share to know if we are in a round and this is a required data for algo.
-                                let share = gui_api_p2pool.lock().unwrap().sidechain_shares;
-                                debug!("XvB | Number of current shares: {}", share);
-                            // private stats can be requested every minute or first loop or if the have almost finished.
-                            if last_request_expired || first_loop || should_refresh_before_next_algo {
-                                debug!("XvB Watchdog | Attempting HTTP private API request...");
-                                // reload private stats, it send a signal if error that will be captured on the upper thread.
-                                XvbPrivStats::update_stats(
-                                    &client, &state_p2pool.address, &state_xvb.token, &pub_api, &gui_api, &process,
-                                )
-                                .await;
-                                *last_request.lock().unwrap() = Instant::now();
-
-                                // verify in which round type we are
-                                let round = round_type(share, &pub_api);
-                                // refresh the round we participate in.
-                                debug!("XvB | Round type: {:#?}", round);
-                                pub_api.lock().unwrap().stats_priv.round_participate = round;
-                                // verify if we are the winner of the current round
-                                if pub_api.lock().unwrap().stats_pub.winner
-                                    == Helper::head_tail_of_monero_address(&state_p2pool.address).as_str()
-                                {
-                                    pub_api.lock().unwrap().stats_priv.win_current = true
+                // check if first loop the state of Xmrig-Proxy
+                if first_loop {
+                    xp_alive = process_xp.lock().unwrap().state == ProcessState::Alive;
+                    msg_retry_done = false;
+                    *retry.lock().unwrap() = false;
+                }
+                // verify if p2pool and xmrig are running, else XvB must be reloaded with another token/address to start verifying the other process.
+                if check_state_outcauses_xvb(
+                    &client,
+                    gui_api,
+                    pub_api,
+                    process,
+                    process_xmrig,
+                    process_xp,
+                    process_p2pool,
+                    &mut first_loop,
+                    &handle_algo,
+                    pub_api_xmrig,
+                    pub_api_xp,
+                    state_p2pool,
+                    state_xmrig,
+                    state_xp,
+                    xp_alive,
+                )
+                .await
+                {
+                    continue;
+                }
+                // check signal
+                debug!("XvB | check signal");
+                if signal_interrupt(
+                    process,
+                    if xp_alive { process_xp } else { process_xmrig },
+                    start.into(),
+                    &client,
+                    pub_api,
+                    gui_api,
+                    gui_api_xmrig,
+                    gui_api_xp,
+                    state_p2pool,
+                    state_xmrig,
+                    state_xp,
+                    xp_alive,
+                ) {
+                    info!("XvB Watchdog | Signal has stopped the loop");
+                    break;
+                }
+                // let handle_algo_c = handle_algo.lock().unwrap();
+                let is_algo_started_once = handle_algo.lock().unwrap().is_some();
+                let is_algo_finished = handle_algo
+                    .lock()
+                    .unwrap()
+                    .as_ref()
+                    .is_some_and(|algo| algo.is_finished());
+                let is_request_finished = handle_request
+                    .lock()
+                    .unwrap()
+                    .as_ref()
+                    .is_some_and(|request: &JoinHandle<()>| request.is_finished())
+                    || handle_request.lock().unwrap().is_none();
+                // Send an HTTP API request only if one minute is passed since the last request or if first loop or if algorithm need to retry or if request is finished and algo is finished or almost finished (only public and private stats). We make sure public and private stats are refreshed before doing another run of the algo.
+                // We make sure algo or request are not rerun when they are not over.
+                // in the case of quick refresh before new run of algo, make sure it doesn't happen multiple times.
+                let last_request_expired =
+                    last_request.lock().unwrap().elapsed() >= Duration::from_secs(60);
+                let should_refresh_before_next_algo = is_algo_started_once
+                    && last_algorithm.lock().unwrap().elapsed()
+                        >= Duration::from_secs((XVB_TIME_ALGO as f32 * 0.95) as u64)
+                    && last_request.lock().unwrap().elapsed() >= Duration::from_secs(25);
+                let process_alive = process.lock().unwrap().state == ProcessState::Alive;
+                if ((last_request_expired || first_loop)
+                    || (*retry.lock().unwrap()
+                        || is_algo_finished
+                        || should_refresh_before_next_algo)
+                        && process_alive)
+                    && is_request_finished
+                {
+                    // do not wait for the request to finish so that they are retrieved at exactly one minute interval and not block the thread.
+                    // Private API will also use this instant if XvB is Alive.
+                    // first_loop is false here but could be changed to true under some conditions.
+                    // will send a stop signal if public stats failed or update data with new one.
+                    *handle_request.lock().unwrap() = Some(spawn(
+                        enc!((client, pub_api, gui_api, gui_api_p2pool, gui_api_xmrig, gui_api_xp, state_xvb, state_p2pool, state_xmrig, state_xp, process, last_algorithm, retry, handle_algo, time_donated, last_request) async move {
+                                // needs to wait here for public stats to get private stats.
+                                if last_request_expired || first_loop || should_refresh_before_next_algo {
+                                XvbPubStats::update_stats(&client, &gui_api, &pub_api, &process).await;
+                                    *last_request.lock().unwrap() = Instant::now();
                                 }
-                            }
-                            let hashrate = current_controllable_hr(xp_alive, &gui_api_xp, &gui_api_xmrig);
-                            let difficulty_data_is_ready = gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64 > 100_000;
-                                if (first_loop || *retry.lock().unwrap()|| is_algo_finished) && hashrate > 0.0 && process.lock().unwrap().state == ProcessState::Alive && difficulty_data_is_ready
-                                {
-                                    // if algo was started, it must not retry next loop.
-                                    *retry.lock().unwrap() = false;
-                                    // reset instant because algo will start.
-                                    *last_algorithm.lock().unwrap() = Instant::now();
-                                    *handle_algo.lock().unwrap() = Some(spawn(enc!((client, gui_api, gui_api_xmrig, gui_api_xp, state_xmrig, state_xp, time_donated, state_xvb) async move {
-                    let token_xmrig = if xp_alive {
-                        &state_xp.token
-                    } else {
-                        &state_xmrig.token
-                    };
-                    let rig = if xp_alive {
-                        ""
-                    } else {
-                        &state_xmrig.rig
-                    };
-                                        algorithm(
-                                            &client,
-                                            &pub_api,
-                                            &gui_api,
-                                            &gui_api_xmrig,
-                                            &gui_api_xp,
-                                            &gui_api_p2pool,
-                                            token_xmrig,
-                                            &state_p2pool,
-                                            share,
-                                            &time_donated,
-                                            rig,
-                                            xp_alive,
-                                            state_xvb.p2pool_buffer
-                                        ).await;
-                                    })));
-                                } else {
-                                    // if xmrig is still at 0 HR but is alive and algorithm is skipped, recheck first 10s of xmrig inside algorithm next time (in one minute). Don't check if algo failed to start because state was not alive after getting private stats.
+                                // private stats needs valid token and address.
+                                // other stats needs everything to be alive, so just require alive here for now.
+                                // maybe later differentiate to add a way to get private stats without running the algo ?
+                                if process.lock().unwrap().state == ProcessState::Alive {
+                                    // get current share to know if we are in a round and this is a required data for algo.
+                                    let share = gui_api_p2pool.lock().unwrap().sidechain_shares;
+                                    debug!("XvB | Number of current shares: {}", share);
+                                // private stats can be requested every minute or first loop or if the have almost finished.
+                                if last_request_expired || first_loop || should_refresh_before_next_algo {
+                                    debug!("XvB Watchdog | Attempting HTTP private API request...");
+                                    // reload private stats, it send a signal if error that will be captured on the upper thread.
+                                    XvbPrivStats::update_stats(
+                                        &client, &state_p2pool.address, &state_xvb.token, &pub_api, &gui_api, &process,
+                                    )
+                                    .await;
+                                    *last_request.lock().unwrap() = Instant::now();
 
-                                    if (hashrate == 0.0 || !difficulty_data_is_ready) && process.lock().unwrap().state == ProcessState::Alive {
-                                        *retry.lock().unwrap() = true
+                                    // verify in which round type we are
+                                    let round = round_type(share, &pub_api);
+                                    // refresh the round we participate in.
+                                    debug!("XvB | Round type: {:#?}", round);
+                                    pub_api.lock().unwrap().stats_priv.round_participate = round;
+                                    // verify if we are the winner of the current round
+                                    if pub_api.lock().unwrap().stats_pub.winner
+                                        == Helper::head_tail_of_monero_address(&state_p2pool.address).as_str()
+                                    {
+                                        pub_api.lock().unwrap().stats_priv.win_current = true
                                     }
                                 }
+                                let hashrate = current_controllable_hr(xp_alive, &gui_api_xp, &gui_api_xmrig);
+                                let difficulty_data_is_ready = gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64 > 100_000;
+                                    if (first_loop || *retry.lock().unwrap()|| is_algo_finished) && hashrate > 0.0 && process.lock().unwrap().state == ProcessState::Alive && difficulty_data_is_ready
+                                    {
+                                        // if algo was started, it must not retry next loop.
+                                        *retry.lock().unwrap() = false;
+                                        // reset instant because algo will start.
+                                        *last_algorithm.lock().unwrap() = Instant::now();
+                                        *handle_algo.lock().unwrap() = Some(spawn(enc!((client, gui_api, gui_api_xmrig, gui_api_xp, state_xmrig, state_xp, time_donated, state_xvb) async move {
+                        let token_xmrig = if xp_alive {
+                            &state_xp.token
+                        } else {
+                            &state_xmrig.token
+                        };
+                        let rig = if xp_alive {
+                            ""
+                        } else {
+                            &state_xmrig.rig
+                        };
+                                            algorithm(
+                                                &client,
+                                                &pub_api,
+                                                &gui_api,
+                                                &gui_api_xmrig,
+                                                &gui_api_xp,
+                                                &gui_api_p2pool,
+                                                token_xmrig,
+                                                &state_p2pool,
+                                                share,
+                                                &time_donated,
+                                                rig,
+                                                xp_alive,
+                                                state_xvb.p2pool_buffer
+                                            ).await;
+                                        })));
+                                    } else {
+                                        // if xmrig is still at 0 HR but is alive and algorithm is skipped, recheck first 10s of xmrig inside algorithm next time (in one minute). Don't check if algo failed to start because state was not alive after getting private stats.
 
-                            }
-                        }),
-                ));
+                                        if (hashrate == 0.0 || !difficulty_data_is_ready) && process.lock().unwrap().state == ProcessState::Alive {
+                                            *retry.lock().unwrap() = true
+                                        }
+                                    }
+
+                                }
+                            }),
+                    ));
+                }
+                // if retry is false, next time the message about waiting for xmrig HR can be shown.
+                if !*retry.lock().unwrap() {
+                    msg_retry_done = false;
+                }
+                // inform user that algorithm has not yet started because it is waiting for xmrig HR.
+                // show this message only once before the start of algo
+                if *retry.lock().unwrap() && !msg_retry_done {
+                    let msg = if xp_alive {
+                        "Algorithm is waiting for 1 minute average HR of XMRig-Proxy or p2pool data"
+                    } else {
+                        "Algorithm is waiting for 10 seconds average HR of XMRig or p2pool data"
+                    };
+                    output_console(&mut gui_api.lock().unwrap().output, msg, ProcessName::Xvb);
+                    msg_retry_done = true;
+                }
+                // update indicator (time before switch and mining location) in private stats
+                // if algo not running, second message.
+                // will update countdown every second.
+                // verify current node which is set by algo or circonstances (failed node).
+                // verify given time set by algo and start time of current algo.
+                // will run only if XvB is alive.
+                // let algo time to start, so no countdown is shown.
+                update_indicator_algo(
+                    is_algo_started_once,
+                    is_algo_finished,
+                    process,
+                    pub_api,
+                    *time_donated.lock().unwrap(),
+                    &last_algorithm,
+                );
+                // first_loop is done, but maybe retry will allow the algorithm to retry again.
+                if first_loop {
+                    first_loop = false;
+                }
+                // Sleep (only if 900ms hasn't passed)
             }
-            // if retry is false, next time the message about waiting for xmrig HR can be shown.
-            if !*retry.lock().unwrap() {
-                msg_retry_done = false;
-            }
-            // inform user that algorithm has not yet started because it is waiting for xmrig HR.
-            // show this message only once before the start of algo
-            if *retry.lock().unwrap() && !msg_retry_done {
-                let msg = if xp_alive {
-                    "Algorithm is waiting for 1 minute average HR of XMRig-Proxy or p2pool data"
-                } else {
-                    "Algorithm is waiting for 10 seconds average HR of XMRig or p2pool data"
-                };
-                output_console(&mut gui_api.lock().unwrap().output, msg, ProcessName::Xvb);
-                msg_retry_done = true;
-            }
-            // update indicator (time before switch and mining location) in private stats
-            // if algo not running, second message.
-            // will update countdown every second.
-            // verify current node which is set by algo or circonstances (failed node).
-            // verify given time set by algo and start time of current algo.
-            // will run only if XvB is alive.
-            // let algo time to start, so no countdown is shown.
-            update_indicator_algo(
-                is_algo_started_once,
-                is_algo_finished,
-                process,
-                pub_api,
-                *time_donated.lock().unwrap(),
-                &last_algorithm,
-            );
-            // first_loop is done, but maybe retry will allow the algorithm to retry again.
-            if first_loop {
-                first_loop = false;
-            }
-            // Sleep (only if 900ms hasn't passed)
             sleep_end_loop(start_loop, ProcessName::Xvb).await;
         }
     }

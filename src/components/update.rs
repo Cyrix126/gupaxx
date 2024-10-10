@@ -369,8 +369,12 @@ impl Update {
                     info!("Update | Saving state...");
                     let original_version = og.lock().unwrap().version.clone();
                     og.lock().unwrap().version = state_ver;
-                    match State::save(&mut og.lock().unwrap(), &state_path) {
-                        Ok(_) => info!("Update ... OK"),
+                    let mut state = og.lock().unwrap().to_owned();
+                    match State::save(&mut state, &state_path) {
+                        Ok(_) => {
+                            info!("Update ... OK");
+                            *og.lock().unwrap() = state;
+                        }
                         Err(e) => {
                             warn!("Update | Saving state ... FAIL: {}", e);
                             og.lock().unwrap().version = original_version;

@@ -227,56 +227,62 @@ impl Helper {
         loop {
             let now = Instant::now();
             debug!("Node Watchdog | ----------- Start of loop -----------");
-
-            // check state
-            if check_died(
-                &child_pty,
-                &mut process.lock().unwrap(),
-                &start,
-                &mut gui_api.lock().unwrap().output,
-            ) {
-                break;
-            }
-            // check signal
-            if signal_end(
-                process,
-                &child_pty,
-                &start,
-                &mut gui_api.lock().unwrap().output,
-            ) {
-                break;
-            }
-            // check user input
-            check_user_input(process, &mut stdin);
-            // get data output/api
-
-            // Check if logs need resetting
-            debug!("Node Watchdog | Attempting GUI log reset check");
             {
-                let mut lock = gui_api.lock().unwrap();
-                Self::check_reset_gui_output(&mut lock.output, ProcessName::Node);
-            }
-            // No need to check output since monerod has a sufficient API
-            // Always update from output
-            debug!("Node Watchdog | Starting [update_from_output()]");
-            PubNodeApi::update_from_output(pub_api, &output_pub, start.elapsed());
-            // update data from api
-            debug!("Node Watchdog | Attempting HTTP API request...");
-            match PrivNodeApi::request_api(&client, &state).await {
-                Ok(priv_api) => {
-                    debug!("Node Watchdog | HTTP API request OK, attempting [update_from_priv()]");
-                    if priv_api.result.synchronized && priv_api.result.status == "OK" {
-                        process.lock().unwrap().state = ProcessState::Alive
-                    }
-                    PubNodeApi::update_from_priv(pub_api, priv_api);
+                // scope to drop locked mutex before the sleep
+                // check state
+                if check_died(
+                    &child_pty,
+                    &mut process.lock().unwrap(),
+                    &start,
+                    &mut gui_api.lock().unwrap().output,
+                ) {
+                    break;
                 }
-                Err(err) => {
-                    // if node is just starting, do not throw an error
-                    if start.elapsed() > Duration::from_secs(10) {
-                        warn!(
-                            "Node Watchdog | Could not send HTTP API request to node\n{}",
-                            err
+                // check signal
+                if signal_end(
+                    &mut process.lock().unwrap(),
+                    &child_pty,
+                    &start,
+                    &mut gui_api.lock().unwrap().output,
+                ) {
+                    break;
+                }
+                // check user input
+                check_user_input(process, &mut stdin);
+                // get data output/api
+
+                // Check if logs need resetting
+                debug!("Node Watchdog | Attempting GUI log reset check");
+                {
+                    Self::check_reset_gui_output(
+                        &mut gui_api.lock().unwrap().output,
+                        ProcessName::Node,
+                    );
+                }
+                // No need to check output since monerod has a sufficient API
+                // Always update from output
+                debug!("Node Watchdog | Starting [update_from_output()]");
+                PubNodeApi::update_from_output(pub_api, &output_pub, start.elapsed());
+                // update data from api
+                debug!("Node Watchdog | Attempting HTTP API request...");
+                match PrivNodeApi::request_api(&client, &state).await {
+                    Ok(priv_api) => {
+                        debug!(
+                            "Node Watchdog | HTTP API request OK, attempting [update_from_priv()]"
                         );
+                        if priv_api.result.synchronized && priv_api.result.status == "OK" {
+                            process.lock().unwrap().state = ProcessState::Alive
+                        }
+                        PubNodeApi::update_from_priv(pub_api, priv_api);
+                    }
+                    Err(err) => {
+                        // if node is just starting, do not throw an error
+                        if start.elapsed() > Duration::from_secs(10) {
+                            warn!(
+                                "Node Watchdog | Could not send HTTP API request to node\n{}",
+                                err
+                            );
+                        }
                     }
                 }
             }

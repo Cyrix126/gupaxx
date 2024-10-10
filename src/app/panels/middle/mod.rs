@@ -1,6 +1,5 @@
 use crate::app::keys::KeyPressed;
 use crate::app::Tab;
-use crate::helper::ProcessState;
 use crate::utils::constants::*;
 use crate::utils::errors::{ErrorButtons, ErrorFerris};
 use egui::*;
@@ -25,6 +24,7 @@ impl crate::app::App {
         xmrig_is_alive: bool,
         xmrig_proxy_is_alive: bool,
         xvb_is_alive: bool,
+        xvb_is_running: bool,
     ) {
         // Middle panel, contents of the [Tab]
         debug!("App | Rendering CENTRAL_PANEL (tab contents)");
@@ -43,12 +43,14 @@ impl crate::app::App {
 						let distro = true;
 						#[cfg(not(feature = "distro"))]
 						let distro = false;
+						let node_gui_len = self.node_api.lock().unwrap().output.len();
 						let p2pool_gui_len = self.p2pool_api.lock().unwrap().output.len();
 						let xmrig_gui_len = self.xmrig_api.lock().unwrap().output.len();
 						let xmrig_proxy_gui_len = self.xmrig_proxy_api.lock().unwrap().output.len();
 						let gupax_p2pool_api = self.gupax_p2pool_api.lock().unwrap();
 						let debug_info = format!(
 "Gupax version: {}\n
+Bundled Node version: {}\n
 Bundled P2Pool version: {}\n
 Bundled XMRig version: {}\n
 Bundled XMRig-Proxy version: {}\n
@@ -114,6 +116,7 @@ path_xmr: {:#?}\n
 							self.state.gupax.absolute_p2pool_path.display(),
 							self.state.gupax.absolute_xmrig_path.display(),
 							self.state.gupax.absolute_xp_path.display(),
+							node_gui_len,
 							p2pool_gui_len,
 							xmrig_gui_len,
 							xmrig_proxy_gui_len,
@@ -181,7 +184,7 @@ path_xmr: {:#?}\n
 				}
 				Tab::Xvb => {
 					debug!("App | Entering [XvB] Tab");
-					crate::disk::state::Xvb::show(&mut self.state.xvb, self.size, &self.state.p2pool.address, ctx, ui, &self.xvb_api, &self.xmrig_api, self.xvb.lock().unwrap().state == ProcessState::Alive);
+					crate::disk::state::Xvb::show(&mut self.state.xvb, self.size, &self.state.p2pool.address, ctx, ui, &self.xvb_api, &self.xmrig_api, xvb_is_running);
 				}
 			}
 		});

@@ -466,39 +466,39 @@ impl Helper {
 
                 // 2. Lock... EVERYTHING!
                 let mut lock = helper.lock().unwrap();
-                debug!("Helper | Locking (1/15) ... [helper]");
+                debug!("Helper | Locked (1/17) ... [helper]");
                 let node = node.lock().unwrap();
-                debug!("Helper | Locking (2/15) ... [helper]");
+                debug!("Helper | Locked (2/17) ... [node]");
                 let p2pool = p2pool.lock().unwrap();
-                debug!("Helper | Locking (3/15) ... [p2pool]");
+                debug!("Helper | Locked (3/17) ... [p2pool]");
                 let xmrig = xmrig.lock().unwrap();
-                debug!("Helper | Locking (4/15) ... [xmrig]");
+                debug!("Helper | Locked (4/17) ... [xmrig]");
                 let xmrig_proxy = xmrig_proxy.lock().unwrap();
-                debug!("Helper | Locking (5/15) ... [xmrig_proxy]");
+                debug!("Helper | Locked (5/17) ... [xmrig_proxy]");
                 let xvb = xvb.lock().unwrap();
-                debug!("Helper | Locking (6/15) ... [xvb]");
+                debug!("Helper | Locked (6/17) ... [xvb]");
                 let mut lock_pub_sys = pub_sys.lock().unwrap();
-                debug!("Helper | Locking (8/15) ... [gui_api_node]");
+                debug!("Helper | Locked (8/17) ... [pub_sys]");
                 let mut gui_api_node = gui_api_node.lock().unwrap();
-                debug!("Helper | Locking (7/15) ... [pub_sys]");
+                debug!("Helper | Locked (7/17) ... [gui_api_node]");
                 let mut gui_api_p2pool = gui_api_p2pool.lock().unwrap();
-                debug!("Helper | Locking (8/15) ... [gui_api_p2pool]");
+                debug!("Helper | Locked (9/17) ... [gui_api_p2pool]");
                 let mut gui_api_xmrig = gui_api_xmrig.lock().unwrap();
-                debug!("Helper | Locking (9/15) ... [gui_api_xmrig]");
+                debug!("Helper | Locked (10/17) ... [gui_api_xmrig]");
                 let mut gui_api_xp = gui_api_xp.lock().unwrap();
-                debug!("Helper | Locking (10/15) ... [gui_api_xp]");
+                debug!("Helper | Locked (11/17) ... [gui_api_xp]");
                 let mut gui_api_xvb = gui_api_xvb.lock().unwrap();
-                debug!("Helper | Locking (11/15) ... [gui_api_xvb]");
+                debug!("Helper | Locked (12/17) ... [gui_api_xvb]");
                 let mut pub_api_node = pub_api_node.lock().unwrap();
-                debug!("Helper | Locking (14/15) ... [pub_api_node]");
+                debug!("Helper | Locked (13/17) ... [pub_api_node]");
                 let mut pub_api_p2pool = pub_api_p2pool.lock().unwrap();
-                debug!("Helper | Locking (14/15) ... [pub_api_p2pool]");
+                debug!("Helper | Locked (14/17) ... [pub_api_p2pool]");
                 let mut pub_api_xmrig = pub_api_xmrig.lock().unwrap();
-                debug!("Helper | Locking (13/15) ... [pub_api_xmrig]");
+                debug!("Helper | Locked (15/17) ... [pub_api_xmrig]");
                 let mut pub_api_xp = pub_api_xp.lock().unwrap();
-                debug!("Helper | Locking (14/15) ... [pub_api_xp]");
+                debug!("Helper | Locked (16/17) ... [pub_api_xp]");
                 let mut pub_api_xvb = pub_api_xvb.lock().unwrap();
-                debug!("Helper | Locking (15/15) ... [pub_api_xvb]");
+                debug!("Helper | Locked (17/17) ... [pub_api_xvb]");
                 // Calculate Gupax's uptime always.
                 lock.uptime = HumanTime::into_human(lock.instant.elapsed());
                 // If [Node] is alive...
@@ -558,39 +558,39 @@ impl Helper {
 
                 // 3. Drop... (almost) EVERYTHING... IN REVERSE!
                 drop(lock_pub_sys);
-                debug!("Helper | Unlocking (1/12) ... [pub_sys]");
+                debug!("Helper | Unlocking (1/17) ... [pub_sys]");
                 drop(xvb);
-                debug!("Helper | Unlocking (2/12) ... [xvb]");
+                debug!("Helper | Unlocking (2/17) ... [xvb]");
                 drop(xmrig_proxy);
-                debug!("Helper | Unlocking (3/12) ... [xmrig_proxy]");
+                debug!("Helper | Unlocking (3/17) ... [xmrig_proxy]");
                 drop(xmrig);
-                debug!("Helper | Unlocking (3/12) ... [xmrig]");
+                debug!("Helper | Unlocking (4/17) ... [xmrig]");
                 drop(p2pool);
-                debug!("Helper | Unlocking (4/12) ... [p2pool]");
+                debug!("Helper | Unlocking (5/17) ... [p2pool]");
                 drop(node);
-                debug!("Helper | Unlocking (4/12) ... [node]");
+                debug!("Helper | Unlocking (6/17) ... [node]");
                 drop(pub_api_xvb);
-                debug!("Helper | Unlocking (5/12) ... [pub_api_xvb]");
+                debug!("Helper | Unlocking (7/17) ... [pub_api_xvb]");
                 drop(pub_api_xp);
-                debug!("Helper | Unlocking (6/12) ... [pub_api_xp]");
+                debug!("Helper | Unlocking (8/17) ... [pub_api_xp]");
                 drop(pub_api_xmrig);
-                debug!("Helper | Unlocking (6/12) ... [pub_api_xmrig]");
+                debug!("Helper | Unlocking (9/17) ... [pub_api_xmrig]");
                 drop(pub_api_p2pool);
-                debug!("Helper | Unlocking (7/12) ... [pub_api_p2pool]");
+                debug!("Helper | Unlocking (10/17) ... [pub_api_p2pool]");
                 drop(pub_api_node);
-                debug!("Helper | Unlocking (7/12) ... [node]");
+                debug!("Helper | Unlocking (11/17) ... [pub_api_node]");
                 drop(gui_api_xvb);
-                debug!("Helper | Unlocking (8/12) ... [gui_api_xvb]");
+                debug!("Helper | Unlocking (12/17) ... [gui_api_xvb]");
                 drop(gui_api_xp);
-                debug!("Helper | Unlocking (9/12) ... [gui_api_xp]");
+                debug!("Helper | Unlocking (13/17) ... [gui_api_xp]");
                 drop(gui_api_xmrig);
-                debug!("Helper | Unlocking (10/12) ... [gui_api_xmrig]");
+                debug!("Helper | Unlocking (14/17) ... [gui_api_xmrig]");
                 drop(gui_api_p2pool);
-                debug!("Helper | Unlocking (11/12) ... [gui_api_p2pool]");
+                debug!("Helper | Unlocking (15/17) ... [gui_api_p2pool]");
                 drop(gui_api_node);
-                debug!("Helper | Unlocking (11/12) ... [node]");
+                debug!("Helper | Unlocking (16/17) ... [gui_api_node]");
                 drop(lock);
-                debug!("Helper | Unlocking (12/12) ... [helper]");
+                debug!("Helper | Unlocking (17/17) ... [helper]");
 
                 // 4. Calculate if we should sleep or not.
                 // If we should sleep, how long?
@@ -686,71 +686,63 @@ fn check_user_input(process: &Arc<Mutex<Process>>, stdin: &mut Box<dyn std::io::
     }
 }
 fn signal_end(
-    process: &Arc<Mutex<Process>>,
+    process: &mut Process,
     child_pty: &Arc<Mutex<Box<dyn Child + Sync + Send>>>,
     start: &Instant,
     gui_api_output_raw: &mut String,
 ) -> bool {
-    if process.lock().unwrap().signal == ProcessSignal::Stop {
-        debug!("{} Watchdog | Stop SIGNAL caught", process.lock().unwrap().name);
+    let mut child_pty_lock = child_pty.lock().unwrap();
+    if process.signal == ProcessSignal::Stop {
+        debug!("{} Watchdog | Stop SIGNAL caught", process.name);
         // This actually sends a SIGHUP to p2pool (closes the PTY, hangs up on p2pool)
-        if let Err(e) = child_pty.lock().unwrap().kill() {
-            error!("{} Watchdog | Kill error: {}", process.lock().unwrap().name, e);
+        if let Err(e) = child_pty_lock.kill() {
+            error!("{} Watchdog | Kill error: {}", process.name, e);
         }
         // Wait to get the exit status
-        let exit_status = match child_pty.lock().unwrap().wait() {
+        let exit_status = match child_pty_lock.wait() {
             Ok(e) => {
                 if e.success() {
-                    process.lock().unwrap().state = ProcessState::Dead;
+                    process.state = ProcessState::Dead;
                     "Successful"
                 } else {
-                    process.lock().unwrap().state = ProcessState::Failed;
+                    process.state = ProcessState::Failed;
                     "Failed"
                 }
             }
             _ => {
-                process.lock().unwrap().state = ProcessState::Failed;
+                process.state = ProcessState::Failed;
                 "Unknown Error"
             }
         };
         let uptime = HumanTime::into_human(start.elapsed());
         info!(
             "{} Watchdog | Stopped ... Uptime was: [{}], Exit status: [{}]",
-            process.lock().unwrap().name,
-            uptime,
-            exit_status
+            process.name, uptime, exit_status
         );
         // This is written directly into the GUI API, because sometimes the 900ms event loop can't catch it.
+        let name = process.name.to_owned();
         if let Err(e) = writeln!(
             gui_api_output_raw,
             "{}\n{} stopped | Uptime: [{}] | Exit status: [{}]\n{}\n\n\n\n",
-            process.lock().unwrap().name,
-            HORI_CONSOLE,
-            uptime,
-            exit_status,
-            HORI_CONSOLE
+            name, HORI_CONSOLE, uptime, exit_status, HORI_CONSOLE
         ) {
             error!(
                 "{} Watchdog | GUI Uptime/Exit status write failed: {}",
-                process.lock().unwrap().name,
-                e
+                name, e
             );
         }
-        process.lock().unwrap().signal = ProcessSignal::None;
-        debug!(
-            "{} Watchdog | Stop SIGNAL done, breaking",
-            process.lock().unwrap().name,
-        );
+        process.signal = ProcessSignal::None;
+        debug!("{} Watchdog | Stop SIGNAL done, breaking", process.name,);
         return true;
     // Check RESTART
-    } else if process.lock().unwrap().signal == ProcessSignal::Restart {
-        debug!("{} Watchdog | Restart SIGNAL caught", process.lock().unwrap().name,);
+    } else if process.signal == ProcessSignal::Restart {
+        debug!("{} Watchdog | Restart SIGNAL caught", process.name,);
         // This actually sends a SIGHUP to p2pool (closes the PTY, hangs up on p2pool)
-        if let Err(e) = child_pty.lock().unwrap().kill() {
-            error!("{} Watchdog | Kill error: {}", process.lock().unwrap().name, e);
+        if let Err(e) = child_pty_lock.kill() {
+            error!("{} Watchdog | Kill error: {}", process.name, e);
         }
         // Wait to get the exit status
-        let exit_status = match child_pty.lock().unwrap().wait() {
+        let exit_status = match child_pty_lock.wait() {
             Ok(e) => {
                 if e.success() {
                     "Successful"
@@ -763,31 +755,22 @@ fn signal_end(
         let uptime = HumanTime::into_human(start.elapsed());
         info!(
             "{} Watchdog | Stopped ... Uptime was: [{}], Exit status: [{}]",
-            process.lock().unwrap().name,
-            uptime,
-            exit_status
+            process.name, uptime, exit_status
         );
         // This is written directly into the GUI API, because sometimes the 900ms event loop can't catch it.
+        let name = process.name.to_owned();
         if let Err(e) = writeln!(
             gui_api_output_raw,
             "{}\n{} stopped | Uptime: [{}] | Exit status: [{}]\n{}\n\n\n\n",
-            process.lock().unwrap().name,
-            HORI_CONSOLE,
-            uptime,
-            exit_status,
-            HORI_CONSOLE
+            name, HORI_CONSOLE, uptime, exit_status, HORI_CONSOLE
         ) {
             error!(
                 "{} Watchdog | GUI Uptime/Exit status write failed: {}",
-                process.lock().unwrap().name,
-                e
+                name, e
             );
         }
-        process.lock().unwrap().state = ProcessState::Waiting;
-        debug!(
-            "{} Watchdog | Restart SIGNAL done, breaking",
-            process.lock().unwrap().name,
-        );
+        process.state = ProcessState::Waiting;
+        debug!("{} Watchdog | Restart SIGNAL done, breaking", process.name,);
         return true;
     }
     false
@@ -796,8 +779,8 @@ async fn sleep_end_loop(now: Instant, name: ProcessName) {
     // Sleep (only if 999ms hasn't passed)
     let elapsed = now.elapsed().as_millis();
     // Since logic goes off if less than 1000, casting should be safe
-    if elapsed < 999 {
-        let sleep = (999 - elapsed) as u64;
+    if elapsed < 1000 {
+        let sleep = (1000 - elapsed) as u64;
         debug!(
             "{} Watchdog | END OF LOOP - Sleeping for [{}]ms...",
             name, sleep
