@@ -294,7 +294,7 @@ pub struct Xmrig {
 }
 
 // present for future.
-#[derive(Clone, Deserialize, Serialize, Debug)]
+#[derive(Clone, Deserialize, Serialize, Debug, PartialEq)]
 pub struct XmrigProxy {
     pub simple: bool,
     pub arguments: String,

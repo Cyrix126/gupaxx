@@ -100,8 +100,8 @@ impl eframe::App for App {
             || og.node != self.state.node
             || og.p2pool != self.state.p2pool
             || og.xmrig != self.state.xmrig
+            || og.xmrig_proxy != self.state.xmrig_proxy
             || og.xvb != self.state.xvb
-            // || og.node != self.state.node
             || self.og_node_vec != self.node_vec
             || self.og_pool_vec != self.pool_vec;
         drop(og);
