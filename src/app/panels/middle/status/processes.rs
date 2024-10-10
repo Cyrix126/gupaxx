@@ -9,7 +9,6 @@ use crate::helper::xrig::xmrig::{ImgXmrig, PubXmrigApi};
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
 use crate::helper::xvb::{rounds::XvbRound, PubXvbApi};
 use crate::helper::Sys;
-use crate::utils::macros::lock;
 use egui::TextStyle;
 
 use crate::constants::*;
@@ -91,7 +90,7 @@ fn gupax(ui: &mut Ui, min_size: Vec2, size: Vec2, sys: &Arc<Mutex<Sys>>) {
                 ),
             )
             .on_hover_text("Gupaxx is online");
-            let sys = lock!(sys);
+            let sys = sys.lock().unwrap();
             ui.add_sized(
                 size,
                 Label::new(RichText::new("Uptime").underline().color(BONE)),
@@ -160,7 +159,7 @@ fn p2pool(
                     .on_disabled_hover_text("P2Pool is offline");
                     ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
                     let size = [size.x, size.y / 1.4];
-                    let api = lock!(p2pool_api);
+                    let api = p2pool_api.lock().unwrap();
                     ui.add_sized(
                         size,
                         Label::new(RichText::new("Uptime").underline().color(BONE)),
@@ -249,7 +248,7 @@ fn p2pool(
                             api.average_effort, api.current_effort
                         )),
                     );
-                    let img = lock!(p2pool_img);
+                    let img = p2pool_img.lock().unwrap();
                     ui.add_sized(
                         size,
                         Label::new(RichText::new("Monero Node").underline().color(BONE)),
@@ -305,7 +304,7 @@ fn xmrig_proxy(
                 )
                 .on_hover_text("XMRig-Proxy is online")
                 .on_disabled_hover_text("XMRig-Proxy is offline");
-                let api = lock!(xmrig_proxy_api);
+                let api = xmrig_proxy_api.lock().unwrap();
                 ui.add_sized(
                     size,
                     Label::new(RichText::new("Uptime").underline().color(BONE)),
@@ -378,7 +377,7 @@ fn xmrig(
                 )
                 .on_hover_text("XMRig is online")
                 .on_disabled_hover_text("XMRig is offline");
-                let api = lock!(xmrig_api);
+                let api = xmrig_api.lock().unwrap();
                 ui.add_sized(
                     size,
                     Label::new(RichText::new("Uptime").underline().color(BONE)),
@@ -427,7 +426,11 @@ fn xmrig(
                 .on_hover_text(STATUS_XMRIG_THREADS);
                 ui.add_sized(
                     size,
-                    Label::new(format!("{}/{}", &lock!(xmrig_img).threads, max_threads)),
+                    Label::new(format!(
+                        "{}/{}",
+                        &xmrig_img.lock().unwrap().threads,
+                        max_threads
+                    )),
                 );
                 drop(api);
             });
@@ -438,7 +441,7 @@ fn xmrig(
 
 fn xvb(ui: &mut Ui, min_size: Vec2, size: Vec2, xvb_alive: bool, xvb_api: &Arc<Mutex<PubXvbApi>>) {
     //
-    let api = &lock!(xvb_api).stats_pub;
+    let api = &xvb_api.lock().unwrap().stats_pub;
     let enabled = xvb_alive;
     ui.group(|ui| {
         ScrollArea::vertical().show(ui, |ui| {
@@ -583,7 +586,7 @@ fn node(
                 )
                 .on_hover_text("Node is online")
                 .on_disabled_hover_text("Node is offline");
-                let api = lock!(node_api);
+                let api = node_api.lock().unwrap();
                 ui.add_sized(
                     size,
                     Label::new(RichText::new("Uptime").underline().color(BONE)),

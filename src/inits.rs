@@ -8,8 +8,8 @@ use crate::utils::regex::Regexes;
 use std::io::Write;
 //---------------------------------------------------------------------------------------------------- Init functions
 use crate::app::App;
+use crate::disk::state::*;
 use crate::{components::node::Ping, miscs::clamp_scale};
-use crate::{disk::state::*, utils::macros::lock};
 use crate::{info, warn};
 use eframe::NativeOptions;
 use egui::TextStyle::Small;
@@ -240,7 +240,7 @@ pub fn init_auto(app: &mut App) {
                 Arc::clone(&app.sudo),
             );
         } else {
-            lock!(app.sudo).signal = ProcessSignal::Start;
+            app.sudo.lock().unwrap().signal = ProcessSignal::Start;
             app.error_state.ask_sudo(&app.sudo);
         }
     } else {

@@ -53,10 +53,10 @@ impl Helper {
         while let Some(Ok(line)) = stdout.next() {
             let line = strip_ansi_escapes::strip_str(line);
 
-            if let Err(e) = writeln!(lock!(output_parse), "{}", line) {
+            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
                 error!("P2Pool PTY Parse | Output error: {}", e);
             }
-            if let Err(e) = writeln!(lock!(output_pub), "{}", line) {
+            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
                 error!("P2Pool PTY Pub | Output error: {}", e);
             }
             if i > 20 {
@@ -81,10 +81,10 @@ impl Helper {
                             ehr
                         );
                         // multiply by a thousand because value is given as kH/s instead H/s
-                        lock!(gui_api).sidechain_ehr = ehr;
+                        gui_api.lock().unwrap().sidechain_ehr = ehr;
                         debug!(
                             "P2pool | PTY getting current estimated HR data from status: {} H/s",
-                            lock!(gui_api).sidechain_ehr
+                            gui_api.lock().unwrap().sidechain_ehr
                         );
                     } else {
                         error!("P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {}", line);
@@ -97,7 +97,7 @@ impl Helper {
                             "P2pool | PTY getting current shares data from status: {} share",
                             shares
                         );
-                        lock!(gui_api).sidechain_shares = shares;
+                        gui_api.lock().unwrap().sidechain_shares = shares;
                     } else {
                         error!("P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {}", line);
                     }
@@ -114,23 +114,23 @@ impl Helper {
                 let (date, atomic_unit, block) = PayoutOrd::parse_raw_payout_line(&line);
                 let formatted_log_line = GupaxP2poolApi::format_payout(&date, &atomic_unit, &block);
                 GupaxP2poolApi::add_payout(
-                    &mut lock!(gupax_p2pool_api),
+                    &mut gupax_p2pool_api.lock().unwrap(),
                     &formatted_log_line,
                     date,
                     atomic_unit,
                     block,
                 );
                 if let Err(e) = GupaxP2poolApi::write_to_all_files(
-                    &lock!(gupax_p2pool_api),
+                    &gupax_p2pool_api.lock().unwrap(),
                     &formatted_log_line,
                 ) {
                     error!("P2Pool PTY GupaxP2poolApi | Write error: {}", e);
                 }
             }
-            if let Err(e) = writeln!(lock!(output_parse), "{}", line) {
+            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
                 error!("P2Pool PTY Parse | Output error: {}", e);
             }
-            if let Err(e) = writeln!(lock!(output_pub), "{}", line) {
+            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
                 error!("P2Pool PTY Pub | Output error: {}", e);
             }
         }
@@ -141,8 +141,8 @@ impl Helper {
     // Just sets some signals for the watchdog thread to pick up on.
     pub fn stop_p2pool(helper: &Arc<Mutex<Self>>) {
         info!("P2Pool | Attempting to stop...");
-        lock2!(helper, p2pool).signal = ProcessSignal::Stop;
-        lock2!(helper, p2pool).state = ProcessState::Middle;
+        helper.lock().unwrap().p2pool.lock().unwrap().signal = ProcessSignal::Stop;
+        helper.lock().unwrap().p2pool.lock().unwrap().state = ProcessState::Middle;
     }
 
     #[cold]
@@ -156,15 +156,15 @@ impl Helper {
         backup_hosts: Option<Vec<Node>>,
     ) {
         info!("P2Pool | Attempting to restart...");
-        lock2!(helper, p2pool).signal = ProcessSignal::Restart;
-        lock2!(helper, p2pool).state = ProcessState::Middle;
+        helper.lock().unwrap().p2pool.lock().unwrap().signal = ProcessSignal::Restart;
+        helper.lock().unwrap().p2pool.lock().unwrap().state = ProcessState::Middle;
 
         let helper = Arc::clone(helper);
         let state = state.clone();
         let path = path.to_path_buf();
         // This thread lives to wait, start p2pool then die.
         thread::spawn(move || {
-            while lock2!(helper, p2pool).state != ProcessState::Waiting {
+            while helper.lock().unwrap().p2pool.lock().unwrap().state != ProcessState::Waiting {
                 warn!("P2Pool | Want to restart but process is still alive, waiting...");
                 sleep!(1000);
             }
@@ -184,7 +184,7 @@ impl Helper {
         path: &Path,
         backup_hosts: Option<Vec<Node>>,
     ) {
-        lock2!(helper, p2pool).state = ProcessState::Middle;
+        helper.lock().unwrap().p2pool.lock().unwrap().state = ProcessState::Middle;
 
         let (args, api_path_local, api_path_network, api_path_pool) =
             Self::build_p2pool_args_and_mutate_img(helper, state, path, backup_hosts);
@@ -199,10 +199,10 @@ impl Helper {
 		));
 
         // Spawn watchdog thread
-        let process = Arc::clone(&lock!(helper).p2pool);
-        let gui_api = Arc::clone(&lock!(helper).gui_api_p2pool);
-        let pub_api = Arc::clone(&lock!(helper).pub_api_p2pool);
-        let gupax_p2pool_api = Arc::clone(&lock!(helper).gupax_p2pool_api);
+        let process = Arc::clone(&helper.lock().unwrap().p2pool);
+        let gui_api = Arc::clone(&helper.lock().unwrap().gui_api_p2pool);
+        let pub_api = Arc::clone(&helper.lock().unwrap().pub_api_p2pool);
+        let gupax_p2pool_api = Arc::clone(&helper.lock().unwrap().gupax_p2pool_api);
         let path = path.to_path_buf();
         thread::spawn(move || {
             Self::spawn_p2pool_watchdog(
@@ -278,7 +278,7 @@ impl Helper {
                 }
             }
 
-            *lock2!(helper, img_p2pool) = ImgP2pool {
+            *helper.lock().unwrap().img_p2pool.lock().unwrap() = ImgP2pool {
                 mini: "P2Pool Mini".to_string(),
                 address: Self::head_tail_of_monero_address(&state.address),
                 host: ip.to_string(),
@@ -305,7 +305,7 @@ impl Helper {
             args.push("--mini".to_string()); // P2Pool Mini
             args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
 
-            *lock2!(helper, img_p2pool) = ImgP2pool {
+            *helper.lock().unwrap().img_p2pool.lock().unwrap() = ImgP2pool {
                 mini: "P2Pool Mini".to_string(),
                 address: Self::head_tail_of_monero_address(&state.address),
                 host: "Local node".to_string(),
@@ -322,8 +322,8 @@ impl Helper {
                 // This parses the input and attempts to fill out
                 // the [ImgP2pool]... This is pretty bad code...
                 let mut last = "";
-                let lock = lock!(helper);
-                let mut p2pool_image = lock!(lock.img_p2pool);
+                let lock = helper.lock().unwrap();
+                let mut p2pool_image = lock.img_p2pool.lock().unwrap();
                 let mut mini = false;
                 for arg in state.arguments.split_whitespace() {
                     match last {
@@ -398,7 +398,7 @@ impl Helper {
                     }
                 }
 
-                *lock2!(helper, img_p2pool) = ImgP2pool {
+                *helper.lock().unwrap().img_p2pool.lock().unwrap() = ImgP2pool {
                     mini: if state.mini {
                         "P2Pool Mini".to_string()
                     } else {
@@ -464,7 +464,7 @@ impl Helper {
 
         // 2. Set process state
         debug!("P2Pool | Setting process state...");
-        let mut lock = lock!(process);
+        let mut lock = process.lock().unwrap();
         lock.state = ProcessState::Syncing;
         lock.signal = ProcessSignal::None;
         lock.start = Instant::now();
@@ -474,8 +474,8 @@ impl Helper {
 
         // 3. Spawn PTY read thread
         debug!("P2Pool | Spawning PTY read thread...");
-        let output_parse = Arc::clone(&lock!(process).output_parse);
-        let output_pub = Arc::clone(&lock!(process).output_pub);
+        let output_parse = Arc::clone(&process.lock().unwrap().output_parse);
+        let output_pub = Arc::clone(&process.lock().unwrap().output_pub);
         let gupax_p2pool_api = Arc::clone(&gupax_p2pool_api);
         let p2pool_api_c = Arc::clone(&gui_api);
         tokio::spawn(async move {
@@ -487,8 +487,8 @@ impl Helper {
                 p2pool_api_c,
             );
         });
-        let output_parse = Arc::clone(&lock!(process).output_parse);
-        let output_pub = Arc::clone(&lock!(process).output_pub);
+        let output_parse = Arc::clone(&process.lock().unwrap().output_parse);
+        let output_pub = Arc::clone(&process.lock().unwrap().output_pub);
 
         debug!("P2Pool | Cleaning old [local] API files...");
         // Attempt to remove stale API file
@@ -511,11 +511,11 @@ impl Helper {
                 ),
             }
         }
-        let start = lock!(process).start;
+        let start = process.lock().unwrap().start;
 
         // Reset stats before loop
-        *lock!(pub_api) = PubP2poolApi::new();
-        *lock!(gui_api) = PubP2poolApi::new();
+        *pub_api.lock().unwrap() = PubP2poolApi::new();
+        *gui_api.lock().unwrap() = PubP2poolApi::new();
 
         // 4. Loop as watchdog
         let mut first_loop = true;
@@ -527,27 +527,32 @@ impl Helper {
             // Set timer
             let now = Instant::now();
             debug!("P2Pool Watchdog | ----------- Start of loop -----------");
-            lock!(gui_api).tick = (last_p2pool_request.elapsed().as_secs() % 60) as u8;
+            gui_api.lock().unwrap().tick = (last_p2pool_request.elapsed().as_secs() % 60) as u8;
 
             // Check if the process is secretly died without us knowing :)
             if check_died(
                 &child_pty,
-                &mut lock!(process),
+                &mut process.lock().unwrap(),
                 &start,
-                &mut lock!(gui_api).output,
+                &mut gui_api.lock().unwrap().output,
             ) {
                 break;
             }
 
             // Check SIGNAL
-            if signal_end(&process, &child_pty, &start, &mut lock!(gui_api).output) {
+            if signal_end(
+                &process,
+                &child_pty,
+                &start,
+                &mut gui_api.lock().unwrap().output,
+            ) {
                 break;
             }
             // Check vector of user input
             check_user_input(&process, &mut stdin);
             // Check if logs need resetting
             debug!("P2Pool Watchdog | Attempting GUI log reset check");
-            let mut lock = lock!(gui_api);
+            let mut lock = gui_api.lock().unwrap();
             Self::check_reset_gui_output(&mut lock.output, ProcessName::P2pool);
             drop(lock);
 
@@ -575,8 +580,9 @@ impl Helper {
                 last_p2pool_request.elapsed() >= Duration::from_secs(60);
             // need to reload fast to get the first right values after syncing.
             // check if value is 100k or under and request immediately if that's the case. fixed in release of p2pool including commit https://github.com/SChernykh/p2pool/commit/64a199be6dec7924b41f857a401086f25e1ec9be
-            if (last_p2pool_request_expired || lock!(pub_api).p2pool_difficulty_u64 <= 100000)
-                && lock!(process).state == ProcessState::Alive
+            if (last_p2pool_request_expired
+                || pub_api.lock().unwrap().p2pool_difficulty_u64 <= 100000)
+                && process.lock().unwrap().state == ProcessState::Alive
             {
                 debug!("P2Pool Watchdog | Attempting [network] & [pool] API file read");
                 if let (Ok(network_api), Ok(pool_api)) = (
@@ -597,7 +603,7 @@ impl Helper {
                 last_status_request.elapsed() >= Duration::from_secs(60);
 
             if (last_status_request_expired || first_loop)
-                && lock!(process).state == ProcessState::Alive
+                && process.lock().unwrap().state == ProcessState::Alive
             {
                 debug!("P2Pool Watchdog | Reading status output of p2pool node");
                 #[cfg(target_os = "windows")]
@@ -622,7 +628,7 @@ impl Helper {
             sleep_end_loop(now, ProcessName::P2pool).await;
             debug!(
                 "P2Pool Watchdog | END OF LOOP -  Tick: [{}/60]",
-                lock!(gui_api).tick,
+                gui_api.lock().unwrap().tick,
             );
         }
 
@@ -827,37 +833,39 @@ impl PubP2poolApi {
         process: &Arc<Mutex<Process>>,
     ) {
         // 1. Take the process's current output buffer and combine it with Pub (if not empty)
-        let mut output_pub = lock!(output_pub);
+        let mut output_pub = output_pub.lock().unwrap();
         if !output_pub.is_empty() {
-            lock!(public)
+            public
+                .lock()
+                .unwrap()
                 .output
                 .push_str(&std::mem::take(&mut *output_pub));
         }
 
         // 2. Parse the full STDOUT
-        let mut output_parse = lock!(output_parse);
+        let mut output_parse = output_parse.lock().unwrap();
         let (payouts_new, xmr_new) = Self::calc_payouts_and_xmr(&output_parse);
         // Check for "SYNCHRONIZED" only if we aren't already.
-        if lock!(process).state == ProcessState::Syncing {
+        if process.lock().unwrap().state == ProcessState::Syncing {
             // look for depth 0
 
             if P2POOL_REGEX.depth_0.is_match(&output_parse) {
-                lock!(process).state = ProcessState::Alive;
+                process.lock().unwrap().state = ProcessState::Alive;
             }
         }
         // check if zmq server still alive
-        if lock!(process).state == ProcessState::Alive
+        if process.lock().unwrap().state == ProcessState::Alive
             && contains_zmq_connection_lost(&output_parse)
         {
             // node zmq is not responding, p2pool is not ready
-            lock!(process).state = ProcessState::Syncing;
+            process.lock().unwrap().state = ProcessState::Syncing;
         }
 
         // 3. Throw away [output_parse]
         output_parse.clear();
         drop(output_parse);
         // 4. Add to current values
-        let mut public = lock!(public);
+        let mut public = public.lock().unwrap();
         let (payouts, xmr) = (public.payouts + payouts_new, public.xmr + xmr_new);
 
         // 5. Calculate hour/day/month given elapsed time
@@ -910,7 +918,7 @@ impl PubP2poolApi {
 
     // Mutate [PubP2poolApi] with data from a [PrivP2poolLocalApi] and the process output.
     pub(super) fn update_from_local(public: &Arc<Mutex<Self>>, local: PrivP2poolLocalApi) {
-        let mut public = lock!(public);
+        let mut public = public.lock().unwrap();
         *public = Self {
             hashrate_15m: HumanNumber::from_u64(local.hashrate_15m),
             hashrate_1h: HumanNumber::from_u64(local.hashrate_1h),
@@ -930,7 +938,7 @@ impl PubP2poolApi {
         net: PrivP2poolNetworkApi,
         pool: PrivP2poolPoolApi,
     ) {
-        let user_hashrate = lock!(public).user_p2pool_hashrate_u64; // The user's total P2Pool hashrate
+        let user_hashrate = public.lock().unwrap().user_p2pool_hashrate_u64; // The user's total P2Pool hashrate
         let monero_difficulty = net.difficulty;
         let monero_hashrate = monero_difficulty / MONERO_BLOCK_TIME_IN_SECONDS;
         let p2pool_hashrate = pool.pool_statistics.hashRate;
@@ -972,7 +980,7 @@ impl PubP2poolApi {
                 p2pool_difficulty / user_hashrate,
             ));
         }
-        let mut public = lock!(public);
+        let mut public = public.lock().unwrap();
         *public = Self {
             p2pool_difficulty_u64: p2pool_difficulty,
             monero_difficulty_u64: monero_difficulty,

@@ -10,7 +10,7 @@ use crate::{
         status::{Hash, PayoutView},
     },
     helper::p2pool::PubP2poolApi,
-    utils::{constants::*, macros::lock},
+    utils::constants::*,
 };
 
 impl Status {
@@ -22,7 +22,7 @@ impl Status {
         p2pool_alive: bool,
         p2pool_api: &Arc<Mutex<PubP2poolApi>>,
     ) {
-        let api = lock!(gupax_p2pool_api);
+        let api = gupax_p2pool_api.lock().unwrap();
         let height = size.y;
         let width = size.x;
         let text = height / 25.0;
@@ -214,7 +214,7 @@ impl Status {
             let text = height / 25.0;
             let width = (width / 3.0) - (SPACE * 1.666);
             let min_height = ui.available_height() / 1.3;
-            let api = lock!(p2pool_api);
+            let api = p2pool_api.lock().unwrap();
             ui.horizontal(|ui| {
                 ui.group(|ui| {
                     ui.vertical(|ui| {

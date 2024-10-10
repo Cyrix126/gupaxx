@@ -11,7 +11,6 @@ use tokio::spawn;
 use crate::{
     components::node::{GetInfo, TIMEOUT_NODE_PING},
     helper::{xvb::output_console, Process, ProcessName, ProcessState},
-    macros::lock,
     GUPAX_VERSION_UNDERSCORE, XVB_NODE_EU, XVB_NODE_NA, XVB_NODE_PORT, XVB_NODE_RPC,
 };
 
@@ -112,16 +111,16 @@ impl XvbNode {
             // if both nodes are dead, then the state of the process must be NodesOffline
             info!("XvB node ping, all offline or ping failed, switching back to local p2pool",);
             output_console(
-                &mut lock!(gui_api_xvb).output,
+                &mut gui_api_xvb.lock().unwrap().output,
                 "XvB node ping, all offline or ping failed, switching back to local p2pool",
                 ProcessName::Xvb,
             );
-            lock!(process_xvb).state = ProcessState::OfflineNodesAll;
+            process_xvb.lock().unwrap().state = ProcessState::OfflineNodesAll;
         } else {
             // if node is up and because update_fastest is used only if token/address is valid, it means XvB process is Alive.
             info!("XvB node ping, both online and best is {}", node.url());
             output_console(
-                &mut lock!(gui_api_xvb).output,
+                &mut gui_api_xvb.lock().unwrap().output,
                 &format!("XvB node ping, {} is selected as the fastest.", node),
                 ProcessName::Xvb,
             );
@@ -129,13 +128,13 @@ impl XvbNode {
             // could be used by xmrig who signal that a node is not joignable
             // or by the start of xvb
             // next iteration of the loop of XvB process will verify if all conditions are met to be alive.
-            if lock!(process_xvb).state != ProcessState::Syncing
-                && lock!(process_xvb).state != ProcessState::Retry
+            if process_xvb.lock().unwrap().state != ProcessState::Syncing
+                && process_xvb.lock().unwrap().state != ProcessState::Retry
             {
-                lock!(process_xvb).state = ProcessState::Syncing;
+                process_xvb.lock().unwrap().state = ProcessState::Syncing;
             }
         }
-        lock!(pub_api_xvb).stats_priv.node = node;
+        pub_api_xvb.lock().unwrap().stats_priv.node = node;
     }
     async fn ping(ip: &str, client: &Client) -> u128 {
         let request = client

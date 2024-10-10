@@ -23,7 +23,6 @@ use crate::{
     constants::*,
     disk::state::Xmrig,
     helper::{Helper, ProcessSignal},
-    macros::*,
 };
 use log::*;
 use std::{
@@ -88,7 +87,7 @@ impl SudoState {
     // Resets the state.
     pub fn reset(state: &Arc<Mutex<Self>>) {
         Self::wipe(state);
-        let mut state = lock!(state);
+        let mut state = state.lock().unwrap();
         state.testing = false;
         state.success = false;
         //		state.signal = ProcessSignal::None;
@@ -101,7 +100,7 @@ impl SudoState {
     pub fn wipe(state: &Arc<Mutex<Self>>) {
         let mut new = String::with_capacity(256);
         // new is now == old, and vice-versa.
-        std::mem::swap(&mut new, &mut lock!(state).pass);
+        std::mem::swap(&mut new, &mut state.lock().unwrap().pass);
         // we're wiping & dropping the old pass here.
         new.zeroize();
         std::mem::drop(new);
@@ -124,7 +123,7 @@ impl SudoState {
         let path = path.to_path_buf();
         thread::spawn(move || {
             // Set to testing
-            lock!(state).testing = true;
+            state.lock().unwrap().testing = true;
 
             // Make sure sudo timestamp is reset
             let reset = Command::new("sudo")
@@ -138,8 +137,8 @@ impl SudoState {
                 Err(e) => {
                     error!("Sudo | Couldn't reset timestamp: {}", e);
                     Self::wipe(&state);
-                    lock!(state).msg = format!("Sudo error: {}", e);
-                    lock!(state).testing = false;
+                    state.lock().unwrap().msg = format!("Sudo error: {}", e);
+                    state.lock().unwrap().testing = false;
                     return;
                 }
             }
@@ -155,7 +154,9 @@ impl SudoState {
 
             // Write pass to STDIN
             let mut stdin = sudo.stdin.take().unwrap();
-            stdin.write_all(lock!(state).pass.as_bytes()).unwrap();
+            stdin
+                .write_all(state.lock().unwrap().pass.as_bytes())
+                .unwrap();
             drop(stdin);
 
             // Sudo re-prompts and will hang.
@@ -166,7 +167,7 @@ impl SudoState {
                     Ok(Some(code)) => {
                         if code.success() {
                             info!("Sudo | Password ... OK!");
-                            lock!(state).success = true;
+                            state.lock().unwrap().success = true;
                             break;
                         }
                     }
@@ -177,8 +178,8 @@ impl SudoState {
                     Err(e) => {
                         error!("Sudo | Couldn't reset timestamp: {}", e);
                         Self::wipe(&state);
-                        lock!(state).msg = format!("Sudo error: {}", e);
-                        lock!(state).testing = false;
+                        state.lock().unwrap().msg = format!("Sudo error: {}", e);
+                        state.lock().unwrap().testing = false;
                         return;
                     }
                 }
@@ -186,8 +187,8 @@ impl SudoState {
             if let Err(e) = sudo.kill() {
                 warn!("Sudo | Kill error (it probably already exited): {}", e);
             }
-            if lock!(state).success {
-                match lock!(state).signal {
+            if state.lock().unwrap().success {
+                match state.lock().unwrap().signal {
                     ProcessSignal::Restart => crate::helper::Helper::restart_xmrig(
                         &helper,
                         &xmrig,
@@ -203,11 +204,11 @@ impl SudoState {
                     ),
                 }
             } else {
-                lock!(state).msg = "Incorrect password! (or sudo timeout)".to_string();
+                state.lock().unwrap().msg = "Incorrect password! (or sudo timeout)".to_string();
                 Self::wipe(&state);
             }
-            lock!(state).signal = ProcessSignal::None;
-            lock!(state).testing = false;
+            state.lock().unwrap().signal = ProcessSignal::None;
+            state.lock().unwrap().testing = false;
         });
     }
 }

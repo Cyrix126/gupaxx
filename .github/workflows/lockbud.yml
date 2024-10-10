@@ -1,0 +1,25 @@
+name: Lockbud
+
+on: push
+
+jobs:
+  test:
+    name: lockbud
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Generate code coverage
+        run: |
+         git clone https://github.com/BurtonQin/lockbud.git
+         cd lockbud
+         cargo install --path .
+         cd ..
+         cargo clean
+         cargo lockbud -k deadlock -l gupaxx  &> >(tee  log.out)
+         if grep -q "WARN" log.out; then
+          echo "Lockbud warnings found:"
+          echo "$output"
+          exit 1
+         fi

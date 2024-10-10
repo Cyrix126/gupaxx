@@ -12,7 +12,6 @@ use tokio::time::sleep;
 use crate::{
     disk::state::ManualDonationLevel,
     helper::{xvb::output_console, Process, ProcessName, ProcessState},
-    macros::lock,
     XVB_URL,
 };
 use crate::{
@@ -122,7 +121,7 @@ impl XvbPrivStats {
         match XvbPrivStats::request_api(client, address, token).await {
             Ok(new_data) => {
                 debug!("XvB Watchdog | HTTP API request OK");
-                lock!(&pub_api).stats_priv = new_data;
+                pub_api.lock().unwrap().stats_priv = new_data;
                 // if last request failed, we are now ready to show stats again and maybe be alive next loop.
             }
             Err(err) => {
@@ -131,17 +130,17 @@ impl XvbPrivStats {
                     XVB_URL, err
                 );
                 output_console(
-                    &mut lock!(gui_api).output,
+                    &mut gui_api.lock().unwrap().output,
                     &format!(
                         "Failure to retrieve private stats from {} because of this error: {}",
                         XVB_URL, err
                     ),
                     ProcessName::Xvb,
                 );
-                lock!(process).state = ProcessState::Retry;
+                process.lock().unwrap().state = ProcessState::Retry;
                 // sleep here because it is in a spawn and will not block the user stopping or restarting the service.
                 output_console(
-                    &mut lock!(gui_api).output,
+                    &mut gui_api.lock().unwrap().output,
                     "Waiting 10 seconds before trying to get stats again.",
                     ProcessName::Xvb,
                 );

@@ -10,7 +10,6 @@ use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
 use crate::helper::Process;
 use crate::regex::{num_lines, REGEXES};
 use crate::utils::constants::DARK_GRAY;
-use crate::utils::macros::lock;
 use crate::{
     GREEN, LIGHT_GRAY, LIST_ADD, LIST_CLEAR, LIST_DELETE, LIST_SAVE, RED, SPACE, XMRIG_API_IP,
     XMRIG_API_PORT, XMRIG_IP, XMRIG_KEEPALIVE, XMRIG_NAME, XMRIG_PORT, XMRIG_PROXY_ARGUMENTS,
@@ -44,7 +43,7 @@ impl XmrigProxy {
         // console output for log
         debug!("Xmrig-Proxy Tab | Rendering [Console]");
         ui.group(|ui| {
-            let text = &lock!(api).output;
+            let text = &api.lock().unwrap().output;
             let nb_lines = num_lines(text);
             let height = size.y / 2.8;
             let width = size.x - (space_h / 2.0);
@@ -86,7 +85,7 @@ impl XmrigProxy {
             if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                 response.request_focus(); // Get focus back
                 let buffer = std::mem::take(buffer); // Take buffer
-                let mut process = lock!(process); // Lock
+                let mut process = process.lock().unwrap(); // Lock
                 if process.is_alive() {
                     process.input.push(buffer);
                 } // Push only if alive

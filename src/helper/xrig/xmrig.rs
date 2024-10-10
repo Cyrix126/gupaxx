@@ -46,10 +46,10 @@ impl Helper {
         let mut i = 0;
         while let Some(Ok(line)) = stdout.next() {
             let line = strip_ansi_escapes::strip_str(line);
-            if let Err(e) = writeln!(lock!(output_parse), "{}", line) {
+            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
                 error!("XMRig PTY Parse | Output error: {}", e);
             }
-            if let Err(e) = writeln!(lock!(output_pub), "{}", line) {
+            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
                 error!("XMRig PTY Pub | Output error: {}", e);
             }
             if i > 13 {
@@ -63,9 +63,9 @@ impl Helper {
             // need to verify if node still working
             // for that need to catch "connect error"
             // only check if xvb process is used and xmrig-proxy is not.
-            if lock!(process_xvb).is_alive() && !lock!(process_xp).is_alive() {
+            if process_xvb.lock().unwrap().is_alive() && !process_xp.lock().unwrap().is_alive() {
                 if contains_error(&line) {
-                    let current_node = lock!(pub_api_xvb).current_node;
+                    let current_node = pub_api_xvb.lock().unwrap().current_node;
                     if let Some(current_node) = current_node {
                         // updating current node to None, will stop sending signal of FailedNode until new node is set
                         // send signal to update node.
@@ -73,9 +73,10 @@ impl Helper {
                         // update nodes only if we were not mining on p2pool.
                         // if xmrig stop, xvb will react in any case.
                         if current_node != XvbNode::P2pool {
-                            lock!(process_xvb).signal = ProcessSignal::UpdateNodes(current_node);
+                            process_xvb.lock().unwrap().signal =
+                                ProcessSignal::UpdateNodes(current_node);
                         }
-                        lock!(pub_api_xvb).current_node = None;
+                        pub_api_xvb.lock().unwrap().current_node = None;
                     }
                 }
                 if contains_usepool(&line) {
@@ -86,16 +87,17 @@ impl Helper {
                     if node.is_none() {
                         error!("XMRig PTY Parse | node is not understood, switching to backup.");
                         // update with default will choose which XvB to prefer. Will update XvB to use p2pool.
-                        lock!(process_xvb).signal = ProcessSignal::UpdateNodes(XvbNode::default());
+                        process_xvb.lock().unwrap().signal =
+                            ProcessSignal::UpdateNodes(XvbNode::default());
                     }
-                    lock!(pub_api_xvb).current_node = node;
+                    pub_api_xvb.lock().unwrap().current_node = node;
                 }
             }
             //			println!("{}", line); // For debugging.
-            if let Err(e) = writeln!(lock!(output_parse), "{}", line) {
+            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
                 error!("XMRig PTY Parse | Output error: {}", e);
             }
-            if let Err(e) = writeln!(lock!(output_pub), "{}", line) {
+            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
                 error!("XMRig PTY Pub | Output error: {}", e);
             }
         }
@@ -117,7 +119,7 @@ impl Helper {
         // Write the [sudo] password to STDIN.
         let mut stdin = child.stdin.take().unwrap();
         use std::io::Write;
-        if let Err(e) = writeln!(stdin, "{}\n", lock!(sudo).pass) {
+        if let Err(e) = writeln!(stdin, "{}\n", sudo.lock().unwrap().pass) {
             error!("Sudo Kill | STDIN error: {}", e);
         }
 
@@ -130,12 +132,12 @@ impl Helper {
     // Just sets some signals for the watchdog thread to pick up on.
     pub fn stop_xmrig(helper: &Arc<Mutex<Self>>) {
         info!("XMRig | Attempting to stop...");
-        lock2!(helper, xmrig).signal = ProcessSignal::Stop;
-        lock2!(helper, xmrig).state = ProcessState::Middle;
-        let gui_api = Arc::clone(&lock!(helper).gui_api_xmrig);
-        let pub_api = Arc::clone(&lock!(helper).pub_api_xmrig);
-        *lock!(pub_api) = PubXmrigApi::new();
-        *lock!(gui_api) = PubXmrigApi::new();
+        helper.lock().unwrap().xmrig.lock().unwrap().signal = ProcessSignal::Stop;
+        helper.lock().unwrap().xmrig.lock().unwrap().state = ProcessState::Middle;
+        let gui_api = Arc::clone(&helper.lock().unwrap().gui_api_xmrig);
+        let pub_api = Arc::clone(&helper.lock().unwrap().pub_api_xmrig);
+        *pub_api.lock().unwrap() = PubXmrigApi::new();
+        *gui_api.lock().unwrap() = PubXmrigApi::new();
     }
 
     #[cold]
@@ -149,15 +151,15 @@ impl Helper {
         sudo: Arc<Mutex<SudoState>>,
     ) {
         info!("XMRig | Attempting to restart...");
-        lock2!(helper, xmrig).signal = ProcessSignal::Restart;
-        lock2!(helper, xmrig).state = ProcessState::Middle;
+        helper.lock().unwrap().xmrig.lock().unwrap().signal = ProcessSignal::Restart;
+        helper.lock().unwrap().xmrig.lock().unwrap().state = ProcessState::Middle;
 
         let helper = Arc::clone(helper);
         let state = state.clone();
         let path = path.to_path_buf();
         // This thread lives to wait, start xmrig then die.
         thread::spawn(move || {
-            while lock2!(helper, xmrig).state != ProcessState::Waiting {
+            while helper.lock().unwrap().xmrig.lock().unwrap().state != ProcessState::Waiting {
                 warn!("XMRig | Want to restart but process is still alive, waiting...");
                 sleep!(1000);
             }
@@ -176,7 +178,7 @@ impl Helper {
         path: &Path,
         sudo: Arc<Mutex<SudoState>>,
     ) {
-        lock2!(helper, xmrig).state = ProcessState::Middle;
+        helper.lock().unwrap().xmrig.lock().unwrap().state = ProcessState::Middle;
 
         let (args, api_ip_port) = Self::build_xmrig_args_and_mutate_img(helper, state, path);
         // Print arguments & user settings to console
@@ -184,15 +186,15 @@ impl Helper {
         info!("XMRig | Using path: [{}]", path.display());
 
         // Spawn watchdog thread
-        let process = Arc::clone(&lock!(helper).xmrig);
-        let gui_api = Arc::clone(&lock!(helper).gui_api_xmrig);
-        let pub_api = Arc::clone(&lock!(helper).pub_api_xmrig);
-        let process_xvb = Arc::clone(&lock!(helper).xvb);
-        let process_xp = Arc::clone(&lock!(helper).xmrig_proxy);
+        let process = Arc::clone(&helper.lock().unwrap().xmrig);
+        let gui_api = Arc::clone(&helper.lock().unwrap().gui_api_xmrig);
+        let pub_api = Arc::clone(&helper.lock().unwrap().pub_api_xmrig);
+        let process_xvb = Arc::clone(&helper.lock().unwrap().xvb);
+        let process_xp = Arc::clone(&helper.lock().unwrap().xmrig_proxy);
         let path = path.to_path_buf();
         let token = state.token.clone();
-        let img_xmrig = Arc::clone(&lock!(helper).img_xmrig);
-        let pub_api_xvb = Arc::clone(&lock!(helper).pub_api_xvb);
+        let img_xmrig = Arc::clone(&helper.lock().unwrap().img_xmrig);
+        let pub_api_xvb = Arc::clone(&helper.lock().unwrap().pub_api_xvb);
         thread::spawn(move || {
             Self::spawn_xmrig_watchdog(
                 process,
@@ -258,12 +260,13 @@ impl Helper {
                 args.push("--pause-on-active".to_string());
                 args.push(state.pause.to_string());
             } // Pause on active
-            *lock2!(helper, img_xmrig) = ImgXmrig {
+            *helper.lock().unwrap().img_xmrig.lock().unwrap() = ImgXmrig {
                 threads: state.current_threads.to_string(),
                 url: "127.0.0.1:3333 (Local P2Pool)".to_string(),
             };
 
-            lock2!(helper, pub_api_xmrig).node = "127.0.0.1:3333 (Local P2Pool)".to_string();
+            helper.lock().unwrap().pub_api_xmrig.lock().unwrap().node =
+                "127.0.0.1:3333 (Local P2Pool)".to_string();
             api_ip = "127.0.0.1".to_string();
             api_port = "18088".to_string();
 
@@ -274,8 +277,8 @@ impl Helper {
                 // This parses the input and attempts to fill out
                 // the [ImgXmrig]... This is pretty bad code...
                 let mut last = "";
-                let lock = lock!(helper);
-                let mut xmrig_image = lock!(lock.img_xmrig);
+                let lock = helper.lock().unwrap();
+                let mut xmrig_image = lock.img_xmrig.lock().unwrap();
                 for arg in state.arguments.split_whitespace() {
                     match last {
                         "--threads" => xmrig_image.threads = arg.to_string(),
@@ -339,11 +342,11 @@ impl Helper {
                     args.push("--pause-on-active".to_string());
                     args.push(state.pause.to_string());
                 } // Pause on active
-                *lock2!(helper, img_xmrig) = ImgXmrig {
+                *helper.lock().unwrap().img_xmrig.lock().unwrap() = ImgXmrig {
                     url: url.clone(),
                     threads: state.current_threads.to_string(),
                 };
-                lock2!(helper, pub_api_xmrig).node = url;
+                helper.lock().unwrap().pub_api_xmrig.lock().unwrap().node = url;
             }
         }
         args.push(format!("--http-access-token={}", state.token)); // HTTP API Port
@@ -404,8 +407,8 @@ impl Helper {
         // 4. Spawn PTY read thread
         debug!("XMRig | Spawning PTY read thread...");
         let reader = pair.master.try_clone_reader().unwrap(); // Get STDOUT/STDERR before moving the PTY
-        let output_parse = Arc::clone(&lock!(process).output_parse);
-        let output_pub = Arc::clone(&lock!(process).output_pub);
+        let output_parse = Arc::clone(&process.lock().unwrap().output_parse);
+        let output_pub = Arc::clone(&process.lock().unwrap().output_pub);
         spawn(enclose!((pub_api_xvb, process_xp) async move {
             Self::read_pty_xmrig(output_parse, output_pub, reader, process_xvb, process_xp, &pub_api_xvb).await;
         }));
@@ -428,19 +431,19 @@ impl Helper {
             // a) Sleep to wait for [sudo]'s non-echo prompt (on Unix).
             // this prevents users pass from showing up in the STDOUT.
             sleep!(3000);
-            if let Err(e) = writeln!(stdin, "{}", lock!(sudo).pass) {
+            if let Err(e) = writeln!(stdin, "{}", sudo.lock().unwrap().pass) {
                 error!("XMRig | Sudo STDIN error: {}", e);
             };
             SudoState::wipe(&sudo);
 
             // b) Reset GUI STDOUT just in case.
             debug!("XMRig | Clearing GUI output...");
-            lock!(gui_api).output.clear();
+            gui_api.lock().unwrap().output.clear();
         }
 
         // 3. Set process state
         debug!("XMRig | Setting process state...");
-        let mut lock = lock!(process);
+        let mut lock = process.lock().unwrap();
         lock.state = ProcessState::NotMining;
         lock.signal = ProcessSignal::None;
         lock.start = Instant::now();
@@ -448,16 +451,16 @@ impl Helper {
 
         // // 4. Spawn PTY read thread
         // debug!("XMRig | Spawning PTY read thread...");
-        // let output_parse = Arc::clone(&lock!(process).output_parse);
-        // let output_pub = Arc::clone(&lock!(process).output_pub);
+        // let output_parse = Arc::clone(&process.lock().unwrap().output_parse);
+        // let output_pub = Arc::clone(&process.lock().unwrap().output_pub);
         // spawn(enclose!((pub_api_xvb) async move {
         //     Self::read_pty_xmrig(output_parse, output_pub, reader, process_xvb, &pub_api_xvb).await;
         // }));
-        let output_parse = Arc::clone(&lock!(process).output_parse);
-        let output_pub = Arc::clone(&lock!(process).output_pub);
+        let output_parse = Arc::clone(&process.lock().unwrap().output_parse);
+        let output_pub = Arc::clone(&process.lock().unwrap().output_pub);
 
         let client = Client::new();
-        let start = lock!(process).start;
+        let start = process.lock().unwrap().start;
         let api_uri = {
             if !api_ip_port.ends_with('/') {
                 api_ip_port.push('/');
@@ -467,10 +470,14 @@ impl Helper {
         info!("XMRig | Final API URI: {}", api_uri);
 
         // Reset stats before loop
-        *lock!(pub_api) = PubXmrigApi::new();
-        *lock!(gui_api) = PubXmrigApi::new();
+        *pub_api.lock().unwrap() = PubXmrigApi::new();
+        *gui_api.lock().unwrap() = PubXmrigApi::new();
         // node used for process Status tab
-        lock!(gui_api).node.clone_from(&lock!(img_xmrig).url);
+        gui_api
+            .lock()
+            .unwrap()
+            .node
+            .clone_from(&img_xmrig.lock().unwrap().url);
         // 5. Loop as watchdog
         info!("XMRig | Entering watchdog mode... woof!");
         // needs xmrig to be in belownormal priority or else Gupaxx will be in trouble if it does not have enough cpu time.
@@ -499,9 +506,9 @@ impl Helper {
             // Check if the process secretly died without us knowing :)
             if check_died(
                 &child_pty,
-                &mut lock!(process),
+                &mut process.lock().unwrap(),
                 &start,
-                &mut lock!(gui_api).output,
+                &mut gui_api.lock().unwrap().output,
             ) {
                 break;
             }
@@ -510,7 +517,7 @@ impl Helper {
                 &process,
                 &child_pty,
                 &start,
-                &mut lock!(gui_api).output,
+                &mut gui_api.lock().unwrap().output,
                 &sudo,
             ) {
                 break;
@@ -520,7 +527,7 @@ impl Helper {
             // Check if logs need resetting
             debug!("XMRig Watchdog | Attempting GUI log reset check");
             {
-                let mut lock = lock!(gui_api);
+                let mut lock = gui_api.lock().unwrap();
                 Self::check_reset_gui_output(&mut lock.output, ProcessName::Xmrig);
             }
             // Always update from output
@@ -547,8 +554,8 @@ impl Helper {
                 }
             }
             // if mining on proxy and proxy is not alive, switch back to p2pool node
-            if lock!(gui_api).node == XvbNode::XmrigProxy.to_string()
-                && !lock!(process_xp).is_alive()
+            if gui_api.lock().unwrap().node == XvbNode::XmrigProxy.to_string()
+                && !process_xp.lock().unwrap().is_alive()
             {
                 info!("XMRig Process |  redirect xmrig to p2pool since XMRig-Proxy is not alive anymore");
                 if let Err(err) = update_xmrig_config(
@@ -564,7 +571,7 @@ impl Helper {
                     // show to console error about updating xmrig config
                     warn!("XMRig Process | Failed request HTTP API Xmrig");
                     output_console(
-                        &mut lock!(gui_api).output,
+                        &mut gui_api.lock().unwrap().output,
                         &format!(
                             "Failure to update xmrig config with HTTP API.\nError: {}",
                             err
@@ -572,7 +579,7 @@ impl Helper {
                         ProcessName::Xmrig,
                     );
                 } else {
-                    lock!(gui_api).node = XvbNode::P2pool.to_string();
+                    gui_api.lock().unwrap().node = XvbNode::P2pool.to_string();
                     debug!("XMRig Process | mining on P2Pool pool");
                 }
             }
@@ -590,7 +597,7 @@ impl Helper {
         gui_api_output_raw: &mut String,
         sudo: &Arc<Mutex<SudoState>>,
     ) -> bool {
-        let signal = lock!(process).signal;
+        let signal = process.lock().unwrap().signal;
         if signal == ProcessSignal::Stop || signal == ProcessSignal::Restart {
             debug!("XMRig Watchdog | Stop/Restart SIGNAL caught");
             // macOS requires [sudo] again to kill [XMRig]
@@ -598,18 +605,18 @@ impl Helper {
                 // If we're at this point, that means the user has
                 // entered their [sudo] pass again, after we wiped it.
                 // So, we should be able to find it in our [Arc<Mutex<SudoState>>].
-                Self::sudo_kill(lock!(child_pty).process_id().unwrap(), sudo);
+                Self::sudo_kill(child_pty.lock().unwrap().process_id().unwrap(), sudo);
                 // And... wipe it again (only if we're stopping full).
                 // If we're restarting, the next start will wipe it for us.
                 if signal != ProcessSignal::Restart {
                     SudoState::wipe(sudo);
                 }
-            } else if let Err(e) = lock!(child_pty).kill() {
+            } else if let Err(e) = child_pty.lock().unwrap().kill() {
                 error!("XMRig Watchdog | Kill error: {}", e);
             }
-            let exit_status = match lock!(child_pty).wait() {
+            let exit_status = match child_pty.lock().unwrap().wait() {
                 Ok(e) => {
-                    let mut process = lock!(process);
+                    let mut process = process.lock().unwrap();
                     if e.success() {
                         if process.signal == ProcessSignal::Stop {
                             process.state = ProcessState::Dead;
@@ -623,7 +630,7 @@ impl Helper {
                     }
                 }
                 _ => {
-                    let mut process = lock!(process);
+                    let mut process = process.lock().unwrap();
                     if process.signal == ProcessSignal::Stop {
                         process.state = ProcessState::Failed;
                     }
@@ -645,7 +652,7 @@ impl Helper {
                     e
                 );
             }
-            let mut process = lock!(process);
+            let mut process = process.lock().unwrap();
             match process.signal {
                 ProcessSignal::Stop => process.signal = ProcessSignal::None,
                 ProcessSignal::Restart => process.state = ProcessState::Waiting,
@@ -746,10 +753,10 @@ impl PubXmrigApi {
         process: &Arc<Mutex<Process>>,
     ) {
         // 1. Take the process's current output buffer and combine it with Pub (if not empty)
-        let mut output_pub = lock!(output_pub);
+        let mut output_pub = output_pub.lock().unwrap();
 
         {
-            let mut public = lock!(public);
+            let mut public = public.lock().unwrap();
             if !output_pub.is_empty() {
                 public.output.push_str(&std::mem::take(&mut *output_pub));
             }
@@ -758,11 +765,11 @@ impl PubXmrigApi {
         }
 
         // 2. Check for "new job"/"no active...".
-        let mut output_parse = lock!(output_parse);
+        let mut output_parse = output_parse.lock().unwrap();
         if XMRIG_REGEX.new_job.is_match(&output_parse) {
-            lock!(process).state = ProcessState::Alive;
+            process.lock().unwrap().state = ProcessState::Alive;
         } else if XMRIG_REGEX.not_mining.is_match(&output_parse) {
-            lock!(process).state = ProcessState::NotMining;
+            process.lock().unwrap().state = ProcessState::NotMining;
         }
 
         // 3. Throw away [output_parse]
@@ -772,7 +779,7 @@ impl PubXmrigApi {
 
     // Formats raw private data into ready-to-print human readable version.
     fn update_from_priv(public: &Arc<Mutex<Self>>, private: PrivXmrigApi) {
-        let mut public = lock!(public);
+        let mut public = public.lock().unwrap();
         let hashrate_raw = match private.hashrate.total.first() {
             Some(Some(h)) => *h,
             _ => 0.0,

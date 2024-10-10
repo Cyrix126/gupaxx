@@ -16,7 +16,6 @@ use crate::helper::node::PubNodeApi;
 use crate::helper::Process;
 use crate::regex::{num_lines, REGEXES};
 use crate::utils::constants::DARK_GRAY;
-use crate::utils::macros::lock;
 use crate::{GREEN, LIGHT_GRAY, P2POOL_IN, P2POOL_LOG, P2POOL_OUT, RED, SPACE};
 
 impl Node {
@@ -47,7 +46,7 @@ impl Node {
             // console output for log
             debug!("Node Tab | Rendering [Console]");
             ui.group(|ui| {
-                let text = &lock!(api).output;
+                let text = &api.lock().unwrap().output;
                 let nb_lines = num_lines(text);
                 let height = size.y / 2.8;
                 let width = size.x - (space_h / 2.0);
@@ -89,7 +88,7 @@ impl Node {
                 if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                     response.request_focus(); // Get focus back
                     let buffer = std::mem::take(buffer); // Take buffer
-                    let mut process = lock!(process); // Lock
+                    let mut process = process.lock().unwrap(); // Lock
                     if process.is_alive() {
                         process.input.push(buffer);
                     } // Push only if alive
@@ -326,7 +325,7 @@ fn path_db_field(
         );
         ui.spacing_mut().text_edit_width =
             ui.available_width() - (ui.spacing().item_spacing.x * 8.0) - SPACE * 2.0;
-        let window_busy = lock!(file_window).thread;
+        let window_busy = file_window.lock().unwrap().thread;
         ui.add_enabled_ui(!window_busy, |ui| {
             if ui.button("Open").on_hover_text(GUPAX_SELECT).clicked() {
                 Gupax::spawn_file_window_thread(file_window, FileType::NodeDB);
@@ -336,7 +335,7 @@ fn path_db_field(
         });
     });
 
-    let mut guard = lock!(file_window);
+    let mut guard = file_window.lock().unwrap();
     if guard.picked_nodedb {
         state.path_db.clone_from(&guard.nodedb_path);
         guard.picked_nodedb = false;

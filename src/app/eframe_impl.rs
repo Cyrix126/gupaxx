@@ -4,7 +4,6 @@ use crate::errors::{process_running, ErrorButtons, ErrorFerris};
 #[cfg(target_os = "windows")]
 use crate::helper::ProcessName;
 use crate::helper::ProcessState;
-use crate::macros::lock;
 use crate::SECOND;
 use egui::CentralPanel;
 use log::debug;
@@ -29,31 +28,31 @@ impl eframe::App for App {
         // might as well check only once here to save
         // on a bunch of [.lock().unwrap()]s.
         debug!("App | Locking and collecting P2Pool state...");
-        let p2pool = lock!(self.p2pool);
+        let p2pool = self.p2pool.lock().unwrap();
         let p2pool_is_alive = p2pool.is_alive();
         let p2pool_is_waiting = p2pool.is_waiting();
         let p2pool_state = p2pool.state;
         drop(p2pool);
         debug!("App | Locking and collecting XMRig state...");
-        let xmrig = lock!(self.xmrig);
+        let xmrig = self.xmrig.lock().unwrap();
         let xmrig_is_alive = xmrig.is_alive();
         let xmrig_is_waiting = xmrig.is_waiting();
         let xmrig_state = xmrig.state;
         drop(xmrig);
         debug!("App | Locking and collecting XMRig-Proxy state...");
-        let xmrig_proxy = lock!(self.xmrig_proxy);
+        let xmrig_proxy = self.xmrig_proxy.lock().unwrap();
         let xmrig_proxy_is_alive = xmrig_proxy.is_alive();
         let xmrig_proxy_is_waiting = xmrig_proxy.is_waiting();
         let xmrig_proxy_state = xmrig_proxy.state;
         drop(xmrig_proxy);
         debug!("App | Locking and collecting XvB state...");
-        let xvb = lock!(self.xvb);
+        let xvb = self.xvb.lock().unwrap();
         let xvb_is_alive = xvb.is_alive();
         let xvb_is_waiting = xvb.is_waiting();
         let xvb_state = xvb.state;
         drop(xvb);
         debug!("App | Locking and collecting Node state...");
-        let node = lock!(self.node);
+        let node = self.node.lock().unwrap();
         let node_is_alive = node.is_alive();
         let node_is_waiting = node.is_waiting();
         let node_state = node.state;
@@ -94,7 +93,7 @@ impl eframe::App for App {
         // contains Arc<Mutex>'s that cannot be compared easily.
         // They don't need to be compared anyway.
         debug!("App | Checking diff between [og] & [state]");
-        let og = lock!(self.og);
+        let og = self.og.lock().unwrap();
         self.diff = og.status != self.state.status
             || og.gupax != self.state.gupax
             || og.node != self.state.node

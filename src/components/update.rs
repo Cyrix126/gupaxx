@@ -287,7 +287,7 @@ impl Update {
         #[cfg(feature = "distro")]
         return;
         // verify validity of absolute path for p2pool, xmrig and xmrig-proxy only if we want to update them.
-        if lock!(og).gupax.bundled {
+        if og.lock().unwrap().gupax.bundled {
             // Check P2Pool path for safety
             // Attempt relative to absolute path
             // it's ok if file doesn't exist. User could enable bundled version for the first time.
@@ -350,15 +350,15 @@ impl Update {
                     return;
                 }
             };
-            lock!(update).path_p2pool = p2pool_path.display().to_string();
-            lock!(update).path_xmrig = xmrig_path.display().to_string();
-            lock!(update).path_xp = xmrig_proxy_path.display().to_string();
-            lock!(update).path_node = node_path.display().to_string();
+            update.lock().unwrap().path_p2pool = p2pool_path.display().to_string();
+            update.lock().unwrap().path_xmrig = xmrig_path.display().to_string();
+            update.lock().unwrap().path_xp = xmrig_proxy_path.display().to_string();
+            update.lock().unwrap().path_node = node_path.display().to_string();
         }
 
         // Clone before thread spawn
         let og = Arc::clone(og);
-        let state_ver = Arc::clone(&lock!(og).version);
+        let state_ver = Arc::clone(&og.lock().unwrap().version);
         let state_path = state_path.to_path_buf();
         let update = Arc::clone(update);
         let restart = Arc::clone(restart);
@@ -367,24 +367,25 @@ impl Update {
             match Update::start(update.clone(), og.clone(), restart) {
                 Ok(_) => {
                     info!("Update | Saving state...");
-                    let original_version = lock!(og).version.clone();
-                    lock!(og).version = state_ver;
-                    match State::save(&mut lock!(og), &state_path) {
+                    let original_version = og.lock().unwrap().version.clone();
+                    og.lock().unwrap().version = state_ver;
+                    match State::save(&mut og.lock().unwrap(), &state_path) {
                         Ok(_) => info!("Update ... OK"),
                         Err(e) => {
                             warn!("Update | Saving state ... FAIL: {}", e);
-                            lock!(og).version = original_version;
-                            *lock2!(update, msg) =
+                            og.lock().unwrap().version = original_version;
+                            *update.lock().unwrap().msg.lock().unwrap() =
                                 "Saving new versions into state failed".to_string();
                         }
                     };
                 }
                 Err(e) => {
                     info!("Update ... FAIL: {}", e);
-                    *lock2!(update, msg) = format!("{} | {}\n{}", MSG_FAILED, e, MSG_FAILED_HELP);
+                    *update.lock().unwrap().msg.lock().unwrap() =
+                        format!("{} | {}\n{}", MSG_FAILED, e, MSG_FAILED_HELP);
                 }
             };
-            *lock2!(update, updating) = false;
+            *update.lock().unwrap().updating.lock().unwrap() = false;
         });
     }
 
@@ -412,38 +413,41 @@ impl Update {
         ));
 
         //---------------------------------------------------------------------------------------------------- Init
-        *lock2!(update, updating) = true;
+        *update.lock().unwrap().updating.lock().unwrap() = true;
         // Set timer
         let now = std::time::Instant::now();
 
         // Set progress bar
-        *lock2!(update, msg) = MSG_START.to_string();
-        *lock2!(update, prog) = 0.0;
+        *update.lock().unwrap().msg.lock().unwrap() = MSG_START.to_string();
+        *update.lock().unwrap().prog.lock().unwrap() = 0.0;
         info!("Update | {}", INIT);
 
         // Get temporary directory
         let msg = MSG_TMP.to_string();
         info!("Update | {}", msg);
-        *lock2!(update, msg) = msg;
+        *update.lock().unwrap().msg.lock().unwrap() = msg;
         let tmp_dir = Self::get_tmp_dir()?;
         std::fs::create_dir(&tmp_dir)?;
 
         // Generate fake user-agent
         let user_agent = get_user_agent();
-        *lock2!(update, prog) = 5.0;
+        *update.lock().unwrap().prog.lock().unwrap() = 5.0;
 
         // Create HTTPS client
-        let lock = lock!(update);
+        let lock = update.lock().unwrap();
         let msg = MSG_HTTPS.to_string();
         info!("Update | {}", msg);
-        *lock!(lock.msg) = msg;
+        *lock.msg.lock().unwrap() = msg;
         drop(lock);
         let client = Client::new();
-        *lock2!(update, prog) += 5.0;
-        info!("Update | Init ... OK ... {}%", lock2!(update, prog));
+        *update.lock().unwrap().prog.lock().unwrap() += 5.0;
+        info!(
+            "Update | Init ... OK ... {}%",
+            update.lock().unwrap().prog.lock().unwrap()
+        );
 
         //---------------------------------------------------------------------------------------------------- Metadata
-        *lock2!(update, msg) = MSG_METADATA.to_string();
+        *update.lock().unwrap().msg.lock().unwrap() = MSG_METADATA.to_string();
         info!("Update | {}", METADATA);
         // Loop process:
         // reqwest will retry himself
@@ -457,11 +461,11 @@ impl Update {
             return Err(anyhow!("Metadata fetch failed"));
         };
 
-        *lock2!(update, prog) += 10.0;
+        *update.lock().unwrap().prog.lock().unwrap() += 10.0;
         info!("Update | Gupaxx {} ... OK", new_ver);
 
         //---------------------------------------------------------------------------------------------------- Compare
-        *lock2!(update, msg) = MSG_COMPARE.to_string();
+        *update.lock().unwrap().msg.lock().unwrap() = MSG_COMPARE.to_string();
         info!("Update | {}", COMPARE);
         let diff = GUPAX_VERSION != new_ver;
         if diff {
@@ -475,18 +479,21 @@ impl Update {
                 GUPAX_VERSION, new_ver
             );
             info!("Update | All packages up-to-date ... RETURNING");
-            *lock2!(update, prog) = 100.0;
-            *lock2!(update, msg) = MSG_UP_TO_DATE.to_string();
+            *update.lock().unwrap().prog.lock().unwrap() = 100.0;
+            *update.lock().unwrap().msg.lock().unwrap() = MSG_UP_TO_DATE.to_string();
             return Ok(());
         }
-        *lock2!(update, prog) += 5.0;
-        info!("Update | Compare ... OK ... {}%", lock2!(update, prog));
+        *update.lock().unwrap().prog.lock().unwrap() += 5.0;
+        info!(
+            "Update | Compare ... OK ... {}%",
+            update.lock().unwrap().prog.lock().unwrap()
+        );
 
         // Return if 0 (all packages up-to-date)
         // Get amount of packages to divide up the percentage increases
 
         //---------------------------------------------------------------------------------------------------- Download
-        *lock2!(update, msg) = format!("{} Gupaxx", MSG_DOWNLOAD);
+        *update.lock().unwrap().msg.lock().unwrap() = format!("{} Gupaxx", MSG_DOWNLOAD);
         info!("Update | {}", DOWNLOAD);
         // Clone data before async
         let version = new_ver;
@@ -500,7 +507,7 @@ impl Update {
         // arch
         // standalone or bundled
         // archive extension
-        let bundle = if lock!(og).gupax.bundled {
+        let bundle = if og.lock().unwrap().gupax.bundled {
             "bundle"
         } else {
             "standalone"
@@ -527,12 +534,15 @@ impl Update {
             error!("Update | Download ... FAIL");
             return Err(anyhow!("Download failed"));
         };
-        *lock2!(update, prog) += 30.0;
+        *update.lock().unwrap().prog.lock().unwrap() += 30.0;
         info!("Update | Gupaxx ... OK");
-        info!("Update | Download ... OK ... {}%", *lock2!(update, prog));
+        info!(
+            "Update | Download ... OK ... {}%",
+            *update.lock().unwrap().prog.lock().unwrap()
+        );
 
         //---------------------------------------------------------------------------------------------------- Extract
-        *lock2!(update, msg) = format!("{} Gupaxx", MSG_EXTRACT);
+        *update.lock().unwrap().msg.lock().unwrap() = format!("{} Gupaxx", MSG_EXTRACT);
         info!("Update | {}", EXTRACT);
         let tmp = tmp_dir.to_owned();
         #[cfg(target_os = "windows")]
@@ -542,9 +552,12 @@ impl Update {
         )?;
         #[cfg(target_family = "unix")]
         tar::Archive::new(flate2::read::GzDecoder::new(bytes.as_ref())).unpack(tmp)?;
-        *lock2!(update, prog) += 5.0;
+        *update.lock().unwrap().prog.lock().unwrap() += 5.0;
         info!("Update | Gupaxx ... OK");
-        info!("Update | Extract ... OK ... {}%", *lock2!(update, prog));
+        info!(
+            "Update | Extract ... OK ... {}%",
+            *update.lock().unwrap().prog.lock().unwrap()
+        );
 
         //---------------------------------------------------------------------------------------------------- Upgrade
         // if bundled, directories p2pool, xmrig and xmrig-proxy will exist.
@@ -553,7 +566,7 @@ impl Update {
         //
         // 3. Rename tmp path into current path
         // 4. Update [State/Version]
-        *lock2!(update, msg) = format!("Gupaxx {}", MSG_UPGRADE);
+        *update.lock().unwrap().msg.lock().unwrap() = format!("Gupaxx {}", MSG_UPGRADE);
         info!("Update | {}", UPGRADE);
         // If this bool doesn't get set, something has gone wrong because
         // we _didn't_ find a binary even though we downloaded it.
@@ -569,11 +582,11 @@ impl Update {
                 .to_str()
                 .ok_or_else(|| anyhow!("WalkDir basename failed"))?;
             let path = match name {
-                GUPAX_BINARY => lock!(update).path_gupax.clone(),
-                P2POOL_BINARY => lock!(update).path_p2pool.clone(),
-                XMRIG_BINARY => lock!(update).path_xmrig.clone(),
-                XMRIG_PROXY_BINARY => lock!(update).path_xp.clone(),
-                NODE_BINARY => lock!(update).path_node.clone(),
+                GUPAX_BINARY => update.lock().unwrap().path_gupax.clone(),
+                P2POOL_BINARY => update.lock().unwrap().path_p2pool.clone(),
+                XMRIG_BINARY => update.lock().unwrap().path_xmrig.clone(),
+                XMRIG_PROXY_BINARY => update.lock().unwrap().path_xp.clone(),
+                NODE_BINARY => update.lock().unwrap().path_node.clone(),
                 _ => continue,
             };
             found = true;
@@ -606,7 +619,7 @@ impl Update {
                 path.display()
             );
             // if bundled, create directory for p2pool, xmrig and xmrig-proxy if not present
-            if lock!(og).gupax.bundled
+            if og.lock().unwrap().gupax.bundled
                 && (name == P2POOL_BINARY
                     || name == XMRIG_BINARY
                     || name == XMRIG_PROXY_BINARY
@@ -620,8 +633,8 @@ impl Update {
             // Move downloaded path into old path
             std::fs::rename(entry.path(), path)?;
             // If we're updating Gupax, set the [Restart] state so that the user knows to restart
-            *lock!(restart) = Restart::Yes;
-            *lock2!(update, prog) += 5.0;
+            *restart.lock().unwrap() = Restart::Yes;
+            *update.lock().unwrap().prog.lock().unwrap() += 5.0;
         }
         if !found {
             return Err(anyhow!("Fatal error: Package binary could not be found"));
@@ -635,11 +648,11 @@ impl Update {
 
         let seconds = now.elapsed().as_secs();
         info!("Update | Seconds elapsed ... [{}s]", seconds);
-        *lock2!(update, msg) = format!(
+        *update.lock().unwrap().msg.lock().unwrap() = format!(
             "Updated from {} to {}\nYou need to restart Gupaxx.",
             GUPAX_VERSION, version
         );
-        *lock2!(update, prog) = 100.0;
+        *update.lock().unwrap().prog.lock().unwrap() = 100.0;
         Ok(())
     }
 }

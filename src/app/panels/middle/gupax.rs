@@ -4,7 +4,6 @@ use crate::app::Restart;
 use crate::components::gupax::*;
 use crate::components::update::Update;
 use crate::disk::state::*;
-use crate::macros::lock2;
 use log::debug;
 use std::path::Path;
 use std::sync::Arc;
@@ -40,7 +39,7 @@ impl Gupax {
                     size.y / 10.0
                 };
                 let width = size.x - SPACE;
-                let updating = *lock2!(update, updating);
+                let updating = *update.lock().unwrap().updating.lock().unwrap();
                 ui.vertical(|ui| {
                     // If [Gupax] is being built for a Linux distro,
                     // disable built-in updating completely.
@@ -50,7 +49,7 @@ impl Gupax {
                     ui.add_sized([width, button], Button::new("Updates are disabled"))
                         .on_disabled_hover_text(DISTRO_NO_UPDATE);
                     #[cfg(not(feature = "distro"))]
-                    ui.add_enabled_ui(!updating && *lock!(restart) == Restart::No, |ui| {
+                    ui.add_enabled_ui(!updating && *restart.lock().unwrap() == Restart::No, |ui| {
                         #[cfg(not(feature = "distro"))]
                         if ui
                             .add_sized([width, button], Button::new("Check for updates"))
@@ -70,8 +69,13 @@ impl Gupax {
                 });
                 ui.vertical(|ui| {
                     ui.add_enabled_ui(updating, |ui| {
-                        let prog = *lock2!(update, prog);
-                        let msg = format!("{}\n{}{}", *lock2!(update, msg), prog, "%");
+                        let prog = *update.lock().unwrap().prog.lock().unwrap();
+                        let msg = format!(
+                            "{}\n{}{}",
+                            *update.lock().unwrap().msg.lock().unwrap(),
+                            prog,
+                            "%"
+                        );
                         ui.add_sized([width, height * 1.4], Label::new(RichText::new(msg)));
                         let height = height / 2.0;
                         let size = vec2(width, height);
@@ -80,7 +84,12 @@ impl Gupax {
                         } else {
                             ui.add_sized(size, Label::new("..."));
                         }
-                        ui.add_sized(size, ProgressBar::new(lock2!(update, prog).round() / 100.0));
+                        ui.add_sized(
+                            size,
+                            ProgressBar::new(
+                                update.lock().unwrap().prog.lock().unwrap().round() / 100.0,
+                            ),
+                        );
                     });
                 });
             });
@@ -140,7 +149,7 @@ impl Gupax {
             debug!("Gupaxx Tab | Rendering P2Pool/XMRig path selection");
             // P2Pool/XMRig binary path selection
             // need to clone bool so file_window is not locked across a thread
-            let window_busy = lock!(file_window).thread.to_owned();
+            let window_busy = file_window.lock().unwrap().thread.to_owned();
             let height = size.y / 28.0;
             let text_edit = (ui.available_width() / 10.0) - SPACE;
             ui.group(|ui| {
@@ -309,7 +318,7 @@ impl Gupax {
                     });
                 });
             });
-            let mut guard = lock!(file_window);
+            let mut guard = file_window.lock().unwrap();
             if guard.picked_p2pool {
                 self.p2pool_path.clone_from(&guard.p2pool_path);
                 guard.picked_p2pool = false;

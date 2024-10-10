@@ -33,7 +33,6 @@ use crate::miscs::get_exe;
 use crate::miscs::get_exe_dir;
 use crate::utils::constants::VISUALS;
 use crate::utils::macros::arc_mut;
-use crate::utils::macros::lock;
 use crate::utils::sudo::SudoState;
 use crate::APP_DEFAULT_HEIGHT;
 use crate::APP_DEFAULT_WIDTH;
@@ -371,7 +370,10 @@ impl App {
         app.pool_path.push(POOL_TOML);
         // Set GupaxP2poolApi path
         app.gupax_p2pool_api_path = crate::disk::get_gupax_p2pool_path(&app.os_data_path);
-        lock!(app.gupax_p2pool_api).fill_paths(&app.gupax_p2pool_api_path);
+        app.gupax_p2pool_api
+            .lock()
+            .unwrap()
+            .fill_paths(&app.gupax_p2pool_api_path);
 
         // Apply arg state
         // It's not safe to [--reset] if any of the previous variables
@@ -453,7 +455,7 @@ impl App {
 
         //----------------------------------------------------------------------------------------------------
         // Read [GupaxP2poolApi] disk files
-        let mut gupax_p2pool_api = lock!(app.gupax_p2pool_api);
+        let mut gupax_p2pool_api = app.gupax_p2pool_api.lock().unwrap();
         match GupaxP2poolApi::create_all_files(&app.gupax_p2pool_api_path) {
             Ok(_) => info!("App Init | Creating Gupax-P2Pool API files ... OK"),
             Err(err) => {
@@ -493,11 +495,11 @@ impl App {
             }
         };
         drop(gupax_p2pool_api);
-        lock!(app.helper).gupax_p2pool_api = Arc::clone(&app.gupax_p2pool_api);
+        app.helper.lock().unwrap().gupax_p2pool_api = Arc::clone(&app.gupax_p2pool_api);
 
         //----------------------------------------------------------------------------------------------------
-        let mut og = lock!(app.og); // Lock [og]
-                                    // Handle max threads
+        let mut og = app.og.lock().unwrap(); // Lock [og]
+                                             // Handle max threads
         info!("App Init | Handling max thread overflow...");
         og.xmrig.max_threads = app.max_threads;
         let current = og.xmrig.current_threads;
@@ -585,8 +587,8 @@ impl App {
 
         // Set state version as compiled in version
         info!("App Init | Setting state Gupax version...");
-        lock!(og.version).gupax = GUPAX_VERSION.to_string();
-        lock!(app.state.version).gupax = GUPAX_VERSION.to_string();
+        og.version.lock().unwrap().gupax = GUPAX_VERSION.to_string();
+        app.state.version.lock().unwrap().gupax = GUPAX_VERSION.to_string();
 
         // Set saved [Tab]
         info!("App Init | Setting saved [Tab]...");
@@ -660,7 +662,7 @@ impl App {
         // Realistically, most of them are, but we can't be sure,
         // and checking here without explicitly asking the user
         // to connect to nodes is a no-go (also, non-async environment).
-        if !lock!(self.ping).pinged {
+        if !self.ping.lock().unwrap().pinged {
             warn!("Backup hosts ... simple node backup: no ping data available, returning None");
             return None;
         }
@@ -670,7 +672,7 @@ impl App {
 
             // Locking during this entire loop should be fine,
             // only a few nodes to iter through.
-            for pinged_node in lock!(self.ping).nodes.iter() {
+            for pinged_node in self.ping.lock().unwrap().nodes.iter() {
                 // Continue if this node is not green/yellow.
                 if pinged_node.ms > crate::components::node::RED_NODE_PING {
                     continue;

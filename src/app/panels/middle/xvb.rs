@@ -20,7 +20,6 @@ use crate::utils::constants::{
     XVB_MODE_MANUAL_P2POOL_HELP, XVB_MODE_MANUAL_XVB_HELP, XVB_ROUND_TYPE_FIELD, XVB_TOKEN_FIELD,
     XVB_TOKEN_LEN, XVB_URL_RULES, XVB_WINNER_FIELD,
 };
-use crate::utils::macros::lock;
 use crate::utils::regex::Regexes;
 use crate::XVB_MINING_ON_FIELD;
 use crate::{
@@ -64,7 +63,7 @@ impl crate::disk::state::Xvb {
             // console output for log
             debug!("XvB Tab | Rendering [Console]");
             ui.group(|ui| {
-                let text = &lock!(api).output;
+                let text = &api.lock().unwrap().output;
                 let nb_lines = num_lines(text);
                 let height = size.y / 2.8;
                 let width = size.x - (space_h / 2.0);
@@ -134,9 +133,9 @@ impl crate::disk::state::Xvb {
 
             if ui.checkbox(&mut self.simple_hero_mode, "Hero Mode").on_hover_text(XVB_HERO_SELECT).clicked() {
                 // also change hero mode of runtime.
-                lock!(api).stats_priv.runtime_mode = RuntimeMode::Hero;
+                api.lock().unwrap().stats_priv.runtime_mode = RuntimeMode::Hero;
             } else {
-                lock!(api).stats_priv.runtime_mode = RuntimeMode::Auto;
+                api.lock().unwrap().stats_priv.runtime_mode = RuntimeMode::Auto;
             }
 
         }
@@ -179,12 +178,12 @@ impl crate::disk::state::Xvb {
                             };
 
                             let mut hashrate_xmrig = {
-                                if lock!(gui_api_xmrig).hashrate_raw_15m > 0.0 {
-                                    lock!(gui_api_xmrig).hashrate_raw_15m
-                                } else if lock!(gui_api_xmrig).hashrate_raw_1m > 0.0 {
-                                    lock!(gui_api_xmrig).hashrate_raw_1m
-                                } else if lock!(gui_api_xmrig).hashrate_raw > 0.0 {
-                                    lock!(gui_api_xmrig).hashrate_raw
+                                if gui_api_xmrig.lock().unwrap().hashrate_raw_15m > 0.0 {
+                                    gui_api_xmrig.lock().unwrap().hashrate_raw_15m
+                                } else if gui_api_xmrig.lock().unwrap().hashrate_raw_1m > 0.0 {
+                                    gui_api_xmrig.lock().unwrap().hashrate_raw_1m
+                                } else if gui_api_xmrig.lock().unwrap().hashrate_raw > 0.0 {
+                                    gui_api_xmrig.lock().unwrap().hashrate_raw
                                 } else {
                                     default_xmrig_hashrate
                                 }
@@ -243,7 +242,7 @@ impl crate::disk::state::Xvb {
                                 ManualDonationLevel::DonorMega.to_string())
                             .on_hover_text(XVB_DONATION_LEVEL_MEGA_DONOR_HELP);
 
-                            lock!(api).stats_priv.runtime_manual_donation_level = self.manual_donation_level.clone().into();
+                            api.lock().unwrap().stats_priv.runtime_manual_donation_level = self.manual_donation_level.clone().into();
                         }
                     });
                 });
@@ -263,8 +262,8 @@ impl crate::disk::state::Xvb {
             }
 
             // Set runtime_mode & runtime_manual_amount
-            lock!(api).stats_priv.runtime_mode = self.mode.clone().into();
-            lock!(api).stats_priv.runtime_manual_amount = self.manual_amount_raw;
+            api.lock().unwrap().stats_priv.runtime_mode = self.mode.clone().into();
+            api.lock().unwrap().stats_priv.runtime_manual_amount = self.manual_amount_raw;
          ui.add_space(space_h);
 
             // allow user to modify the buffer for p2pool
@@ -289,7 +288,7 @@ impl crate::disk::state::Xvb {
             ui.add_space(space_h);
             // ui.add_enabled_ui(is_alive, |ui| {
             ui.add_enabled_ui(is_alive, |ui| {
-                let api = &lock!(api);
+                let api = &api.lock().unwrap();
                 let priv_stats = &api.stats_priv;
                 let current_node = &api.current_node;
                 let width_stat = (ui.available_width() - SPACE * 4.0) / 5.0;

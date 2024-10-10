@@ -425,7 +425,6 @@ Uptime         = 0h 2m 4s
     use crate::{
         disk::state::P2pool,
         helper::{p2pool::PubP2poolApi, xrig::xmrig::PubXmrigApi},
-        macros::lock,
     };
 
     use crate::helper::xvb::{public_stats::XvbPubStats, PubXvbApi};
@@ -458,9 +457,9 @@ Uptime         = 0h 2m 4s
         let share = 1;
         let p2pool_buffer = 5;
 
-        lock!(gui_api_xmrig).hashrate_raw_15m = 10000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualXvb;
-        lock!(gui_api_xvb).stats_priv.runtime_manual_amount = 1000.0;
+        gui_api_xmrig.lock().unwrap().hashrate_raw_15m = 10000.0;
+        gui_api_xvb.lock().unwrap().stats_priv.runtime_mode = RuntimeMode::ManualXvb;
+        gui_api_xvb.lock().unwrap().stats_priv.runtime_manual_amount = 1000.0;
 
         let algo = Algorithm::new(
             &client,
@@ -497,9 +496,9 @@ Uptime         = 0h 2m 4s
         let share = 1;
         let p2pool_buffer = 5;
 
-        lock!(gui_api_xmrig).hashrate_raw_15m = 10000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualP2pool;
-        lock!(gui_api_xvb).stats_priv.runtime_manual_amount = 1000.0;
+        gui_api_xmrig.lock().unwrap().hashrate_raw_15m = 10000.0;
+        gui_api_xvb.lock().unwrap().stats_priv.runtime_mode = RuntimeMode::ManualP2pool;
+        gui_api_xvb.lock().unwrap().stats_priv.runtime_manual_amount = 1000.0;
 
         let algo = Algorithm::new(
             &client,
@@ -536,10 +535,14 @@ Uptime         = 0h 2m 4s
         let share = 1;
         let p2pool_buffer = 5;
 
-        lock!(gui_api_xmrig).hashrate_raw_15m = 10000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::ManualDonationLevel;
-        lock!(gui_api_xvb).stats_priv.runtime_manual_amount = 1000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_manual_donation_level = RuntimeDonationLevel::Donor;
+        gui_api_xmrig.lock().unwrap().hashrate_raw_15m = 10000.0;
+        gui_api_xvb.lock().unwrap().stats_priv.runtime_mode = RuntimeMode::ManualDonationLevel;
+        gui_api_xvb.lock().unwrap().stats_priv.runtime_manual_amount = 1000.0;
+        gui_api_xvb
+            .lock()
+            .unwrap()
+            .stats_priv
+            .runtime_manual_donation_level = RuntimeDonationLevel::Donor;
 
         let algo = Algorithm::new(
             &client,
@@ -576,9 +579,9 @@ Uptime         = 0h 2m 4s
         let share = 1;
         let p2pool_buffer = 5;
 
-        lock!(gui_api_p2pool).p2pool_difficulty_u64 = 9_000_000;
-        lock!(gui_api_xmrig).hashrate_raw_15m = 20000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
+        gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64 = 9_000_000;
+        gui_api_xmrig.lock().unwrap().hashrate_raw_15m = 20000.0;
+        gui_api_xvb.lock().unwrap().stats_priv.runtime_mode = RuntimeMode::Auto;
 
         let algo = Algorithm::new(
             &client,
@@ -598,9 +601,9 @@ Uptime         = 0h 2m 4s
 
         assert_eq!(algo.stats.target_donation_hashrate, 10000.0);
 
-        lock!(gui_api_p2pool).p2pool_difficulty_u64 = 95_000_000;
-        lock!(gui_api_xmrig).hashrate_raw_15m = 10000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Auto;
+        gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64 = 95_000_000;
+        gui_api_xmrig.lock().unwrap().hashrate_raw_15m = 10000.0;
+        gui_api_xvb.lock().unwrap().stats_priv.runtime_mode = RuntimeMode::Auto;
 
         let algo = Algorithm::new(
             &client,
@@ -637,9 +640,9 @@ Uptime         = 0h 2m 4s
         let share = 1;
         let p2pool_buffer = 5;
 
-        lock!(gui_api_p2pool).p2pool_difficulty_u64 = 95_000_000;
-        lock!(gui_api_xmrig).hashrate_raw_15m = 20000.0;
-        lock!(gui_api_xvb).stats_priv.runtime_mode = RuntimeMode::Hero;
+        gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64 = 95_000_000;
+        gui_api_xmrig.lock().unwrap().hashrate_raw_15m = 20000.0;
+        gui_api_xvb.lock().unwrap().stats_priv.runtime_mode = RuntimeMode::Hero;
 
         let algo = Algorithm::new(
             &client,
@@ -659,7 +662,7 @@ Uptime         = 0h 2m 4s
 
         assert_eq!(algo.stats.target_donation_hashrate, 15382.1);
 
-        lock!(gui_api_p2pool).sidechain_ehr = 25000.0;
+        gui_api_p2pool.lock().unwrap().sidechain_ehr = 25000.0;
 
         let algo = Algorithm::new(
             &client,

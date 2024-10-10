@@ -15,13 +15,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::constants::*;
 use crate::disk::pool::Pool;
 use crate::disk::state::Xmrig;
 use crate::helper::xrig::xmrig::PubXmrigApi;
 use crate::helper::Process;
 use crate::regex::{num_lines, REGEXES};
 use crate::utils::regex::Regexes;
-use crate::{constants::*, macros::*};
 use egui::{
     vec2, Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, Slider, TextEdit,
     TextStyle::{self, *},
@@ -49,7 +49,7 @@ impl Xmrig {
         debug!("XMRig Tab | Rendering [Console]");
         egui::ScrollArea::vertical().show(ui, |ui| {
         ui.group(|ui| {
-            let text = &lock!(api).output;
+            let text = &api.lock().unwrap().output;
             let nb_lines = num_lines(text);
             let (height, width) = if self.simple {
                 (size.y / 1.5, size.x - SPACE)
@@ -93,7 +93,7 @@ impl Xmrig {
                 if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                     response.request_focus(); // Get focus back
                     let buffer = std::mem::take(buffer); // Take buffer
-                    let mut process = lock!(process); // Lock
+                    let mut process = process.lock().unwrap(); // Lock
                     if process.is_alive() {
                         process.input.push(buffer);
                     } // Push only if alive

@@ -18,11 +18,11 @@ use crate::{
         check_died, check_user_input, signal_end, sleep_end_loop, ProcessName, ProcessSignal,
         ProcessState,
     },
-    macros::{arc_mut, lock2, sleep},
+    macros::{arc_mut, sleep},
 };
 use std::fmt::Write;
 
-use super::{lock, Helper, HumanNumber, HumanTime, Process};
+use super::{Helper, HumanNumber, HumanTime, Process};
 
 impl Helper {
     #[cold]
@@ -38,18 +38,18 @@ impl Helper {
         // Run a ANSI escape sequence filter.
         while let Some(Ok(line)) = stdout.next() {
             let line = strip_ansi_escapes::strip_str(line);
-            if let Err(e) = writeln!(lock!(output_parse), "{}", line) {
+            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
                 error!("Node PTY Parse | Output error: {}", e);
             }
-            if let Err(e) = writeln!(lock!(output_pub), "{}", line) {
+            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
                 error!("Node PTY Pub | Output error: {}", e);
             }
         }
         while let Some(Ok(line)) = stdout.next() {
-            if let Err(e) = writeln!(lock!(output_parse), "{}", line) {
+            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
                 error!("P2Pool PTY Parse | Output error: {}", e);
             }
-            if let Err(e) = writeln!(lock!(output_pub), "{}", line) {
+            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
                 error!("P2Pool PTY Pub | Output error: {}", e);
             }
         }
@@ -121,12 +121,12 @@ impl Helper {
     // Just sets some signals for the watchdog thread to pick up on.
     pub fn stop_node(helper: &Arc<Mutex<Self>>) {
         info!("Node | Attempting to stop...");
-        lock2!(helper, node).signal = ProcessSignal::Stop;
-        lock2!(helper, node).state = ProcessState::Middle;
-        let gui_api = Arc::clone(&lock!(helper).gui_api_node);
-        let pub_api = Arc::clone(&lock!(helper).pub_api_node);
-        *lock!(pub_api) = PubNodeApi::new();
-        *lock!(gui_api) = PubNodeApi::new();
+        helper.lock().unwrap().node.lock().unwrap().signal = ProcessSignal::Stop;
+        helper.lock().unwrap().node.lock().unwrap().state = ProcessState::Middle;
+        let gui_api = Arc::clone(&helper.lock().unwrap().gui_api_node);
+        let pub_api = Arc::clone(&helper.lock().unwrap().pub_api_node);
+        *pub_api.lock().unwrap() = PubNodeApi::new();
+        *gui_api.lock().unwrap() = PubNodeApi::new();
     }
     #[cold]
     #[inline(never)]
@@ -134,15 +134,15 @@ impl Helper {
     // Basically calls to kill the current p2pool, waits a little, then starts the below function in a a new thread, then exit.
     pub fn restart_node(helper: &Arc<Mutex<Self>>, state: &Node, path: &Path) {
         info!("Node | Attempting to restart...");
-        lock2!(helper, node).signal = ProcessSignal::Restart;
-        lock2!(helper, node).state = ProcessState::Middle;
+        helper.lock().unwrap().node.lock().unwrap().signal = ProcessSignal::Restart;
+        helper.lock().unwrap().node.lock().unwrap().state = ProcessState::Middle;
 
         let helper = Arc::clone(helper);
         let state = state.clone();
         let path = path.to_path_buf();
         // This thread lives to wait, start p2pool then die.
         thread::spawn(move || {
-            while lock2!(helper, node).state != ProcessState::Waiting {
+            while helper.lock().unwrap().node.lock().unwrap().state != ProcessState::Waiting {
                 warn!("Node | Want to restart but process is still alive, waiting...");
                 sleep!(1000);
             }
@@ -156,7 +156,7 @@ impl Helper {
     #[inline(never)]
     // The "frontend" function that parses the arguments, and spawns either the [Simple] or [Advanced] Node watchdog thread.
     pub fn start_node(helper: &Arc<Mutex<Self>>, state: &Node, path: &Path) {
-        lock2!(helper, node).state = ProcessState::Middle;
+        helper.lock().unwrap().node.lock().unwrap().state = ProcessState::Middle;
 
         let args = Self::build_node_args(state);
 
@@ -164,9 +164,9 @@ impl Helper {
         crate::disk::print_dash(&format!("Node | Launch arguments: {:#?}", args));
 
         // Spawn watchdog thread
-        let process = Arc::clone(&lock!(helper).node);
-        let gui_api = Arc::clone(&lock!(helper).gui_api_node);
-        let pub_api = Arc::clone(&lock!(helper).pub_api_node);
+        let process = Arc::clone(&helper.lock().unwrap().node);
+        let gui_api = Arc::clone(&helper.lock().unwrap().gui_api_node);
+        let pub_api = Arc::clone(&helper.lock().unwrap().pub_api_node);
         let path = path.to_path_buf();
         let state = state.clone();
         thread::spawn(move || {
@@ -184,7 +184,7 @@ impl Helper {
         path: std::path::PathBuf,
         state: Node,
     ) {
-        lock!(process).start = Instant::now();
+        process.lock().unwrap().start = Instant::now();
         // spawn pty
         debug!("Node | Creating PTY...");
         let pty = portable_pty::native_pty_system();
@@ -199,8 +199,8 @@ impl Helper {
         // 4. Spawn PTY read thread
         debug!("Node | Spawning PTY read thread...");
         let reader = pair.master.try_clone_reader().unwrap(); // Get STDOUT/STDERR before moving the PTY
-        let output_parse = Arc::clone(&lock!(process).output_parse);
-        let output_pub = Arc::clone(&lock!(process).output_pub);
+        let output_parse = Arc::clone(&process.lock().unwrap().output_parse);
+        let output_pub = Arc::clone(&process.lock().unwrap().output_pub);
         spawn(enc!((output_parse, output_pub) async move {
             Self::read_pty_node(output_parse, output_pub, reader);
         }));
@@ -216,13 +216,13 @@ impl Helper {
         let mut stdin = pair.master.take_writer().unwrap();
         // set state
         let client = Client::new();
-        lock!(process).state = ProcessState::Syncing;
-        lock!(process).signal = ProcessSignal::None;
+        process.lock().unwrap().state = ProcessState::Syncing;
+        process.lock().unwrap().signal = ProcessSignal::None;
         // reset stats
-        *lock!(pub_api) = PubNodeApi::new();
-        *lock!(gui_api) = PubNodeApi::new();
+        *pub_api.lock().unwrap() = PubNodeApi::new();
+        *gui_api.lock().unwrap() = PubNodeApi::new();
         // loop
-        let start = lock!(process).start;
+        let start = process.lock().unwrap().start;
         info!("Node | Entering watchdog mode... woof!");
         loop {
             let now = Instant::now();
@@ -231,14 +231,19 @@ impl Helper {
             // check state
             if check_died(
                 &child_pty,
-                &mut lock!(process),
+                &mut process.lock().unwrap(),
                 &start,
-                &mut lock!(gui_api).output,
+                &mut gui_api.lock().unwrap().output,
             ) {
                 break;
             }
             // check signal
-            if signal_end(process, &child_pty, &start, &mut lock!(gui_api).output) {
+            if signal_end(
+                process,
+                &child_pty,
+                &start,
+                &mut gui_api.lock().unwrap().output,
+            ) {
                 break;
             }
             // check user input
@@ -248,7 +253,7 @@ impl Helper {
             // Check if logs need resetting
             debug!("Node Watchdog | Attempting GUI log reset check");
             {
-                let mut lock = lock!(gui_api);
+                let mut lock = gui_api.lock().unwrap();
                 Self::check_reset_gui_output(&mut lock.output, ProcessName::Node);
             }
             // No need to check output since monerod has a sufficient API
@@ -261,7 +266,7 @@ impl Helper {
                 Ok(priv_api) => {
                     debug!("Node Watchdog | HTTP API request OK, attempting [update_from_priv()]");
                     if priv_api.result.synchronized && priv_api.result.status == "OK" {
-                        lock!(process).state = ProcessState::Alive
+                        process.lock().unwrap().state = ProcessState::Alive
                     }
                     PubNodeApi::update_from_priv(pub_api, priv_api);
                 }
@@ -332,7 +337,7 @@ impl PubNodeApi {
         }
     }
     fn update_from_priv(public: &Arc<Mutex<Self>>, private: PrivNodeApi) {
-        let mut public = lock!(public);
+        let mut public = public.lock().unwrap();
         *public = Self {
             blockheight: HumanNumber::from_u64(private.result.height),
             difficulty: HumanNumber::from_u64(private.result.difficulty),
@@ -352,10 +357,10 @@ impl PubNodeApi {
         elapsed: std::time::Duration,
     ) {
         // 1. Take the process's current output buffer and combine it with Pub (if not empty)
-        let mut output_pub = lock!(output_pub);
+        let mut output_pub = output_pub.lock().unwrap();
 
         {
-            let mut public = lock!(public);
+            let mut public = public.lock().unwrap();
             if !output_pub.is_empty() {
                 public.output.push_str(&std::mem::take(&mut *output_pub));
             }

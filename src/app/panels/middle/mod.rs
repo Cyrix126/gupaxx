@@ -3,7 +3,6 @@ use crate::app::Tab;
 use crate::helper::ProcessState;
 use crate::utils::constants::*;
 use crate::utils::errors::{ErrorButtons, ErrorFerris};
-use crate::utils::macros::lock;
 use egui::*;
 use log::debug;
 
@@ -44,10 +43,10 @@ impl crate::app::App {
 						let distro = true;
 						#[cfg(not(feature = "distro"))]
 						let distro = false;
-						let p2pool_gui_len = lock!(self.p2pool_api).output.len();
-						let xmrig_gui_len = lock!(self.xmrig_api).output.len();
-						let xmrig_proxy_gui_len = lock!(self.xmrig_proxy_api).output.len();
-						let gupax_p2pool_api = lock!(self.gupax_p2pool_api);
+						let p2pool_gui_len = self.p2pool_api.lock().unwrap().output.len();
+						let xmrig_gui_len = self.xmrig_api.lock().unwrap().output.len();
+						let xmrig_proxy_gui_len = self.xmrig_proxy_api.lock().unwrap().output.len();
+						let gupax_p2pool_api = self.gupax_p2pool_api.lock().unwrap();
 						let debug_info = format!(
 "Gupax version: {}\n
 Bundled P2Pool version: {}\n
@@ -118,8 +117,8 @@ path_xmr: {:#?}\n
 							p2pool_gui_len,
 							xmrig_gui_len,
 							xmrig_proxy_gui_len,
-							lock!(self.p2pool_img),
-							lock!(self.xmrig_img),
+							self.p2pool_img.lock().unwrap(),
+							self.xmrig_img.lock().unwrap(),
 							gupax_p2pool_api.payout,
 							gupax_p2pool_api.payout_u64,
 							gupax_p2pool_api.xmr,
@@ -127,7 +126,7 @@ path_xmr: {:#?}\n
 							gupax_p2pool_api.path_payout,
 							gupax_p2pool_api.path_xmr,
 							self.state,
-							lock!(self.og),
+							self.og.lock().unwrap(),
 						);
 						self.error_state.set(debug_info, ErrorFerris::Cute, ErrorButtons::Debug);
 					}
@@ -153,7 +152,7 @@ path_xmr: {:#?}\n
 						ui.add_space(SPACE*2.0);
 
 						if cfg!(debug_assertions) { ui.label(format!("Gupax is running in debug mode - {}", self.now.elapsed().as_secs_f64())); }
-						ui.label(format!("Gupax has been running for {}", lock!(self.pub_sys).gupax_uptime));
+						ui.label(format!("Gupax has been running for {}", self.pub_sys.lock().unwrap().gupax_uptime));
 					});
 				}
 				Tab::Status => {
@@ -182,7 +181,7 @@ path_xmr: {:#?}\n
 				}
 				Tab::Xvb => {
 					debug!("App | Entering [XvB] Tab");
-					crate::disk::state::Xvb::show(&mut self.state.xvb, self.size, &self.state.p2pool.address, ctx, ui, &self.xvb_api, &self.xmrig_api, lock!(self.xvb).state == ProcessState::Alive);
+					crate::disk::state::Xvb::show(&mut self.state.xvb, self.size, &self.state.p2pool.address, ctx, ui, &self.xvb_api, &self.xmrig_api, self.xvb.lock().unwrap().state == ProcessState::Alive);
 				}
 			}
 		});

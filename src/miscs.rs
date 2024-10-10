@@ -78,7 +78,7 @@ pub fn print_disk_file(path: &PathBuf) {
 #[cold]
 #[inline(never)]
 pub fn print_gupax_p2pool_api(gupax_p2pool_api: &Arc<Mutex<GupaxP2poolApi>>) {
-    let api = lock!(gupax_p2pool_api);
+    let api = gupax_p2pool_api.lock().unwrap();
     let log = match std::fs::read_to_string(&api.path_log) {
         Ok(string) => string,
         Err(e) => {
@@ -130,7 +130,6 @@ pub fn cmp_f64(a: f64, b: f64) -> std::cmp::Ordering {
 
 use crate::disk::gupax_p2pool_api::GupaxP2poolApi;
 use crate::helper::ProcessName;
-use crate::utils::macros::lock;
 use chrono::Local;
 use log::error;
 use log::warn;

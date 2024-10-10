@@ -18,7 +18,6 @@ use crate::{
         xrig::{update_xmrig_config, xmrig::PubXmrigApi},
         xvb::{nodes::XvbNode, priv_stats::RuntimeMode},
     },
-    macros::lock,
     BLOCK_PPLNS_WINDOW_MAIN, BLOCK_PPLNS_WINDOW_MINI, SECOND_PER_BLOCK_P2POOL,
     XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR, XVB_ROUND_DONOR_VIP_MIN_HR,
     XVB_ROUND_DONOR_WHALE_MIN_HR, XVB_TIME_ALGO,
@@ -119,24 +118,27 @@ impl<'a> Algorithm<'a> {
 
         let address = state_p2pool.address.clone();
 
-        let runtime_mode = lock!(gui_api_xvb).stats_priv.runtime_mode.clone();
-        let runtime_donation_level = lock!(gui_api_xvb)
+        let runtime_mode = gui_api_xvb.lock().unwrap().stats_priv.runtime_mode.clone();
+        let runtime_donation_level = gui_api_xvb
+            .lock()
+            .unwrap()
             .stats_priv
             .runtime_manual_donation_level
             .clone();
-        let runtime_amount = lock!(gui_api_xvb).stats_priv.runtime_manual_amount;
+        let runtime_amount = gui_api_xvb.lock().unwrap().stats_priv.runtime_manual_amount;
 
-        let p2pool_total_hashrate = lock!(gui_api_p2pool).sidechain_ehr;
+        let p2pool_total_hashrate = gui_api_p2pool.lock().unwrap().sidechain_ehr;
 
-        let avg_last_hour_hashrate =
-            Self::calc_last_hour_avg_hash_rate(&lock!(gui_api_xvb).p2pool_sent_last_hour_samples);
+        let avg_last_hour_hashrate = Self::calc_last_hour_avg_hash_rate(
+            &gui_api_xvb.lock().unwrap().p2pool_sent_last_hour_samples,
+        );
         let mut p2pool_external_hashrate = p2pool_total_hashrate - avg_last_hour_hashrate;
         if p2pool_external_hashrate < 0.0 {
             p2pool_external_hashrate = 0.0;
         }
 
         let share_min_hashrate = Self::minimum_hashrate_share(
-            lock!(gui_api_p2pool).p2pool_difficulty_u64,
+            gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64,
             state_p2pool.mini,
             p2pool_external_hashrate,
             p2pool_buffer,
@@ -149,8 +151,8 @@ impl<'a> Algorithm<'a> {
         let msg_xmrig_or_xp = (if xp_alive { "XMRig-Proxy" } else { "XMRig" }).to_string();
         info!("xp alive: {:?}", xp_alive);
 
-        let xvb_24h_avg = lock!(pub_api).stats_priv.donor_24hr_avg * 1000.0;
-        let xvb_1h_avg = lock!(pub_api).stats_priv.donor_1hr_avg * 1000.0;
+        let xvb_24h_avg = pub_api.lock().unwrap().stats_priv.donor_24hr_avg * 1000.0;
+        let xvb_1h_avg = pub_api.lock().unwrap().stats_priv.donor_1hr_avg * 1000.0;
 
         let stats = Stats {
             share,
@@ -218,7 +220,7 @@ impl<'a> Algorithm<'a> {
     }
 
     async fn target_p2pool_node(&self) {
-        if lock!(self.gui_api_xvb).current_node != Some(XvbNode::P2pool) {
+        if self.gui_api_xvb.lock().unwrap().current_node != Some(XvbNode::P2pool) {
             info!(
                 "Algorithm | request {} to mine on p2pool",
                 self.stats.msg_xmrig_or_xp
@@ -239,7 +241,7 @@ impl<'a> Algorithm<'a> {
                     self.stats.msg_xmrig_or_xp
                 );
                 output_console(
-                    &mut lock!(self.gui_api_xvb).output,
+                    &mut self.gui_api_xvb.lock().unwrap().output,
                     &format!(
                         "Failure to update {} config with HTTP API.\nError: {}",
                         self.stats.msg_xmrig_or_xp, err
@@ -256,15 +258,18 @@ impl<'a> Algorithm<'a> {
     }
 
     async fn target_xvb_node(&self) {
-        let node = lock!(self.gui_api_xvb).stats_priv.node;
+        let node = self.gui_api_xvb.lock().unwrap().stats_priv.node;
 
         info!(
             "Algorithm | request {} to mine on XvB",
             self.stats.msg_xmrig_or_xp
         );
 
-        if lock!(self.gui_api_xvb).current_node.is_none()
-            || lock!(self.gui_api_xvb)
+        if self.gui_api_xvb.lock().unwrap().current_node.is_none()
+            || self
+                .gui_api_xvb
+                .lock()
+                .unwrap()
                 .current_node
                 .as_ref()
                 .is_some_and(|n| n == &XvbNode::P2pool)
@@ -285,7 +290,7 @@ impl<'a> Algorithm<'a> {
                     self.stats.msg_xmrig_or_xp
                 );
                 output_console(
-                    &mut lock!(self.gui_api_xvb).output,
+                    &mut self.gui_api_xvb.lock().unwrap().output,
                     &format!(
                         "Failure to update {} config with HTTP API.\nError: {}",
                         self.stats.msg_xmrig_or_xp, err
@@ -294,9 +299,9 @@ impl<'a> Algorithm<'a> {
                 );
             } else {
                 if self.xp_alive {
-                    lock!(self.gui_api_xp).node = node.to_string();
+                    self.gui_api_xp.lock().unwrap().node = node.to_string();
                 } else {
-                    lock!(self.gui_api_xmrig).node = node.to_string();
+                    self.gui_api_xmrig.lock().unwrap().node = node.to_string();
                 }
                 info!(
                     "Algorithm | {} mining on XvB pool",
@@ -315,11 +320,15 @@ impl<'a> Algorithm<'a> {
         );
         sleep(Duration::from_secs(XVB_TIME_ALGO.into())).await;
 
-        lock!(self.gui_api_xvb)
+        self.gui_api_xvb
+            .lock()
+            .unwrap()
             .p2pool_sent_last_hour_samples
             .0
-            .push_back(lock!(self.gui_api_xmrig).hashrate_raw_15m);
-        lock!(self.gui_api_xvb)
+            .push_back(self.gui_api_xmrig.lock().unwrap().hashrate_raw_15m);
+        self.gui_api_xvb
+            .lock()
+            .unwrap()
             .xvb_sent_last_hour_samples
             .0
             .push_back(0.0);
@@ -334,11 +343,15 @@ impl<'a> Algorithm<'a> {
         );
         sleep(Duration::from_secs(XVB_TIME_ALGO.into())).await;
 
-        lock!(self.gui_api_xvb)
+        self.gui_api_xvb
+            .lock()
+            .unwrap()
             .p2pool_sent_last_hour_samples
             .0
-            .push_back(lock!(self.gui_api_xmrig).hashrate_raw_15m);
-        lock!(self.gui_api_xvb)
+            .push_back(self.gui_api_xmrig.lock().unwrap().hashrate_raw_15m);
+        self.gui_api_xvb
+            .lock()
+            .unwrap()
             .xvb_sent_last_hour_samples
             .0
             .push_back(0.0);
@@ -368,7 +381,9 @@ impl<'a> Algorithm<'a> {
         );
         sleep(Duration::from_secs(self.stats.spared_time.into())).await;
 
-        lock!(self.gui_api_xvb)
+        self.gui_api_xvb
+            .lock()
+            .unwrap()
             .p2pool_sent_last_hour_samples
             .0
             .push_back(
@@ -376,7 +391,9 @@ impl<'a> Algorithm<'a> {
                     * ((XVB_TIME_ALGO as f32 - self.stats.spared_time as f32)
                         / XVB_TIME_ALGO as f32),
             );
-        lock!(self.gui_api_xvb)
+        self.gui_api_xvb
+            .lock()
+            .unwrap()
             .xvb_sent_last_hour_samples
             .0
             .push_back(
@@ -496,7 +513,7 @@ impl<'a> Algorithm<'a> {
 
     async fn fulfill_share(&self) {
         output_console(
-            &mut lock!(self.gui_api_xvb).output,
+            &mut self.gui_api_xvb.lock().unwrap().output,
             "There are no shares in p2pool. Sending all hashrate to p2pool!",
             crate::helper::ProcessName::Xvb,
         );
@@ -508,21 +525,21 @@ impl<'a> Algorithm<'a> {
 
     async fn fulfill_xvb_24_avg(&self) {
         output_console(
-            &mut lock!(self.gui_api_xvb).output,
+            &mut self.gui_api_xvb.lock().unwrap().output,
             "24H avg XvB target not achieved. Sending all hashrate to XvB!",
             crate::helper::ProcessName::Xvb,
         );
 
         info!("Algorithm | 24H avg XvB target not achieved. Sending all hashrate to XvB!");
 
-        *lock!(self.time_donated) = XVB_TIME_ALGO;
+        *self.time_donated.lock().unwrap() = XVB_TIME_ALGO;
 
         self.send_all_xvb().await
     }
 
     async fn fulfill_normal_cycles(&self) {
         output_console(
-            &mut lock!(self.gui_api_xvb).output,
+            &mut self.gui_api_xvb.lock().unwrap().output,
             &format!(
                 "There is a share in p2pool and 24H avg XvB is achieved. Sending {} seconds to XvB!",
                 self.stats.spared_time
@@ -532,7 +549,7 @@ impl<'a> Algorithm<'a> {
 
         info!("Algorithm | There is a share in p2pool and 24H avg XvB is achieved. Sending seconds {} to XvB!", self.stats.spared_time);
 
-        *lock!(self.time_donated) = self.stats.spared_time;
+        *self.time_donated.lock().unwrap() = self.stats.spared_time;
 
         self.target_p2pool_node().await;
         self.sleep_then_update_node_xmrig().await;
@@ -540,7 +557,7 @@ impl<'a> Algorithm<'a> {
 
     pub async fn run(&mut self) {
         output_console(
-            &mut lock!(self.gui_api_xvb).output,
+            &mut self.gui_api_xvb.lock().unwrap().output,
             "Algorithm of HR distribution started for the next 10 minutes.",
             crate::helper::ProcessName::Xvb,
         );
@@ -557,7 +574,7 @@ impl<'a> Algorithm<'a> {
         }
 
         output_console_without_time(
-            &mut lock!(self.gui_api_xvb).output,
+            &mut self.gui_api_xvb.lock().unwrap().output,
             "",
             crate::helper::ProcessName::Xvb,
         )

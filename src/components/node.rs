@@ -331,19 +331,19 @@ impl Ping {
             match Self::ping(&ping) {
                 Ok(msg) => {
                     info!("Ping ... OK");
-                    lock!(ping).msg = msg;
-                    lock!(ping).pinged = true;
-                    lock!(ping).auto_selected = false;
-                    lock!(ping).prog = 100.0;
+                    ping.lock().unwrap().msg = msg;
+                    ping.lock().unwrap().pinged = true;
+                    ping.lock().unwrap().auto_selected = false;
+                    ping.lock().unwrap().prog = 100.0;
                 }
                 Err(err) => {
                     error!("Ping ... FAIL ... {}", err);
-                    lock!(ping).pinged = false;
-                    lock!(ping).msg = err.to_string();
+                    ping.lock().unwrap().pinged = false;
+                    ping.lock().unwrap().msg = err.to_string();
                 }
             }
             info!("Ping ... Took [{}] seconds...", now.elapsed().as_secs_f32());
-            lock!(ping).pinging = false;
+            ping.lock().unwrap().pinging = false;
         });
     }
 
@@ -370,13 +370,13 @@ impl Ping {
     pub async fn ping(ping: &Arc<Mutex<Self>>) -> Result<String, anyhow::Error> {
         // Start ping
         let ping = Arc::clone(ping);
-        lock!(ping).pinging = true;
-        lock!(ping).prog = 0.0;
+        ping.lock().unwrap().pinging = true;
+        ping.lock().unwrap().prog = 0.0;
         let percent = (100.0 / (REMOTE_NODE_LENGTH as f32)).floor();
 
         // Create HTTP client
         let info = "Creating HTTP Client".to_string();
-        lock!(ping).msg = info;
+        ping.lock().unwrap().msg = info;
         let client = Client::new();
 
         // Random User Agent
@@ -404,13 +404,13 @@ impl Ping {
             handle.await?;
         }
 
-        let mut node_vec = std::mem::take(&mut *lock!(node_vec));
+        let mut node_vec = std::mem::take(&mut *node_vec.lock().unwrap());
         node_vec.sort_by(|a, b| a.ms.cmp(&b.ms));
         let fastest_info = format!("Fastest node: {}ms ... {}", node_vec[0].ms, node_vec[0].ip);
 
         let info = "Cleaning up connections".to_string();
         info!("Ping | {}...", info);
-        let mut ping = lock!(ping);
+        let mut ping = ping.lock().unwrap();
         ping.fastest = node_vec[0].ip;
         ping.nodes = node_vec;
         ping.msg = info;
@@ -467,11 +467,11 @@ impl Ping {
             BLACK
         };
 
-        let mut ping = lock!(ping);
+        let mut ping = ping.lock().unwrap();
         ping.msg = info;
         ping.prog += percent;
         drop(ping);
-        lock!(node_vec).push(NodeData { ip, ms, color });
+        node_vec.lock().unwrap().push(NodeData { ip, ms, color });
     }
 }
 //---------------------------------------------------------------------------------------------------- NODE

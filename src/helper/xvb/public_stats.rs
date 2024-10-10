@@ -11,7 +11,6 @@ use tokio::time::sleep;
 
 use crate::{
     helper::{xvb::output_console, Process, ProcessName, ProcessState},
-    macros::lock,
     XVB_URL_PUBLIC_API,
 };
 
@@ -64,12 +63,12 @@ impl XvbPubStats {
         match XvbPubStats::request_api(client).await {
             Ok(new_data) => {
                 debug!("XvB Watchdog | HTTP API request OK");
-                lock!(&pub_api).stats_pub = new_data;
+                pub_api.lock().unwrap().stats_pub = new_data;
                 // if last request failed, we are now ready to show stats again and maybe be alive next loop.
-                if lock!(process).state == ProcessState::Retry {
-                    lock!(process).state = ProcessState::Syncing;
+                if process.lock().unwrap().state == ProcessState::Retry {
+                    process.lock().unwrap().state = ProcessState::Syncing;
                     output_console(
-                        &mut lock!(gui_api).output,
+                        &mut gui_api.lock().unwrap().output,
                         "Stats are now working again after last successful request.",
                         ProcessName::Xvb,
                     );
@@ -82,9 +81,9 @@ impl XvbPubStats {
                 );
                 // output the error to console
                 // if error already present, no need to print it multiple times.
-                if lock!(process).state != ProcessState::Retry {
+                if process.lock().unwrap().state != ProcessState::Retry {
                     output_console(
-                        &mut lock!(gui_api).output,
+                        &mut gui_api.lock().unwrap().output,
                         &format!(
                             "Failure to retrieve public stats from {}\nWill retry shortly...",
                             XVB_URL_PUBLIC_API
@@ -93,10 +92,10 @@ impl XvbPubStats {
                     );
                 }
                 // we stop the algo (will be stopped by the check status on next loop) because we can't make the rest work without public stats. (winner in xvb private stats).
-                lock!(process).state = ProcessState::Retry;
+                process.lock().unwrap().state = ProcessState::Retry;
                 // sleep here because it is in a spawn and will not block the user stopping or restarting the service.
                 output_console(
-                    &mut lock!(gui_api).output,
+                    &mut gui_api.lock().unwrap().output,
                     "Waiting 10 seconds before trying to get stats again.",
                     ProcessName::Xvb,
                 );

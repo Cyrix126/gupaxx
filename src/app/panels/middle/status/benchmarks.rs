@@ -5,8 +5,6 @@ use egui::{Hyperlink, ProgressBar, ScrollArea, Spinner, Vec2};
 use egui_extras::{Column, TableBuilder};
 use readable::num::{Float, Percent, Unsigned};
 
-use crate::utils::macros::lock;
-
 use crate::constants::*;
 use egui::{Label, RichText};
 use log::*;
@@ -93,7 +91,7 @@ impl Status {
         // User's CPU hashrate comparison (if XMRig is alive).
         ui.scope(|ui| {
             if xmrig_alive {
-                let api = lock!(xmrig_api);
+                let api = xmrig_api.lock().unwrap();
                 let percent = (api.hashrate_raw / cpu.high) * 100.0;
                 let human = Percent::from(percent);
                 if percent > 100.0 {

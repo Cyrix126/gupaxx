@@ -6,7 +6,7 @@ use crate::disk::state::State;
 use crate::utils::constants::*;
 use crate::utils::errors::ErrorState;
 use crate::utils::ferris::*;
-use crate::utils::macros::{arc_mut, flip, lock, lock2};
+use crate::utils::macros::{arc_mut, flip};
 use crate::utils::resets::{reset_nodes, reset_state};
 use crate::utils::sudo::SudoState;
 use egui::TextStyle::Name;
@@ -53,7 +53,7 @@ impl crate::app::App {
                 match self.error_state.buttons {
                     StayQuit => {
                         let mut text = "".to_string();
-                        if *lock2!(self.update, updating) {
+                        if *self.update.lock().unwrap().updating.lock().unwrap() {
                             text = format!(
                                 "{}\nUpdate is in progress...! Quitting may cause file corruption!",
                                 text
@@ -277,7 +277,7 @@ impl crate::app::App {
                     ErrorButtons::Sudo => {
                         let sudo_width = width / 10.0;
                         let height = ui.available_height() / 4.0;
-                        let mut sudo = lock!(self.sudo);
+                        let mut sudo = self.sudo.lock().unwrap();
                         let hide = sudo.hide;
                         if sudo.testing {
                             ui.add_sized([width, height], Spinner::new().size(height));

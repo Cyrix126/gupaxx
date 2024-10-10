@@ -9,7 +9,6 @@ use crate::errors::process_running;
 use crate::helper::{Helper, ProcessSignal, ProcessState};
 use crate::utils::constants::*;
 use crate::utils::errors::{ErrorButtons, ErrorFerris};
-use crate::utils::macros::lock;
 use crate::utils::regex::Regexes;
 use egui::TextStyle::Name;
 use egui::*;
@@ -52,7 +51,7 @@ impl crate::app::App {
                     let size = vec2(0.0, height);
                     // [Gupax Version]
                     // Is yellow if the user updated and should (but isn't required to) restart.
-                    match *lock!(self.restart) {
+                    match *self.restart.lock().unwrap() {
                         Restart::Yes => ui
                             .add_sized(
                                 size,
@@ -174,7 +173,7 @@ impl crate::app::App {
                         .on_hover_text("Reset changes")
                         .clicked()
                 {
-                    let og = lock!(self.og).clone();
+                    let og = self.og.lock().unwrap().clone();
                     self.state.status = og.status;
                     self.state.gupax = og.gupax;
                     self.state.node = og.node;
@@ -193,7 +192,7 @@ impl crate::app::App {
                 {
                     match State::save(&mut self.state, &self.state_path) {
                         Ok(_) => {
-                            let mut og = lock!(self.og);
+                            let mut og = self.og.lock().unwrap();
                             og.status = self.state.status.clone();
                             og.gupax = self.state.gupax.clone();
                             og.node = self.state.node.clone();
@@ -380,7 +379,7 @@ impl crate::app::App {
                         .on_hover_text("Restart P2Pool")
                         .clicked()
                 {
-                    let _ = lock!(self.og).update_absolute_path();
+                    let _ = self.og.lock().unwrap().update_absolute_path();
                     let _ = self.state.update_absolute_path();
                     Helper::restart_p2pool(
                         &self.helper,
@@ -435,7 +434,7 @@ impl crate::app::App {
                             .on_disabled_hover_text(text)
                             .clicked()
                     {
-                        let _ = lock!(self.og).update_absolute_path();
+                        let _ = self.og.lock().unwrap().update_absolute_path();
                         let _ = self.state.update_absolute_path();
                         Helper::start_p2pool(
                             &self.helper,
@@ -476,7 +475,7 @@ impl crate::app::App {
                         .on_hover_text("Restart node")
                         .clicked()
                 {
-                    let _ = lock!(self.og).update_absolute_path();
+                    let _ = self.og.lock().unwrap().update_absolute_path();
                     let _ = self.state.update_absolute_path();
                     Helper::restart_node(
                         &self.helper,
@@ -525,7 +524,7 @@ impl crate::app::App {
                             .on_disabled_hover_text(text)
                             .clicked()
                     {
-                        let _ = lock!(self.og).update_absolute_path();
+                        let _ = self.og.lock().unwrap().update_absolute_path();
                         let _ = self.state.update_absolute_path();
                         Helper::start_node(
                             &self.helper,
@@ -619,7 +618,7 @@ impl crate::app::App {
                         .on_hover_text("Restart XMRig")
                         .clicked()
                 {
-                    let _ = lock!(self.og).update_absolute_path();
+                    let _ = self.og.lock().unwrap().update_absolute_path();
                     let _ = self.state.update_absolute_path();
                     if cfg!(windows) {
                         Helper::restart_xmrig(
@@ -629,7 +628,7 @@ impl crate::app::App {
                             Arc::clone(&self.sudo),
                         );
                     } else {
-                        lock!(self.sudo).signal = ProcessSignal::Restart;
+                        self.sudo.lock().unwrap().signal = ProcessSignal::Restart;
                         self.error_state.ask_sudo(&self.sudo);
                     }
                 }
@@ -640,7 +639,7 @@ impl crate::app::App {
                         .clicked()
                 {
                     if cfg!(target_os = "macos") {
-                        lock!(self.sudo).signal = ProcessSignal::Stop;
+                        self.sudo.lock().unwrap().signal = ProcessSignal::Stop;
                         self.error_state.ask_sudo(&self.sudo);
                     } else {
                         Helper::stop_xmrig(&self.helper);
@@ -679,7 +678,7 @@ impl crate::app::App {
                             .on_disabled_hover_text(text)
                             .clicked()
                     {
-                        let _ = lock!(self.og).update_absolute_path();
+                        let _ = self.og.lock().unwrap().update_absolute_path();
                         let _ = self.state.update_absolute_path();
                         if cfg!(windows) {
                             Helper::start_xmrig(
@@ -689,7 +688,7 @@ impl crate::app::App {
                                 Arc::clone(&self.sudo),
                             );
                         } else if cfg!(unix) {
-                            lock!(self.sudo).signal = ProcessSignal::Start;
+                            self.sudo.lock().unwrap().signal = ProcessSignal::Start;
                             self.error_state.ask_sudo(&self.sudo);
                         }
                     }
@@ -829,7 +828,7 @@ impl crate::app::App {
                         .on_hover_text("Restart XMRig-Proxy")
                         .clicked()
                 {
-                    let _ = lock!(self.og).update_absolute_path();
+                    let _ = self.og.lock().unwrap().update_absolute_path();
                     let _ = self.state.update_absolute_path();
                     Helper::restart_xp(
                         &self.helper,
@@ -881,7 +880,7 @@ impl crate::app::App {
                             .on_disabled_hover_text(text)
                             .clicked()
                     {
-                        let _ = lock!(self.og).update_absolute_path();
+                        let _ = self.og.lock().unwrap().update_absolute_path();
                         let _ = self.state.update_absolute_path();
                         Helper::start_xp(
                             &self.helper,

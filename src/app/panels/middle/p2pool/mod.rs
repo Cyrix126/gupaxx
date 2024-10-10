@@ -18,7 +18,7 @@ use crate::regex::num_lines;
 //
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
-use crate::{components::node::*, constants::*, helper::*, macros::*, utils::regex::Regexes};
+use crate::{components::node::*, constants::*, helper::*, utils::regex::Regexes};
 use egui::{
     vec2, Color32, Label, RichText, TextEdit,
     TextStyle::{self, *},
@@ -53,7 +53,7 @@ impl P2pool {
         // debug!("P2Pool Tab | Rendering [Console]");
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.group(|ui| {
-                let text = &lock!(api).output;
+                let text = &api.lock().unwrap().output;
                 let nb_lines = num_lines(text);
                 let (height, width) = if self.simple {
                     ((size.y * 0.38) - SPACE, size.x - SPACE)
@@ -104,7 +104,7 @@ impl P2pool {
                     if response.lost_focus() && ui.input(|i| i.key_pressed(egui::Key::Enter)) {
                         response.request_focus(); // Get focus back
                         let buffer = std::mem::take(buffer); // Take buffer
-                        let mut process = lock!(process); // Lock
+                        let mut process = process.lock().unwrap(); // Lock
                         if process.is_alive() {
                             process.input.push(buffer);
                         } // Push only if alive

@@ -26,7 +26,7 @@
 // found here, e.g: User clicks [Stop P2Pool] -> Arc<Mutex<ProcessSignal> is set
 // indicating to this thread during its loop: "I should stop P2Pool!", e.g:
 //
-//     if lock!(p2pool).signal == ProcessSignal::Stop {
+//     if p2pool.lock().unwrap().signal == ProcessSignal::Stop {
 //         stop_p2pool(),
 //     }
 //
@@ -430,7 +430,7 @@ impl Helper {
         // order as the main GUI thread (top to bottom).
 
         let helper = Arc::clone(helper);
-        let lock = lock!(helper);
+        let lock = helper.lock().unwrap();
         let node = Arc::clone(&lock.node);
         let p2pool = Arc::clone(&lock.p2pool);
         let xmrig = Arc::clone(&lock.xmrig);
@@ -465,39 +465,39 @@ impl Helper {
                 // down the culprit of an [Arc<Mutex>] deadlock. I know, they're ugly.
 
                 // 2. Lock... EVERYTHING!
-                let mut lock = lock!(helper);
+                let mut lock = helper.lock().unwrap();
                 debug!("Helper | Locking (1/15) ... [helper]");
-                let node = lock!(node);
+                let node = node.lock().unwrap();
                 debug!("Helper | Locking (2/15) ... [helper]");
-                let p2pool = lock!(p2pool);
+                let p2pool = p2pool.lock().unwrap();
                 debug!("Helper | Locking (3/15) ... [p2pool]");
-                let xmrig = lock!(xmrig);
+                let xmrig = xmrig.lock().unwrap();
                 debug!("Helper | Locking (4/15) ... [xmrig]");
-                let xmrig_proxy = lock!(xmrig_proxy);
+                let xmrig_proxy = xmrig_proxy.lock().unwrap();
                 debug!("Helper | Locking (5/15) ... [xmrig_proxy]");
-                let xvb = lock!(xvb);
+                let xvb = xvb.lock().unwrap();
                 debug!("Helper | Locking (6/15) ... [xvb]");
-                let mut lock_pub_sys = lock!(pub_sys);
+                let mut lock_pub_sys = pub_sys.lock().unwrap();
                 debug!("Helper | Locking (8/15) ... [gui_api_node]");
-                let mut gui_api_node = lock!(gui_api_node);
+                let mut gui_api_node = gui_api_node.lock().unwrap();
                 debug!("Helper | Locking (7/15) ... [pub_sys]");
-                let mut gui_api_p2pool = lock!(gui_api_p2pool);
+                let mut gui_api_p2pool = gui_api_p2pool.lock().unwrap();
                 debug!("Helper | Locking (8/15) ... [gui_api_p2pool]");
-                let mut gui_api_xmrig = lock!(gui_api_xmrig);
+                let mut gui_api_xmrig = gui_api_xmrig.lock().unwrap();
                 debug!("Helper | Locking (9/15) ... [gui_api_xmrig]");
-                let mut gui_api_xp = lock!(gui_api_xp);
+                let mut gui_api_xp = gui_api_xp.lock().unwrap();
                 debug!("Helper | Locking (10/15) ... [gui_api_xp]");
-                let mut gui_api_xvb = lock!(gui_api_xvb);
+                let mut gui_api_xvb = gui_api_xvb.lock().unwrap();
                 debug!("Helper | Locking (11/15) ... [gui_api_xvb]");
-                let mut pub_api_node = lock!(pub_api_node);
+                let mut pub_api_node = pub_api_node.lock().unwrap();
                 debug!("Helper | Locking (14/15) ... [pub_api_node]");
-                let mut pub_api_p2pool = lock!(pub_api_p2pool);
+                let mut pub_api_p2pool = pub_api_p2pool.lock().unwrap();
                 debug!("Helper | Locking (14/15) ... [pub_api_p2pool]");
-                let mut pub_api_xmrig = lock!(pub_api_xmrig);
+                let mut pub_api_xmrig = pub_api_xmrig.lock().unwrap();
                 debug!("Helper | Locking (13/15) ... [pub_api_xmrig]");
-                let mut pub_api_xp = lock!(pub_api_xp);
+                let mut pub_api_xp = pub_api_xp.lock().unwrap();
                 debug!("Helper | Locking (14/15) ... [pub_api_xp]");
-                let mut pub_api_xvb = lock!(pub_api_xvb);
+                let mut pub_api_xvb = pub_api_xvb.lock().unwrap();
                 debug!("Helper | Locking (15/15) ... [pub_api_xvb]");
                 // Calculate Gupax's uptime always.
                 lock.uptime = HumanTime::into_human(lock.instant.elapsed());
@@ -619,7 +619,7 @@ fn check_died(
     gui_api_output_raw: &mut String,
 ) -> bool {
     // Check if the process secretly died without us knowing :)
-    if let Ok(Some(code)) = lock!(child_pty).try_wait() {
+    if let Ok(Some(code)) = child_pty.lock().unwrap().try_wait() {
         debug!(
             "{} Watchdog | Process secretly died on us! Getting exit status...",
             process.name
@@ -659,7 +659,7 @@ fn check_died(
     false
 }
 fn check_user_input(process: &Arc<Mutex<Process>>, stdin: &mut Box<dyn std::io::Write + Send>) {
-    let mut lock = lock!(process);
+    let mut lock = process.lock().unwrap();
     if !lock.input.is_empty() {
         let input = std::mem::take(&mut lock.input);
         for line in input {
@@ -691,32 +691,32 @@ fn signal_end(
     start: &Instant,
     gui_api_output_raw: &mut String,
 ) -> bool {
-    if lock!(process).signal == ProcessSignal::Stop {
-        debug!("{} Watchdog | Stop SIGNAL caught", lock!(process).name);
+    if process.lock().unwrap().signal == ProcessSignal::Stop {
+        debug!("{} Watchdog | Stop SIGNAL caught", process.lock().unwrap().name);
         // This actually sends a SIGHUP to p2pool (closes the PTY, hangs up on p2pool)
-        if let Err(e) = lock!(child_pty).kill() {
-            error!("{} Watchdog | Kill error: {}", lock!(process).name, e);
+        if let Err(e) = child_pty.lock().unwrap().kill() {
+            error!("{} Watchdog | Kill error: {}", process.lock().unwrap().name, e);
         }
         // Wait to get the exit status
-        let exit_status = match lock!(child_pty).wait() {
+        let exit_status = match child_pty.lock().unwrap().wait() {
             Ok(e) => {
                 if e.success() {
-                    lock!(process).state = ProcessState::Dead;
+                    process.lock().unwrap().state = ProcessState::Dead;
                     "Successful"
                 } else {
-                    lock!(process).state = ProcessState::Failed;
+                    process.lock().unwrap().state = ProcessState::Failed;
                     "Failed"
                 }
             }
             _ => {
-                lock!(process).state = ProcessState::Failed;
+                process.lock().unwrap().state = ProcessState::Failed;
                 "Unknown Error"
             }
         };
         let uptime = HumanTime::into_human(start.elapsed());
         info!(
             "{} Watchdog | Stopped ... Uptime was: [{}], Exit status: [{}]",
-            lock!(process).name,
+            process.lock().unwrap().name,
             uptime,
             exit_status
         );
@@ -724,7 +724,7 @@ fn signal_end(
         if let Err(e) = writeln!(
             gui_api_output_raw,
             "{}\n{} stopped | Uptime: [{}] | Exit status: [{}]\n{}\n\n\n\n",
-            lock!(process).name,
+            process.lock().unwrap().name,
             HORI_CONSOLE,
             uptime,
             exit_status,
@@ -732,25 +732,25 @@ fn signal_end(
         ) {
             error!(
                 "{} Watchdog | GUI Uptime/Exit status write failed: {}",
-                lock!(process).name,
+                process.lock().unwrap().name,
                 e
             );
         }
-        lock!(process).signal = ProcessSignal::None;
+        process.lock().unwrap().signal = ProcessSignal::None;
         debug!(
             "{} Watchdog | Stop SIGNAL done, breaking",
-            lock!(process).name,
+            process.lock().unwrap().name,
         );
         return true;
     // Check RESTART
-    } else if lock!(process).signal == ProcessSignal::Restart {
-        debug!("{} Watchdog | Restart SIGNAL caught", lock!(process).name,);
+    } else if process.lock().unwrap().signal == ProcessSignal::Restart {
+        debug!("{} Watchdog | Restart SIGNAL caught", process.lock().unwrap().name,);
         // This actually sends a SIGHUP to p2pool (closes the PTY, hangs up on p2pool)
-        if let Err(e) = lock!(child_pty).kill() {
-            error!("{} Watchdog | Kill error: {}", lock!(process).name, e);
+        if let Err(e) = child_pty.lock().unwrap().kill() {
+            error!("{} Watchdog | Kill error: {}", process.lock().unwrap().name, e);
         }
         // Wait to get the exit status
-        let exit_status = match lock!(child_pty).wait() {
+        let exit_status = match child_pty.lock().unwrap().wait() {
             Ok(e) => {
                 if e.success() {
                     "Successful"
@@ -763,7 +763,7 @@ fn signal_end(
         let uptime = HumanTime::into_human(start.elapsed());
         info!(
             "{} Watchdog | Stopped ... Uptime was: [{}], Exit status: [{}]",
-            lock!(process).name,
+            process.lock().unwrap().name,
             uptime,
             exit_status
         );
@@ -771,7 +771,7 @@ fn signal_end(
         if let Err(e) = writeln!(
             gui_api_output_raw,
             "{}\n{} stopped | Uptime: [{}] | Exit status: [{}]\n{}\n\n\n\n",
-            lock!(process).name,
+            process.lock().unwrap().name,
             HORI_CONSOLE,
             uptime,
             exit_status,
@@ -779,14 +779,14 @@ fn signal_end(
         ) {
             error!(
                 "{} Watchdog | GUI Uptime/Exit status write failed: {}",
-                lock!(process).name,
+                process.lock().unwrap().name,
                 e
             );
         }
-        lock!(process).state = ProcessState::Waiting;
+        process.lock().unwrap().state = ProcessState::Waiting;
         debug!(
             "{} Watchdog | Restart SIGNAL done, breaking",
-            lock!(process).name,
+            process.lock().unwrap().name,
         );
         return true;
     }

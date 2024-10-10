@@ -15,10 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::{
-    disk::state::*,
-    utils::macros::{arc_mut, lock},
-};
+use crate::{disk::state::*, utils::macros::arc_mut};
 use log::*;
 use serde::{Deserialize, Serialize};
 use std::{
@@ -111,7 +108,7 @@ impl Gupax {
             NodeDB => "Node DB",
         };
         let file_window = file_window.clone();
-        lock!(file_window).thread = true;
+        file_window.lock().unwrap().thread = true;
         thread::spawn(move || {
             let path = match file_type {
                 NodeDB => rfd::FileDialog::new()
@@ -125,31 +122,31 @@ impl Gupax {
                 info!("Gupaxx | Path selected for {} ... {}", name, path.display());
                 match file_type {
                     P2pool => {
-                        lock!(file_window).p2pool_path = path.display().to_string();
-                        lock!(file_window).picked_p2pool = true;
+                        file_window.lock().unwrap().p2pool_path = path.display().to_string();
+                        file_window.lock().unwrap().picked_p2pool = true;
                     }
                     Xmrig => {
-                        lock!(file_window).xmrig_path = path.display().to_string();
-                        lock!(file_window).picked_xmrig = true;
+                        file_window.lock().unwrap().xmrig_path = path.display().to_string();
+                        file_window.lock().unwrap().picked_xmrig = true;
                     }
                     XmrigProxy => {
-                        lock!(file_window).xmrig_proxy_path = path.display().to_string();
-                        lock!(file_window).picked_xp = true;
+                        file_window.lock().unwrap().xmrig_proxy_path = path.display().to_string();
+                        file_window.lock().unwrap().picked_xp = true;
                     }
                     Node => {
-                        lock!(file_window).node_path = path.display().to_string();
-                        lock!(file_window).picked_node = true;
+                        file_window.lock().unwrap().node_path = path.display().to_string();
+                        file_window.lock().unwrap().picked_node = true;
                     }
                     NodeDB => {
-                        lock!(file_window).nodedb_path = path.display().to_string();
-                        lock!(file_window).picked_nodedb = true;
+                        file_window.lock().unwrap().nodedb_path = path.display().to_string();
+                        file_window.lock().unwrap().picked_nodedb = true;
                     }
                 };
             } else {
                 info!("Gupaxx | No path selected for {}", name);
             }
 
-            lock!(file_window).thread = false;
+            file_window.lock().unwrap().thread = false;
         });
     }
 }

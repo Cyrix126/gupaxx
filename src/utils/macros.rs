@@ -19,40 +19,10 @@
 //
 // | MACRO   | PURPOSE                                       | EQUIVALENT CODE                                            |
 // |---------|-----------------------------------------------|------------------------------------------------------------|
-// | lock    | Lock an [Arc<Mutex>]                          | a.lock().unwrap()                                          |
-// | lock2   | Lock a field inside a struct, both Arc<Mutex> | a.lock().unwrap().b.lock().unwrap()                        |
 // | arc_mut | Create a new [Arc<Mutex>]                     | std::sync::Arc::new(std::sync::Mutex::new(my_value))       |
 // | sleep   | Sleep the current thread for x milliseconds   | std::thread::sleep(std::time::Duration::from_millis(1000)) |
 // | flip    | Flip a bool in place                          | my_bool = !my_bool                                         |
 //
-// Hopefully the long ass code on the right justifies usage of macros :D
-//
-// [lock2!()] works like this: "lock2!(my_first, my_second)"
-// and expects it be a [Struct]-[field] relationship, e.g:
-//
-//     let my_first = Arc::new(Mutex::new(Struct {
-//         my_second: Arc::new(Mutex::new(true)),
-//     }));
-//     lock2!(my_first, my_second);
-//
-// The equivalent code is: "my_first.lock().unwrap().my_second.lock().unwrap()" (see? this is long as hell)
-
-// Locks and unwraps an [Arc<Mutex<T>]
-macro_rules! lock {
-    ($arc_mutex:expr) => {
-        $arc_mutex.lock().unwrap()
-    };
-}
-pub(crate) use lock;
-
-// Locks and unwraps a field of a struct, both of them being [Arc<Mutex>]
-// Yes, I know this is bad code.
-macro_rules! lock2 {
-    ($arc_mutex:expr, $arc_mutex_two:ident) => {
-        $arc_mutex.lock().unwrap().$arc_mutex_two.lock().unwrap()
-    };
-}
-pub(crate) use lock2;
 
 // Creates a new [Arc<Mutex<T>]
 macro_rules! arc_mut {
@@ -83,31 +53,11 @@ pub(crate) use flip;
 //---------------------------------------------------------------------------------------------------- TESTS
 #[cfg(test)]
 mod test {
-    #[test]
-    fn lock() {
-        use std::sync::{Arc, Mutex};
-        let arc_mutex = Arc::new(Mutex::new(false));
-        *lock!(arc_mutex) = true;
-        assert!(*lock!(arc_mutex));
-    }
-
-    #[test]
-    fn lock2() {
-        struct Ab {
-            a: Arc<Mutex<bool>>,
-        }
-        use std::sync::{Arc, Mutex};
-        let arc_mutex = Arc::new(Mutex::new(Ab {
-            a: Arc::new(Mutex::new(false)),
-        }));
-        *lock2!(arc_mutex, a) = true;
-        assert!(*lock2!(arc_mutex, a));
-    }
 
     #[test]
     fn arc_mut() {
         let a = arc_mut!(false);
-        assert!(!(*lock!(a)));
+        assert!(!(*a.lock().unwrap()));
     }
 
     #[test]

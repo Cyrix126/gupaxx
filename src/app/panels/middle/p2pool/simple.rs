@@ -9,7 +9,6 @@ use crate::components::node::format_ms;
 use crate::components::node::Ping;
 use crate::components::node::RemoteNode;
 use crate::disk::state::P2pool;
-use crate::utils::macros::lock;
 use egui::vec2;
 use egui::Button;
 use egui::Checkbox;
@@ -47,7 +46,7 @@ impl P2pool {
         let visible = !self.local_node;
         debug!("P2Pool Tab | Running [auto-select] check");
         if self.auto_select && visible {
-            let mut ping = lock!(ping);
+            let mut ping = ping.lock().unwrap();
             // If we haven't auto_selected yet, auto-select and turn it off
             if ping.pinged && !ping.auto_selected {
                 self.node = ping.fastest.to_string();
@@ -63,8 +62,8 @@ impl P2pool {
                     // [Ping List]
                     let mut ms = 0;
                     let mut color = Color32::LIGHT_GRAY;
-                    if lock!(ping).pinged {
-                        for data in lock!(ping).nodes.iter() {
+                    if ping.lock().unwrap().pinged {
+                        for data in ping.lock().unwrap().nodes.iter() {
                             if data.ip == self.node {
                                 ms = data.ms;
                                 color = data.color;
@@ -79,7 +78,7 @@ impl P2pool {
                         .selected_text(text)
                         .width(size.x)
                         .show_ui(ui, |ui| {
-                            for data in lock!(ping).nodes.iter() {
+                            for data in ping.lock().unwrap().nodes.iter() {
                                 let ms = format_ms(data.ms);
                                 let ip_location = format_ip_location(data.ip, true);
                                 let text = RichText::new(format!(" ⏺ {} | {}", ms, ip_location))
@@ -108,12 +107,12 @@ impl P2pool {
                         .add_sized(size, Button::new("Select fastest node"))
                         .on_hover_text(P2POOL_SELECT_FASTEST)
                         .clicked()
-                        && lock!(ping).pinged
+                        && ping.lock().unwrap().pinged
                     {
-                        self.node = lock!(ping).fastest.to_string();
+                        self.node = ping.lock().unwrap().fastest.to_string();
                     }
                     // [Ping Button]
-                    ui.add_enabled_ui(!lock!(ping).pinging, |ui| {
+                    ui.add_enabled_ui(!ping.lock().unwrap().pinging, |ui| {
                         if ui
                             .add_sized(size, Button::new("Ping remote nodes"))
                             .on_hover_text(P2POOL_PING)
@@ -128,7 +127,7 @@ impl P2pool {
                         .on_hover_text(P2POOL_SELECT_LAST)
                         .clicked()
                     {
-                        let ping = lock!(ping);
+                        let ping = ping.lock().unwrap();
                         match ping.pinged {
                             true => {
                                 self.node = RemoteNode::get_last_from_ping(&self.node, &ping.nodes)
@@ -143,7 +142,7 @@ impl P2pool {
                         .on_hover_text(P2POOL_SELECT_NEXT)
                         .clicked()
                     {
-                        let ping = lock!(ping);
+                        let ping = ping.lock().unwrap();
                         match ping.pinged {
                             true => {
                                 self.node = RemoteNode::get_next_from_ping(&self.node, &ping.nodes)
@@ -156,10 +155,11 @@ impl P2pool {
 
                 ui.vertical(|ui| {
                     let height = height / 2.0;
-                    let pinging = lock!(ping).pinging;
+                    let pinging = ping.lock().unwrap().pinging;
                     ui.add_enabled_ui(pinging, |ui| {
-                        let prog = lock!(ping).prog.round();
-                        let msg = RichText::new(format!("{} ... {}%", lock!(ping).msg, prog));
+                        let prog = ping.lock().unwrap().prog.round();
+                        let msg =
+                            RichText::new(format!("{} ... {}%", ping.lock().unwrap().msg, prog));
                         let height = height / 1.25;
                         let size = vec2(size.x, height);
                         ui.add_space(space_h);
