@@ -155,7 +155,13 @@ Uptime         = 0h 2m 4s
 
         // It only gets checked if we're `Syncing`.
         process.lock().unwrap().state = ProcessState::Syncing;
-        PubP2poolApi::update_from_output(&public, &output_parse, &output_pub, elapsed, &process);
+        PubP2poolApi::update_from_output(
+            &mut public.lock().unwrap(),
+            &output_parse,
+            &output_pub,
+            elapsed,
+            &mut process.lock().unwrap(),
+        );
         println!("{:#?}", process);
         assert!(process.lock().unwrap().state == ProcessState::Alive);
     }
@@ -185,7 +191,13 @@ Uptime         = 0h 2m 4s
 
         // It only gets checked if we're `Syncing`.
         process.lock().unwrap().state = ProcessState::Syncing;
-        PubP2poolApi::update_from_output(&public, &output_parse, &output_pub, elapsed, &process);
+        PubP2poolApi::update_from_output(
+            &mut public.lock().unwrap(),
+            &output_parse,
+            &output_pub,
+            elapsed,
+            &mut process.lock().unwrap(),
+        );
         println!("{:#?}", process);
         assert!(process.lock().unwrap().state == ProcessState::Syncing); // still syncing
     }
@@ -217,7 +229,13 @@ Uptime         = 0h 2m 4s
 
         // It only gets checked if we're `Syncing`.
         process.lock().unwrap().state = ProcessState::Syncing;
-        PubP2poolApi::update_from_output(&public, &output_parse, &output_pub, elapsed, &process);
+        PubP2poolApi::update_from_output(
+            &mut public.lock().unwrap(),
+            &output_parse,
+            &output_pub,
+            elapsed,
+            &mut process.lock().unwrap(),
+        );
         println!("{:#?}", process);
         assert!(process.lock().unwrap().state == ProcessState::Alive);
     }
