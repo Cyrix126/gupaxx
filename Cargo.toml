@@ -1,18 +1,18 @@
 cargo-features = ["profile-rustflags"]
 [package]
 name = "gupaxx"
-version = "1.5.0"
+version = "1.5.1"
 authors = ["cyrix126 <gupaxx@baermail.fr>"]
 description = "Fork of Gupax integrating the XMRvsBeast Raffle "
 documentation = "https://github.com/cyrix126/gupaxx"
 edition = "2021"
 
 [profile.release]
-panic = "abort"
+# panic = "abort"
 lto = "fat"
 codegen-units = 1
 incremental = false
-strip = "symbols"
+# strip = "symbols"
 rustflags = ["-Zlocation-detail=none"]
 
 [profile.dev]
