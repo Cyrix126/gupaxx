@@ -1,15 +1,16 @@
+use enclose::enc;
+use log::{debug, error, info, warn};
+use readable::byte::Byte;
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
+#[cfg(target_os = "windows")]
+use std::fs::Metadata;
 use std::{
     path::Path,
     sync::{Arc, Mutex},
     thread,
     time::{Duration, Instant},
 };
-
-use enclose::enc;
-use log::{debug, error, info, warn};
-use readable::byte::Byte;
-use reqwest::Client;
-use serde::{Deserialize, Serialize};
 use tokio::spawn;
 
 use crate::{
@@ -397,6 +398,15 @@ impl PrivNodeApi {
         state: &Node,
     ) -> std::result::Result<Self, anyhow::Error> {
         let adr = format!("http://{}:{}/json_rpc", state.api_ip, state.api_port);
+        #[cfg(target_os = "windows")]
+        let mut private = client
+            .post(adr)
+            .body(r#"{"jsonrpc":"2.0","id":"0","method":"get_info"}"#)
+            .send()
+            .await?
+            .json::<PrivNodeApi>()
+            .await?;
+        #[cfg(not(target_os = "windows"))]
         let private = client
             .post(adr)
             .body(r#"{"jsonrpc":"2.0","id":"0","method":"get_info"}"#)
@@ -404,6 +414,14 @@ impl PrivNodeApi {
             .await?
             .json::<PrivNodeApi>()
             .await?;
+        #[cfg(target_os = "windows")]
+        // api returns 0 for DB size for Windows so we read the size directly from the filesystem.
+        // https://github.com/monero-project/monero/issues/9513
+        {
+            private.result.database_size = std::fs::metadata(state.path_db)
+                .unwrap_or(".bitmonero")
+                .st_size();
+        }
         Ok(private)
     }
 }
