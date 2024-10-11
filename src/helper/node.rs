@@ -4,7 +4,7 @@ use readable::byte::Byte;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 #[cfg(target_os = "windows")]
-use std::fs::Metadata;
+use std::os::windows::fs::MetadataExt;
 use std::{
     path::Path,
     sync::{Arc, Mutex},
@@ -414,13 +414,17 @@ impl PrivNodeApi {
             .await?
             .json::<PrivNodeApi>()
             .await?;
-        #[cfg(target_os = "windows")]
+        // #[cfg(target_os = "windows")]
         // api returns 0 for DB size for Windows so we read the size directly from the filesystem.
         // https://github.com/monero-project/monero/issues/9513
         {
-            private.result.database_size = std::fs::metadata(state.path_db)
-                .unwrap_or(".bitmonero")
-                .st_size();
+            if let Ok(metadata) = std::fs::metadata(if !state.path_db.is_empty() {
+                state.path_db.clone()
+            } else {
+                ".bitmonero".to_string()
+            }) {
+                private.result.database_size = metadata.file_size();
+            }
         }
         Ok(private)
     }
