@@ -582,8 +582,7 @@ impl Helper {
                     last_p2pool_request.elapsed() >= Duration::from_secs(60);
                 // need to reload fast to get the first right values after syncing.
                 // check if value is 100k or under and request immediately if that's the case. fixed in release of p2pool including commit https://github.com/SChernykh/p2pool/commit/64a199be6dec7924b41f857a401086f25e1ec9be
-                if (last_p2pool_request_expired
-                    || pub_api.lock().unwrap().p2pool_difficulty_u64 <= 100000)
+                if (last_p2pool_request_expired || pub_api_lock.p2pool_difficulty_u64 <= 100000)
                     && process_lock.state == ProcessState::Alive
                 {
                     debug!("P2Pool Watchdog | Attempting [network] & [pool] API file read");
