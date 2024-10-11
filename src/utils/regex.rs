@@ -90,7 +90,8 @@ pub struct P2poolRegex {
     pub block: Regex,
     pub block_int: Regex,
     pub block_comma: Regex,
-    pub depth_0: Regex,
+    pub synchronized: Regex,
+    pub next_height_1: Regex,
 }
 
 impl P2poolRegex {
@@ -104,7 +105,8 @@ impl P2poolRegex {
             block: Regex::new("block [0-9]{7}").unwrap(), // Monero blocks will be 7 digits for... the next 10,379 years
             block_int: Regex::new("[0-9]{7}").unwrap(),
             block_comma: Regex::new("[0-9],[0-9]{3},[0-9]{3}").unwrap(),
-            depth_0: Regex::new("depth = 0").unwrap(),
+            synchronized: Regex::new("SYNCHRONIZED").unwrap(),
+            next_height_1: Regex::new("next height = 1").unwrap(),
         }
     }
 }
@@ -297,6 +299,7 @@ mod test {
         assert_eq!(r.block.find(text).unwrap().as_str(), "block 1111111");
         assert_eq!(r.block_int.find(text).unwrap().as_str(), "1111111");
         assert_eq!(r.block_comma.find(text2).unwrap().as_str(), "1,111,111");
+        assert_eq!(r.synchronized.find(text3).unwrap().as_str(), "SYNCHRONIZED");
     }
 
     #[test]

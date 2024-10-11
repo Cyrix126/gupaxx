@@ -843,16 +843,25 @@ impl PubP2poolApi {
         let (payouts_new, xmr_new) = Self::calc_payouts_and_xmr(&output_parse);
         // Check for "SYNCHRONIZED" only if we aren't already.
         if process.state == ProcessState::Syncing {
-            // look for depth 0
+            // How many times the word was captured.
+            let synchronized_captures = P2POOL_REGEX.synchronized.find_iter(&output_parse).count();
 
-            if P2POOL_REGEX.depth_0.is_match(&output_parse) {
+            // If P2Pool receives shares before syncing, it will start mining on its own sidechain.
+            // In this instance, we technically are "synced" on block 1 and P2Pool will print "SYNCHRONIZED"
+            // although, that doesn't necessarily mean we're synced on main/mini-chain.
+            //
+            // So, if we find a `next block = 1`, that means we
+            // must look for at least 2 instances of "SYNCHRONIZED",
+            // one for the sidechain, one for main/mini.
+            if P2POOL_REGEX.next_height_1.is_match(&output_parse) {
+                if synchronized_captures > 1 {
+                    process.state = ProcessState::Alive;
+                }
+            } else if synchronized_captures > 0 {
+                // if there is no `next block = 1`, fallback to
+                // just finding 1 instance of "SYNCHRONIZED".
                 process.state = ProcessState::Alive;
             }
-        }
-        // check if zmq server still alive
-        if process.state == ProcessState::Alive && contains_zmq_connection_lost(&output_parse) {
-            // node zmq is not responding, p2pool is not ready
-            process.state = ProcessState::Syncing;
         }
 
         // 3. Throw away [output_parse]
