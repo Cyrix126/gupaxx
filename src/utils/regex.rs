@@ -284,6 +284,7 @@ mod test {
         let r = P2poolRegex::new();
         let text = "NOTICE  2022-11-11 11:11:11.1111 P2Pool You received a payout of 0.111111111111 XMR in block 1111111";
         let text2 = "2022-11-11 11:11:11.1111 | 0.111111111111 XMR | Block 1,111,111";
+        let text3 = "NOTICE  2020-12-11 12:35:41.3150 SideChain SYNCHRONIZED";
         assert_eq!(
             r.payout.find(text).unwrap().as_str(),
             "payout of 0.111111111111 XMR"
