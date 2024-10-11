@@ -13,7 +13,6 @@ use crate::regex::contains_end_status;
 use crate::regex::contains_statuscommand;
 use crate::regex::contains_yourhashrate;
 use crate::regex::contains_yourshare;
-use crate::regex::contains_zmq_connection_lost;
 use crate::regex::estimated_hr;
 use crate::regex::nb_current_shares;
 use crate::regex::P2POOL_REGEX;

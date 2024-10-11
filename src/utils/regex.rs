@@ -222,11 +222,6 @@ pub fn contains_timeout(l: &str) -> bool {
     static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"timeout").unwrap());
     LINE_SHARE.is_match(l)
 }
-pub fn contains_zmq_connection_lost(l: &str) -> bool {
-    static LINE_SHARE: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"ZMQReader failed to connect to").unwrap());
-    LINE_SHARE.is_match(l)
-}
 pub fn contains_error(l: &str) -> bool {
     static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"error").unwrap());
     LINE_SHARE.is_match(l)
