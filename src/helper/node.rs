@@ -414,7 +414,7 @@ impl PrivNodeApi {
             .await?
             .json::<PrivNodeApi>()
             .await?;
-        // #[cfg(target_os = "windows")]
+        #[cfg(target_os = "windows")]
         // api returns 0 for DB size for Windows so we read the size directly from the filesystem.
         // https://github.com/monero-project/monero/issues/9513
         {
