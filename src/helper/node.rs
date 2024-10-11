@@ -5,6 +5,8 @@ use reqwest::Client;
 use serde::{Deserialize, Serialize};
 #[cfg(target_os = "windows")]
 use std::os::windows::fs::MetadataExt;
+#[cfg(target_os = "windows")]
+use std::path::PathBuf;
 use std::{
     path::Path,
     sync::{Arc, Mutex},
@@ -266,7 +268,11 @@ impl Helper {
                 PubNodeApi::update_from_output(pub_api, &output_pub, start.elapsed());
                 // update data from api
                 debug!("Node Watchdog | Attempting HTTP API request...");
-                match PrivNodeApi::request_api(&client, &state).await {
+                #[cfg(target_os = "windows")]
+                let rep = PrivNodeApi::request_api(&client, &state, path.clone()).await;
+                #[cfg(not(target_os = "windows"))]
+                let rep = PrivNodeApi::request_api(&client, &state).await;
+                match rep {
                     Ok(priv_api) => {
                         debug!(
                             "Node Watchdog | HTTP API request OK, attempting [update_from_priv()]"
@@ -396,6 +402,7 @@ impl PrivNodeApi {
     async fn request_api(
         client: &Client,
         state: &Node,
+        #[cfg(target_os = "windows")] mut path: PathBuf,
     ) -> std::result::Result<Self, anyhow::Error> {
         let adr = format!("http://{}:{}/json_rpc", state.api_ip, state.api_port);
         #[cfg(target_os = "windows")]
@@ -421,7 +428,10 @@ impl PrivNodeApi {
             if let Ok(metadata) = std::fs::metadata(if !state.path_db.is_empty() {
                 state.path_db.clone()
             } else {
-                ".bitmonero".to_string()
+                // take full path of monerod witout binary and add db since it's the default.
+                path.pop();
+                path.push("db");
+                path.to_str().unwrap_or_default().to_string()
             }) {
                 private.result.database_size = metadata.file_size();
             }
