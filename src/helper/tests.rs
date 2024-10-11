@@ -329,12 +329,24 @@ Uptime         = 0h 2m 4s
         )));
 
         process.lock().unwrap().state = ProcessState::Alive;
-        PubXmrigApi::update_from_output(&public, &output_parse, &output_pub, elapsed, &process);
+        PubXmrigApi::update_from_output(
+            &mut public.lock().unwrap(),
+            &output_parse,
+            &output_pub,
+            elapsed,
+            &mut process.lock().unwrap(),
+        );
         println!("{:#?}", process);
         assert!(process.lock().unwrap().state == ProcessState::NotMining);
 
         let output_parse = Arc::new(Mutex::new(String::from("[2022-02-12 12:49:30.311]  net      new job from 192.168.2.1:3333 diff 402K algo rx/0 height 2241142 (11 tx)")));
-        PubXmrigApi::update_from_output(&public, &output_parse, &output_pub, elapsed, &process);
+        PubXmrigApi::update_from_output(
+            &mut public.lock().unwrap(),
+            &output_parse,
+            &output_pub,
+            elapsed,
+            &mut process.lock().unwrap(),
+        );
         assert!(process.lock().unwrap().state == ProcessState::Alive);
     }
 

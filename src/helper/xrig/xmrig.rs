@@ -532,13 +532,17 @@ impl Helper {
             }
             // Always update from output
             debug!("XMRig Watchdog | Starting [update_from_output()]");
+            let mut process_lock = process.lock().unwrap();
+            let mut pub_api_lock = pub_api.lock().unwrap();
             PubXmrigApi::update_from_output(
-                &pub_api,
+                &mut pub_api_lock,
                 &output_pub,
                 &output_parse,
                 start.elapsed(),
-                &process,
+                &mut process_lock,
             );
+            drop(pub_api_lock);
+            drop(process_lock);
             // Send an HTTP API request
             debug!("XMRig Watchdog | Attempting HTTP API request...");
             match PrivXmrigApi::request_xmrig_api(&client, &api_uri, token).await {
@@ -743,17 +747,16 @@ impl PubXmrigApi {
     // This combines the buffer from the PTY thread [output_pub]
     // with the actual [PubApiXmrig] output field.
     pub fn update_from_output(
-        public: &Arc<Mutex<Self>>,
+        public: &mut Self,
         output_parse: &Arc<Mutex<String>>,
         output_pub: &Arc<Mutex<String>>,
         elapsed: std::time::Duration,
-        process: &Arc<Mutex<Process>>,
+        process: &mut Process,
     ) {
         // 1. Take the process's current output buffer and combine it with Pub (if not empty)
         let mut output_pub = output_pub.lock().unwrap();
 
         {
-            let mut public = public.lock().unwrap();
             if !output_pub.is_empty() {
                 public.output.push_str(&std::mem::take(&mut *output_pub));
             }
@@ -764,9 +767,9 @@ impl PubXmrigApi {
         // 2. Check for "new job"/"no active...".
         let mut output_parse = output_parse.lock().unwrap();
         if XMRIG_REGEX.new_job.is_match(&output_parse) {
-            process.lock().unwrap().state = ProcessState::Alive;
+            process.state = ProcessState::Alive;
         } else if XMRIG_REGEX.not_mining.is_match(&output_parse) {
-            process.lock().unwrap().state = ProcessState::NotMining;
+            process.state = ProcessState::NotMining;
         }
 
         // 3. Throw away [output_parse]
