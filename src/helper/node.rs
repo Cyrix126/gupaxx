@@ -419,9 +419,11 @@ impl PrivNodeApi {
         // https://github.com/monero-project/monero/issues/9513
         {
             if let Ok(metadata) = std::fs::metadata(if !state.path_db.is_empty() {
-                state.path_db.clone()
+                let mut path_db = state.path_db.clone();
+                path_db.push_str("lmdb/data/mdb");
+                path_db
             } else {
-                r#"C:\ProgramData\bitmonero\"#.to_string()
+                r#"C:\ProgramData\bitmonero\lmdb\data.mdb"#.to_string()
             }) {
                 private.result.database_size = metadata.file_size();
             }
