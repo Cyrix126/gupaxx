@@ -21,7 +21,7 @@ Having a website, we can detect the architecture and os of the visitor and give 
 ### Generated wallet
 If Gupaxx could create a wallet and put the primary address in p2pool tab automaticcly, it would remove a manual step for the user.  
 It could be an option to ask at first start.  
-The user could access this wallet on the same computer with the official GUI wallet.
+The user could access this wallet on the same computer with the official GUI wallet. A password would be needed and a button could be added to show the seedphrase.
 ### Auto register to XvB
 If Gupaxx could register the user automaticcly to the raffle, it would remove a manual step for the user.  
 Automatic registration could be done to prevent spam by checking if the registered address is in p2pool window or by giving a small HR to XvB.
@@ -32,6 +32,17 @@ At first start, a guide could ask the user what it intends to do with Gupaxx (cr
 At first start, a mode is suggested for very noob users. It would only shows the seed phrase of the wallet generated and configure all options for the user.
 ### Do not re-ask password if not needed
 On Linux, Do not re-ask for sudo to start xmrig when the user can use sudo without a password. It can happen if visudo has been configured to do so or if there is a delay specified in /etc/sudoers with "timestamp_timeout". 
+### Use remote node while syncing local node
+To reduce the time to get the first shares. No need to wait for the monero node to be synced.
+### Allow resize of consoles
+So users can view more or less output as they need.
+### Scrolling arrows
+To notify the user that content is present in the bottom, an arrow pointing downside will appear.
+### Friendlier custom args
+For custom command arguments, some args are required. To help the user not make any errors, theses args must be prefilled. The user will need to enable a checkbox to apply the custom command arguments. A button reset will replace the text fields by only the required fields.
+### Better default
+Reduce in/out peers, remote nodes by default
+
 
 ## Supporting more environments
 ### Packaging
@@ -60,6 +71,14 @@ The algorithm could instead watch the stats from the stratum server, which is mo
 The algorithm would still check the estimation made by the p2pool instance of Gupaxx and warn the user if it seems there is too much difference between the data of the stratum server and the one of p2pool. It could prevent the user to forget to configure a miner to the stratum p2pool.
 Could also be an option in advanced tab of XvB warning the user that he should point all his miners to the p2pool instance of Gupaxx to take them into account.
 It can be a checkbox into advanced option of XvB to use the stratum data.
+### Automatic sending of funds
+A way to automatically send funds of mining to a wallet address or multiple wallet addresses by setting a minimum amount and % with time frequency or setting a fixed amount and priority.
+### Wait for sync to start of xmrig
+If p2pool/node is not yet synced, xmrig can slower them and mine for nothing if it start at the same time. We don't want to prevent the user to start xmrig without p2pool, so xmrig could start later only if p2pool is auto started.
+### Systray icon
+Enable a way to put Gupaxx in background, managing it with a systray icon.
+### Auto-Launch
+Option to launch Gupaxx at startup 
 ### Manually set HR for XvB algo
 Done by [Sina](https://github.com/mostafaei2002) [PR](https://github.com/Cyrix126/gupaxx/pull/11)
 An advanced tab on XvB tab with multiple tools to set the HR manually.
@@ -70,8 +89,6 @@ The algorithm of distribution of HR can't control HR outside of his instance.
 It must estimate external HR, which can be approximative.
 If a user control multiples miners, it could connect all of them to a xmrig-proxy instance.
 Gupaxx could offer this xmrig-instance and control it like it was a normal xmrig instance.  
-### Wait for sync to start of xmrig
-If p2pool/node is not yet synced, xmrig can slower them and mine for nothing if it start at the same time. We don't want to prevent the user to start xmrig without p2pool, so xmrig could start later only if p2pool is auto started.
 
 ## Trust-less
 ## Builds
