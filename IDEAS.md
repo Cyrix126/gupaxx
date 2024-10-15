@@ -79,6 +79,10 @@ If p2pool/node is not yet synced, xmrig can slower them and mine for nothing if 
 Enable a way to put Gupaxx in background, managing it with a systray icon.
 ### Auto-Launch
 Option to launch Gupaxx at startup 
+### API of Algorithm
+To make the Algorithm controllable outside of Gupaxx.
+### Graphs history of HR
+The user could see how the HR was given on p2pool and XvB.
 ### Manually set HR for XvB algo
 Done by [Sina](https://github.com/mostafaei2002) [PR](https://github.com/Cyrix126/gupaxx/pull/11)
 An advanced tab on XvB tab with multiple tools to set the HR manually.
