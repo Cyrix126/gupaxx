@@ -49,7 +49,7 @@ impl Node {
                 let text = &api.lock().unwrap().output;
                 let nb_lines = num_lines(text);
                 let height = size.y / 2.8;
-                let width = size.x - (space_h / 2.0);
+                let width = (size.x - (space_h / 2.0)).max(0.0);
                 egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
                     ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
                     egui::ScrollArea::vertical()
@@ -121,8 +121,19 @@ impl Node {
                 ui.style_mut().spacing.icon_width_inner = width / 45.0;
                 ui.style_mut().spacing.icon_width = width / 35.0;
                 ui.style_mut().spacing.icon_spacing = space_h;
-                ui.checkbox(&mut self.pruned, "Prunned")
-                    .on_hover_text(NODE_PRUNNING);
+                debug!("Node Tab | Rendering DNS  and Prunning buttons");
+                ui.horizontal(|ui| {
+                    ui.group(|ui| {
+                        ui.checkbox(&mut self.pruned, "Prunned")
+                            .on_hover_text(NODE_PRUNNING);
+                        ui.separator();
+                        ui.checkbox(&mut self.dns_blocklist, "DNS blocklist")
+                            .on_hover_text(NODE_DNS_BLOCKLIST);
+                        ui.separator();
+                        ui.checkbox(&mut self.disable_dns_checkpoint, "DNS checkpoint")
+                            .on_hover_text(NODE_DNS_CHECKPOINT);
+                    });
+                });
 
                 ui.add_space(space_h);
                 // idea
@@ -155,7 +166,7 @@ impl Node {
                                 // ui.label("Out peers [10-450]:");
                                 ui.add_sized(
                                     [txt_description_width, text_height],
-                                    Label::new("Out peers [10-450]:"),
+                                    Label::new("Out peers [2-450]:"),
                                 );
                                 // not sure what's the right calculation to make
                                 ui.style_mut().spacing.slider_width = (ui.available_width()
@@ -163,7 +174,7 @@ impl Node {
                                     - ui.spacing().scroll.bar_width
                                     - (SPACE * 2.0))
                                     .max(0.0);
-                                ui.add(Slider::new(&mut self.out_peers, 10..=450))
+                                ui.add(Slider::new(&mut self.out_peers, 2..=450))
                                     .on_hover_text(P2POOL_OUT);
                                 // ui.add_space(ui.available_width() - 4.0);
                             });
@@ -171,13 +182,14 @@ impl Node {
                                 // ui.label("In peers  [10-450]:");
                                 ui.add_sized(
                                     [txt_description_width, text_height],
-                                    Label::new("In peers  [10-450]:"),
+                                    Label::new("In peers  [2-450]:"),
                                 );
-                                ui.style_mut().spacing.slider_width = ui.available_width()
+                                ui.style_mut().spacing.slider_width = (ui.available_width()
                                     - ui.spacing().item_spacing.x * 4.0
                                     - ui.spacing().scroll.bar_width
-                                    - (SPACE * 2.0);
-                                ui.add(Slider::new(&mut self.in_peers, 10..=450))
+                                    - (SPACE * 2.0))
+                                    .max(0.0);
+                                ui.add(Slider::new(&mut self.in_peers, 2..=450))
                                     .on_hover_text(P2POOL_IN);
                             });
                             ui.horizontal(|ui| {
@@ -186,10 +198,11 @@ impl Node {
                                     [txt_description_width, text_height],
                                     Label::new("Log level [ 0-4 ] :"),
                                 );
-                                ui.style_mut().spacing.slider_width = ui.available_width()
+                                ui.style_mut().spacing.slider_width = (ui.available_width()
                                     - ui.spacing().item_spacing.x * 4.0
                                     - ui.spacing().scroll.bar_width
-                                    - (SPACE * 2.0);
+                                    - (SPACE * 2.0))
+                                    .max(0.0);
                                 ui.add(Slider::new(&mut self.log_level, 0..=4))
                                     .on_hover_text(P2POOL_LOG);
                             });
@@ -202,16 +215,6 @@ impl Node {
                     path_db_field(self, ui, txt_description_width, text_height, file_window);
                 });
                 ui.add_space(space_h);
-                debug!("Node Tab | Rendering DNS buttons");
-                ui.horizontal(|ui| {
-                    ui.group(|ui| {
-                        ui.checkbox(&mut self.dns_blocklist, "DNS blocklist")
-                            .on_hover_text(NODE_DNS_BLOCKLIST);
-                        ui.separator();
-                        ui.checkbox(&mut self.disable_dns_checkpoint, "DNS checkpoint")
-                            .on_hover_text(NODE_DNS_CHECKPOINT);
-                    });
-                });
             }
         });
     }
@@ -325,7 +328,7 @@ fn path_db_field(
             Label::new(RichText::new(text).color(color)),
         );
         ui.spacing_mut().text_edit_width =
-            ui.available_width() - (ui.spacing().item_spacing.x * 8.0) - SPACE * 2.0;
+            (ui.available_width() - (ui.spacing().item_spacing.x * 8.0) - SPACE * 2.0).max(0.0);
         let window_busy = file_window.lock().unwrap().thread;
         ui.add_enabled_ui(!window_busy, |ui| {
             if ui.button("Open").on_hover_text(GUPAX_SELECT).clicked() {
@@ -398,9 +401,10 @@ fn state_edit_field(
             Label::new(RichText::new(text).color(color)),
         );
         // allocate the size to leave half of the total width free.
-        ui.spacing_mut().text_edit_width = (width / 2.0)
+        ui.spacing_mut().text_edit_width = ((width / 2.0)
             - (width - ui.available_width() - ui.spacing().scroll.bar_width)
-            - ui.spacing().item_spacing.x * 2.5;
+            - ui.spacing().item_spacing.x * 2.5)
+            .max(0.0);
         ui.text_edit_singleline(state_field).on_hover_text(help_msg);
         state_field.truncate(max_ch.into());
     });
