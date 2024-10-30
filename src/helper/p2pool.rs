@@ -833,13 +833,14 @@ impl PubP2poolApi {
         process: &mut Process,
     ) {
         // 1. Take the process's current output buffer and combine it with Pub (if not empty)
-        let mut output_parse = output_parse.lock().unwrap();
         let mut output_pub = output_pub.lock().unwrap();
         if !output_pub.is_empty() {
             public.output.push_str(&std::mem::take(&mut *output_pub));
         }
 
+        drop(output_pub);
         // 2. Parse the full STDOUT
+        let mut output_parse = output_parse.lock().unwrap();
         let (payouts_new, xmr_new) = Self::calc_payouts_and_xmr(&output_parse);
         // Check for "SYNCHRONIZED" only if we aren't already.
         if process.state == ProcessState::Syncing {
@@ -866,7 +867,6 @@ impl PubP2poolApi {
 
         // 3. Throw away [output_parse]
         output_parse.clear();
-        drop(output_pub);
         drop(output_parse);
         // 4. Add to current values
         let (payouts, xmr) = (public.payouts + payouts_new, public.xmr + xmr_new);

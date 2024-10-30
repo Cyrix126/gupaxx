@@ -746,7 +746,6 @@ impl PubXmrigApi {
         process: &mut Process,
     ) {
         // 1. Take the process's current output buffer and combine it with Pub (if not empty)
-        let mut output_parse = output_parse.lock().unwrap();
         let mut output_pub = output_pub.lock().unwrap();
 
         {
@@ -756,7 +755,9 @@ impl PubXmrigApi {
             // Update uptime
             public.uptime = elapsed;
         }
+        drop(output_pub);
 
+        let mut output_parse = output_parse.lock().unwrap();
         // 2. Check for "new job"/"no active...".
         if XMRIG_REGEX.new_job.is_match(&output_parse) {
             process.state = ProcessState::Alive;
@@ -771,7 +772,6 @@ impl PubXmrigApi {
 
         // 3. Throw away [output_parse]
         output_parse.clear();
-        drop(output_pub);
         drop(output_parse);
     }
 
