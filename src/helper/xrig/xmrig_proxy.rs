@@ -24,7 +24,7 @@ use crate::{
     regex::{contains_timeout, contains_usepool, detect_new_node_xmrig, XMRIG_REGEX},
     GUPAX_VERSION_UNDERSCORE, UNKNOWN_DATA,
 };
-use crate::{XMRIG_CONFIG_URL, XMRIG_PROXY_SUMMARY_URL};
+use crate::{NO_POOL, XMRIG_CONFIG_URL, XMRIG_PROXY_SUMMARY_URL};
 
 use super::xmrig::PubXmrigApi;
 impl Helper {
@@ -105,10 +105,7 @@ impl Helper {
             }
         }
     }
-    pub fn build_xp_args(
-        helper: &Arc<Mutex<Self>>,
-        state: &crate::disk::state::XmrigProxy,
-    ) -> Vec<String> {
+    pub fn build_xp_args(state: &crate::disk::state::XmrigProxy) -> Vec<String> {
         let mut args = Vec::with_capacity(500);
         let api_ip;
         let api_port;
@@ -133,8 +130,6 @@ impl Helper {
             args.push("127.0.0.1".to_string()); // HTTP API IP
             args.push("--http-port".to_string());
             args.push("18089".to_string()); // HTTP API Port
-            helper.lock().unwrap().pub_api_xp.lock().unwrap().node =
-                "127.0.0.1:3333 (Local P2Pool)".to_string();
 
         // [Advanced]
         } else if !state.arguments.is_empty() {
@@ -194,7 +189,6 @@ impl Helper {
             if state.keepalive {
                 args.push("--keepalive".to_string());
             } // Keepalive
-            helper.lock().unwrap().pub_api_xp.lock().unwrap().node = p2pool_url;
         }
         args.push(format!("--http-access-token={}", state.token)); // HTTP API Port
         args.push("--http-no-restricted".to_string());
@@ -253,7 +247,7 @@ impl Helper {
     ) {
         helper.lock().unwrap().xmrig_proxy.lock().unwrap().state = ProcessState::Middle;
 
-        let args = Self::build_xp_args(helper, state_proxy);
+        let args = Self::build_xp_args(state_proxy);
         // Print arguments & user settings to console
         crate::disk::print_dash(&format!("XMRig-Proxy | Launch arguments: {:#?}", args));
         info!("XMRig-Proxy | Using path: [{}]", path.display());
@@ -269,7 +263,7 @@ impl Helper {
         let state_xmrig = state_xmrig.clone();
         let redirect_xmrig = state_proxy.redirect_local_xmrig;
         let pub_api_xvb = Arc::clone(&helper.lock().unwrap().pub_api_xvb);
-        let gui_api_xmrig = Arc::clone(&helper.lock().unwrap().gui_api_xmrig);
+        let pub_api_xmrig = Arc::clone(&helper.lock().unwrap().pub_api_xmrig);
         thread::spawn(move || {
             Self::spawn_xp_watchdog(
                 &process,
@@ -283,7 +277,7 @@ impl Helper {
                 process_xvb,
                 process_xmrig,
                 &pub_api_xvb,
-                &gui_api_xmrig,
+                &pub_api_xmrig,
             );
         });
     }
@@ -302,7 +296,7 @@ impl Helper {
         process_xvb: Arc<Mutex<Process>>,
         process_xmrig: Arc<Mutex<Process>>,
         pub_api_xvb: &Arc<Mutex<PubXvbApi>>,
-        gui_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
+        pub_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
     ) {
         process.lock().unwrap().start = Instant::now();
         // spawn pty
@@ -343,10 +337,8 @@ impl Helper {
         process.lock().unwrap().state = ProcessState::NotMining;
         process.lock().unwrap().signal = ProcessSignal::None;
         // reset stats
-        let node = pub_api.lock().unwrap().node.to_string();
         *pub_api.lock().unwrap() = PubXmrigProxyApi::new();
         *gui_api.lock().unwrap() = PubXmrigProxyApi::new();
-        gui_api.lock().unwrap().node = node;
         // loop
         let start = process.lock().unwrap().start;
         debug!("Xmrig-Proxy Watchdog | enabling verbose mode");
@@ -402,13 +394,17 @@ impl Helper {
                 // Always update from output
                 // todo: check difference with xmrig
                 debug!("XMRig-Proxy Watchdog | Starting [update_from_output()]");
+                let mut process_lock = process.lock().unwrap();
+                let mut pub_api_lock = pub_api.lock().unwrap();
                 PubXmrigProxyApi::update_from_output(
-                    pub_api,
+                    &mut pub_api_lock,
                     &output_pub,
                     &output_parse,
                     start.elapsed(),
-                    process,
+                    &mut process_lock,
                 );
+                drop(pub_api_lock);
+                drop(process_lock);
                 // update data from api
                 debug!("XMRig-Proxy Watchdog | Attempting HTTP API request...");
                 match PrivXmrigProxyApi::request_xp_api(&client, api_summary_xp, token_proxy).await
@@ -426,16 +422,17 @@ impl Helper {
                 }
                 // update xmrig to use xmrig-proxy if option enabled and local xmrig alive
                 if xmrig_redirect
-                    && gui_api_xmrig.lock().unwrap().node != XvbNode::XmrigProxy.to_string()
+                    && pub_api_xmrig.lock().unwrap().node != XvbNode::XmrigProxy.to_string()
                     && (process_xmrig.lock().unwrap().state == ProcessState::Alive
                         || process_xmrig.lock().unwrap().state == ProcessState::NotMining)
                 {
                     info!("redirect local xmrig instance to xmrig-proxy");
+                    let node = XvbNode::XmrigProxy;
                     if let Err(err) = update_xmrig_config(
                         &client,
                         api_config_xmrig,
                         &state_xmrig.token,
-                        &XvbNode::XmrigProxy,
+                        &node,
                         "",
                         GUPAX_VERSION_UNDERSCORE,
                     )
@@ -452,7 +449,6 @@ impl Helper {
                             ProcessName::XmrigProxy,
                         );
                     } else {
-                        gui_api_xmrig.lock().unwrap().node = XvbNode::XmrigProxy.to_string();
                         debug!("XMRig-Proxy Process | mining on Xmrig-Proxy pool");
                     }
                 }
@@ -501,17 +497,16 @@ impl PubXmrigProxyApi {
         }
     }
     pub fn update_from_output(
-        public: &Arc<Mutex<Self>>,
+        public: &mut Self,
         output_parse: &Arc<Mutex<String>>,
         output_pub: &Arc<Mutex<String>>,
         elapsed: std::time::Duration,
-        process: &Arc<Mutex<Process>>,
+        process: &mut Process,
     ) {
         // 1. Take the process's current output buffer and combine it with Pub (if not empty)
         let mut output_pub = output_pub.lock().unwrap();
 
         {
-            let mut public = public.lock().unwrap();
             if !output_pub.is_empty() {
                 public.output.push_str(&std::mem::take(&mut *output_pub));
             }
@@ -524,12 +519,17 @@ impl PubXmrigProxyApi {
         if XMRIG_REGEX.new_job.is_match(&output_parse)
             || XMRIG_REGEX.valid_conn.is_match(&output_parse)
         {
-            process.lock().unwrap().state = ProcessState::Alive;
+            process.state = ProcessState::Alive;
+            // get the pool we mine on to put it on stats
+            if let Some(name_pool) = crate::regex::detect_node_xmrig(&output_parse) {
+                public.node = name_pool;
+            }
         } else if XMRIG_REGEX.timeout.is_match(&output_parse)
             || XMRIG_REGEX.invalid_conn.is_match(&output_parse)
             || XMRIG_REGEX.error.is_match(&output_parse)
         {
-            process.lock().unwrap().state = ProcessState::NotMining;
+            process.state = ProcessState::NotMining;
+            public.node = NO_POOL.to_string();
         }
         // 3. Throw away [output_parse]
         output_parse.clear();
@@ -538,11 +538,9 @@ impl PubXmrigProxyApi {
     // same method as PubXmrigApi, why not make a trait ?
     pub fn combine_gui_pub_api(gui_api: &mut Self, pub_api: &mut Self) {
         let output = std::mem::take(&mut gui_api.output);
-        let node = std::mem::take(&mut gui_api.node);
         let buf = std::mem::take(&mut pub_api.output);
         *gui_api = Self {
             output,
-            node,
             ..pub_api.clone()
         };
         if !buf.is_empty() {

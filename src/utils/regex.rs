@@ -171,6 +171,9 @@ pub fn detect_new_node_xmrig(s: &str) -> Option<XvbNode> {
                 "127.0.0.1:3333" => {
                     return Some(XvbNode::P2pool);
                 }
+                "127.0.0.1:3355" => {
+                    return Some(XvbNode::XmrigProxy);
+                }
                 "eu.xmrvsbeast.com:4247" => {
                     return Some(XvbNode::Europe);
                 }
@@ -179,6 +182,26 @@ pub fn detect_new_node_xmrig(s: &str) -> Option<XvbNode> {
                 }
                 _ => {}
             }
+        }
+    }
+    warn!("a line on xmrig console was detected as using a new pool but the syntax was not recognized or it was not a pool useable for the algorithm.");
+    None
+}
+// this detection removes the need to update pub_api.node everytime xmrig/proxy are updated to mine to another p2pool node.
+pub fn detect_node_xmrig(s: &str) -> Option<String> {
+    static CURRENT_SHARE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"new job from (?P<pool>.*?) diff").unwrap());
+    if let Some(c) = CURRENT_SHARE.captures(s) {
+        if let Some(m) = c.name("pool") {
+            // let's make nicer name appear on status tab
+            let name = match m.as_str() {
+                "127.0.0.1:3333" => XvbNode::P2pool.to_string(),
+                "127.0.0.1:3355" => XvbNode::XmrigProxy.to_string(),
+                "eu.xmrvsbeast.com:4247" => XvbNode::Europe.to_string(),
+                "na.xmrvsbeast.com:4247" => XvbNode::NorthAmerica.to_string(),
+                x => x.to_string(),
+            };
+            return Some(name);
         }
     }
     warn!("a line on xmrig console was detected as using a new pool but the syntax was not recognized or it was not a pool useable for the algorithm.");

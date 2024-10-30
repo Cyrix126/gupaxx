@@ -95,10 +95,10 @@ impl Helper {
         let gui_api_p2pool = Arc::clone(&helper.lock().unwrap().gui_api_p2pool);
         let process_xmrig = Arc::clone(&helper.lock().unwrap().xmrig);
         let process_xp = Arc::clone(&helper.lock().unwrap().xmrig_proxy);
+        // Generally, gui is to read data, pub is to update.
+        // ex: read hashrate values from gui, update node to pub.
         let gui_api_xmrig = Arc::clone(&helper.lock().unwrap().gui_api_xmrig);
-        let pub_api_xmrig = Arc::clone(&helper.lock().unwrap().pub_api_xmrig);
         let gui_api_xp = Arc::clone(&helper.lock().unwrap().gui_api_xp);
-        let pub_api_xp = Arc::clone(&helper.lock().unwrap().gui_api_xp);
         // Reset before printing to output.
         // Need to reset because values of stats would stay otherwise which could bring confusion even if panel is with a disabled theme.
         // at the start of a process, values must be default.
@@ -136,10 +136,8 @@ impl Helper {
                     &gui_api_p2pool,
                     &process_p2pool,
                     &gui_api_xmrig,
-                    &pub_api_xmrig,
                     &process_xmrig,
                     &gui_api_xp,
-                    &pub_api_xp,
                     &process_xp,
                 );
             }),
@@ -159,10 +157,8 @@ impl Helper {
         gui_api_p2pool: &Arc<Mutex<PubP2poolApi>>,
         process_p2pool: &Arc<Mutex<Process>>,
         gui_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
-        pub_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
         process_xmrig: &Arc<Mutex<Process>>,
         gui_api_xp: &Arc<Mutex<PubXmrigProxyApi>>,
-        pub_api_xp: &Arc<Mutex<PubXmrigProxyApi>>,
         process_xp: &Arc<Mutex<Process>>,
     ) {
         // create uniq client that is going to be used for during the life of the thread.
@@ -226,8 +222,6 @@ impl Helper {
                     process_p2pool,
                     &mut first_loop,
                     &handle_algo,
-                    pub_api_xmrig,
-                    pub_api_xp,
                     state_p2pool,
                     state_xmrig,
                     state_xp,
@@ -246,8 +240,6 @@ impl Helper {
                     &client,
                     pub_api,
                     gui_api,
-                    gui_api_xmrig,
-                    gui_api_xp,
                     state_p2pool,
                     state_xmrig,
                     state_xp,
@@ -291,7 +283,7 @@ impl Helper {
                     // first_loop is false here but could be changed to true under some conditions.
                     // will send a stop signal if public stats failed or update data with new one.
                     *handle_request.lock().unwrap() = Some(spawn(
-                        enc!((client, pub_api, gui_api, gui_api_p2pool, gui_api_xmrig, gui_api_xp, state_xvb, state_p2pool, state_xmrig, state_xp, process, last_algorithm, retry, handle_algo, time_donated, last_request) async move {
+                        enc!((client, pub_api, gui_api, gui_api_p2pool, gui_api_xmrig, gui_api_xp,  state_xvb, state_p2pool, state_xmrig, state_xp, process, last_algorithm, retry, handle_algo, time_donated, last_request) async move {
                                 // needs to wait here for public stats to get private stats.
                                 if last_request_expired || first_loop || should_refresh_before_next_algo {
                                 XvbPubStats::update_stats(&client, &gui_api, &pub_api, &process).await;
@@ -334,7 +326,7 @@ impl Helper {
                                         *retry.lock().unwrap() = false;
                                         // reset instant because algo will start.
                                         *last_algorithm.lock().unwrap() = Instant::now();
-                                        *handle_algo.lock().unwrap() = Some(spawn(enc!((client, gui_api, gui_api_xmrig, gui_api_xp, state_xmrig, state_xp, time_donated, state_xvb) async move {
+                                        *handle_algo.lock().unwrap() = Some(spawn(enc!((client, gui_api,  gui_api_xmrig, gui_api_xp, state_xmrig, state_xp, time_donated, state_xvb) async move {
                         let token_xmrig = if xp_alive {
                             &state_xp.token
                         } else {
@@ -547,8 +539,6 @@ async fn check_state_outcauses_xvb(
     process_p2pool: &Arc<Mutex<Process>>,
     first_loop: &mut bool,
     handle_algo: &Arc<Mutex<Option<JoinHandle<()>>>>,
-    pub_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
-    pub_api_xp: &Arc<Mutex<PubXmrigProxyApi>>,
     state_p2pool: &crate::disk::state::P2pool,
     state_xmrig: &crate::disk::state::Xmrig,
     state_xp: &crate::disk::state::XmrigProxy,
@@ -595,40 +585,37 @@ async fn check_state_outcauses_xvb(
                 } else {
                     state_xmrig.rig.clone()
                 };
-                spawn(
-                    enc!((client, pub_api_xmrig, gui_api,pub_api_xp) async move {
-                    let url_api = api_url_xmrig(xp_is_alive, true);
-                    if let Err(err) = update_xmrig_config(
-                        &client,
-                        &url_api,
-                        &token_xmrig,
-                        &XvbNode::P2pool,
-                        &address,
-                        &rig
-                    )
-                    .await
-                            {
-                                // show to console error about updating xmrig config
-                                output_console(
-                                    &mut gui_api.lock().unwrap().output,
-                                    &format!(
-                                        "Failure to update {msg_xmrig_or_proxy} config with HTTP API.\nError: {}",
-                                        err
-                                    ),
-                                    ProcessName::Xvb
-                                );
-                            } else {
-                                if xp_is_alive {pub_api_xp.lock().unwrap().node = XvbNode::P2pool.to_string();} else {pub_api_xmrig.lock().unwrap().node = XvbNode::P2pool.to_string();}
+                spawn(enc!((client,  gui_api) async move {
+                let url_api = api_url_xmrig(xp_is_alive, true);
+                let node = XvbNode::P2pool;
+                if let Err(err) = update_xmrig_config(
+                    &client,
+                    &url_api,
+                    &token_xmrig,
+                    &node,
+                    &address,
+                    &rig
+                )
+                .await
+                        {
+                            // show to console error about updating xmrig config
+                            output_console(
+                                &mut gui_api.lock().unwrap().output,
+                                &format!(
+                                    "Failure to update {msg_xmrig_or_proxy} config with HTTP API.\nError: {}",
+                                    err
+                                ),
+                                ProcessName::Xvb
+                            );
+                        } else {
+                            output_console(
+                                &mut gui_api.lock().unwrap().output,
+                                &format!("XvB process can not completely continue, falling back to {}", XvbNode::P2pool),
+                                ProcessName::Xvb
+                            );
+                        }
 
-                                output_console(
-                                    &mut gui_api.lock().unwrap().output,
-                                    &format!("XvB process can not completely continue, falling back to {}", XvbNode::P2pool),
-                                    ProcessName::Xvb
-                                );
-                            }
-
-                    }),
-                );
+                }));
             }
         }
     }
@@ -697,8 +684,6 @@ fn signal_interrupt(
     client: &Client,
     pub_api: &Arc<Mutex<PubXvbApi>>,
     gui_api: &Arc<Mutex<PubXvbApi>>,
-    gui_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
-    gui_api_xp: &Arc<Mutex<PubXmrigProxyApi>>,
     state_p2pool: &crate::disk::state::P2pool,
     state_xmrig: &crate::disk::state::Xmrig,
     state_xp: &crate::disk::state::XmrigProxy,
@@ -766,7 +751,7 @@ fn signal_interrupt(
                 process.lock().unwrap().state = ProcessState::Waiting;
                 process.lock().unwrap().signal = ProcessSignal::None;
                 spawn(
-                    enc!((node, process, client, gui_api, pub_api, was_alive, address, token_xmrig, gui_api_xmrig, gui_api_xp,process_xrig) async move {
+                    enc!((node, process, client, gui_api, pub_api, was_alive, address, token_xmrig, process_xrig) async move {
                         warn!("in spawn of UpdateNodes");
                     match node {
                         XvbNode::NorthAmerica|XvbNode::Europe if was_alive => {
@@ -795,14 +780,15 @@ fn signal_interrupt(
                             // Need to set XMRig to P2Pool if it wasn't. XMRig should have populated this value at his start.
                             // but if xmrig didn't start, don't update it.
                 if process_xrig.lock().unwrap().state == ProcessState::Alive && gui_api.lock().unwrap().current_node != Some(XvbNode::P2pool) {
-                            spawn(enc!((client, token_xmrig, address, gui_api_xmrig, gui_api_xp, gui_api) async move{
+                            spawn(enc!((client, token_xmrig, address,  gui_api) async move{
                 let url_api = api_url_xmrig(xp_alive, true);
                     warn!("update xmrig to use node ?");
+                    let node = XvbNode::P2pool;
                 if let Err(err) = update_xmrig_config(
                     &client,
                     &url_api,
                     &token_xmrig,
-                    &XvbNode::P2pool,
+                    &node,
                     &address,
                     &rig
                 )
@@ -819,14 +805,7 @@ fn signal_interrupt(
                             err
                         ), ProcessName::Xvb
                     );
-                            } else {
-                                // update node xmrig
-                                if xp_alive {
-                                gui_api_xp.lock().unwrap().node = XvbNode::P2pool.to_string();
-                                } else {
-                                gui_api_xmrig.lock().unwrap().node = XvbNode::P2pool.to_string();
-                                };
-                            }
+                            } 
                         }
                             ));}
             },

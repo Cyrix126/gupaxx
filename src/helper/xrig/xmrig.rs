@@ -191,9 +191,9 @@ impl Helper {
         let pub_api = Arc::clone(&helper.lock().unwrap().pub_api_xmrig);
         let process_xvb = Arc::clone(&helper.lock().unwrap().xvb);
         let process_xp = Arc::clone(&helper.lock().unwrap().xmrig_proxy);
+        let process_p2pool = Arc::clone(&helper.lock().unwrap().p2pool);
         let path = path.to_path_buf();
         let token = state.token.clone();
-        let img_xmrig = Arc::clone(&helper.lock().unwrap().img_xmrig);
         let pub_api_xvb = Arc::clone(&helper.lock().unwrap().pub_api_xvb);
         thread::spawn(move || {
             Self::spawn_xmrig_watchdog(
@@ -207,7 +207,7 @@ impl Helper {
                 &token,
                 process_xvb,
                 process_xp,
-                &img_xmrig,
+                process_p2pool,
                 &pub_api_xvb,
             );
         });
@@ -264,9 +264,6 @@ impl Helper {
                 threads: state.current_threads.to_string(),
                 url: "127.0.0.1:3333 (Local P2Pool)".to_string(),
             };
-
-            helper.lock().unwrap().pub_api_xmrig.lock().unwrap().node =
-                "127.0.0.1:3333 (Local P2Pool)".to_string();
             api_ip = "127.0.0.1".to_string();
             api_port = "18088".to_string();
 
@@ -346,7 +343,6 @@ impl Helper {
                     url: url.clone(),
                     threads: state.current_threads.to_string(),
                 };
-                helper.lock().unwrap().pub_api_xmrig.lock().unwrap().node = url;
             }
         }
         args.push(format!("--http-access-token={}", state.token)); // HTTP API Port
@@ -390,7 +386,7 @@ impl Helper {
         token: &str,
         process_xvb: Arc<Mutex<Process>>,
         process_xp: Arc<Mutex<Process>>,
-        img_xmrig: &Arc<Mutex<ImgXmrig>>,
+        process_p2pool: Arc<Mutex<Process>>,
         pub_api_xvb: &Arc<Mutex<PubXvbApi>>,
     ) {
         // 1a. Create PTY
@@ -473,11 +469,7 @@ impl Helper {
         *pub_api.lock().unwrap() = PubXmrigApi::new();
         *gui_api.lock().unwrap() = PubXmrigApi::new();
         // node used for process Status tab
-        gui_api
-            .lock()
-            .unwrap()
-            .node
-            .clone_from(&img_xmrig.lock().unwrap().url);
+        pub_api.lock().unwrap().node = NO_POOL.to_string();
         // 5. Loop as watchdog
         info!("XMRig | Entering watchdog mode... woof!");
         // needs xmrig to be in belownormal priority or else Gupaxx will be in trouble if it does not have enough cpu time.
@@ -558,15 +550,18 @@ impl Helper {
                 }
             }
             // if mining on proxy and proxy is not alive, switch back to p2pool node
-            if gui_api.lock().unwrap().node == XvbNode::XmrigProxy.to_string()
+            if (pub_api.lock().unwrap().node == XvbNode::XmrigProxy.to_string()
+                || pub_api.lock().unwrap().node == NO_POOL)
                 && !process_xp.lock().unwrap().is_alive()
+                && process_p2pool.lock().unwrap().is_alive()
             {
                 info!("XMRig Process |  redirect xmrig to p2pool since XMRig-Proxy is not alive anymore");
+                let node = XvbNode::P2pool;
                 if let Err(err) = update_xmrig_config(
                     &client,
                     XMRIG_CONFIG_URL,
                     token,
-                    &XvbNode::P2pool,
+                    &node,
                     "",
                     GUPAX_VERSION_UNDERSCORE,
                 )
@@ -583,7 +578,6 @@ impl Helper {
                         ProcessName::Xmrig,
                     );
                 } else {
-                    gui_api.lock().unwrap().node = XvbNode::P2pool.to_string();
                     debug!("XMRig Process | mining on P2Pool pool");
                 }
             }
@@ -732,12 +726,10 @@ impl PubXmrigApi {
     #[inline]
     pub fn combine_gui_pub_api(gui_api: &mut Self, pub_api: &mut Self) {
         let output = std::mem::take(&mut gui_api.output);
-        let node = std::mem::take(&mut gui_api.node);
         let buf = std::mem::take(&mut pub_api.output);
         *gui_api = Self {
             output,
-            node,
-            ..std::mem::take(pub_api)
+            ..pub_api.clone()
         };
         if !buf.is_empty() {
             gui_api.output.push_str(&buf);
@@ -768,8 +760,13 @@ impl PubXmrigApi {
         let mut output_parse = output_parse.lock().unwrap();
         if XMRIG_REGEX.new_job.is_match(&output_parse) {
             process.state = ProcessState::Alive;
+            // get the pool we mine on to put it on stats
+            if let Some(name_pool) = crate::regex::detect_node_xmrig(&output_parse) {
+                public.node = name_pool;
+            }
         } else if XMRIG_REGEX.not_mining.is_match(&output_parse) {
             process.state = ProcessState::NotMining;
+            public.node = NO_POOL.to_string();
         }
 
         // 3. Throw away [output_parse]

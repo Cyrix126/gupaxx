@@ -94,6 +94,7 @@ pub const XMRIG_CONFIG_URL: &str = "http://127.0.0.1:18088/1/config"; // The def
 pub const XMRIG_PROXY_CONFIG_URL: &str = "http://127.0.0.1:18089/1/config"; // The default relative URI of XMRig Proxy's API config
 pub const XMRIG_SUMMARY_URL: &str = "http://127.0.0.1:18088/1/summary"; // The default relative URI of XMRig's API config
 pub const XMRIG_PROXY_SUMMARY_URL: &str = "http://127.0.0.1:18089/1/summary"; // The default relative URI of XMRig Proxy's API config
+pub const NO_POOL: &str = "Not connected to any pool"; // status tab xrig if no pool is used
 
 // Process state tooltips (online, offline, etc)
 pub const P2POOL_ALIVE: &str = "P2Pool is online and fully synchronized";

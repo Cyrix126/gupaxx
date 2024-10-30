@@ -225,12 +225,12 @@ impl<'a> Algorithm<'a> {
                 "Algorithm | request {} to mine on p2pool",
                 self.stats.msg_xmrig_or_xp
             );
-
+            let node = XvbNode::P2pool;
             if let Err(err) = update_xmrig_config(
                 self.client,
                 &self.stats.api_url,
                 self.token_xmrig,
-                &XvbNode::P2pool,
+                &node,
                 &self.stats.address,
                 self.rig,
             )
@@ -298,11 +298,6 @@ impl<'a> Algorithm<'a> {
                     crate::helper::ProcessName::Xvb,
                 );
             } else {
-                if self.xp_alive {
-                    self.gui_api_xp.lock().unwrap().node = node.to_string();
-                } else {
-                    self.gui_api_xmrig.lock().unwrap().node = node.to_string();
-                }
                 info!(
                     "Algorithm | {} mining on XvB pool",
                     self.stats.msg_xmrig_or_xp
