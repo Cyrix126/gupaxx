@@ -92,7 +92,7 @@ pub struct Stats {
     p2pool_external_hashrate: f32,
     share_min_hashrate: f32,
     spareable_hashrate: f32,
-    spared_time: u32,
+    needed_time_xvb: u32,
     api_url: String,
     msg_xmrig_or_xp: String,
 }
@@ -132,10 +132,7 @@ impl<'a> Algorithm<'a> {
         let avg_last_hour_hashrate = Self::calc_last_hour_avg_hash_rate(
             &gui_api_xvb.lock().unwrap().p2pool_sent_last_hour_samples,
         );
-        let mut p2pool_external_hashrate = p2pool_total_hashrate - avg_last_hour_hashrate;
-        if p2pool_external_hashrate < 0.0 {
-            p2pool_external_hashrate = 0.0;
-        }
+        let p2pool_external_hashrate = (p2pool_total_hashrate - avg_last_hour_hashrate).max(0.0);
 
         let share_min_hashrate = Self::minimum_hashrate_share(
             gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64,
@@ -169,7 +166,7 @@ impl<'a> Algorithm<'a> {
             p2pool_external_hashrate,
             share_min_hashrate,
             spareable_hashrate,
-            spared_time: u32::default(),
+            needed_time_xvb: u32::default(),
             api_url,
             msg_xmrig_or_xp,
         };
@@ -190,8 +187,7 @@ impl<'a> Algorithm<'a> {
         };
 
         new_instance.stats.target_donation_hashrate = new_instance.get_target_donation_hashrate();
-
-        new_instance.stats.spared_time = Self::get_spared_time(
+        new_instance.stats.needed_time_xvb = Self::get_needed_time_xvb(
             new_instance.stats.target_donation_hashrate,
             new_instance.stats.hashrate_xmrig,
         );
@@ -355,10 +351,10 @@ impl<'a> Algorithm<'a> {
     async fn sleep_then_update_node_xmrig(&self) {
         info!(
             "Algorithm | algo sleep for {} seconds while mining on P2pool",
-            XVB_TIME_ALGO - self.stats.spared_time
+            XVB_TIME_ALGO - self.stats.needed_time_xvb
         );
         sleep(Duration::from_secs(
-            (XVB_TIME_ALGO - self.stats.spared_time).into(),
+            (XVB_TIME_ALGO - self.stats.needed_time_xvb).into(),
         ))
         .await;
 
@@ -372,9 +368,9 @@ impl<'a> Algorithm<'a> {
 
         info!(
             "Algorithm | algo sleep for {} seconds while mining on P2pool",
-            self.stats.spared_time
+            self.stats.needed_time_xvb
         );
-        sleep(Duration::from_secs(self.stats.spared_time.into())).await;
+        sleep(Duration::from_secs(self.stats.needed_time_xvb.into())).await;
 
         self.gui_api_xvb
             .lock()
@@ -383,7 +379,7 @@ impl<'a> Algorithm<'a> {
             .0
             .push_back(
                 self.stats.hashrate_xmrig
-                    * ((XVB_TIME_ALGO as f32 - self.stats.spared_time as f32)
+                    * ((XVB_TIME_ALGO as f32 - self.stats.needed_time_xvb as f32)
                         / XVB_TIME_ALGO as f32),
             );
         self.gui_api_xvb
@@ -392,7 +388,8 @@ impl<'a> Algorithm<'a> {
             .xvb_sent_last_hour_samples
             .0
             .push_back(
-                self.stats.hashrate_xmrig * (self.stats.spared_time as f32 / XVB_TIME_ALGO as f32),
+                self.stats.hashrate_xmrig
+                    * (self.stats.needed_time_xvb as f32 / XVB_TIME_ALGO as f32),
             );
     }
 
@@ -486,11 +483,11 @@ impl<'a> Algorithm<'a> {
         } else {
             BLOCK_PPLNS_WINDOW_MAIN
         };
-        let mut minimum_hr = ((difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32
+        let minimum_hr = ((difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32
             * (1.0 + (p2pool_buffer as f32 / 100.0)))
             - p2pool_external_hashrate;
 
-        info!("Algorithm | (difficulty({}) / (window pplns blocks({}) * seconds per p2pool block({})) * (BUFFER({})) / 100) - outside HR({}H/s) = minimum HR({}H/s) to keep a share.",
+        info!("Algorithm | (difficulty({}) / (window pplns blocks({}) * seconds per p2pool block({})) * (BUFFER 1 + ({})) / 100) - outside HR({}H/s) = minimum HR({}H/s) to keep a share.",
          difficulty,
          pws,
          SECOND_PER_BLOCK_P2POOL,
@@ -500,10 +497,9 @@ impl<'a> Algorithm<'a> {
 
         if minimum_hr.is_sign_negative() {
             info!("Algorithm | if minimum HR is negative, it is 0.");
-            minimum_hr = 0.0;
         }
 
-        minimum_hr
+        minimum_hr.max(0.0)
     }
 
     async fn fulfill_share(&self) {
@@ -537,14 +533,14 @@ impl<'a> Algorithm<'a> {
             &mut self.gui_api_xvb.lock().unwrap().output,
             &format!(
                 "There is a share in p2pool and 24H avg XvB is achieved. Sending {} seconds to XvB!",
-                self.stats.spared_time
+                self.stats.needed_time_xvb
             ),
             crate::helper::ProcessName::Xvb,
         );
 
-        info!("Algorithm | There is a share in p2pool and 24H avg XvB is achieved. Sending seconds {} to XvB!", self.stats.spared_time);
+        info!("Algorithm | There is a share in p2pool and 24H avg XvB is achieved. Sending seconds {} to XvB!", self.stats.needed_time_xvb);
 
-        *self.time_donated.lock().unwrap() = self.stats.spared_time;
+        *self.time_donated.lock().unwrap() = self.stats.needed_time_xvb;
 
         self.target_p2pool_node().await;
         self.sleep_then_update_node_xmrig().await;
@@ -574,16 +570,17 @@ impl<'a> Algorithm<'a> {
             crate::helper::ProcessName::Xvb,
         )
     }
+    // time needed to send on XvB get to the targeted doner round
+    fn get_needed_time_xvb(target_donation_hashrate: f32, hashrate_xmrig: f32) -> u32 {
+        let needed_time = target_donation_hashrate / hashrate_xmrig * (XVB_TIME_ALGO as f32);
 
-    fn get_spared_time(target_donation_hashrate: f32, hashrate_xmrig: f32) -> u32 {
-        let spared_time = target_donation_hashrate / hashrate_xmrig * (XVB_TIME_ALGO as f32);
-
-        info!("Algorithm | Calculating... spared_time({}seconds)=target_donation_hashrate({})/hashrate_xmrig({})*XVB_TIME_ALGO({})",
-        spared_time,
+        info!("Algorithm | Calculating... needed time for XvB ({}seconds)=target_donation_hashrate({})/hashrate_xmrig({})*XVB_TIME_ALGO({})",
+        needed_time,
         target_donation_hashrate,
         hashrate_xmrig,
         XVB_TIME_ALGO);
-
-        spared_time as u32
+        // never go above time of algo
+        // it could be the case if manual donation level is set
+        needed_time.max(XVB_TIME_ALGO as f32) as u32
     }
 }
