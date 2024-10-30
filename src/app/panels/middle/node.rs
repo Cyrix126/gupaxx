@@ -158,10 +158,11 @@ impl Node {
                                     Label::new("Out peers [10-450]:"),
                                 );
                                 // not sure what's the right calculation to make
-                                ui.style_mut().spacing.slider_width = ui.available_width()
+                                ui.style_mut().spacing.slider_width = (ui.available_width()
                                     - ui.spacing().item_spacing.x * 4.0
                                     - ui.spacing().scroll.bar_width
-                                    - (SPACE * 2.0);
+                                    - (SPACE * 2.0))
+                                    .max(0.0);
                                 ui.add(Slider::new(&mut self.out_peers, 10..=450))
                                     .on_hover_text(P2POOL_OUT);
                                 // ui.add_space(ui.available_width() - 4.0);
