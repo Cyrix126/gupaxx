@@ -517,7 +517,7 @@ pub const XVB_SIDE_MARGIN_1H: f32 = 1.20;
 pub const XVB_TIME_ALGO: u32 = 600;
 pub const XVB_TOKEN_LEN: usize = 9;
 pub const XVB_HERO_SELECT: &str =
-    "This mode will donate all available hashrate while keeping a share in the  p2pool PPLNS window.\nWhen modified, the algorithm will use the new choice at the next decision.";
+    "Donate as much as possible while keeping a share on p2pool, increases the odds of your round winning\nWhen modified, the algorithm will use the new choice at the next decision.";
 pub const XVB_TOKEN_FIELD: &str = "Token";
 pub const XVB_FAILURE_FIELD: &str = "Failures";
 pub const XVB_DONATED_1H_FIELD: &str = "Donated last hour";
