@@ -55,6 +55,7 @@ title "Windows folder check"
 [[ -f windows_b/Gupaxx.exe ]]; check "windows_b/Gupaxx.exe"
 [[ -f windows_b/P2Pool/p2pool.exe ]]; check "windows_b/P2Pool/p2pool.exe"
 [[ -f windows_b/XMRig/xmrig.exe ]]; check "windows_b/XMRig/xmrig.exe"
+[[ -f windows_b/XMRig/WinRing0x64.sys ]]; check "windows_b/XMRig/WinRing0x64.sys"
 [[ -f windows_b/XMRig-Proxy/xmrig-proxy.exe ]]; check "windows_b/XMRig-Proxy/xmrig-proxy.exe"
 [[ -f windows_b/Node/monerod.exe ]]; check "windows_b/Node/monerod.exe"
 

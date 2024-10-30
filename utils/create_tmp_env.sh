@@ -38,6 +38,7 @@ rm xmrig-6.21.1-macos-x64.tar.gz
 wget https://github.com/xmrig/xmrig/releases/download/v6.21.1/xmrig-6.21.1-msvc-win64.zip
 unzip xmrig-6.21.1-msvc-win64.zip
 mv xmrig-6.21.1/xmrig.exe /tmp/${FOLDER}/skel/windows_b/XMRig/xmrig.exe
+mv xmrig-6.21.1/WinRing0x64.sys /tmp/${FOLDER}/skel/windows_b/XMRig/WinRing0x64.sys
 rm -r xmrig-6.21.1
 rm xmrig-6.21.1-msvc-win64.zip
 
