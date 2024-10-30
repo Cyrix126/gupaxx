@@ -504,6 +504,7 @@ impl PubXmrigProxyApi {
         process: &mut Process,
     ) {
         // 1. Take the process's current output buffer and combine it with Pub (if not empty)
+        let mut output_parse = output_parse.lock().unwrap();
         let mut output_pub = output_pub.lock().unwrap();
 
         {
@@ -515,7 +516,6 @@ impl PubXmrigProxyApi {
         }
 
         // 2. Check for "new job"/"no active...".
-        let mut output_parse = output_parse.lock().unwrap();
         if XMRIG_REGEX.new_job.is_match(&output_parse)
             || XMRIG_REGEX.valid_conn.is_match(&output_parse)
         {
@@ -533,6 +533,7 @@ impl PubXmrigProxyApi {
         }
         // 3. Throw away [output_parse]
         output_parse.clear();
+        drop(output_pub);
         drop(output_parse);
     }
     // same method as PubXmrigApi, why not make a trait ?
