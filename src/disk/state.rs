@@ -488,7 +488,7 @@ impl Default for P2pool {
     fn default() -> Self {
         Self {
             simple: true,
-            local_node: true,
+            local_node: false,
             mini: true,
             auto_ping: true,
             auto_select: true,
