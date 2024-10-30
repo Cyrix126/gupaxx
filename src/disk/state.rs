@@ -565,7 +565,7 @@ impl Default for Xvb {
             manual_slider_amount: Default::default(),
             manual_donation_level: Default::default(),
             manual_donation_metric: Default::default(),
-            p2pool_buffer: 5,
+            p2pool_buffer: 25,
         }
     }
 }
