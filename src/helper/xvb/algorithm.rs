@@ -581,6 +581,6 @@ impl<'a> Algorithm<'a> {
         XVB_TIME_ALGO);
         // never go above time of algo
         // it could be the case if manual donation level is set
-        needed_time.max(XVB_TIME_ALGO as f32) as u32
+        needed_time.clamp(0.0, XVB_TIME_ALGO as f32) as u32
     }
 }
