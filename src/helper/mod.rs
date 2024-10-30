@@ -542,6 +542,7 @@ impl Helper {
                 debug!("Helper | Sysinfo refresh (1/3) ... [cpu]");
                 sysinfo.refresh_processes_specifics(
                     sysinfo::ProcessesToUpdate::All,
+                    false,
                     sysinfo_processes,
                 );
                 debug!("Helper | Sysinfo refresh (2/3) ... [processes]");
