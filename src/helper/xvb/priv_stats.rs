@@ -83,7 +83,7 @@ impl XvbPrivStats {
             .get(
                 [
                     XVB_URL,
-                    "/cgi-bin/p2pool_bonus_history_api.cgi?address=",
+                    "/cgi-bin/p2pool_bonus_history_gupaxx_api.cgi?address=",
                     address,
                     "&token=",
                     token,
