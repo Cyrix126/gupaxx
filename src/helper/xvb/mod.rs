@@ -749,10 +749,8 @@ fn signal_interrupt(
                 process.lock().unwrap().signal = ProcessSignal::None;
                 spawn(
                     enc!((node, process, client, gui_api, pub_api, was_alive, address, token_xmrig, process_xrig) async move {
-                        warn!("in spawn of UpdateNodes");
                     match node {
                         XvbNode::NorthAmerica|XvbNode::Europe if was_alive => {
-                        warn!("current is XvB node ? update to see which is available");
                             // a node is failing. We need to first verify if a node is available
                         XvbNode::update_fastest_node(&client, &gui_api, &pub_api, &process).await;
                             if process.lock().unwrap().state == ProcessState::OfflineNodesAll {
@@ -772,14 +770,16 @@ fn signal_interrupt(
                         },
                         XvbNode::NorthAmerica|XvbNode::Europe if !was_alive => {
                         process.lock().unwrap().state = ProcessState::Syncing;
-                            // Probably a start. We don't consider XMRig using XvB nodes without algo.
-                                // can update xmrig and check status of state in the same time.
-                            // Need to set XMRig to P2Pool if it wasn't. XMRig should have populated this value at his start.
-                            // but if xmrig didn't start, don't update it.
+                        // Probably a start. We don't consider XMRig using XvB nodes without algo.
+                        // can update xmrig and check status of state in the same time.
+                        // update prefred node
+                        XvbNode::update_fastest_node(&client, &gui_api, &pub_api, &process).await;
+                        // Need to set XMRig to P2Pool if it wasn't. XMRig should have populated this value at his start.
+                        // but if xmrig didn't start, don't update it.
+                
                 if process_xrig.lock().unwrap().state == ProcessState::Alive && gui_api.lock().unwrap().current_node != Some(XvbNode::P2pool) {
                             spawn(enc!((client, token_xmrig, address,  gui_api) async move{
                 let url_api = api_url_xmrig(xp_alive, true);
-                    warn!("update xmrig to use node ?");
                     let node = XvbNode::P2pool;
                 if let Err(err) = update_xmrig_config(
                     &client,
