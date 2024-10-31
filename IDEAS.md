@@ -13,6 +13,8 @@ The code, issues and PR could be synchronized with Github.
 [Done](https://github.com/Cyrix126/releases/tag/v1.5.0)
 If we want Gupaxx to help user mine in the most decentralized way, we should offer them to run a monero node.
 This would be optional and would check if the requirement are fulfilled before enabling the button to do so.
+### Integrate a P2Pool compatible Nodes crawler
+To get rid of integrating nodes list, we can include a crawler like monero.fail inside Gupaxx.
 
 ## More User friendly
 ### Website
