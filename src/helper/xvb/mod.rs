@@ -3,13 +3,13 @@ use crate::helper::xvb::algorithm::algorithm;
 use crate::helper::xvb::priv_stats::XvbPrivStats;
 use crate::helper::xvb::public_stats::XvbPubStats;
 use crate::helper::{sleep_end_loop, ProcessName};
-use crate::miscs::output_console;
+use crate::miscs::{client, output_console};
 use crate::{XMRIG_CONFIG_URL, XMRIG_PROXY_CONFIG_URL, XMRIG_PROXY_SUMMARY_URL, XMRIG_SUMMARY_URL};
 use bounded_vec_deque::BoundedVecDeque;
 use enclose::enc;
 use log::{debug, info, warn};
 use readable::up::Uptime;
-use reqwest::Client;
+use reqwest_middleware::ClientWithMiddleware as Client;
 use std::mem;
 use std::time::Duration;
 use std::{
@@ -162,8 +162,7 @@ impl Helper {
         process_xp: &Arc<Mutex<Process>>,
     ) {
         // create uniq client that is going to be used for during the life of the thread.
-        let client = reqwest::Client::new();
-
+        let client = client();
         // checks confition to start XvB, will set proper state of XvB.
         // if state is middle (everything fine here),set which xvb node could be used.
         // should wait for it, because algo needs to not be started if at least one node of XvB are not responsive.
@@ -199,6 +198,12 @@ impl Helper {
         let handle_algo = Arc::new(Mutex::new(None));
         let handle_request = Arc::new(Mutex::new(None));
         let mut msg_retry_done = false;
+
+        // let's create the memory of last hour average sent to p2pool and XvB
+        // tuple (p2pool, xvb)
+        // need to keep it alive even if algo is down, and push values of hashrate sent to p2pool and 0 for XvB.
+        // spawn a task to keep the values updated, looking at hr and pool direction.
+        //
         info!("XvB | Entering Process mode... ");
         loop {
             debug!("XvB Watchdog | ----------- Start of loop -----------");
@@ -459,10 +464,6 @@ impl PubXvbApi {
                 runtime_manual_donation_level,
                 ..pub_api.stats_priv.clone()
             },
-            p2pool_sent_last_hour_samples: std::mem::take(
-                &mut gui_api.p2pool_sent_last_hour_samples,
-            ),
-            xvb_sent_last_hour_samples: std::mem::take(&mut gui_api.xvb_sent_last_hour_samples),
             ..pub_api.clone()
         };
     }
@@ -666,10 +667,6 @@ async fn check_state_outcauses_xvb(
                 .concat(),
                 ProcessName::Xvb,
             );
-        }
-        ProcessState::Retry => {
-            debug!("XvB | Retry to get stats from https://xmrvsbeast.com in this loop if delay is done.");
-            *first_loop = true;
         }
         // nothing to do, we don't want to change other state
         _ => {}

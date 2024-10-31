@@ -2,6 +2,7 @@
 
 // Get absolute [Gupax] binary path
 use std::fmt::Write;
+use std::time::Duration;
 #[cold]
 #[inline(never)]
 pub fn get_exe() -> Result<String, std::io::Error> {
@@ -134,6 +135,7 @@ use chrono::Local;
 use log::error;
 use log::warn;
 use regex::Regex;
+use reqwest_middleware::ClientWithMiddleware;
 use std::path::PathBuf;
 use std::process::exit;
 use std::sync::Arc;
@@ -169,4 +171,14 @@ pub fn output_console_without_time(output: &mut String, msg: &str, p_name: Proce
 }
 fn datetimeonsole() -> String {
     format!("[{}]  ", Local::now().format("%Y-%m-%d %H:%M:%S%.3f"))
+}
+
+pub fn client() -> ClientWithMiddleware {
+    reqwest_middleware::ClientBuilder::new(reqwest::Client::new())
+        .with(reqwest_retry::RetryTransientMiddleware::new_with_policy(
+            reqwest_retry::policies::ExponentialBackoff::builder()
+                .retry_bounds(Duration::from_secs(1), Duration::from_secs(5))
+                .build_with_total_retry_duration(Duration::from_secs(20)),
+        ))
+        .build()
 }

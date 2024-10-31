@@ -8,6 +8,7 @@ mod test {
         xvb::{priv_stats::RuntimeDonationLevel, priv_stats::RuntimeMode},
         Helper, Process, ProcessName, ProcessState,
     };
+    use crate::miscs::client;
 
     #[test]
     fn get_current_shares() {
@@ -549,11 +550,11 @@ Uptime         = 0h 2m 4s
     };
 
     use crate::helper::xvb::{public_stats::XvbPubStats, PubXvbApi};
-    use reqwest::Client;
+    use reqwest_middleware::ClientWithMiddleware as Client;
 
     #[test]
     fn public_api_deserialize() {
-        let client = Client::new();
+        let client = client();
         let new_data = thread::spawn(move || corr(&client)).join().unwrap();
         assert!(!new_data.reward_yearly.is_empty());
     }
@@ -564,7 +565,7 @@ Uptime         = 0h 2m 4s
 
     #[test]
     fn test_manual_xvb_mode() {
-        let client = reqwest::Client::new();
+        let client = client();
         let pub_api = Arc::new(Mutex::new(PubXvbApi::new()));
         let gui_api_xvb = Arc::new(Mutex::new(PubXvbApi::new()));
         let gui_api_xmrig = Arc::new(Mutex::new(PubXmrigApi::new()));
@@ -603,7 +604,7 @@ Uptime         = 0h 2m 4s
 
     #[test]
     fn test_manual_p2pool_mode() {
-        let client = reqwest::Client::new();
+        let client = client();
         let pub_api = Arc::new(Mutex::new(PubXvbApi::new()));
         let gui_api_xvb = Arc::new(Mutex::new(PubXvbApi::new()));
         let gui_api_xmrig = Arc::new(Mutex::new(PubXmrigApi::new()));
@@ -642,7 +643,7 @@ Uptime         = 0h 2m 4s
 
     #[test]
     fn test_manual_donor_level_mode_donor() {
-        let client = reqwest::Client::new();
+        let client = client();
         let pub_api = Arc::new(Mutex::new(PubXvbApi::new()));
         let gui_api_xvb = Arc::new(Mutex::new(PubXvbApi::new()));
         let gui_api_xmrig = Arc::new(Mutex::new(PubXmrigApi::new()));
@@ -686,7 +687,7 @@ Uptime         = 0h 2m 4s
 
     #[test]
     fn test_auto_mode() {
-        let client = reqwest::Client::new();
+        let client = client();
         let pub_api = Arc::new(Mutex::new(PubXvbApi::new()));
         let gui_api_xvb = Arc::new(Mutex::new(PubXvbApi::new()));
         let gui_api_xmrig = Arc::new(Mutex::new(PubXmrigApi::new()));
@@ -747,7 +748,7 @@ Uptime         = 0h 2m 4s
 
     #[test]
     fn test_hero_mode() {
-        let client = reqwest::Client::new();
+        let client = client();
         let pub_api = Arc::new(Mutex::new(PubXvbApi::new()));
         let gui_api_xvb = Arc::new(Mutex::new(PubXvbApi::new()));
         let gui_api_xmrig = Arc::new(Mutex::new(PubXmrigApi::new()));

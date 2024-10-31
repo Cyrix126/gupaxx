@@ -196,7 +196,6 @@ impl Process {
         self.state == ProcessState::Alive
             || self.state == ProcessState::Middle
             || self.state == ProcessState::Syncing
-            || self.state == ProcessState::Retry
             || self.state == ProcessState::NotMining
             || self.state == ProcessState::OfflineNodesAll
     }
@@ -219,8 +218,6 @@ pub enum ProcessState {
     // Only for P2Pool and XvB, ORANGE.
     // XvB: Xmrig or P2pool are not alive
     Syncing,
-    // XvB: if requests for stats fail, retry state to retry every minutes
-    Retry,
 
     // Only for XMRig and XvB, ORANGE.
     // XvB: token or address are invalid even if syntax correct

@@ -5,7 +5,7 @@ use std::{
 
 use derive_more::Display;
 use log::{error, info, warn};
-use reqwest::Client;
+use reqwest_middleware::ClientWithMiddleware as Client;
 use tokio::spawn;
 
 use crate::{
@@ -128,9 +128,7 @@ impl XvbNode {
             // could be used by xmrig who signal that a node is not joignable
             // or by the start of xvb
             // next iteration of the loop of XvB process will verify if all conditions are met to be alive.
-            if process_xvb.lock().unwrap().state != ProcessState::Syncing
-                && process_xvb.lock().unwrap().state != ProcessState::Retry
-            {
+            if process_xvb.lock().unwrap().state != ProcessState::Syncing {
                 process_xvb.lock().unwrap().state = ProcessState::Syncing;
             }
         }

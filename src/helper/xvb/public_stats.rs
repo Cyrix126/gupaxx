@@ -3,11 +3,10 @@ use std::{
     time::Duration,
 };
 
-use log::{debug, warn};
-use reqwest::Client;
+use log::{debug, info, warn};
+use reqwest_middleware::ClientWithMiddleware as Client;
 use serde::Deserialize;
 use serde_this_or_that::as_u64;
-use tokio::time::sleep;
 
 use crate::{
     helper::{xvb::output_console, Process, ProcessName, ProcessState},
@@ -47,7 +46,7 @@ impl XvbPubStats {
     ) -> std::result::Result<Self, anyhow::Error> {
         Ok(client
             .get(XVB_URL_PUBLIC_API)
-            .timeout(Duration::from_secs(5))
+            .timeout(Duration::from_secs(10))
             .send()
             .await?
             .json::<Self>()
@@ -64,24 +63,25 @@ impl XvbPubStats {
             Ok(new_data) => {
                 debug!("XvB Watchdog | HTTP API request OK");
                 pub_api.lock().unwrap().stats_pub = new_data;
-                // if last request failed, we are now ready to show stats again and maybe be alive next loop.
-                if process.lock().unwrap().state == ProcessState::Retry {
-                    process.lock().unwrap().state = ProcessState::Syncing;
+                let previously_failed = process.lock().unwrap().state == ProcessState::Failed;
+                if previously_failed {
+                    info!("XvB Watchdog | Public stats are working again");
                     output_console(
                         &mut gui_api.lock().unwrap().output,
-                        "Stats are now working again after last successful request.",
+                        "requests for public API are now working",
                         ProcessName::Xvb,
                     );
+                    process.lock().unwrap().state = ProcessState::Syncing;
                 }
             }
             Err(err) => {
                 warn!(
-                    "XvB Watchdog | Could not send HTTP API request to: {}\n:{}",
+                    "XvB Watchdog | Could not send HTTP API request to: {} even after multiples tries\n:{}",
                     XVB_URL_PUBLIC_API, err
                 );
                 // output the error to console
                 // if error already present, no need to print it multiple times.
-                if process.lock().unwrap().state != ProcessState::Retry {
+                if process.lock().unwrap().state != ProcessState::Failed {
                     output_console(
                         &mut gui_api.lock().unwrap().output,
                         &format!(
@@ -92,14 +92,12 @@ impl XvbPubStats {
                     );
                 }
                 // we stop the algo (will be stopped by the check status on next loop) because we can't make the rest work without public stats. (winner in xvb private stats).
-                process.lock().unwrap().state = ProcessState::Retry;
-                // sleep here because it is in a spawn and will not block the user stopping or restarting the service.
                 output_console(
                     &mut gui_api.lock().unwrap().output,
-                    "Waiting 10 seconds before trying to get stats again.",
+                    "request to get public API failed",
                     ProcessName::Xvb,
                 );
-                sleep(Duration::from_secs(10)).await;
+                process.lock().unwrap().state = ProcessState::Failed;
             }
         }
     }

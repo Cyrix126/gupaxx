@@ -9,7 +9,7 @@ use std::{
 };
 
 use log::{info, warn};
-use reqwest::Client;
+use reqwest_middleware::ClientWithMiddleware as Client;
 use tokio::time::sleep;
 
 use crate::{

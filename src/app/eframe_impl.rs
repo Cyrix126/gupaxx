@@ -130,7 +130,7 @@ impl eframe::App for App {
         // xvb_is_alive is not the same for bottom and for middle.
         // for status we don't want to enable the column when it is retrying request
         // but for bottom we don't want the user to be able to start it in this case.
-        let xvb_is_alive = xvb_state != ProcessState::Retry && xvb_state != ProcessState::Dead;
+        let xvb_is_alive = xvb_state != ProcessState::Dead;
         self.middle_panel(
             ctx,
             frame,

@@ -4,10 +4,10 @@ use std::{
 };
 
 use anyhow::bail;
-use log::{debug, error, warn};
-use reqwest::{Client, StatusCode};
+use log::{debug, error, info, warn};
+use reqwest::StatusCode;
+use reqwest_middleware::ClientWithMiddleware as Client;
 use serde::Deserialize;
-use tokio::time::sleep;
 
 use crate::{
     disk::state::ManualDonationLevel,
@@ -90,7 +90,7 @@ impl XvbPrivStats {
                 ]
                 .concat(),
             )
-            .timeout(Duration::from_secs(5))
+            .timeout(Duration::from_secs(10))
             .send()
             .await?;
         match resp.status() {
@@ -122,6 +122,16 @@ impl XvbPrivStats {
             Ok(new_data) => {
                 debug!("XvB Watchdog | HTTP API request OK");
                 pub_api.lock().unwrap().stats_priv = new_data;
+                let previously_failed = process.lock().unwrap().state == ProcessState::Failed;
+                if previously_failed {
+                    info!("XvB Watchdog | Public stats are working again");
+                    output_console(
+                        &mut gui_api.lock().unwrap().output,
+                        "requests for public API are now working",
+                        ProcessName::Xvb,
+                    );
+                    process.lock().unwrap().state = ProcessState::Syncing;
+                }
                 // if last request failed, we are now ready to show stats again and maybe be alive next loop.
             }
             Err(err) => {
@@ -129,22 +139,20 @@ impl XvbPrivStats {
                     "XvB Watchdog | Could not send HTTP private API request to: {}\n:{}",
                     XVB_URL, err
                 );
+                if process.lock().unwrap().state != ProcessState::Failed {
+                    output_console(
+                        &mut gui_api.lock().unwrap().output,
+                        "Failure to retrieve private stats \nWill retry shortly...",
+                        ProcessName::Xvb,
+                    );
+                }
+                // we stop the algo (will be stopped by the check status on next loop) because we can't make the rest work without public stats. (winner in xvb private stats).
                 output_console(
                     &mut gui_api.lock().unwrap().output,
-                    &format!(
-                        "Failure to retrieve private stats from {} because of this error: {}",
-                        XVB_URL, err
-                    ),
+                    "request to get private API failed",
                     ProcessName::Xvb,
                 );
-                process.lock().unwrap().state = ProcessState::Retry;
-                // sleep here because it is in a spawn and will not block the user stopping or restarting the service.
-                output_console(
-                    &mut gui_api.lock().unwrap().output,
-                    "Waiting 10 seconds before trying to get stats again.",
-                    ProcessName::Xvb,
-                );
-                sleep(Duration::from_secs(10)).await;
+                process.lock().unwrap().state = ProcessState::Failed;
             }
         }
     }

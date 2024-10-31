@@ -1,6 +1,7 @@
 use enclose::enc;
 use log::{debug, error, info, warn};
-use reqwest::{header::AUTHORIZATION, Client};
+use reqwest::header::AUTHORIZATION;
+use reqwest_middleware::ClientWithMiddleware as Client;
 use serde::{Deserialize, Serialize};
 use std::fmt::Write;
 use std::{
@@ -11,6 +12,7 @@ use std::{
 };
 use tokio::spawn;
 
+use crate::miscs::client;
 use crate::{
     disk::state::Xmrig,
     helper::{
@@ -333,7 +335,7 @@ impl Helper {
         let api_config_xmrig = XMRIG_CONFIG_URL;
 
         // set state
-        let client = Client::new();
+        let client = client();
         process.lock().unwrap().state = ProcessState::NotMining;
         process.lock().unwrap().signal = ProcessSignal::None;
         // reset stats

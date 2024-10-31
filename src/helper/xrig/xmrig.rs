@@ -3,7 +3,7 @@ use crate::helper::xrig::update_xmrig_config;
 use crate::helper::{arc_mut, check_died, check_user_input, sleep, sleep_end_loop, Process};
 use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
 use crate::helper::{PubXvbApi, XvbNode};
-use crate::miscs::output_console;
+use crate::miscs::{client, output_console};
 use crate::regex::{contains_error, contains_usepool, detect_new_node_xmrig, XMRIG_REGEX};
 use crate::utils::human::HumanNumber;
 use crate::utils::sudo::SudoState;
@@ -13,7 +13,7 @@ use portable_pty::Child;
 use readable::num::Unsigned;
 use readable::up::Uptime;
 use reqwest::header::AUTHORIZATION;
-use reqwest::Client;
+use reqwest_middleware::ClientWithMiddleware as Client;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::{
@@ -455,7 +455,7 @@ impl Helper {
         let output_parse = Arc::clone(&process.lock().unwrap().output_parse);
         let output_pub = Arc::clone(&process.lock().unwrap().output_pub);
 
-        let client = Client::new();
+        let client = client();
         let start = process.lock().unwrap().start;
         let api_uri = {
             if !api_ip_port.ends_with('/') {

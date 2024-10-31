@@ -3,7 +3,7 @@ use anyhow::anyhow;
 use anyhow::Result;
 use log::info;
 use reqwest::header::AUTHORIZATION;
-use reqwest::Client;
+use reqwest_middleware::ClientWithMiddleware as Client;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
