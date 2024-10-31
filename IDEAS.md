@@ -9,12 +9,12 @@ Some ideas could be done in a matter of hours, some could take months.
 Github is proprietary. If Gupaxx aims to be free, it should not be only available on this platform and we should explore options to get github free.  
 We can use [Radicle](https://radicle.xyz/) to get Gupaxx on a p2p collaboration stack.  
 The code, issues and PR could be synchronized with Github.  
+### Integrate a P2Pool compatible Nodes crawler
+To get rid of integrating nodes list, we can include a crawler like monero.fail inside Gupaxx.
 ### Integrate a Monero Node
 [Done](https://github.com/Cyrix126/releases/tag/v1.5.0)
 If we want Gupaxx to help user mine in the most decentralized way, we should offer them to run a monero node.
 This would be optional and would check if the requirement are fulfilled before enabling the button to do so.
-### Integrate a P2Pool compatible Nodes crawler
-To get rid of integrating nodes list, we can include a crawler like monero.fail inside Gupaxx.
 
 ## More User friendly
 ### Website
@@ -85,6 +85,8 @@ Option to launch Gupaxx at startup
 To make the Algorithm controllable outside of Gupaxx.
 ### Graphs history of HR
 The user could see how the HR was given on p2pool and XvB.
+### Update xmrig benchmark from Gupaxx
+To have the latest benchmark from xmrig, but still including one by default. Also automates the inclusion on release
 ### Manually set HR for XvB algo
 Done by [Sina](https://github.com/mostafaei2002) [PR](https://github.com/Cyrix126/gupaxx/pull/11)
 An advanced tab on XvB tab with multiple tools to set the HR manually.

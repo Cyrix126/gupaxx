@@ -338,7 +338,7 @@ impl Ping {
     // <300ms  = GREEN
     // >300ms = YELLOW
     // >500ms = RED
-    // timeout = BLACK
+    // timeout = RED
     // default = GRAY
     #[cold]
     #[inline(never)]
@@ -450,10 +450,8 @@ impl Ping {
             GREEN
         } else if ms < RED_NODE_PING {
             YELLOW
-        } else if ms < TIMEOUT_NODE_PING {
-            RED
         } else {
-            BLACK
+            RED
         };
 
         let mut ping = ping.lock().unwrap();
