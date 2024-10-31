@@ -77,9 +77,14 @@ impl XvbNode {
         let client_eu = client.clone();
         let client_na = client.clone();
         // two spawn to ping the two nodes in parallel and not one after the other.
-        let ms_eu = spawn(async move { XvbNode::ping(&XvbNode::Europe.url(), &client_eu).await });
-        let ms_na =
-            spawn(async move { XvbNode::ping(&XvbNode::NorthAmerica.url(), &client_na).await });
+        let ms_eu = spawn(async move {
+            info!("Node | ping European XvB Node");
+            XvbNode::ping(&XvbNode::Europe.url(), &client_eu).await
+        });
+        let ms_na = spawn(async move {
+            info!("Node | ping North America Node");
+            XvbNode::ping(&XvbNode::NorthAmerica.url(), &client_na).await
+        });
         let node = if let Ok(ms_eu) = ms_eu.await {
             if let Ok(ms_na) = ms_na.await {
                 // if two nodes are up, compare ping latency and return fastest.
@@ -138,31 +143,45 @@ impl XvbNode {
         let request = client
             .post("http://".to_string() + ip + ":" + XVB_NODE_RPC + "/json_rpc")
             .body(r#"{"jsonrpc":"2.0","id":"0","method":"get_info"}"#);
-        let ms;
-        let now = Instant::now();
-        match tokio::time::timeout(Duration::from_secs(8), request.send()).await {
+        let mut vec_ms = vec![];
+        for _ in 0..6 {
+            // clone request
+            let req = request
+                .try_clone()
+                .expect("should be able to clone a str body");
+            // begin timer
+            let now_req = Instant::now();
+            // get and store time of request
+            vec_ms.push(match tokio::time::timeout(Duration::from_millis(TIMEOUT_NODE_PING as u64), req.send()).await {
             Ok(Ok(json_rpc)) => {
                 // Attempt to convert to JSON-RPC.
                 match json_rpc.bytes().await {
                     Ok(b) => match serde_json::from_slice::<GetInfo<'_>>(&b) {
                         Ok(rpc) => {
                             if rpc.result.mainnet && rpc.result.synchronized {
-                                ms = now.elapsed().as_millis();
+                                now_req.elapsed().as_millis()
                             } else {
-                                ms = TIMEOUT_NODE_PING;
                                 warn!("Ping | {ip} responded with valid get_info but is not in sync, remove this node!");
+                                TIMEOUT_NODE_PING
                             }
                         }
                         _ => {
-                            ms = TIMEOUT_NODE_PING;
                             warn!("Ping | {ip} responded but with invalid get_info, remove this node!");
+                            TIMEOUT_NODE_PING
                         }
                     },
-                    _ => ms = TIMEOUT_NODE_PING,
-                };
+                    _ => TIMEOUT_NODE_PING,
+                }
             }
-            _ => ms = TIMEOUT_NODE_PING,
-        };
+            _ => TIMEOUT_NODE_PING,
+        });
+        }
+        let ms = *vec_ms
+            .iter()
+            .min()
+            .expect("at least the value of timeout should be present");
+        info!("Ping | {ms}ms ... {ip}");
+        info!("{:?}", vec_ms);
         ms
     }
 }
