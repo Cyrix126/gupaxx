@@ -28,18 +28,13 @@ use std::time::{Duration, Instant};
 // Remote Monero Nodes with ZMQ enabled.
 // The format is an array of tuples consisting of: (IP, LOCATION, RPC_PORT, ZMQ_PORT)
 
-pub const REMOTE_NODES: [(&str, &str, &str, &str); 14] = [
+pub const REMOTE_NODES: [(&str, &str, &str, &str); 9] = [
     ("monero.10z.com.ar", "Argentina", "18089", "18084"),
-    ("monero1.heitechsoft.com", "Canada", "18081", "18084"),
     ("node.monerodevs.org", "Canada", "18089", "18084"),
-    ("node.cryptocano.de", "Germany", "18089", "18083"),
     ("p2pmd.xmrvsbeast.com", "Germany", "18081", "18083"),
-    ("fbx.tranbert.com", "France", "18089", "18084"),
     ("node2.monerodevs.org", "France", "18089", "18084"),
-    ("home.allantaylor.kiwi", "New Zealand", "18089", "18083"),
     ("p2pool.uk", "United Kingdom", "18089", "18084"),
     ("xmr.support", "United States", "18081", "18083"),
-    ("sf.xmr.support", "United States", "18081", "18083"),
     ("xmrbandwagon.hopto.org", "United States", "18081", "18084"),
     ("xmr.spotlightsound.com", "United States", "18081", "18084"),
     ("node.richfowler.net", "United States", "18089", "18084"),
@@ -47,22 +42,6 @@ pub const REMOTE_NODES: [(&str, &str, &str, &str); 14] = [
 
 pub const REMOTE_NODE_LENGTH: usize = REMOTE_NODES.len();
 
-// Iterate through all nodes, find the longest domain.
-const REMOTE_NODE_MAX_CHARS: usize = {
-    let mut len = 0;
-    let mut index = 0;
-
-    while index < REMOTE_NODE_LENGTH {
-        let (node, _, _, _) = REMOTE_NODES[index];
-        if node.len() > len {
-            len = node.len();
-        }
-        index += 1;
-    }
-
-    assert!(len != 0);
-    len
-};
 #[allow(dead_code)]
 pub struct RemoteNode {
     pub ip: &'static str,
@@ -235,17 +214,14 @@ pub fn format_ip_location(og_ip: &str, extra_space: bool) -> String {
 }
 
 pub fn format_ip(ip: &str) -> String {
-    if 23 != REMOTE_NODE_MAX_CHARS {
-        panic!();
-    };
-    format!("{ip: >23}")
+    format!("{ip: >22}")
 }
 
 //---------------------------------------------------------------------------------------------------- Node data
-pub const GREEN_NODE_PING: u128 = 300;
+pub const GREEN_NODE_PING: u128 = 100;
 // yellow is anything in-between green/red
-pub const RED_NODE_PING: u128 = 500;
-pub const TIMEOUT_NODE_PING: u128 = 5000;
+pub const RED_NODE_PING: u128 = 300;
+pub const TIMEOUT_NODE_PING: u128 = 1000;
 
 #[derive(Debug, Clone)]
 pub struct NodeData {
@@ -427,35 +403,48 @@ impl Ping {
         percent: f32,
         node_vec: Arc<Mutex<Vec<NodeData>>>,
     ) {
-        let ms;
-        let now = Instant::now();
-
-        match tokio::time::timeout(Duration::from_secs(5), request.send()).await {
-            Ok(Ok(json_rpc)) => {
-                // Attempt to convert to JSON-RPC.
-                match json_rpc.bytes().await {
-                    Ok(b) => match serde_json::from_slice::<GetInfo<'_>>(&b) {
-                        Ok(rpc) => {
-                            if rpc.result.mainnet && rpc.result.synchronized {
-                                ms = now.elapsed().as_millis();
-                            } else {
-                                ms = TIMEOUT_NODE_PING;
-                                warn!("Ping | {ip} responded with valid get_info but is not in sync, remove this node!");
+        // test multiples request as first can apparently timeout.
+        let mut vec_ms = vec![];
+        for _ in 0..6 {
+            // clone request
+            let req = request
+                .try_clone()
+                .expect("should be able to clone a str body");
+            // begin timer
+            let now_req = Instant::now();
+            // get and store time of request
+            vec_ms.push(match tokio::time::timeout(Duration::from_millis(TIMEOUT_NODE_PING as u64), req.send()).await {
+                Ok(Ok(json_rpc)) => {
+                    // Attempt to convert to JSON-RPC.
+                    match json_rpc.bytes().await {
+                        Ok(b) => match serde_json::from_slice::<GetInfo<'_>>(&b) {
+                            Ok(rpc) => {
+                                if rpc.result.mainnet && rpc.result.synchronized {
+                                    now_req.elapsed().as_millis()
+                                } else {
+                                    warn!("Ping | {ip} responded with valid get_info but is not in sync, remove this node!");
+                                    TIMEOUT_NODE_PING
+                                }
                             }
-                        }
-                        _ => {
-                            ms = TIMEOUT_NODE_PING;
-                            warn!("Ping | {ip} responded but with invalid get_info, remove this node!");
-                        }
-                    },
-                    _ => ms = TIMEOUT_NODE_PING,
-                };
-            }
-            _ => ms = TIMEOUT_NODE_PING,
-        };
+                            _ => {
+                                warn!("Ping | {ip} responded but with invalid get_info, remove this node!");
+                                TIMEOUT_NODE_PING
+                            }
+                        },
+                        _ => TIMEOUT_NODE_PING,
+                    }
+                }
+                _ => TIMEOUT_NODE_PING,
+            });
+        }
+        let ms = *vec_ms
+            .iter()
+            .min()
+            .expect("at least the value of timeout should be present");
 
         let info = format!("{ms}ms ... {ip}");
         info!("Ping | {ms}ms ... {ip}");
+        info!("{:?}", vec_ms);
 
         let color = if ms < GREEN_NODE_PING {
             GREEN
@@ -477,12 +466,27 @@ impl Ping {
 //---------------------------------------------------------------------------------------------------- NODE
 #[cfg(test)]
 mod test {
+    use log::error;
     use reqwest::Client;
 
-    use crate::components::node::{
-        format_ip, REMOTE_NODES, REMOTE_NODE_LENGTH, REMOTE_NODE_MAX_CHARS,
-    };
+    use crate::components::node::{format_ip, REMOTE_NODES, REMOTE_NODE_LENGTH};
     use crate::components::update::get_user_agent;
+    // Iterate through all nodes, find the longest domain.
+    pub const REMOTE_NODE_MAX_CHARS: usize = {
+        let mut len = 0;
+        let mut index = 0;
+
+        while index < REMOTE_NODE_LENGTH {
+            let (node, _, _, _) = REMOTE_NODES[index];
+            if node.len() > len {
+                len = node.len();
+            }
+            index += 1;
+        }
+
+        assert!(len != 0);
+        len
+    };
     #[test]
     fn validate_node_ips() {
         for (ip, location, rpc, zmq) in REMOTE_NODES {
@@ -565,7 +569,7 @@ mod test {
         // If more than half the nodes fail, something
         // is definitely wrong, fail this test.
         if failure_count > HALF_REMOTE_NODES {
-            panic!("[{failure_percent:.2}% of nodes failed, failure log:\n{failures}");
+            error!("[{failure_percent:.2}% of nodes failed, failure log:\n{failures}");
         // If some failures happened, log.
         } else if failure_count != 0 {
             eprintln!("[{failure_count}] nodes failed ({failure_percent:.2}%):\n{failures}");
