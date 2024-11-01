@@ -464,6 +464,10 @@ impl PubXvbApi {
                 runtime_manual_donation_level,
                 ..pub_api.stats_priv.clone()
             },
+            p2pool_sent_last_hour_samples: std::mem::take(
+                &mut gui_api.p2pool_sent_last_hour_samples,
+            ),
+            xvb_sent_last_hour_samples: std::mem::take(&mut gui_api.xvb_sent_last_hour_samples),
             ..pub_api.clone()
         };
     }
