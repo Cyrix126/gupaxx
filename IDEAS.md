@@ -43,6 +43,7 @@ To notify the user that content is present in the bottom, an arrow pointing down
 ### Friendlier custom args
 For custom command arguments, some args are required. To help the user not make any errors, theses args must be prefilled. The user will need to enable a checkbox to apply the custom command arguments. A button reset will replace the text fields by only the required fields.
 ### Better default
+[Done](https://github.com/Cyrix126/gupaxx/commit/6cb767a342bec2df3358b10826a1ec1dee57fc76) and [Done](https://github.com/Cyrix126/gupaxx/commit/a102bdbee2e4c0bc8785f9e638d3e54958d79489)
 Reduce in/out peers, remote nodes by default
 
 

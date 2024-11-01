@@ -220,8 +220,10 @@ impl<'a> Algorithm<'a> {
     }
 
     fn is_xvb_24h_fulfilled(&self) -> bool {
-        if self.stats.runtime_mode == RuntimeMode::Hero {
-            info!("Algorithm | running in hero mode, no fast 24h average");
+        if self.stats.runtime_mode != RuntimeMode::Auto
+            && self.stats.runtime_mode != RuntimeMode::ManualDonationLevel
+        {
+            info!("Algorithm | not running auto or manual round selection, no fast 24h average");
             return true;
         }
         // add external to target to have the real total target
@@ -421,7 +423,6 @@ impl<'a> Algorithm<'a> {
                     "Algorithm | ManualXvBMode target_donation_hashrate=runtime_amount({}H/s)",
                     self.stats.runtime_amount
                 );
-
                 self.stats.runtime_amount as f32
             }
             RuntimeMode::ManualP2pool => {
@@ -575,7 +576,7 @@ impl<'a> Algorithm<'a> {
                 self.sleep_then_update_node_xmrig().await;
             }
             x if x >= XVB_TIME_ALGO - XVB_MIN_TIME_SEND => {
-                info!("Algorithm | time : {x} seconds for P2Pool is less than minimum time to send, sending all to XvB");
+                info!("Algorithm | time : {x} seconds for XvB is more than time algo - minimum time to send, sending all to XvB");
                 self.send_all_xvb().await;
             }
             _ => error!("should not be possible"),

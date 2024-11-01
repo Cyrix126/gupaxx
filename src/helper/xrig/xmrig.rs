@@ -230,7 +230,7 @@ impl Helper {
         // The actual binary we're executing is [sudo], technically
         // the XMRig path is just an argument to sudo, so add it.
         // Before that though, add the ["--prompt"] flag and set it
-        // to emptyness so that it doesn't show up in the output.
+        // to emptiness so that it doesn't show up in the output.
         if cfg!(unix) {
             args.push(r#"--prompt="#.to_string());
             args.push("--".to_string());
