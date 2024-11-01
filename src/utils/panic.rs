@@ -13,10 +13,11 @@ pub(crate) fn set_panic_hook(now: std::time::Instant) {
         let stack_trace = std::backtrace::Backtrace::force_capture();
         let args = std::env::args_os();
         let uptime = now.elapsed().as_secs_f32();
-
+        let panic_msg = panic_info.to_string();
         // Re-format panic info.
         let panic_info = format!(
-            "{panic_info:#?}
+            "panic error: {panic_msg}\n
+            {panic_info:#?}
 
 info:
    OS          | {OS_NAME}
