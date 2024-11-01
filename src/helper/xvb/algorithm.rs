@@ -3,6 +3,7 @@ use crate::helper::xvb::api_url_xmrig;
 use crate::helper::xvb::current_controllable_hr;
 use crate::miscs::output_console;
 use crate::miscs::output_console_without_time;
+use crate::XVB_MIN_TIME_SEND;
 use std::{
     sync::{Arc, Mutex},
     time::Duration,
@@ -160,7 +161,7 @@ impl<'a> Algorithm<'a> {
             &gui_api_xvb.lock().unwrap().xvb_sent_last_hour_samples,
         );
         let xvb_external_hashrate = (xvb_1h_avg - xvb_avg_last_hour_hashrate).max(0.0);
-        info!("xvb external hashrate({xvb_external_hashrate}) = p2ool_total_hashrate({xvb_1h_avg}) - xvb_avg_last_hour_hashrate({xvb_avg_last_hour_hashrate})");
+        info!("xvb external hashrate({xvb_external_hashrate}) = xvb_1h_avg({xvb_1h_avg}) - xvb_avg_last_hour_hashrate({xvb_avg_last_hour_hashrate})");
         let stats = Stats {
             share,
             hashrate_xmrig,
@@ -383,7 +384,7 @@ impl<'a> Algorithm<'a> {
         // xvb process watch this algo handle to see if process is finished or not.
 
         info!(
-            "Algorithm | algo sleep for {} seconds while mining on P2pool",
+            "Algorithm | algo sleep for {} seconds while mining on XvB",
             self.stats.needed_time_xvb
         );
         sleep(Duration::from_secs(self.stats.needed_time_xvb.into())).await;
@@ -556,17 +557,23 @@ impl<'a> Algorithm<'a> {
             crate::helper::ProcessName::Xvb,
         );
 
-        info!("Algorithm | There is a share in p2pool and 24H avg XvB is achieved. Sending  {} seconds to XvB!", self.stats.needed_time_xvb);
-
         *self.time_donated.lock().unwrap() = self.stats.needed_time_xvb;
         // do not switch pool for a few seconds, let's make 6 seconds minimum.
+
         match self.stats.needed_time_xvb {
-            x if x <= 6 => {
+            x if x <= XVB_MIN_TIME_SEND => {
+                info!("Algorithm | Needed time: {x} to send on XvB is less than minimum time to send, sending all HR to p2pool");
+                self.send_all_p2pool().await;
+            }
+            x if x <= XVB_TIME_ALGO - XVB_MIN_TIME_SEND => {
+                info!("Algorithm | There is a share in p2pool and 24H avg XvB is achieved. Sending  {} seconds to XvB!", self.stats.needed_time_xvb);
                 self.target_p2pool_node().await;
                 self.sleep_then_update_node_xmrig().await;
             }
-            x if x <= XVB_TIME_ALGO - 6 => self.send_all_p2pool().await,
-            x if x >= XVB_TIME_ALGO - 6 => self.send_all_xvb().await,
+            x if x >= XVB_TIME_ALGO - XVB_MIN_TIME_SEND => {
+                info!("Algorithm | time : {x} seconds for P2Pool is less than minimum time to send, sending all to XvB");
+                self.send_all_xvb().await;
+            }
             _ => error!("should not be possible"),
         };
     }

@@ -515,6 +515,7 @@ pub const XVB_URL_RULES: &str = "https://xmrvsbeast.com/p2pool/rules.html";
 // buffer in percentage of HR to have plus the requirement.
 pub const XVB_SIDE_MARGIN_1H: f32 = 1.20;
 pub const XVB_TIME_ALGO: u32 = 600;
+pub const XVB_MIN_TIME_SEND: u32 = (XVB_TIME_ALGO as f32 * 0.01) as u32;
 pub const XVB_TOKEN_LEN: usize = 9;
 pub const XVB_HERO_SELECT: &str =
     "Donate as much as possible while keeping a share on p2pool, increases the odds of your round winning\nWhen modified, the algorithm will use the new choice at the next decision.";
