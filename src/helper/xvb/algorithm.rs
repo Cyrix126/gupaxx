@@ -224,10 +224,14 @@ impl<'a> Algorithm<'a> {
             info!("Algorithm | running in hero mode, no fast 24h average");
             return true;
         }
-        let is_criteria_fulfilled = self.stats.xvb_24h_avg > self.stats.target_donation_hashrate;
+        // add external to target to have the real total target
+        let is_criteria_fulfilled = self.stats.xvb_24h_avg
+            > self.stats.target_donation_hashrate + self.stats.xvb_external_hashrate;
         info!(
             "Algorithm | xvb_24h_avg({}) > target_donation_hashrate({}) : {}",
-            self.stats.xvb_24h_avg, self.stats.target_donation_hashrate, is_criteria_fulfilled
+            self.stats.xvb_24h_avg,
+            self.stats.target_donation_hashrate + self.stats.xvb_external_hashrate,
+            is_criteria_fulfilled
         );
         is_criteria_fulfilled
     }
@@ -587,6 +591,30 @@ impl<'a> Algorithm<'a> {
 
         info!("Algorithm | Starting...");
         info!("Algorithm | {:#?}", self.stats);
+
+        // inform user about external HR detected to explain better the decision.
+        let external_xvb_hr = self.stats.xvb_external_hashrate;
+        if external_xvb_hr > 0.0 {
+            output_console(
+                &mut self.gui_api_xvb.lock().unwrap().output,
+                &format!(
+                    "estimated external HR on XvB: {}kH/s",
+                    external_xvb_hr / 1000.0
+                ),
+                crate::helper::ProcessName::Xvb,
+            );
+        }
+        let external_p2pool_hr = self.stats.p2pool_external_hashrate;
+        if external_p2pool_hr > 0.0 {
+            output_console(
+                &mut self.gui_api_xvb.lock().unwrap().output,
+                &format!(
+                    "estimated external HR on P2pool: {}kH/s",
+                    external_p2pool_hr / 1000.0
+                ),
+                crate::helper::ProcessName::Xvb,
+            );
+        }
 
         if !self.is_share_fulfilled() {
             self.fulfill_share().await
