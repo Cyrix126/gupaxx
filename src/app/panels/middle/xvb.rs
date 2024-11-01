@@ -156,7 +156,7 @@ impl crate::disk::state::Xvb {
                                 ui.selectable_value(&mut self.mode, XvbMode::Auto,
                                      XvbMode::Auto.to_string());
                                 ui.selectable_value(&mut self.mode, XvbMode::Hero,
-                                     XvbMode::Hero.to_string());
+                                     XvbMode::Hero.to_string()).on_hover_text(XVB_HERO_SELECT);
                                 ui.selectable_value(&mut self.mode, XvbMode::ManualXvb,
                                      XvbMode::ManualXvb.to_string())
                                 .on_hover_text(XVB_MODE_MANUAL_XVB_HELP);
