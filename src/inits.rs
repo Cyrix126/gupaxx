@@ -26,48 +26,48 @@ use std::time::Instant;
 #[inline(never)]
 pub fn init_text_styles(ctx: &egui::Context, width: f32, pixels_per_point: f32) {
     let scale = width / 35.5;
-    let mut style = (*ctx.style()).clone();
-    style.text_styles = [
-        (Small, FontId::new(scale / 3.0, egui::FontFamily::Monospace)),
-        (Body, FontId::new(scale / 2.0, egui::FontFamily::Monospace)),
-        (
-            Button,
-            FontId::new(scale / 2.0, egui::FontFamily::Monospace),
-        ),
-        (
-            Monospace,
-            FontId::new(scale / 2.0, egui::FontFamily::Monospace),
-        ),
-        (
-            Heading,
-            FontId::new(scale / 1.5, egui::FontFamily::Monospace),
-        ),
-        (
-            Name("Tab".into()),
-            FontId::new(scale * 1.05, egui::FontFamily::Monospace),
-        ),
-        (
-            Name("Bottom".into()),
-            FontId::new(scale / 2.0, egui::FontFamily::Monospace),
-        ),
-        (
-            Name("MonospaceSmall".into()),
-            FontId::new(scale / 2.5, egui::FontFamily::Monospace),
-        ),
-        (
-            Name("MonospaceLarge".into()),
-            FontId::new(scale / 1.5, egui::FontFamily::Monospace),
-        ),
-    ]
-    .into();
-    style.spacing.icon_width_inner = width / 35.0;
-    style.spacing.icon_width = width / 25.0;
-    style.spacing.icon_spacing = 20.0;
-    style.spacing.scroll = egui::style::ScrollStyle {
-        bar_width: width / 150.0,
-        ..egui::style::ScrollStyle::solid()
-    };
-    ctx.set_style(style);
+    ctx.all_styles_mut(|style| {
+        style.text_styles = [
+            (Small, FontId::new(scale / 3.0, egui::FontFamily::Monospace)),
+            (Body, FontId::new(scale / 2.0, egui::FontFamily::Monospace)),
+            (
+                Button,
+                FontId::new(scale / 2.0, egui::FontFamily::Monospace),
+            ),
+            (
+                Monospace,
+                FontId::new(scale / 2.0, egui::FontFamily::Monospace),
+            ),
+            (
+                Heading,
+                FontId::new(scale / 1.5, egui::FontFamily::Monospace),
+            ),
+            (
+                Name("Tab".into()),
+                FontId::new(scale * 1.05, egui::FontFamily::Monospace),
+            ),
+            (
+                Name("Bottom".into()),
+                FontId::new(scale / 2.0, egui::FontFamily::Monospace),
+            ),
+            (
+                Name("MonospaceSmall".into()),
+                FontId::new(scale / 2.5, egui::FontFamily::Monospace),
+            ),
+            (
+                Name("MonospaceLarge".into()),
+                FontId::new(scale / 1.5, egui::FontFamily::Monospace),
+            ),
+        ]
+        .into();
+        style.spacing.icon_width_inner = width / 35.0;
+        style.spacing.icon_width = width / 25.0;
+        style.spacing.icon_spacing = 20.0;
+        style.spacing.scroll = egui::style::ScrollStyle {
+            bar_width: width / 150.0,
+            ..egui::style::ScrollStyle::solid()
+        };
+    });
     // Make sure scale f32 is a regular number.
     let pixels_per_point = clamp_scale(pixels_per_point);
     ctx.set_pixels_per_point(pixels_per_point);
