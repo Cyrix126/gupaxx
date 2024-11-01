@@ -598,7 +598,7 @@ impl<'a> Algorithm<'a> {
             output_console(
                 &mut self.gui_api_xvb.lock().unwrap().output,
                 &format!(
-                    "estimated external HR on XvB: {}kH/s",
+                    "estimated external HR on XvB: {:.3}kH/s",
                     external_xvb_hr / 1000.0
                 ),
                 crate::helper::ProcessName::Xvb,
@@ -609,7 +609,7 @@ impl<'a> Algorithm<'a> {
             output_console(
                 &mut self.gui_api_xvb.lock().unwrap().output,
                 &format!(
-                    "estimated external HR on P2pool: {}kH/s",
+                    "estimated external HR on P2pool: {:.3}kH/s",
                     external_p2pool_hr / 1000.0
                 ),
                 crate::helper::ProcessName::Xvb,
