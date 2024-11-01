@@ -197,7 +197,8 @@ impl<'a> Algorithm<'a> {
             stats,
         };
         // external XvB HR is taken into account with get_target_donation_hashrate so the needed time is calculating how much time is needed from local sparable HR only
-        new_instance.stats.target_donation_hashrate = new_instance.get_target_donation_hashrate();
+        new_instance.stats.target_donation_hashrate =
+            new_instance.get_target_donation_hashrate().max(0.0);
         new_instance.stats.needed_time_xvb = Self::get_needed_time_xvb(
             new_instance.stats.target_donation_hashrate,
             new_instance.stats.hashrate_xmrig,
