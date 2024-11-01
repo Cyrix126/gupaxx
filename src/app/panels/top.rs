@@ -8,7 +8,7 @@ impl crate::app::App {
     pub fn top_panel(&mut self, ctx: &egui::Context) {
         debug!("App | Rendering TOP tabs");
         TopBottomPanel::top("top").show(ctx, |ui| {
-            let width = (self.size.x - (SPACE * 18.0)) / 8.0;
+            let width = ((self.size.x - (SPACE * 18.0)) / 8.0).max(0.0);
             let height = self.size.y / 15.0;
             ui.add_space(4.0);
             ui.horizontal(|ui| {
