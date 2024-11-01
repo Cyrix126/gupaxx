@@ -36,11 +36,11 @@ impl Status {
         max_threads: usize,
     ) {
         // set fixed text size, temporary solution before refactoring text/widget size.
-        let width = (size.x / 5.0) - (SPACE * 1.7500);
+        let width = ((size.x / 5.0) - (SPACE * 1.7500)).max(0.0);
         let height = size.y / 25.0;
         // height must be height - top - bottom - space * 2 - space of text
         let size: Vec2 = [width, height].into();
-        let min_height = size.y - SPACE;
+        let min_height = (size.y - SPACE).max(0.0);
         // min width must allow to display text without wrapping.
         let size_text = ui.text_style_height(&TextStyle::Body);
         // ui.spacing_mut().item_spacing = Vec2::new(2.0, 2.0);
