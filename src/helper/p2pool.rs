@@ -49,22 +49,35 @@ impl Helper {
 
         // Run a ANSI escape sequence filter for the first few lines.
         let mut i = 0;
+        let mut status_output = false;
         while let Some(Ok(line)) = stdout.next() {
             let line = strip_ansi_escapes::strip_str(line);
 
-            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
-                error!("P2Pool PTY Parse | Output error: {}", e);
+            // status could be present before 20 lines with a low verbosity value
+            if contains_statuscommand(&line) {
+                status_output = true;
+                continue;
             }
-            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
-                error!("P2Pool PTY Pub | Output error: {}", e);
-            }
-            if i > 20 {
-                break;
+            if status_output {
+                if contains_end_status(&line) {
+                    // end of status
+                    status_output = false;
+                    continue;
+                }
             } else {
-                i += 1;
+                if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
+                    error!("P2Pool PTY Parse | Output error: {}", e);
+                }
+                if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
+                    error!("P2Pool PTY Pub | Output error: {}", e);
+                }
+                if i > 20 {
+                    break;
+                } else {
+                    i += 1;
+                }
             }
         }
-        let mut status_output = false;
         while let Some(Ok(line)) = stdout.next() {
             // if command status is sent by gupaxx process and not the user, forward it only to update_from_status method.
             // 25 lines after the command are the result of status, with last line finishing by update.
