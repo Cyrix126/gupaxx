@@ -22,6 +22,7 @@ use crate::helper::p2pool::PubP2poolApi;
 use crate::helper::xrig::xmrig::ImgXmrig;
 use crate::helper::xrig::xmrig::PubXmrigApi;
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
+use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::helper::xvb::PubXvbApi;
 use crate::helper::Helper;
 use crate::helper::Process;
@@ -596,7 +597,14 @@ impl App {
 
         // Set saved Hero mode to runtime.
         debug!("Setting runtime_mode & runtime_manual_amount");
-        app.xvb_api.lock().unwrap().stats_priv.runtime_mode = app.state.xvb.mode.clone().into();
+        // apply hero if simple mode saved with checkbox true, will let default to auto otherwise
+        if app.state.xvb.simple {
+            if app.state.xvb.simple_hero_mode {
+                app.xvb_api.lock().unwrap().stats_priv.runtime_mode = RuntimeMode::Hero
+            }
+        } else {
+            app.xvb_api.lock().unwrap().stats_priv.runtime_mode = app.state.xvb.mode.clone().into();
+        }
         app.xvb_api.lock().unwrap().stats_priv.runtime_manual_amount =
             app.state.xvb.manual_amount_raw;
         // Check if [P2pool.node] exists

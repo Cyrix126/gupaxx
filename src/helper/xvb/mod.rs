@@ -822,6 +822,7 @@ fn signal_interrupt(
 }
 fn reset_data_xvb(pub_api: &Arc<Mutex<PubXvbApi>>, gui_api: &Arc<Mutex<PubXvbApi>>) {
     let current_node = mem::take(&mut pub_api.lock().unwrap().current_node.clone());
+    // even if it is a restart, we want to keep set values by the user without the need from him to click on save button.
     let runtime_mode = mem::take(&mut gui_api.lock().unwrap().stats_priv.runtime_mode);
     let runtime_manual_amount =
         mem::take(&mut gui_api.lock().unwrap().stats_priv.runtime_manual_amount);
