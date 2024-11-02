@@ -106,7 +106,7 @@ impl P2poolRegex {
             block_int: Regex::new("[0-9]{7}").unwrap(),
             block_comma: Regex::new("[0-9],[0-9]{3},[0-9]{3}").unwrap(),
             synchronized: Regex::new("SYNCHRONIZED").unwrap(),
-            next_height_1: Regex::new("next height = 1").unwrap(),
+            next_height_1: Regex::new("sidechain height 0").unwrap(),
         }
     }
 }
