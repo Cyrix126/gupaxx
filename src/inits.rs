@@ -199,7 +199,7 @@ pub fn init_auto(app: &mut App) {
             );
         }
     } else {
-        info!("Skipping auto-p2pool...");
+        info!("Skipping auto-node...");
     }
     // [Auto-P2Pool]
     if app.state.gupax.auto_p2pool {
