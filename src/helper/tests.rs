@@ -177,10 +177,9 @@ Uptime         = 0h 2m 4s
         // probably not main/mini, but the sidechain started on height 1,
         // so this should _not_ trigger alive state.
         let output_parse = Arc::new(Mutex::new(String::from(
-            r#"payout of 5.000000000001 XMR in block 1111
-			SideChain new chain tip: next height = 1
-			NOTICE  2021-12-27 21:42:17.2008 SideChain SYNCHRONIZED
-			payout of 5.000000000001 XMR in block 1113"#,
+            r#"2024-11-02 17:39:02.6241 SideChain SYNCHRONIZED
+            2024-11-02 17:39:02.6242 StratumServer SHARE FOUND: mainchain height 3272685, sidechain height 0, diff 100000, client 127.0.0.1:40874, effort 100.001%
+            2024-11-02 17:39:02.6559 StratumServer SHARE FOUND: mainchain height 3272685, sidechain height 0, diff 100000, client 127.0.0.1:40874, effort 200.002%"#,
         )));
         let output_pub = Arc::new(Mutex::new(String::new()));
         let elapsed = std::time::Duration::from_secs(60);
@@ -214,11 +213,10 @@ Uptime         = 0h 2m 4s
         // which means the real main/mini is probably synced,
         // so this _should_ trigger alive state.
         let output_parse = Arc::new(Mutex::new(String::from(
-            r#"payout of 5.000000000001 XMR in block 1111
-			SideChain new chain tip: next height = 1
-			NOTICE  2021-12-27 21:42:17.2008 SideChain SYNCHRONIZED
-			payout of 5.000000000001 XMR in block 1113
-			NOTICE  2021-12-27 21:42:17.2100 SideChain SYNCHRONIZED"#,
+            r#"2024-11-02 17:39:02.6241 SideChain SYNCHRONIZED
+            2024-11-02 17:39:02.6242 StratumServer SHARE FOUND: mainchain height 3272685, sidechain height 0, diff 100000, client 127.0.0.1:40874, effort 100.001%
+            2024-11-02 17:39:02.6559 StratumServer SHARE FOUND: mainchain height 3272685, sidechain height 0, diff 100000, client 127.0.0.1:40874, effort 200.002%
+            2024-11-02 17:40:06.8562 SideChain SYNCHRONIZED"#,
         )));
         let output_pub = Arc::new(Mutex::new(String::new()));
         let elapsed = std::time::Duration::from_secs(60);
