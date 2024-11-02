@@ -106,6 +106,8 @@ To remove necessary trust, binairies released should have the same checksum if r
 See [this](https://reproducible-builds.org).
 ### Release changes notes preview
 Show the summuray of what will change between releases before updating to newer release.
+### Check signature of updates with Gupaxx
+let the build in updater of Gupaxx check the signature of the release to confirm that the releases has been signed by the right key.
 ## Donation
 ### Donation transparency
 So that user can see how much is given to this project and make their own opinion of if enough donations have been given or not, the history of donation should be made visible with the viewkey available.  
