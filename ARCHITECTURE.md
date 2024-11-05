@@ -27,7 +27,7 @@ This document explains how the source code is organized. Everything differing fr
 
 Status of process for XMRig use for some information an image of data when the process started.
 The node of xmrig in upstream can not change without a restart of the process. In this fork, the node used by XMRig needs to be updated without restart (using the config HTTP API of XMRig).
-So Gupaxx need to refresh the value of status tab submenu process for xmrig where before the values could not change without a restart of the process.
+So Gupaxx needs to refresh the value of status tab submenu process for XMRig where before the values could not change without a restart of the process.
 The field node from ImgXmrig needs to be moved to PubXvbApi. This value must be updated by XMRig at start and by XvB process at runtime.
 
 ## Updates
