@@ -1,17 +1,17 @@
-![Gupax logo](assets/images/banner.png)
+![Gupaxx logo](assets/images/banner.png)
 
 ## Status of development
 
-This fork has a stable release. It is intended for end users and offers a friendly easy user experience.
+This fork has a stable release. It is intended for end users and offers a friendly and easy user experience.
 
 ## Gupaxx
 
-Gupaxx is a fork of [**Gupax**](https://github.com/hinto-janai/gupax) integrating the [XMRvsBeast Raffle](https://xmrvsbeast.com), it is also a maintained software. It is made to make in the most easy way possible mining on P2Pool while optionally participating (but you will want to :wink:) in the XMRvsBeast raffle.  
+Gupaxx is a fork of [**Gupax**](https://github.com/hinto-janai/gupax) integrating the [XMRvsBeast Raffle](https://xmrvsbeast.com), it is also a maintained software. Designed to simplify mining on [P2Pool](https://www.getmonero.org/2021/10/05/p2pool-released.html) while optionally participating (but you will want to 😉) in the XMRvsBeast raffle. 
 
 ## System requirements
 
 Gupax may not run on machines with:
-- a deprecated OS (Windows 7, Ubuntu 18.04, etc)
+- A deprecated OS (Windows 7, Ubuntu 18.04, etc)
 - CPU whithout support for OpenGL 3.1 (<2010)
 
 [![CI](https://github.com/cyrix126/gupaxx/actions/workflows/ci.yml/badge.svg)](https://github.com/cyrix126/gupaxx/actions/workflows/ci.yml)
@@ -28,16 +28,14 @@ Gupax may not run on machines with:
 * [License](#license) 
 
 ## What is Gupaxx/XMRvsBeast?
-[**`Gupaxx`**](https://getmonero.org) is a fork of [*Gupax*](https://github.com/hinto-janai/gupax) that integrate the [XMRvsBeast raffle](https://xmrvsbeast.com).
+[**`Gupaxx`**](https://getmonero.org) is a fork of [*Gupax*](https://github.com/hinto-janai/gupax) that integrates the [XMRvsBeast raffle](https://xmrvsbeast.com).
 
-This fork adds an easy way to distribute your hashrate between P2pool and XMRvsBeast to participate in the raffle to win more xmr while supporting the p2pool network.
+With this fork, you can easily split your hashrate between P2Pool and XMRvsBeast, increasing your chances of winning XMR in the raffle while also supporting the P2Pool ecosystem.
 
-To have a detailed explication of Gupax, see the [README](https://github.com/hinto-janai/gupax) of upstream.
+To have a detailed explanation of Gupax, see the [README](https://github.com/hinto-janai/gupax) of upstream.
 
 
 ## Guide
-
-
 
 1. [Download the bundled version of Gupaxx](https://github.com/Cyrix126/gupaxx/releases)
 2. Extract
@@ -56,9 +54,9 @@ https://github.com/Cyrix126/gupaxx/assets/58007246/610cbfea-fd97-4150-95ed-9c8a7
 7. Start XMRig
 8. Start XvB
 
-Gupaxx will distribute your hashrate between P2Pool and XMRvsBeast as defined here by the [algorithm](NOTES_ALGORITHM.md).
+Gupaxx will distribute your hashrate between P2Pool and XMRvsBeast as defined by [this algorithm](NOTES_ALGORITHM.md).
 
-The algorithm will decide which quantity of HR will be directed to P2pool and to XMRvsBeast, so that you still keep a share in the [PPLNS Window](https://github.com/SChernykh/p2pool#how-payouts-work-in-p2pool). It will send by default just enough to get to the highest round or, if hero mode is enabled, everything minus minimum required to still have a share in the PPLNS Window.
+The algorithm will decide which quantity of HR will be directed to P2Pool and to XMRvsBeast, so that you still keep a share in the [PPLNS Window](https://github.com/SChernykh/p2pool#how-payouts-work-in-p2pool). It will send by default just enough to get to the highest round or, if hero mode is enabled, everything minus the minimum required to still have a share in the PPLNS Window.
 </div>
 
 ## XvB Tab
@@ -67,11 +65,11 @@ The algorithm will decide which quantity of HR will be directed to P2pool and to
 
 ### Console of XvB
 
-The output of console will show useful information on the status of the XvB process and the decision of the algorithm for every 10 minutes.
+The output of the console will show useful information on the status of the XvB process and the decision of the algorithm for every 10 minutes.
 
 ### Token input
 
-You need to put the token received when you registered your XMR payout address.
+When you registered your XMR payout address, you should have received a token. Please enter this token here.
 
 ### Account stats
 
@@ -80,7 +78,7 @@ Account stats about your address on XMRvsBeast can be found here after the proce
 
 ## XvB Raffle Status
 
-Gupaxx add a new column **XvB Raffle** on the Status Tab in the Process submenu. It displays public statistics of XMRvsBeast, which are available [here](https://xmrvsbeast.com/p2pool).  
+Gupaxx adds a new column called **XvB Raffle** on the Status Tab in the Process submenu. It displays public statistics of XMRvsBeast, which are available [here](https://xmrvsbeast.com/p2pool).  
 It is refreshed every minute.
 This column will be active if the XvB process is started even partially, it doesn't need the token to be provided.
 
@@ -91,7 +89,7 @@ This column will be active if the XvB process is started even partially, it does
 This fork brings upgrades of dependence and some bugfixes about visual, performance and security that you can find in [DIFFERENCES](DIFFERENCES.md).  
 ~~I will eventually (meaning when I'll have time) create pull requests for upstream about these differences.~~  
 **Edit**:  
-There is no plan to upstream changes as the owner of Gupax said he won't have time to review the PR.
+There is currently no plan to upstream the changes as the owner of Gupax said he won't have time to review the PR.
 
 ## Troubleshooting
 
