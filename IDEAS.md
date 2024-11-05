@@ -32,16 +32,21 @@ It could be an option to ask at first start.
 At first start, a guide could ask the user what it intends to do with Gupaxx (create node, create wallet, use xmrig-proxy, participate in raffle...) and do the setup for him and show him what it must do manually. An option to skip this guide would be present for advanced users.
 ### Very noob mode
 At first start, a mode is suggested for very noob users. It would only shows the seed phrase of the wallet generated and configure all options for the user.
-### Do not re-ask password if not needed
-On Linux, Do not re-ask for sudo to start xmrig when the user can use sudo without a password. It can happen if visudo has been configured to do so or if there is a delay specified in /etc/sudoers with "timestamp_timeout". 
 ### Use remote node while syncing local node
 To reduce the time to get the first shares. No need to wait for the monero node to be synced.
-### Allow resize of consoles
+### Better UI
+#### Set fixed font size, do not resize with size of window
+Setting a fixed font size will allow to use the space fully and having a UI more adapted to screens. Option to set the size of the font will be included.
+#### Do not re-ask password if not needed
+On Linux, Do not re-ask for sudo to start xmrig when the user can use sudo without a password. It can happen if visudo has been configured to do so or if there is a delay specified in /etc/sudoers with "timestamp_timeout". 
+#### Allow resize of consoles
 So users can view more or less output as they need.
-### Scrolling arrows
+#### Scrolling arrows
 To notify the user that content is present in the bottom, an arrow pointing downside will appear.
-### Friendlier custom args
+#### Friendlier custom args
 For custom command arguments, some args are required. To help the user not make any errors, theses args must be prefilled. The user will need to enable a checkbox to apply the custom command arguments. A button reset will replace the text fields by only the required fields.
+#### Allow to hide status column
+Status columns can take together lots of space and user can use only a number of them. Allows to hide/restore them with button on the bottom on the columns for each one.
 ### Better default
 [Done](https://github.com/Cyrix126/gupaxx/commit/6cb767a342bec2df3358b10826a1ec1dee57fc76) and [Done](https://github.com/Cyrix126/gupaxx/commit/a102bdbee2e4c0bc8785f9e638d3e54958d79489)
 Reduce in/out peers, remote nodes by default
