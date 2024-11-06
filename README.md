@@ -32,7 +32,7 @@ Gupax may not run on machines with:
 
 With this fork, you can easily split your hashrate between P2Pool and XMRvsBeast, increasing your chances of winning in the raffle while also supporting the Monero network via decentralizing the mining using using p2pool.
 
-For an detailed explanation of Gupax, see the [README](https://github.com/hinto-janai/gupax) of upstream.
+For a detailed explanation of Gupax, see the [README](https://github.com/hinto-janai/gupax) of upstream.
 
 
 ## Guide
