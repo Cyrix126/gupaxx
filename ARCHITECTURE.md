@@ -8,12 +8,18 @@ This document explains how the source code is organized. Everything differing fr
 |main.rs| Launch the app.
 |inits.rs| Launch the threads if auto, including XvB.
 |miscs.rs| Useful functions.
+|cli.rs| Command line arguments.
 |app| Directory with everything related to displaying the UI.
 |app/keys.rs| Handle keys input.
 |app/mod.rs| Define App struct, used by egui.
 |app/eframe_impl.rs| First entry to the UI.
+|app/panels| All the different parts of the UI.
 |disk/| Code for writing to disk: `state.toml/node.toml/pool.toml`; This holds the structs for the [State] struct.
 |helper| The "helper" thread that runs for the entire duration Gupax is alive. All the processing that needs to be done without blocking the main GUI thread runs here, including everything related to handling P2Pool/XMRig/XvB.
+|helper/node.rs| Node thread and principal loop.
+|helper/xrig| All related thread XMRig and Xmrig-Proxy code.
+|helper/xrig/xmrig.rs| XMRig thread and principal loop.
+|helper/xrig/xmrig-proxy.rs| XMRig-Proxy thread and principal loop.
 |helper/xvb| All related thread XvB code.
 |helper/xvb/mod.rs| XvB thread and principal loop, checks and triggers, gluing every other code of this directory.
 |helper/xvb/algorithm.rs| Algorithm logic with calculations and actions.
