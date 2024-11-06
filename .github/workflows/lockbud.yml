@@ -1,6 +1,9 @@
 name: Lockbud
 
-on: push
+on:
+  push:
+    paths-ignore:
+      - '**/*.md'
 
 jobs:
   test:
