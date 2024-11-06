@@ -30,9 +30,9 @@ Gupax may not run on machines with:
 ## What is Gupaxx/XMRvsBeast?
 [**`Gupaxx`**](https://getmonero.org) is a fork of [*Gupax*](https://github.com/hinto-janai/gupax) that integrates the [XMRvsBeast raffle](https://xmrvsbeast.com).
 
-With this fork, you can easily split your hashrate between P2Pool and XMRvsBeast, increasing your chances of winning in the raffle while also supporting the P2Pool ecosystem.
+With this fork, you can easily split your hashrate between P2Pool and XMRvsBeast, increasing your chances of winning in the raffle while also supporting the Monero network via decentralizing the mining using using p2pool.
 
-For a explanation of Gupax, see the [README](https://github.com/hinto-janai/gupax) of upstream.
+For an detailed explanation of Gupax, see the [README](https://github.com/hinto-janai/gupax) of upstream.
 
 
 ## Guide
