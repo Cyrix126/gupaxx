@@ -35,4 +35,4 @@ It also allows advanced users to use your their own version of P2Pool and XMRig.
 
 ## **Security**
 
-With the upgrade of dependencies, cargo audit shows no more warnings. (instead of 5 vulnerabilities and 4 allowed warnings for Gupax.) 
+With the upgrade of dependencies, cargo audit shows no more warnings for Gupaxx. (instead of 5 vulnerabilities and 4 allowed warnings for Gupax.) 
