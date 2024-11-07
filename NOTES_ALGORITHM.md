@@ -1,101 +1,95 @@
 
 **Draft**
 
-# Algorithm of distribution of Hashrate between P2pool and XvB
+# **Algorithm of distribution of Hashrate between P2pool and XvB**
 
-## Objective
+## **Objective**
+If the Hashrate (HR) is not enough to probably always have at least one share in the window PPLNS (WP), the HR will never be redirected to XvB node but always stay on P2Pool node.
 
-If the Hashrate (HR) is not enough to probably always have at least one share in the window PPLNS (WP), the HR will never be redirected to XvB node but always stay on p2pool node.
-
-If no share is acquired, all HR will stay on p2pool node until there is one.  
+If no share is acquired, all HR will stay on P2Pool node until there is one.  
 
 If HR is enough to probably always have at least one share in the (WP), the spare HR will be:  
-**Default mode**: in part given to XvB node to be in the most possible round type and keep in p2pool the rest of HR that will not impact the type of round (sHR for spared HR).  
+**Default mode**: in part given to XvB node to be in the most possible round type and keep in P2Pool the rest of HR that will not impact the type of round (sHR for spared HR).  
 **Hero mode**: entirely given to the XvB node regardless of sHR.
 
-## How
 
-PPLNS window size (PWS): API P2pool pplnsWindowSize [^1]  
+## **How**
+>PPLNS window size (PWS): API P2pool pplnsWindowSize [^1]  
 p2pool difficulty(PD): API P2pool sidechainDifficulty [^1]  
 mHR: minimum required HR to stay in WP = PD / (PWS*10) [^2]  
 
-Because it is probabilities, a buffer will be put in place for the required HR for p2pool and mHR for round type to allow some margin of errors.  
+Because it is probabilities, a buffer will be put in place for the required HR for P2Pool and mHR for round type to allow some margin of errors.  
 The mHR needs to be refreshed periodically because it can change with the difficulty changing. (PWS should not change).
 
-Calculation is made in % of time that will go to p2pool and to XvB, depending if mining on mini or main side chain.  
+Calculation is made in % of time that will go to P2Pool and to XvB, depending if mining on mini or main side chain.  
 Every ten minutes, the algorithm will decide how next 10 minutes will be distributed depending on default or hero mode.
 
-## Manage with outside HashRate
 
-If miners outside the Gupaxx instance are mining on P2pool for the same address, Gupaxx will send too much on P2pool because it doesn't take extra HR outside his control into account.
-To solve this issue, it will look at the sidechain estimated HR (eHR) from status command of p2pool. It is an estimation based on passed discovered shares, their difficulty, the number of blocks between them etc...
+## **Manage with outside HashRate**
+If miners outside the Gupaxx instance are mining on P2Pool for the same address, Gupaxx will send too much on P2Pool because it doesn't take extra HR outside his control into account.
+To solve this issue, it will look at the sidechain estimated HR (eHR) from status command of P2Pool. It is an estimation based on passed discovered shares, their difficulty, the number of blocks between them etc...
+
 This eHR will be retrieved at the same interval as the algorithm.
-This estimated external HR(eHR) minus the local HR sent to p2pool will be removed from the mHR.
+This estimated external HR(eHR) minus the local HR sent to P2Pool will be removed from the mHR.
 
 If miners outside the Gupaxx instance are mining on XvB for the same address, Gupaxx will maybe send too much (more than enough for the round) or too less (could have been in better round) on XvB.
 To solve this second issue, it will remove from the required HR to get to rounds the average HR sent to XvB (retrieved by XvB API) minus what he is sending of its own.
 
-## Examples
 
-PWS = 2160  
+## **Examples**
+> PWS = 2160  
 PD = 85.5M  
 
 ### Example 1: the poor
+> Miner has 2kH/s on Gupaxx.  
 
-Miner has 2kH/s on Gupaxx.  
 HR never goes on XvB, because the minimum required to have a share in WP is 4kH/s based on PD and PWS values.
 
 ### Example 2: the modest
+> Miner has 10kH/s on Gupaxx  
+for ten minutes, 4 are required to be put on P2Pool.
 
-Miner has 10kH/s on Gupaxx  
-for ten minutes, 4 are required to be put on p2pool.
-
-**Default mode**: 9 minutes are given to p2pool and one for XvB.  
-Because after giving 4mn to p2pool to meet mHR, he still have ~5kH/s to spare.  
+**Default mode**: 9 minutes are given to P2Pool and one for XvB.  
+Because after giving 4mn to P2Pool to meet mHR, he still have ~5kH/s to spare.  
 The first round type (Donor round) need 1kH/s and second round type (VIP Donor) need 10kH/s.  
 5kH/s is enough for the Donor Round but not enough for the VIP Donor.  
 So 1kH/s is given to XvB node so that the miner participate in the Donor round.  
 
-**Hero mode**: 4 minutes are given to p2pool and 6 for XvB.
+**Hero mode**: 4 minutes are given to P2Pool and 6 for XvB.
 
 ### Example 3: the hardworker
+> Miner has 5kH/s on Gupaxx
+He also have one remote miner that mines 2kH/s on P2Pool and another one 8kH/s on XvB
 
-Miner has 5kH/s on Gupaxx
-He also have one remote miner that mines 2kH/s on P2pool and another one 8kH/s on XvB
-**Default mode**: 6 minutes are given to p2pool and 4 for XvB.
-Because to have at still one share per window, gupaxx need to complete the already existent HR on p2pool with 4 minutes (2kH/s). But after that, it still have 6 minutes spared (3kH/s) when only 4 minutes are needed to gain the better round of vip donor (10kH/s). So it will send only the necessary 4 minutes to XvB and give the 2 minutes not needed to p2pool.
+**Default mode**: 6 minutes are given to P2Pool and 4 for XvB.
+Because to have at still one share per window, gupaxx need to complete the already existent HR on P2Pool with 4 minutes (2kH/s). But after that, it still have 6 minutes spared (3kH/s) when only 4 minutes are needed to gain the better round of vip donor (10kH/s). So it will send only the necessary 4 minutes to XvB and give the 2 minutes not needed to P2Pool.
 
-**Hero mode**: 4 minutes are given to p2pool and 6 for XvB. 
+**Hero mode**: 4 minutes are given to P2Pool and 6 for XvB. 
 
 
-## Technical Implementation
+## **Technical Implementation**
 
 ### Knowing if a share is in PW
+P2Pool node (PN) local API show only found shares and not current.
+Gupaxx process will check frequently the output of the P2Pool command "status" without impacting the console output of the P2Pool tab to get the current shares.
 
-P2pool node (PN) local API show only found shares and not current.
-Gupaxx process will check frequently the output of the p2pool command "status" without impacting the console output of the P2pool tab to get the current shares.
-
-### know oHR on P2pool
-
-Gupaxx watch for sidechain HR for his address on the output of status command of p2pool in a way that do not disturb the output of console in the UI.
+### know oHR on P2Pool
+Gupaxx watch for sidechain HR for his address on the output of status command of P2Pool in a way that do not disturb the output of console in the UI.
 
 ### know oHR on XvB
-
-Gupaxx receive these data from XvB API.
+Gupaxx receive this data from XvB API.
 
 ### Knowing the HR generated by Gupaxx
+Gupaxx will simply watch the values retrieved by XMRig process.
 
-Gupaxx will simply watch the values retrieved by Xmrig process.
+### Switching HR from P2Pool node to XvB node
+The mHR is calculated depending on the sidechain the P2Pool is mining on.  
+The XvB process will check every ten minutes the last 15 minutes average HR and decide when to switch (in seconds) for the ten next minutes. (first P2Pool then XvB).  
+*Need to see the time for XMRig takes to set the new settings by API.*  
+When the time to switch arrives, XvB process will send a request to XMRig to change the node used.  
 
-### Switching HR from p2pool node to XvB node
-
-The mHR is calculated depending on the sidechain the p2pool is mining on.  
-The XvB process will check every ten minutes the last 15 minutes average HR and decide when to switch (in seconds) for the ten next minutes. (first p2pool then XvB).  
-*Need to see the time for Xmrig takes to set the new settings by API.*  
-When the time to switch arrives, XvB process will send a request to Xmrig to change the node used.  
-### Modification of config of xmrig
-
-The following 4 attributes must be applied to xmrig config when mining to XvB node.
+### Modification of config of XMRig
+The following 4 attributes must be applied to XMRig config when mining to XvB node.
 
 ```ignore
              "url": "xvb node:4247"
@@ -112,7 +106,7 @@ Or to return back to p2pool
              "tls": false,
 ```
 
-The HTTP API of xmrig requires to give a full config.  
+The HTTP API of XMRig requires to give a full config.  
 The current config will be requested, modified and sent back.  
 
 [^1]: https://p2pool.io/mini/api/pool/stats 
