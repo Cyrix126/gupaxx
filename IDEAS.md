@@ -30,7 +30,7 @@ currently in the [README](https://github.com/Cyrix126/gupaxx#what-is-gupaxxxmrvs
 The README explains what XMRvsBeast it does but not what it is.
 we could improve this with either creating another tab or expanding the [current one](https://github.com/Cyrix126/gupaxx#what-is-gupaxxxmrvsbeast).
 
-> I think this necessary because noob users have no clue what XvB is. I know that it link their [website](https://xmrvsbeast.com/p2pool/), but that would just go right over their heads.
+> I think this necessary because noob users have no clue what XvB is. I know that it links their [website](https://xmrvsbeast.com/p2pool/), but that site would just go right over their heads.
 
 
 ### Generated wallet
