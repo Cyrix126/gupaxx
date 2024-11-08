@@ -59,13 +59,10 @@ It will send by default just enough to get to the highest round or, if hero mode
 
 ## **XvB Tab**
 ![CI](assets/images/xvb_tab.png)
-
 ### Console of XvB
 The output of the console will show useful information on the status of the XvB process and the decision of the algorithm for every 10 minutes.
-
 ### Token input
 When you registered your XMR payout address, you should have received a token. Please enter this token here.
-
 ### Account stats
 Account stats about your address on XMRvsBeast can be found here after the process is started with your token provided.
 
@@ -87,10 +84,8 @@ There is currently no plan to upstream the changes as the owner of Gupax said he
 
 ## **Troubleshooting**
 If you have any issue, feel free to ask for support in the [xmrvsbeast matrix room](#xmrvsbeast:monero.social) [![Chat on Matrix](https://matrix.to/img/matrix-badge.svg)](https://matrix.to/#/#xmrvsbeast:monero.social) or you can also just [open an issue](https://github.com/Cyrix126/gupaxx/issues/new/choose) in this repo. You can also contact me through [email](mailto:gupaxx@baermail.fr).
-
 ### Windows
 You must add an exception to your antivirus for the directory where gupaxx is executed. Follow the step for Windows Only that start at 30 seconds in this [video](https://user-images.githubusercontent.com/101352116/207978455-6ffdc0cc-204c-4594-9a2f-e10c505745bc.mp4).
-
 ### Mac OSX
 You must remove Gupaxx app from quarantine with following command:  
 *If you have put Gupaxx.app in your Applications*  
