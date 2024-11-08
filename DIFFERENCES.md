@@ -9,7 +9,7 @@ This tab also includes a console output to let you track if everything is workin
 
 A new column in Status Tab to see public stats from the raffle.
 
-### XMRig Proxy
+### XMRig-Proxy
 
 You can now point all your external miners and get all the juicy stats in Gupaxx. XvB algorithm is able to control XMRig-Proxy when it is enabled.
 
