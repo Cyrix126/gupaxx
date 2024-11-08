@@ -28,7 +28,7 @@ If Gupaxx could register the user automaticcly to the raffle, it would remove a 
 Automatic registration could be done to prevent spam by checking if the registered address is in p2pool window or by giving a small HR to XvB.
 It could be an option to ask at first start.  
 ### Setup Guide
-At first start, a guide could ask the user what it intends to do with Gupaxx (create node, create wallet, use XMRig-Proxy, participate in raffle...) and do the setup for him and show him what it must do manually. An option to skip this guide would be present for advanced users.
+At first start, a guide could ask the user what it intends to do with Gupaxx (create node, create wallet, use xmrig-proxy, participate in raffle...) and do the setup for him and show him what it must do manually. An option to skip this guide would be present for advanced users.
 ### Very noob mode
 At first start, a mode is suggested for very noob users. It would only shows the seed phrase of the wallet generated and configure all options for the user.
 ### Use remote node while syncing local node
@@ -76,12 +76,12 @@ On the XMRig tab, inform users about manual optimizations that Gupaxx can't cont
 Right now, the algorithm estimate the eHR with the estimation made by the p2pool instance which is calculating from passed shares.
 The algorithm could instead watch the stats from the stratum server, which is more precise but would take into account only miners which are pointed to it.
 The algorithm would still check the estimation made by the p2pool instance of Gupaxx and warn the user if it seems there is too much difference between the data of the stratum server and the one of p2pool. It could prevent the user to forget to configure a miner to the stratum p2pool.
-Could also be an option in advanced tab of XvB warning the user that he should point all his miners to the P2Pool instance of Gupaxx to take them into account.
+Could also be an option in advanced tab of XvB warning the user that he should point all his miners to the p2pool instance of Gupaxx to take them into account.
 It can be a checkbox into advanced option of XvB to use the stratum data.
 ### Automatic sending of funds
 A way to automatically send funds of mining to a wallet address or multiple wallet addresses by setting a minimum amount and % with time frequency or setting a fixed amount and priority.
-### Wait for sync to start of XMRig
-If P2Pool/node is not yet synced, XMRig can slower them and mine for nothing if it start at the same time. We don't want to prevent the user to start XMRig without P2Pool, so XMRig could start later only if P2Pool is auto started.
+### Wait for sync to start of xmrig
+If p2pool/node is not yet synced, xmrig can slower them and mine for nothing if it start at the same time. We don't want to prevent the user to start xmrig without p2pool, so xmrig could start later only if p2pool is auto started.
 ### Systray icon
 Enable a way to put Gupaxx in background, managing it with a systray icon.
 ### Auto-Launch

@@ -8,7 +8,7 @@ If the Hashrate (HR) is not enough to probably always have at least one share in
 If no share is acquired, all HR will stay on P2Pool node until there is one.  
 
 If HR is enough to probably always have at least one share in the (WP), the spare HR will be:  
-**Default mode**: in part given to XvB node to be in the most possible round type and keep in P2Pool the rest of HR that will not impact the type of round (sHR for spared HR).  
+**Default mode**: in part given to XvB node to be in the most possible round type and keep in p2pool the rest of HR that will not impact the type of round (sHR for spared HR).  
 **Hero mode**: entirely given to the XvB node regardless of sHR.
 
 ## **How**
@@ -43,7 +43,7 @@ Miner has 10kH/s on Gupaxx
 for ten minutes, 4 are required to be put on p2pool.
 
 **Default mode**: 9 minutes are given to p2pool and one for XvB.  
-Because after giving 4mn to P2Pool to meet mHR, he still have ~5kH/s to spare.  
+Because after giving 4mn to p2pool to meet mHR, he still have ~5kH/s to spare.  
 The first round type (Donor round) need 1kH/s and second round type (VIP Donor) need 10kH/s.  
 5kH/s is enough for the Donor Round but not enough for the VIP Donor.  
 So 1kH/s is given to XvB node so that the miner participate in the Donor round.  
