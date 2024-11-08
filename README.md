@@ -45,7 +45,7 @@ https://github.com/Cyrix126/gupaxx/assets/58007246/610cbfea-fd97-4150-95ed-9c8a7
 
 
 4. Input your Monero address in the `P2Pool` tab
-5. Register your same address on [XMRvsBeast](https://xmrvsbeast.com)
+5. Register the same address on [XMRvsBeast](https://xmrvsbeast.com)
 6. Input the token received in the `XvB Tab`
 6. Start `P2Pool`
 7. Start `XMRig`
