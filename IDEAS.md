@@ -8,9 +8,7 @@
 ### Synchronize source code repository on p2p network
 - Github is proprietary. If Gupaxx aims to be free software, it should not be only available on this proprietary platform and we should explore options to be github free.  
 - We can use [Radicle](https://radicle.xyz/) to get Gupaxx on a p2p collaboration stack.  
-- We can use [Codeberg](https://codeberg.org/) as an open source alternative for Github.
 > The code, issues and PR could then also be synchronized with Github.  
-(We could create mirrors between Github, Radicle and/or Codeberg)
 
 ### Integrate a P2Pool compatible Nodes crawler
 To get rid of integrating nodes list, we can include a crawler like monero.fail inside Gupaxx.
@@ -24,14 +22,6 @@ This would be optional and would check if the requirement are fulfilled before e
 ### Website
 Creating a website like [gupax.io](https://gupax.io) to have a more user friendly presentation and installation method.  
 Having a website, we can detect the architecture and OS of the visitor and give them the right archive to download.
-
-### XMRvsBeast explanation
-currently in the [README](https://github.com/Cyrix126/gupaxx#what-is-gupaxxxmrvsbeast), there is no explanation on what XMRvsBeast is.
-The README explains what XMRvsBeast it does but not what it is.
-we could improve this with either creating another tab or expanding the [current one](https://github.com/Cyrix126/gupaxx#what-is-gupaxxxmrvsbeast).
-
-> I think this necessary because noob users have no clue what XvB is. I know that it links their [website](https://xmrvsbeast.com/p2pool/), but that site would just go right over their heads.
-
 
 ### Generated wallet
 If Gupaxx could create a wallet and put the primary address in P2Pool tab automatically, it would remove a manual step for the user.  
@@ -80,12 +70,6 @@ Reduce in/out peers, remote nodes by default
 ## **Making Gupaxx Support more environments**
 ### Packaging
 - Add repository/AUR for Gupaxx and a status of packaging distro/version on the README.
-- Add support support for [Flatpak](https://docs.flatpak.org/en/latest/first-build.html).
-- Add support for [AppImage](https://appimage.org/).
-- Add support for [Nix](https://nixos.wiki/wiki/Nixpkgs/Create_and_debug_packages).
-- Add support for [Guix](https://guix.gnu.org/).
-- Add Support [*BSD](https://www.freebsd.org/) systems.
-> Both XMRig and P2Pool support FreeBSD.
 
 ### Minimum requirement
 Add a table with minimum hardware/software requirements to the README.
