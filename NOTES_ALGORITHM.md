@@ -43,7 +43,7 @@ Miner has 10kH/s on Gupaxx
 for ten minutes, 4 are required to be put on p2pool.
 
 **Default mode**: 9 minutes are given to p2pool and one for XvB.  
-Because after giving 4mn to p2p ool to meet mHR, he still have ~5kH/s to spare.  
+Because after giving 4mn to p2pool to meet mHR, he still have ~5kH/s to spare.  
 The first round type (Donor round) need 1kH/s and second round type (VIP Donor) need 10kH/s.  
 5kH/s is enough for the Donor Round but not enough for the VIP Donor.  
 So 1kH/s is given to XvB node so that the miner participate in the Donor round.  

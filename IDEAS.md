@@ -118,4 +118,4 @@ let the build in updater of Gupaxx check the signature of the release to confirm
 So that user can see how much is given to this project and make their own opinion of it if enough donations have been given or not, the history of donation should be made visible with the viewkey available.  
 
 ## XvB
-keeping track of participation history in rounds and automatically showing results in the XvB tab.
+keeping track of participation history in rounds and showing results in the XvB tab.

@@ -22,9 +22,9 @@ The rendering of Tabs has been modified so that the minimum stated size of the w
 
 The rendering of the benchmark table and of console outputs were calculating every line at the same time. Now it only renders what you see. It is a significant improvement for your processor, and you can feel the difference if it is not very powerful.
 
-Updates from Gupaxx do not retrieve XMRig and P2Pool from upstream anymore, but use versions in the bundled version. This modification prevent bad surprise (see [#3](https://github.com/Cyrix126/gupaxx/issues/3)).
+Updates from Gupaxx does not retrieve xmrig and p2pool from upstream anymore, but use versions in the bundled version. This modification prevent bad surprise (see [#3](https://github.com/Cyrix126/gupaxx/issues/3)).
 
-It also allows advanced users to use your their own version of P2Pool and XMRig.The standalone version of Gupaxx will not replace them.
+It also allows advanced users to use your their own version of p2pool and xmrig.The standalone version of Gupaxx will not replace them.
 
 ## Security
 With the upgrade of dependencies, cargo audit shows no more warnings for Gupaxx. (instead of 5 vulnerabilities and 4 allowed warnings for Gupax.) 
