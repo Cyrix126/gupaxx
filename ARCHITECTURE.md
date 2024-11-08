@@ -39,7 +39,7 @@ The field node from ImgXmrig needs to be moved to PubXvbApi. This value must be 
 ## **Updates**
 
 A new option in Gupaxx tab advanced will enable bundled updates.
-The binary included of Gupaxx will have default value for bundled updates depending if it is coming from the standalone or the bundled release.
+The binary included of gupaxx will have default value for bundled updates depending if it is coming from the standalone or the bundled release.
 
 Updates from Gupaxx will do the following differently from upstream:
 - Check if using bundled or standalone with state. Update only Gupaxx binary if the latter or xmrig and p2pool from bundle version if the former.
