@@ -29,7 +29,7 @@ This document explains how the source code is organized. Everything differing fr
 |component| Gupaxx related features, like updates and nodes.
 
 
-## **Technical differences of column XMRig in Status Tab process sub-menu with upstream Gupax**
+## **Technical differences of column XMRig in Status Tab process sub menu with upstream Gupax**
 
 Status of process for XMRig use for some information an image of data when the process started.
 The node of xmrig in upstream can not change without a restart of the process. In this fork, the node used by XMRig needs to be updated without restart (using the config HTTP API of XMRig).

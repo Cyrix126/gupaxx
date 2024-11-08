@@ -10,6 +10,7 @@ If no share is acquired, all HR will stay on P2Pool node until there is one.
 If HR is enough to probably always have at least one share in the (WP), the spare HR will be:  
 **Default mode**: in part given to XvB node to be in the most possible round type and keep in P2Pool the rest of HR that will not impact the type of round (sHR for spared HR).  
 **Hero mode**: entirely given to the XvB node regardless of sHR.
+
 ## **How**
 >PPLNS window size (PWS): API P2pool pplnsWindowSize [^1]  
 p2pool difficulty(PD): API P2pool sidechainDifficulty [^1]  
@@ -20,7 +21,6 @@ The mHR needs to be refreshed periodically because it can change with the diffic
 
 Calculation is made in % of time that will go to P2Pool and to XvB, depending if mining on mini or main side chain.  
 Every ten minutes, the algorithm will decide how next 10 minutes will be distributed depending on default or hero mode.
-
 
 ## **Manage with outside HashRate**
 If miners outside the Gupaxx instance are mining on P2Pool for the same address, Gupaxx will send too much on P2Pool because it doesn't take extra HR outside his control into account.
