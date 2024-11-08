@@ -2,12 +2,12 @@
 
 
 **Theses are only ideas, everything here is still to be decided and only thoughts for now.**
-- Note: Some ideas could be done in a matter of hours, some could take months.
+Note: Some ideas could be done in a matter of hours, some could take months.
 
 ## **Making Gupaxx more Decentralized**
 ### Synchronize source code repository on p2p network
-- Github is proprietary. If Gupaxx aims to be free software, it should not be only available on this proprietary platform and we should explore options to be github free.  
-- We can use [Radicle](https://radicle.xyz/) to get Gupaxx on a p2p collaboration stack.  
+Github is proprietary. If Gupaxx aims to be free software, it should not be only available on this proprietary platform and we should explore options to be github free.  
+We can use [Radicle](https://radicle.xyz/) to get Gupaxx on a p2p collaboration stack.  
 > The code, issues and PR could then also be synchronized with Github.  
 
 ### Integrate a P2Pool compatible Nodes crawler
@@ -69,7 +69,7 @@ Reduce in/out peers, remote nodes by default
 
 ## **Making Gupaxx Support more environments**
 ### Packaging
-- Add repository/AUR for Gupaxx and a status of packaging distro/version on the README.
+Add repository/AUR for Gupaxx and a status of packaging distro/version on the README.
 
 ### Minimum requirement
 Add a table with minimum hardware/software requirements to the README.

@@ -37,16 +37,16 @@ To solve this second issue, it will remove from the required HR to get to rounds
 
 
 ## **Examples**
-> PWS = 2160  
+PWS = 2160  
 PD = 85.5M  
 
 ### Example 1: the poor
-> Miner has 2kH/s on Gupaxx.  
+Miner has 2kH/s on Gupaxx.  
 
 HR never goes on XvB, because the minimum required to have a share in WP is 4kH/s based on PD and PWS values.
 
 ### Example 2: the modest
-> Miner has 10kH/s on Gupaxx  
+Miner has 10kH/s on Gupaxx  
 for ten minutes, 4 are required to be put on P2Pool.
 
 **Default mode**: 9 minutes are given to P2Pool and one for XvB.  
@@ -58,7 +58,7 @@ So 1kH/s is given to XvB node so that the miner participate in the Donor round.
 **Hero mode**: 4 minutes are given to P2Pool and 6 for XvB.
 
 ### Example 3: the hardworker
-> Miner has 5kH/s on Gupaxx
+Miner has 5kH/s on Gupaxx
 He also have one remote miner that mines 2kH/s on P2Pool and another one 8kH/s on XvB
 
 **Default mode**: 6 minutes are given to P2Pool and 4 for XvB.
