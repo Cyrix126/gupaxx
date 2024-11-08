@@ -1,6 +1,5 @@
 # IDEAS for the future of Gupaxx
 
-
 **Theses are only ideas, everything here is still to be decided and only thoughts for now.**
 Some ideas could be done in a matter of hours, some could take months.
 
@@ -34,6 +33,7 @@ At first start, a guide could ask the user what it intends to do with Gupaxx (cr
 At first start, a mode is suggested for very noob users. It would only shows the seed phrase of the wallet generated and configure all options for the user.
 ### Use remote node while syncing local node
 To reduce the time to get the first shares. No need to wait for the monero node to be synced.
+
 ### Better UI
 #### Set fixed font size, do not resize with size of window
 Setting a fixed font size will allow to use the space fully and having a UI more adapted to screens. Option to set the size of the font will be included.
@@ -51,8 +51,7 @@ Status columns can take together lots of space and user can use only a number of
 [Done](https://github.com/Cyrix126/gupaxx/commit/6cb767a342bec2df3358b10826a1ec1dee57fc76) and [Done](https://github.com/Cyrix126/gupaxx/commit/a102bdbee2e4c0bc8785f9e638d3e54958d79489)
 Reduce in/out peers, remote nodes by default
 
-
-## Supporting more environments
+## Making Gupaxx Support more environments
 ### Packaging
 Add repository/AUR for Gupaxx and a status of packaging distro/version on the README
 ### Minimum requirement
@@ -113,8 +112,10 @@ See [this](https://reproducible-builds.org).
 Show the summuray of what will change between releases before updating to newer release.
 ### Check signature of updates with Gupaxx
 let the build in updater of Gupaxx check the signature of the release to confirm that the releases has been signed by the right key.
+
 ## Donation
 ### Donation transparency
-So that user can see how much is given to this project and make their own opinion of if enough donations have been given or not, the history of donation should be made visible with the viewkey available.  
+So that user can see how much is given to this project and make their own opinion of it if enough donations have been given or not, the history of donation should be made visible with the viewkey available.  
+
 ## XvB
 keeping track of participation history in rounds and showing results in the XvB tab.
