@@ -1,8 +1,8 @@
 
 **Draft**
 
-# **Algorithm of distribution of Hashrate between P2pool and XvB**
-## **Objective**
+# Algorithm of distribution of Hashrate between P2pool and XvB
+## Objective
 If the Hashrate (HR) is not enough to probably always have at least one share in the window PPLNS (WP), the HR will never be redirected to XvB node but always stay on P2Pool node.
 
 If no share is acquired, all HR will stay on P2Pool node until there is one.  
@@ -11,7 +11,7 @@ If HR is enough to probably always have at least one share in the (WP), the spar
 **Default mode**: in part given to XvB node to be in the most possible round type and keep in p2pool the rest of HR that will not impact the type of round (sHR for spared HR).  
 **Hero mode**: entirely given to the XvB node regardless of sHR.
 
-## **How**
+## How
 PPLNS window size (PWS): API P2pool pplnsWindowSize [^1]  
 p2pool difficulty(PD): API P2pool sidechainDifficulty [^1]  
 mHR: minimum required HR to stay in WP = PD / (PWS*10) [^2]  
@@ -22,7 +22,7 @@ The mHR needs to be refreshed periodically because it can change with the diffic
 Calculation is made in % of time that will go to p2pool and to XvB, depending if mining on mini or main side chain.  
 Every ten minutes, the algorithm will decide how next 10 minutes will be distributed depending on default or hero mode.
 
-## **Manage with outside HashRate**
+## Manage with outside HashRate
 If miners outside the Gupaxx instance are mining on P2Pool for the same address, Gupaxx will send too much on P2Pool because it doesn't take extra HR outside his control into account.
 To solve this issue, it will look at the sidechain estimated HR (eHR) from status command of P2Pool. It is an estimation based on passed discovered shares, their difficulty, the number of blocks between them etc...
 
@@ -32,7 +32,7 @@ This estimated external HR(eHR) minus the local HR sent to p2pool will be remove
 If miners outside the Gupaxx instance are mining on XvB for the same address, Gupaxx will maybe send too much (more than enough for the round) or too less (could have been in better round) on XvB.
 To solve this second issue, it will remove from the required HR to get to rounds the average HR sent to XvB (retrieved by XvB API) minus what he is sending of its own.
 
-## **Examples**
+## Examples
 PWS = 2160  
 PD = 85.5M  
 ### Example 1: the poor
@@ -43,7 +43,7 @@ Miner has 10kH/s on Gupaxx
 for ten minutes, 4 are required to be put on p2pool.
 
 **Default mode**: 9 minutes are given to p2pool and one for XvB.  
-Because after giving 4mn to p2pool to meet mHR, he still have ~5kH/s to spare.  
+Because after giving 4mn to p2p ool to meet mHR, he still have ~5kH/s to spare.  
 The first round type (Donor round) need 1kH/s and second round type (VIP Donor) need 10kH/s.  
 5kH/s is enough for the Donor Round but not enough for the VIP Donor.  
 So 1kH/s is given to XvB node so that the miner participate in the Donor round.  
@@ -58,7 +58,7 @@ Because to have at still one share per window, gupaxx need to complete the alrea
 
 **Hero mode**: 4 minutes are given to P2Pool and 6 for XvB. 
 
-## **Technical Implementation**
+## Technical Implementation
 ### Knowing if a share is in PW
 P2Pool node (PN) local API show only found shares and not current.
 Gupaxx process will check frequently the output of the P2Pool command "status" without impacting the console output of the P2Pool tab to get the current shares.
