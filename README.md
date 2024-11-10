@@ -38,14 +38,14 @@ For a detailed explanation of Gupax, see the [README](https://github.com/hinto-j
 2. Extract
 3. Launch Gupaxx
 
-Next steps can be seen in this video tutorial.
+Next steps can be seen in this video tutorial:
 
 https://github.com/Cyrix126/gupaxx/assets/58007246/610cbfea-fd97-4150-95ed-9c8a7ef5ba94
 
 
 
 4. Input your Monero address in the `P2Pool` tab
-5. Register your same address on [XMRvsBeast](https://xmrvsbeast.com)
+5. Register the same address on [XMRvsBeast](https://xmrvsbeast.com)
 6. Input the token received in the XvB Tab
 6. Start P2Pool
 7. Start XMRig
@@ -53,8 +53,8 @@ https://github.com/Cyrix126/gupaxx/assets/58007246/610cbfea-fd97-4150-95ed-9c8a7
 
 Gupaxx will distribute your hashrate between P2Pool and XMRvsBeast as defined by [this algorithm](NOTES_ALGORITHM.md).
 
-The algorithm will decide which quantity of HR will be directed to P2Pool and to XMRvsBeast, so that you still keep a share in the [PPLNS Window](https://github.com/SChernykh/p2pool#how-payouts-work-in-p2pool). 
-It will send by default just enough to get to the highest round or, if hero mode is enabled, everything minus the minimum required to still have a share in the PPLNS Window.
+The algorithm will decide which quantity of HR that will be directed to P2Pool and to XMRvsBeast, so that you still keep a share in the [PPLNS Window](https://github.com/SChernykh/p2pool#how-payouts-work-in-p2pool). 
+It will by default send just enough to get to the highest round or, if hero mode is enabled, everything minus the minimum required to still have a share in the PPLNS Window.
 </div>
 
 ## XvB Tab
@@ -85,7 +85,7 @@ There is currently no plan to upstream the changes as the owner of Gupax said he
 ## Troubleshooting
 If you have any issue, feel free to ask for support in the [xmrvsbeast matrix room](#xmrvsbeast:monero.social) [![Chat on Matrix](https://matrix.to/img/matrix-badge.svg)](https://matrix.to/#/#xmrvsbeast:monero.social) or you can also just [open an issue](https://github.com/Cyrix126/gupaxx/issues/new/choose) in this repo. You can also contact me through [email](mailto:gupaxx@baermail.fr).
 ### Windows
-You must add an exception to your antivirus for the directory where gupaxx is executed. Follow the step for Windows Only that start at 30 seconds in this [video](https://user-images.githubusercontent.com/101352116/207978455-6ffdc0cc-204c-4594-9a2f-e10c505745bc.mp4).
+You must add an exception to your antivirus for the directory where Gupaxx is executed. Follow the step for Windows Only, that starts at 30 seconds in this [video](https://user-images.githubusercontent.com/101352116/207978455-6ffdc0cc-204c-4594-9a2f-e10c505745bc.mp4).
 ### Mac OSX
 You must remove Gupaxx app from quarantine with following command:  
 *If you have put Gupaxx.app in your Applications*  

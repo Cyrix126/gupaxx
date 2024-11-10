@@ -8,7 +8,7 @@ If the Hashrate (HR) is not enough to probably always have at least one share in
 If no share is acquired, all HR will stay on P2Pool node until there is one.  
 
 If HR is enough to probably always have at least one share in the (WP), the spare HR will be:  
-**Default mode**: in part given to XvB node to be in the most possible round type and keep in p2pool the rest of HR that will not impact the type of round (sHR for spared HR).  
+**Default mode**: in part given to XvB node to be in the most possible round type and keep in P2Pool the rest of HR that will not impact the type of round (sHR for spared HR).  
 **Hero mode**: entirely given to the XvB node regardless of sHR.
 
 ## How
@@ -16,10 +16,10 @@ PPLNS window size (PWS): API P2pool pplnsWindowSize [^1]
 p2pool difficulty(PD): API P2pool sidechainDifficulty [^1]  
 mHR: minimum required HR to stay in WP = PD / (PWS*10) [^2]  
 
-Because it is probabilities, a buffer will be put in place for the required HR for p2pool and mHR for round type to allow some margin of errors.  
+Because it is probabilities, a buffer will be put in place for the required HR for P2Pool and mHR for round type to allow some margin of errors.  
 The mHR needs to be refreshed periodically because it can change with the difficulty changing. (PWS should not change).
 
-Calculation is made in % of time that will go to p2pool and to XvB, depending if mining on mini or main side chain.  
+Calculation is made in % of time that will go to P2Pool and to XvB, depending if your mining on mini or main side chain.  
 Every ten minutes, the algorithm will decide how next 10 minutes will be distributed depending on default or hero mode.
 
 ## Manage with outside HashRate
@@ -27,7 +27,7 @@ If miners outside the Gupaxx instance are mining on P2Pool for the same address,
 To solve this issue, it will look at the sidechain estimated HR (eHR) from status command of P2Pool. It is an estimation based on passed discovered shares, their difficulty, the number of blocks between them etc...
 
 This eHR will be retrieved at the same interval as the algorithm.
-This estimated external HR(eHR) minus the local HR sent to p2pool will be removed from the mHR.
+This estimated external HR(eHR) minus the local HR sent to P2Pool will be removed from the mHR.
 
 If miners outside the Gupaxx instance are mining on XvB for the same address, Gupaxx will maybe send too much (more than enough for the round) or too less (could have been in better round) on XvB.
 To solve this second issue, it will remove from the required HR to get to rounds the average HR sent to XvB (retrieved by XvB API) minus what he is sending of its own.
@@ -40,10 +40,10 @@ Miner has 2kH/s on Gupaxx.
 HR never goes on XvB, because the minimum required to have a share in WP is 4kH/s based on PD and PWS values.
 ### Example 2: the modest
 Miner has 10kH/s on Gupaxx  
-for ten minutes, 4 are required to be put on p2pool.
+for ten minutes, 4 are required to be put on P2Pool.
 
-**Default mode**: 9 minutes are given to p2pool and one for XvB.  
-Because after giving 4mn to p2pool to meet mHR, he still have ~5kH/s to spare.  
+**Default mode**: 9 minutes are given to P2Pool and one for XvB.  
+Because after giving 4mn to P2Pool to meet mHR, he still have ~5kH/s to spare.  
 The first round type (Donor round) need 1kH/s and second round type (VIP Donor) need 10kH/s.  
 5kH/s is enough for the Donor Round but not enough for the VIP Donor.  
 So 1kH/s is given to XvB node so that the miner participate in the Donor round.  
@@ -91,7 +91,7 @@ Or to return back to p2pool
              "tls": false,
 ```
 
-The HTTP API of xmrig requires to give a full config.  
+The HTTP API of XMRig requires to give a full config.  
 The current config will be requested, modified and sent back.  
 
 [^1]: https://p2pool.io/mini/api/pool/stats 
