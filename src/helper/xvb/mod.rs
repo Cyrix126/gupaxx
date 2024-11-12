@@ -853,7 +853,7 @@ fn update_indicator_algo(
     {
         let node = pub_api.lock().unwrap().current_node;
         let msg_indicator = match node {
-            Some(XvbNode::P2pool) if time_donated > 0 => {
+            Some(XvbNode::P2pool) if time_donated > 0 && time_donated != XVB_TIME_ALGO => {
                 // algo is mining on p2pool but will switch to XvB after
                 // show time remaining on p2pool
 
