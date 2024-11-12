@@ -184,7 +184,7 @@ path_xmr: {:#?}\n
 				}
 				Tab::Xvb => {
 					debug!("App | Entering [XvB] Tab");
-					crate::disk::state::Xvb::show(&mut self.state.xvb, self.size, &self.state.p2pool.address, ctx, ui, &self.xvb_api, &self.xmrig_api, xvb_is_running);
+					crate::disk::state::Xvb::show(&mut self.state.xvb, self.size, &self.state.p2pool.address, ctx, ui, &self.xvb_api, &self.xmrig_api, &self.xmrig_proxy_api, xvb_is_running);
 				}
 			}
 		});

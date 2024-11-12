@@ -8,6 +8,7 @@ use readable::up::Uptime;
 
 use crate::disk::state::{ManualDonationLevel, ManualDonationMetric, XvbMode};
 use crate::helper::xrig::xmrig::PubXmrigApi;
+use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
 use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::helper::xvb::PubXvbApi;
 use crate::regex::num_lines;
@@ -38,6 +39,7 @@ impl crate::disk::state::Xvb {
         ui: &mut egui::Ui,
         api: &Arc<Mutex<PubXvbApi>>,
         gui_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
+        gui_api_xp: &Arc<Mutex<PubXmrigProxyApi>>,
         is_alive: bool,
     ) {
         egui::ScrollArea::vertical().show(ui, |ui| {
@@ -174,9 +176,11 @@ impl crate::disk::state::Xvb {
                                 ManualDonationMetric::Kilo => 1_000_000.0,
                                 ManualDonationMetric::Mega => 1_000_000_000.0
                             };
-
+                            // use proxy HR in priority, or use xmrig or default.
                             let mut hashrate_xmrig = {
-                                if gui_api_xmrig.lock().unwrap().hashrate_raw_15m > 0.0 {
+                                if gui_api_xp.lock().unwrap().hashrate_10m > 0.0 {
+                                    gui_api_xp.lock().unwrap().hashrate_10m
+                                } else if gui_api_xmrig.lock().unwrap().hashrate_raw_15m > 0.0 {
                                     gui_api_xmrig.lock().unwrap().hashrate_raw_15m
                                 } else if gui_api_xmrig.lock().unwrap().hashrate_raw_1m > 0.0 {
                                     gui_api_xmrig.lock().unwrap().hashrate_raw_1m
