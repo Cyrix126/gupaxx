@@ -7,7 +7,7 @@ Some ideas could be done in a matter of hours, some could take months.
 ### Synchronize source code repository on p2p network
 Github is proprietary. If Gupaxx aims to be free software, it should not only be available on this proprietary platform and we should explore other options to be github free.
 We can use [Radicle](https://radicle.xyz/) to get Gupaxx on a p2p collaboration stack.
-we can create mirrors between Github and Radicle.
+We can create mirrors between Github and Radicle.
 The code, issues and PR could be synchronized with Github.
 ### Integrate a P2Pool compatible Nodes crawler
 To get rid of integrating nodes list, we can include a crawler like monero.fail inside Gupaxx.
