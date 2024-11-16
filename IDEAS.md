@@ -5,11 +5,10 @@ Some ideas could be done in a matter of hours, some could take months.
 
 ## More Decentralized
 ### Synchronize source code repository on p2p network
-Github is proprietary. If Gupaxx aims to be free software, it should not only be available on this proprietary platform and we should explore other options to be github free.  
-We can use [Radicle](https://radicle.xyz/) to get Gupaxx on a p2p collaboration stack.  
-we can use [Codeberg](https://codeberg.org/) as an foss alternative to github
-we can create mirrors between github, codeberg and radicle.(doesnt have to be all 3)
-The code, issues and PR could be synchronized with Github.  
+Github is proprietary. If Gupaxx aims to be free software, it should not only be available on this proprietary platform and we should explore other options to be github free.
+We can use [Radicle](https://radicle.xyz/) to get Gupaxx on a p2p collaboration stack.
+we can create mirrors between Github and Radicle.
+The code, issues and PR could be synchronized with Github.
 ### Integrate a P2Pool compatible Nodes crawler
 To get rid of integrating nodes list, we can include a crawler like monero.fail inside Gupaxx.
 ### Integrate a Monero Node
@@ -19,21 +18,20 @@ This would be optional and would check if the requirement are fulfilled before e
 
 ## More User friendly
 ### Website
-Creating a website like [gupax.io](https://gupax.io) to have a more user friendly presentation and installation method.  
+Creating a website like [gupax.io](https://gupax.io) to have a more user friendly presentation and installation method.
 Having a website, we can detect the architecture and OS of the visitor and give them the right archive to download.
 ### XMRvsBeast explanation
 Currently in the [README](https://github.com/Cyrix126/gupaxx#what-is-gupaxxxmrvsbeast), there is no explanation on what XMRvsBeast is.
 The README explains what XMRvsBeast it does but not what it is.
-we could improve this with either creating another tab or expanding the [current one](https://github.com/Cyrix126/gupaxx#what-is-gupaxxxmrvsbeast).
-> I think this necessary because noob users have no clue what XvB is. I know that it links to the [XvB website](https://xmrvsbeast.com/p2pool/), but the site would just go right over their heads.
+we could improve this with either creating another chapter or expanding the [current one](https://github.com/Cyrix126/gupaxx#what-is-gupaxxxmrvsbeast).
 ### Generated wallet
-If Gupaxx could create a wallet and put the primary address in P2Pool tab automatically, it would remove a manual step for the user.  
-It could be an option to ask at first start.  
+If Gupaxx could create a wallet and put the primary address in P2Pool tab automatically, it would remove a manual step for the user.
+It could be an option to ask at first start.
 The user could access this wallet on the same computer with the official GUI wallet. A password would be needed and a button could be added to show the seedphrase.
 ### Auto register to XvB
-If Gupaxx could register the user automatically to the raffle, it would remove a manual step for the user.  
+If Gupaxx could register the user automatically to the raffle, it would remove a manual step for the user.
 Automatic registration could be done to prevent spam by checking if the registered address is in P2Pool window or by giving a small HR to XvB.
-It could be an option to ask at first start.  
+It could be an option to ask at first start.
 ### Setup Guide
 At first start, a guide could ask the user what it intends to do with Gupaxx (create node, create wallet, use XMRig-Proxy, participate in raffle...) and do the setup for him and show him what it must do manually. An option to skip this guide would be present for advanced users.
 ### Very noob mode
@@ -45,7 +43,7 @@ To reduce the time to get the first shares. No need to wait for the monero node 
 #### Set fixed font size, do not resize with size of window
 Setting a fixed font size will allow to use the space fully and having a UI more adapted to screens. Option to set the size of the font will be included.
 #### Do not re-ask password if not needed
-On Linux, Do not re-ask for sudo to start XMRig when the user can use sudo without a password. It can happen if visudo has been configured to do so or if there is a delay specified in /etc/sudoers with "timestamp_timeout". 
+On Linux, Do not re-ask for sudo to start XMRig when the user can use sudo without a password. It can happen if visudo has been configured to do so or if there is a delay specified in /etc/sudoers with "timestamp_timeout".
 #### Allow resize of consoles
 So users can view more or less output as they need.
 #### Scrolling arrows
@@ -66,11 +64,10 @@ Add support for [AppImage](https://appimage.org/).
 Add support for [Nix](https://nixos.wiki/wiki/Nixpkgs/Create_and_debug_packages).
 Add support for [Guix](https://guix.gnu.org/).
 Add Support [*BSD](https://www.freebsd.org/) systems.
-> Both XMRig and P2Pool support FreeBSD.
 ### Minimum requirement
 Add a table with the minimum hardware/software requirements to the README.
 ### Add more target
-Gupaxx could add support for Linux ARM64 since both P2Pool and XMRig can compile on this target. 
+Gupaxx could add support for Linux ARM64 since both P2Pool and XMRig can compile on this target.
 ### Refactor size of text
 Gupaxx currently resize texts/widgets based on the window size. Instead, the text/widget size should be decided by the OS/config, scroll bar should be used when there is not enough space. It will allow to use Gupaxx on different ratio of screen.
 ### CLI for Algorithm
@@ -98,7 +95,7 @@ If P2Pool/node is not yet synced, XMRig can slower them and mine for nothing if 
 ### Systray icon
 Enable a way to put Gupaxx in background, managing it with a systray icon.
 ### Auto-Launch
-Option to launch Gupaxx at startup 
+Option to launch Gupaxx at startup
 ### API of Algorithm
 To make the Algorithm controllable outside of Gupaxx.
 ### Graphs history of HR
@@ -110,11 +107,11 @@ Done by [Sina](https://github.com/mostafaei2002) [PR](https://github.com/Cyrix12
 An advanced tab on XvB tab with multiple tools to set the HR manually.
 The user can sometime better know the right decision from his HR than the algo that will take more time to get everything right, specially if resources are changing.
 ### Integrate XMRig-Proxy
-[Done](https://github.com/Cyrix126/gupaxx/releases/tag/v1.2.0)  
+[Done](https://github.com/Cyrix126/gupaxx/releases/tag/v1.2.0)
 The algorithm of distribution of HR can't control HR outside of his instance.
 It must estimate external HR, which can be approximative.
 If a user control multiples miners, it could connect all of them to a XMRig-Proxy instance.
-Gupaxx could offer this XMRig-instance and control it like it was a normal XMRig instance.  
+Gupaxx could offer this XMRig-instance and control it like it was a normal XMRig instance.
 
 ## Trust-less Builds
 ### Reproducible builds
@@ -127,7 +124,7 @@ let the build in updater of Gupaxx check the signature of the release to confirm
 
 ## Donation
 ### Donation transparency
-So that user can see how much is given to this project and make their own opinion of it if enough donations have been given or not, the history of donation should be made visible with the viewkey available.  
+So that user can see how much is given to this project and make their own opinion of it if enough donations have been given or not, the history of donation should be made visible with the viewkey available.
 
 ## XvB
 keeping track of participation history in rounds and automatically showing results in the XvB tab.
