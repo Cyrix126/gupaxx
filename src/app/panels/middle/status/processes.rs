@@ -2,17 +2,17 @@ use egui::{ScrollArea, Ui, Vec2};
 use readable::up::UptimeFull;
 use std::sync::{Arc, Mutex};
 
+use crate::app::eframe_impl::ProcessStatesGui;
 use crate::disk::state::Status;
 use crate::helper::node::PubNodeApi;
 use crate::helper::p2pool::{ImgP2pool, PubP2poolApi};
 use crate::helper::xrig::xmrig::{ImgXmrig, PubXmrigApi};
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
 use crate::helper::xvb::{rounds::XvbRound, PubXvbApi};
-use crate::helper::Sys;
-use egui::TextStyle;
+use crate::helper::{ProcessName, Sys};
 
 use crate::constants::*;
-use egui::{Label, RichText, TextStyle::*};
+use egui::{Label, RichText, TextStyle};
 use log::*;
 impl Status {
     #[allow(clippy::too_many_arguments)]
@@ -21,19 +21,15 @@ impl Status {
         sys: &Arc<Mutex<Sys>>,
         size: Vec2,
         ui: &mut egui::Ui,
-        node_alive: bool,
         node_api: &Arc<Mutex<PubNodeApi>>,
-        p2pool_alive: bool,
         p2pool_api: &Arc<Mutex<PubP2poolApi>>,
         p2pool_img: &Arc<Mutex<ImgP2pool>>,
-        xmrig_alive: bool,
         xmrig_api: &Arc<Mutex<PubXmrigApi>>,
-        xmrig_proxy_alive: bool,
         xmrig_proxy_api: &Arc<Mutex<PubXmrigProxyApi>>,
         xmrig_img: &Arc<Mutex<ImgXmrig>>,
-        xvb_alive: bool,
         xvb_api: &Arc<Mutex<PubXvbApi>>,
         max_threads: usize,
+        states: &ProcessStatesGui,
     ) {
         // set fixed text size, temporary solution before refactoring text/widget size.
         let width = ((size.x / 5.0) - (SPACE * 1.7500)).max(0.0);
@@ -49,27 +45,45 @@ impl Status {
         ui.horizontal(|ui| {
             ScrollArea::horizontal().show(ui, |ui| {
                 ui.set_min_height(min_height * 34.2);
-
-                // [Gupax]
                 gupax(ui, min_size, size, sys);
-                // [Node]
-                node(ui, min_size, size, node_alive, node_api);
-                // [P2Pool]
-                p2pool(ui, min_size, size, p2pool_alive, p2pool_api, p2pool_img);
-                // [XMRig]
+                node(
+                    ui,
+                    min_size,
+                    size,
+                    states.is_alive(ProcessName::Node),
+                    node_api,
+                );
+                p2pool(
+                    ui,
+                    min_size,
+                    size,
+                    states.is_alive(ProcessName::P2pool),
+                    p2pool_api,
+                    p2pool_img,
+                );
                 xmrig(
                     ui,
                     min_size,
                     size,
-                    xmrig_alive,
+                    states.is_alive(ProcessName::Xmrig),
                     xmrig_api,
                     xmrig_img,
                     max_threads,
                 );
-                //[XMRig-Proxy]
-                xmrig_proxy(ui, min_size, size, xmrig_proxy_alive, xmrig_proxy_api);
-                // [XvB]
-                xvb(ui, min_size, size, xvb_alive, xvb_api);
+                xmrig_proxy(
+                    ui,
+                    min_size,
+                    size,
+                    states.is_alive(ProcessName::XmrigProxy),
+                    xmrig_proxy_api,
+                );
+                xvb(
+                    ui,
+                    min_size,
+                    size,
+                    states.is_alive(ProcessName::Xvb),
+                    xvb_api,
+                );
             })
         });
     }
@@ -86,7 +100,7 @@ fn gupax(ui: &mut Ui, min_size: Vec2, size: Vec2, sys: &Arc<Mutex<Sys>>) {
                 Label::new(
                     RichText::new("[Gupaxx]")
                         .color(LIGHT_GRAY)
-                        .text_style(TextStyle::Name("MonospaceLarge".into())),
+                        .text_style(TextStyle::Heading),
                 ),
             )
             .on_hover_text("Gupaxx is online");
@@ -152,12 +166,12 @@ fn p2pool(
                         Label::new(
                             RichText::new("[P2Pool]")
                                 .color(LIGHT_GRAY)
-                                .text_style(TextStyle::Name("MonospaceLarge".into())),
+                                .text_style(TextStyle::Heading),
                         ),
                     )
                     .on_hover_text("P2Pool is online")
                     .on_disabled_hover_text("P2Pool is offline");
-                    ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
+                    ui.style_mut().override_text_style = Some(TextStyle::Small);
                     let size = [size.x, size.y / 1.4];
                     let api = p2pool_api.lock().unwrap();
                     ui.add_sized(
@@ -299,7 +313,7 @@ fn xmrig_proxy(
                     Label::new(
                         RichText::new("[XMRig-Proxy]")
                             .color(LIGHT_GRAY)
-                            .text_style(TextStyle::Name("MonospaceLarge".into())),
+                            .text_style(TextStyle::Heading),
                     ),
                 )
                 .on_hover_text("XMRig-Proxy is online")
@@ -372,7 +386,7 @@ fn xmrig(
                     Label::new(
                         RichText::new("[XMRig]")
                             .color(LIGHT_GRAY)
-                            .text_style(TextStyle::Name("MonospaceLarge".into())),
+                            .text_style(TextStyle::Heading),
                     ),
                 )
                 .on_hover_text("XMRig is online")
@@ -456,7 +470,7 @@ fn xvb(ui: &mut Ui, min_size: Vec2, size: Vec2, xvb_alive: bool, xvb_api: &Arc<M
                         Label::new(
                             RichText::new("[XvB Raffle]")
                                 .color(LIGHT_GRAY)
-                                .text_style(TextStyle::Name("MonospaceLarge".into())),
+                                .text_style(TextStyle::Heading),
                         ),
                     )
                     .on_hover_text("XvB API stats")
@@ -581,7 +595,7 @@ fn node(
                     Label::new(
                         RichText::new("[Node]")
                             .color(LIGHT_GRAY)
-                            .text_style(TextStyle::Name("MonospaceLarge".into())),
+                            .text_style(TextStyle::Heading),
                     ),
                 )
                 .on_hover_text("Node is online")

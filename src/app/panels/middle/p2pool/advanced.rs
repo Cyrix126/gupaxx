@@ -5,7 +5,7 @@ use egui::Slider;
 use egui::{Button, Vec2};
 
 use crate::constants::*;
-use egui::{Color32, ComboBox, Label, RichText, SelectableLabel, TextStyle::*, Ui};
+use egui::{Color32, ComboBox, Label, RichText, SelectableLabel, Ui};
 use log::*;
 
 impl P2pool {
@@ -275,7 +275,7 @@ impl P2pool {
                     let height = height / 3.0;
                     ui.style_mut().spacing.slider_width = width / 1.1;
                     ui.style_mut().spacing.interact_size.y = height;
-                    ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
+                    ui.style_mut().override_text_style = Some(egui::TextStyle::Small);
                     ui.horizontal(|ui| {
                         ui.add_sized([text, height], Label::new("Out peers [10-450]:"));
                         ui.add_sized([width, height], Slider::new(&mut self.out_peers, 10..=450))

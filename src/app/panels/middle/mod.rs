@@ -1,5 +1,7 @@
+use crate::app::eframe_impl::ProcessStatesGui;
 use crate::app::keys::KeyPressed;
 use crate::app::Tab;
+use crate::helper::ProcessName;
 use crate::utils::constants::*;
 use crate::utils::errors::{ErrorButtons, ErrorFerris};
 use egui::*;
@@ -19,12 +21,7 @@ impl crate::app::App {
         ctx: &egui::Context,
         frame: &mut eframe::Frame,
         key: KeyPressed,
-        node_is_alive: bool,
-        p2pool_is_alive: bool,
-        xmrig_is_alive: bool,
-        xmrig_proxy_is_alive: bool,
-        xvb_is_alive: bool,
-        xvb_is_running: bool,
+        states: &ProcessStatesGui,
     ) {
         // Middle panel, contents of the [Tab]
         debug!("App | Rendering CENTRAL_PANEL (tab contents)");
@@ -160,11 +157,11 @@ path_xmr: {:#?}\n
 				}
 				Tab::Status => {
 					debug!("App | Entering [Status] Tab");
-					crate::disk::state::Status::show(&mut self.state.status, &self.pub_sys, &self.node_api, &self.p2pool_api, &self.xmrig_api,&self.xmrig_proxy_api, &self.xvb_api,&self.p2pool_img, &self.xmrig_img, node_is_alive, p2pool_is_alive, xmrig_is_alive,  xmrig_proxy_is_alive,xvb_is_alive, self.max_threads, &self.gupax_p2pool_api, &self.benchmarks, self.size, ctx, ui);
+					crate::disk::state::Status::show(&mut self.state.status, &self.pub_sys, &self.node_api, &self.p2pool_api, &self.xmrig_api,&self.xmrig_proxy_api, &self.xvb_api,&self.p2pool_img, &self.xmrig_img, states, self.max_threads, &self.gupax_p2pool_api, &self.benchmarks, self.size, ctx, ui);
 				}
 				Tab::Gupax => {
 					debug!("App | Entering [Gupax] Tab");
-					crate::disk::state::Gupax::show(&mut self.state.gupax, &self.og, &self.state_path, &self.update, &self.file_window, &mut self.error_state, &self.restart, self.size,  frame, ctx, ui);
+					crate::disk::state::Gupax::show(&mut self.state.gupax, &self.og, &self.state_path, &self.update, &self.file_window, &mut self.error_state, &self.restart, self.size,  frame, ctx, ui, &mut self.must_resize);
 				}
 				Tab::Node=> {
 					debug!("App | Entering [Node] Tab");
@@ -184,7 +181,7 @@ path_xmr: {:#?}\n
 				}
 				Tab::Xvb => {
 					debug!("App | Entering [XvB] Tab");
-					crate::disk::state::Xvb::show(&mut self.state.xvb, self.size, &self.state.p2pool.address, ctx, ui, &self.xvb_api, &self.xmrig_api, &self.xmrig_proxy_api, xvb_is_running);
+					crate::disk::state::Xvb::show(&mut self.state.xvb, self.size, &self.state.p2pool.address, ctx, ui, &self.xvb_api, &self.xmrig_api, &self.xmrig_proxy_api, states.is_alive(ProcessName::Xvb));
 				}
 			}
 		});

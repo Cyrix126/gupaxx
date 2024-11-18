@@ -2,6 +2,7 @@ use crate::app::panels::middle::*;
 use crate::app::ErrorState;
 use crate::app::Restart;
 use crate::components::gupax::*;
+use crate::components::update::check_binary_path;
 use crate::components::update::Update;
 use crate::disk::state::*;
 use log::debug;
@@ -23,6 +24,7 @@ impl Gupax {
         _frame: &mut eframe::Frame,
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
+        must_resize: &mut bool,
     ) {
         // Update button + Progress bar
         debug!("Gupaxx Tab | Rendering [Update] button + progress bar");
@@ -176,7 +178,7 @@ impl Gupax {
                             Label::new(RichText::new("Node Binary Path ❌").color(RED)),
                         )
                         .on_hover_text(NODE_PATH_NOT_FILE);
-                    } else if !crate::components::update::check_node_path(&self.node_path) {
+                    } else if !check_binary_path(&self.node_path, ProcessName::Node) {
                         ui.add_sized(
                             [text_edit, height],
                             Label::new(RichText::new("Node Binary Path ❌").color(RED)),
@@ -214,7 +216,7 @@ impl Gupax {
                             Label::new(RichText::new("P2Pool Binary Path ❌").color(RED)),
                         )
                         .on_hover_text(P2POOL_PATH_NOT_FILE);
-                    } else if !crate::components::update::check_p2pool_path(&self.p2pool_path) {
+                    } else if !check_binary_path(&self.p2pool_path, ProcessName::P2pool) {
                         ui.add_sized(
                             [text_edit, height],
                             Label::new(RichText::new("P2Pool Binary Path ❌").color(RED)),
@@ -252,7 +254,7 @@ impl Gupax {
                             Label::new(RichText::new("XMRig Binary Path ❌").color(RED)),
                         )
                         .on_hover_text(XMRIG_PATH_NOT_FILE);
-                    } else if !crate::components::update::check_xmrig_path(&self.xmrig_path) {
+                    } else if !check_binary_path(&self.xmrig_path, ProcessName::Xmrig) {
                         ui.add_sized(
                             [text_edit, height],
                             Label::new(RichText::new("XMRig Binary Path ❌").color(RED)),
@@ -292,7 +294,10 @@ impl Gupax {
                             Label::new(RichText::new("XMRig-Proxy Binary Path ❌").color(RED)),
                         )
                         .on_hover_text(XMRIG_PROXY_PATH_NOT_FILE);
-                    } else if !crate::components::update::check_xp_path(&self.xmrig_proxy_path) {
+                    } else if !crate::components::update::check_binary_path(
+                        &self.xmrig_proxy_path,
+                        ProcessName::XmrigProxy,
+                    ) {
                         ui.add_sized(
                             [text_edit, height],
                             Label::new(RichText::new("XMRig-Proxy Binary Path ❌").color(RED)),
@@ -542,6 +547,7 @@ impl Gupax {
                             Vec2::new(self.selected_width as f32, self.selected_height as f32);
                         ui.ctx()
                             .send_viewport_cmd(egui::viewport::ViewportCommand::InnerSize(size));
+                        *must_resize = true;
                     }
                 })
             });

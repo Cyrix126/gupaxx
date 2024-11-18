@@ -1,7 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use egui::TextStyle::{self, Name};
-use egui::{vec2, Image, RichText, TextEdit, Ui, Vec2};
+use egui::{vec2, Image, RichText, TextEdit, TextStyle, Ui, Vec2};
 use log::debug;
 use readable::num::Float;
 use readable::up::Uptime;
@@ -70,7 +69,7 @@ impl crate::disk::state::Xvb {
                 let height = size.y / 2.8;
                 let width = size.x - (space_h / 2.0);
                 egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
-                    ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
+                    ui.style_mut().override_text_style = Some(TextStyle::Small);
                     egui::ScrollArea::vertical()
                         .stick_to_bottom(true)
                         .max_width(width)
@@ -79,7 +78,7 @@ impl crate::disk::state::Xvb {
                         // .show_viewport(ui, |ui, _| {
                         .show_rows(
                             ui,
-                            ui.text_style_height(&TextStyle::Name("MonospaceSmall".into())),
+                            ui.text_style_height(&TextStyle::Small),
                             nb_lines,
                             |ui, row_range| {
                                 for i in row_range {

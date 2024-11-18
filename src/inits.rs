@@ -1,6 +1,6 @@
-use crate::components::update::Update;
+use crate::components::update::{check_binary_path, Update};
 use crate::errors::process_running;
-use crate::helper::{Helper, ProcessSignal};
+use crate::helper::{Helper, ProcessName, ProcessSignal};
 use crate::utils::constants::{
     APP_MAX_HEIGHT, APP_MAX_WIDTH, APP_MIN_HEIGHT, APP_MIN_WIDTH, BYTES_ICON,
 };
@@ -13,7 +13,7 @@ use crate::{components::node::Ping, miscs::clamp_scale};
 use crate::{info, warn};
 use eframe::NativeOptions;
 use egui::TextStyle::Small;
-use egui::TextStyle::{Body, Button, Heading, Monospace, Name};
+use egui::TextStyle::{Body, Button, Heading, Monospace};
 use egui::*;
 use env_logger::fmt::style::Style;
 use env_logger::{Builder, WriteStyle};
@@ -24,47 +24,21 @@ use std::time::Instant;
 
 #[cold]
 #[inline(never)]
-pub fn init_text_styles(ctx: &egui::Context, width: f32, pixels_per_point: f32) {
-    let scale = width / 35.5;
+pub fn init_text_styles(ctx: &egui::Context, pixels_per_point: f32) {
     ctx.all_styles_mut(|style| {
         style.text_styles = [
-            (Small, FontId::new(scale / 3.0, egui::FontFamily::Monospace)),
-            (Body, FontId::new(scale / 2.0, egui::FontFamily::Monospace)),
-            (
-                Button,
-                FontId::new(scale / 2.0, egui::FontFamily::Monospace),
-            ),
-            (
-                Monospace,
-                FontId::new(scale / 2.0, egui::FontFamily::Monospace),
-            ),
-            (
-                Heading,
-                FontId::new(scale / 1.5, egui::FontFamily::Monospace),
-            ),
-            (
-                Name("Tab".into()),
-                FontId::new(scale * 1.05, egui::FontFamily::Monospace),
-            ),
-            (
-                Name("Bottom".into()),
-                FontId::new(scale / 2.0, egui::FontFamily::Monospace),
-            ),
-            (
-                Name("MonospaceSmall".into()),
-                FontId::new(scale / 2.5, egui::FontFamily::Monospace),
-            ),
-            (
-                Name("MonospaceLarge".into()),
-                FontId::new(scale / 1.5, egui::FontFamily::Monospace),
-            ),
+            (Small, FontId::new(14.0, egui::FontFamily::Monospace)),
+            (Monospace, FontId::new(15.0, egui::FontFamily::Monospace)),
+            (Body, FontId::new(16.0, egui::FontFamily::Monospace)),
+            (Button, FontId::new(17.0, egui::FontFamily::Monospace)),
+            (Heading, FontId::new(22.0, egui::FontFamily::Monospace)),
         ]
         .into();
-        style.spacing.icon_width_inner = width / 35.0;
-        style.spacing.icon_width = width / 25.0;
+        style.spacing.icon_width_inner = 32.0;
+        style.spacing.icon_width = 64.0;
         style.spacing.icon_spacing = 20.0;
         style.spacing.scroll = egui::style::ScrollStyle {
-            bar_width: width / 150.0,
+            bar_width: 8.0,
             ..egui::style::ScrollStyle::solid()
         };
     });
@@ -185,9 +159,9 @@ pub fn init_auto(app: &mut App) {
     if app.state.gupax.auto_node {
         if !Gupax::path_is_file(&app.state.gupax.node_path) {
             warn!("Gupaxx | Node path is not a file! Skipping auto-node...");
-        } else if !crate::components::update::check_node_path(&app.state.gupax.node_path) {
+        } else if !check_binary_path(&app.state.gupax.node_path, ProcessName::Node) {
             warn!("Gupaxx | Node path is not valid! Skipping auto-node...");
-        } else if process_running(crate::helper::ProcessName::Node) {
+        } else if process_running(ProcessName::Node) {
             warn!("Gupaxx | Node instance is already running outside of Gupaxx ! Skipping auto-node...");
         } else {
             // enable hugepage on linux
@@ -207,7 +181,7 @@ pub fn init_auto(app: &mut App) {
             warn!("Gupaxx | P2Pool address is not valid! Skipping auto-p2pool...");
         } else if !Gupax::path_is_file(&app.state.gupax.p2pool_path) {
             warn!("Gupaxx | P2Pool path is not a file! Skipping auto-p2pool...");
-        } else if !crate::components::update::check_p2pool_path(&app.state.gupax.p2pool_path) {
+        } else if !check_binary_path(&app.state.gupax.p2pool_path, ProcessName::P2pool) {
             warn!("Gupaxx | P2Pool path is not valid! Skipping auto-p2pool...");
         } else if process_running(crate::helper::ProcessName::P2pool) {
             warn!("Gupaxx | P2pool instance is already running outside of Gupaxx ! Skipping auto-node...");
@@ -228,7 +202,7 @@ pub fn init_auto(app: &mut App) {
     if app.state.gupax.auto_xmrig {
         if !Gupax::path_is_file(&app.state.gupax.xmrig_path) {
             warn!("Gupaxx | XMRig path is not an executable! Skipping auto-xmrig...");
-        } else if !crate::components::update::check_xmrig_path(&app.state.gupax.xmrig_path) {
+        } else if !check_binary_path(&app.state.gupax.xmrig_path, ProcessName::Xmrig) {
             warn!("Gupaxx | XMRig path is not valid! Skipping auto-xmrig...");
         } else if process_running(crate::helper::ProcessName::Xmrig) {
             warn!("Gupaxx | Xmrig instance is already running outside of Gupaxx ! Skipping auto-node...");
@@ -250,7 +224,7 @@ pub fn init_auto(app: &mut App) {
     if app.state.gupax.auto_xp {
         if !Gupax::path_is_file(&app.state.gupax.xmrig_proxy_path) {
             warn!("Gupaxx | Xmrig-Proxy path is not a file! Skipping auto-xmrig_proxy...");
-        } else if !crate::components::update::check_xp_path(&app.state.gupax.xmrig_proxy_path) {
+        } else if !check_binary_path(&app.state.gupax.xmrig_proxy_path, ProcessName::XmrigProxy) {
             warn!("Gupaxx | Xmrig-Proxy path is not valid! Skipping auto-xmrig_proxy...");
         } else if process_running(crate::helper::ProcessName::XmrigProxy) {
             warn!("Gupaxx | Xmrig-Proxy instance is already running outside of Gupaxx ! Skipping auto-node...");
