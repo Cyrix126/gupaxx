@@ -115,11 +115,13 @@ impl ProcessStatesGui {
     // order is important for lock
     pub fn new(app: &App) -> Self {
         let mut process_states = ProcessStatesGui(vec![]);
-        for process in [&app.node,
+        for process in [
+            &app.node,
             &app.p2pool,
             &app.xmrig,
             &app.xmrig_proxy,
-            &app.xvb] {
+            &app.xvb,
+        ] {
             let lock = process.lock().unwrap();
             process_states.push(ProcessStateGui {
                 name: lock.name,
@@ -133,13 +135,13 @@ impl ProcessStatesGui {
     pub fn is_alive(&self, name: ProcessName) -> bool {
         self.iter()
             .find(|p| p.name == name)
-            .unwrap_or_else(|| panic!("This vec should always contains all Processes {:?}",
-                self))
+            .unwrap_or_else(|| panic!("This vec should always contains all Processes {:?}", self))
             .alive
     }
     pub fn find(&self, name: ProcessName) -> &ProcessStateGui {
-        self.iter().find(|p| p.name == name).unwrap_or_else(|| panic!("This vec should always contains all Processes {:?}",
-            self))
+        self.iter()
+            .find(|p| p.name == name)
+            .unwrap_or_else(|| panic!("This vec should always contains all Processes {:?}", self))
     }
     pub fn find_mut(&mut self, name: ProcessName) -> &mut ProcessStateGui {
         self.iter_mut()
