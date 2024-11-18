@@ -19,11 +19,7 @@ use crate::regex::num_lines;
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::{components::node::*, constants::*, helper::*, utils::regex::Regexes};
-use egui::{
-    vec2, Color32, Label, RichText, TextEdit,
-    TextStyle::{self, *},
-    Vec2,
-};
+use egui::{vec2, Color32, Label, RichText, TextEdit, TextStyle, Vec2};
 use log::*;
 
 use std::sync::{Arc, Mutex};
@@ -68,7 +64,7 @@ impl P2pool {
                     )
                 };
                 egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
-                    ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
+                    ui.style_mut().override_text_style = Some(egui::TextStyle::Small);
                     egui::ScrollArea::vertical()
                         .stick_to_bottom(true)
                         .max_width(width)
@@ -77,7 +73,7 @@ impl P2pool {
                         // .show_viewport(ui, |ui, _| {
                         .show_rows(
                             ui,
-                            ui.text_style_height(&TextStyle::Name("MonospaceSmall".into())),
+                            ui.text_style_height(&TextStyle::Small),
                             nb_lines,
                             |ui, row_range| {
                                 for i in row_range {

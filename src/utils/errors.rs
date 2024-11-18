@@ -105,7 +105,10 @@ pub fn process_running(process_name: ProcessName) -> bool {
         ProcessName::P2pool => P2POOL_BINARY,
         ProcessName::Xmrig => XMRIG_BINARY,
         ProcessName::XmrigProxy => XMRIG_PROXY_BINARY,
-        ProcessName::Xvb => panic!("XvB does not exist as a process outside of Gupaxx"),
+        ProcessName::Xvb => {
+            // XvB does not exist as a process outside of Gupaxx (not yet anyway);
+            return false;
+        }
     };
     let s = System::new_all();
     if s.processes_by_exact_name(name.as_ref()).next().is_some() {

@@ -105,8 +105,7 @@ impl Status {
                     .max_height(log)
                     .auto_shrink([false; 2])
                     .show_viewport(ui, |ui, _| {
-                        ui.style_mut().override_text_style =
-                            Some(egui::TextStyle::Name("MonospaceLarge".into()));
+                        ui.style_mut().override_text_style = Some(egui::TextStyle::Body);
                         match self.payout_view {
                             PayoutView::Latest => ui.add_sized(
                                 [width, log],

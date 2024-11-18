@@ -28,6 +28,7 @@ use crate::{
     app::Restart,
     constants::GUPAX_VERSION,
     disk::{state::State, *},
+    helper::ProcessName,
     macros::*,
     miscs::get_exe_dir,
     utils::errors::{ErrorButtons, ErrorFerris, ErrorState},
@@ -139,7 +140,7 @@ const EXTRACT: &str = "----------------- Extract ------------------";
 const UPGRADE: &str = "----------------- Upgrade ------------------";
 
 //---------------------------------------------------------------------------------------------------- General functions
-pub fn check_p2pool_path(path: &str) -> bool {
+pub fn check_binary_path(path: &str, process: ProcessName) -> bool {
     let path = match crate::disk::into_absolute_path(path.to_string()) {
         Ok(p) => p,
         Err(_) => return false,
@@ -147,57 +148,11 @@ pub fn check_p2pool_path(path: &str) -> bool {
     let path = match path.file_name() {
         Some(p) => p,
         None => {
-            error!("Couldn't get P2Pool file name");
+            error!("Couldn't get {process} file name");
             return false;
         }
     };
-
-    path == P2POOL_BINARY
-}
-
-pub fn check_node_path(path: &str) -> bool {
-    let path = match crate::disk::into_absolute_path(path.to_string()) {
-        Ok(p) => p,
-        Err(_) => return false,
-    };
-    let path = match path.file_name() {
-        Some(p) => p,
-        None => {
-            error!("Couldn't get Node file name");
-            return false;
-        }
-    };
-
-    path == NODE_BINARY
-}
-
-pub fn check_xmrig_path(path: &str) -> bool {
-    let path = match crate::disk::into_absolute_path(path.to_string()) {
-        Ok(p) => p,
-        Err(_) => return false,
-    };
-    let path = match path.file_name() {
-        Some(p) => p,
-        None => {
-            error!("Couldn't get XMRig file name");
-            return false;
-        }
-    };
-    path == XMRIG_BINARY
-}
-pub fn check_xp_path(path: &str) -> bool {
-    let path = match crate::disk::into_absolute_path(path.to_string()) {
-        Ok(p) => p,
-        Err(_) => return false,
-    };
-    let path = match path.file_name() {
-        Some(p) => p,
-        None => {
-            error!("Couldn't get XMRig-Proxy file name");
-            return false;
-        }
-    };
-    path == XMRIG_PROXY_BINARY
+    path == process.binary_name()
 }
 
 //---------------------------------------------------------------------------------------------------- Update struct/impl

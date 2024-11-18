@@ -18,7 +18,7 @@
 use egui::Vec2;
 
 use crate::{
-    app::Benchmark,
+    app::{eframe_impl::ProcessStatesGui, Benchmark},
     disk::{gupax_p2pool_api::GupaxP2poolApi, state::Status, status::*},
     helper::{
         node::PubNodeApi,
@@ -28,7 +28,7 @@ use crate::{
             xmrig_proxy::PubXmrigProxyApi,
         },
         xvb::PubXvbApi,
-        Sys,
+        ProcessName, Sys,
     },
 };
 use std::sync::{Arc, Mutex};
@@ -50,11 +50,7 @@ impl Status {
         xvb_api: &Arc<Mutex<PubXvbApi>>,
         p2pool_img: &Arc<Mutex<ImgP2pool>>,
         xmrig_img: &Arc<Mutex<ImgXmrig>>,
-        node_alive: bool,
-        p2pool_alive: bool,
-        xmrig_alive: bool,
-        xmrig_proxy_alive: bool,
-        xvb_alive: bool,
+        states: &ProcessStatesGui,
         max_threads: usize,
         gupax_p2pool_api: &Arc<Mutex<GupaxP2poolApi>>,
         benchmarks: &[Benchmark],
@@ -68,26 +64,34 @@ impl Status {
                 sys,
                 size,
                 ui,
-                node_alive,
                 node_api,
-                p2pool_alive,
                 p2pool_api,
                 p2pool_img,
-                xmrig_alive,
                 xmrig_api,
-                xmrig_proxy_alive,
                 xmrig_proxy_api,
                 xmrig_img,
-                xvb_alive,
                 xvb_api,
                 max_threads,
+                states,
             );
         //---------------------------------------------------------------------------------------------------- [P2Pool]
         } else if self.submenu == Submenu::P2pool {
-            self.p2pool(size, ui, gupax_p2pool_api, p2pool_alive, p2pool_api);
+            self.p2pool(
+                size,
+                ui,
+                gupax_p2pool_api,
+                states.is_alive(ProcessName::P2pool),
+                p2pool_api,
+            );
         //---------------------------------------------------------------------------------------------------- [Benchmarks]
         } else if self.submenu == Submenu::Benchmarks {
-            self.benchmarks(size, ui, benchmarks, xmrig_alive, xmrig_api)
+            self.benchmarks(
+                size,
+                ui,
+                benchmarks,
+                states.is_alive(ProcessName::Xmrig),
+                xmrig_api,
+            )
         }
     }
 }

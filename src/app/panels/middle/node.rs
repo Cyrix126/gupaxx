@@ -3,11 +3,10 @@ use crate::{
     NODE_DNS_BLOCKLIST, NODE_DNS_CHECKPOINT, NODE_INPUT, NODE_PATH_OK, NODE_PRUNNING, NODE_URL,
     NODE_ZMQ_BIND, NODE_ZMQ_PORT,
 };
-use egui::{Color32, Label, RichText, Slider, TextEdit, Ui, Vec2};
+use egui::{Color32, Label, RichText, Slider, TextEdit, TextStyle, Ui, Vec2};
 use regex::Regex;
 use std::sync::{Arc, Mutex};
 
-use egui::TextStyle::{self, Name};
 use log::debug;
 
 use crate::components::gupax::{FileType, FileWindow};
@@ -51,7 +50,7 @@ impl Node {
                 let height = size.y / 2.8;
                 let width = (size.x - (space_h / 2.0)).max(0.0);
                 egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
-                    ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
+                    ui.style_mut().override_text_style = Some(TextStyle::Small);
                     egui::ScrollArea::vertical()
                         .stick_to_bottom(true)
                         .max_width(width)
@@ -60,7 +59,7 @@ impl Node {
                         // .show_viewport(ui, |ui, _| {
                         .show_rows(
                             ui,
-                            ui.text_style_height(&TextStyle::Name("MonospaceSmall".into())),
+                            ui.text_style_height(&TextStyle::Small),
                             nb_lines,
                             |ui, row_range| {
                                 for i in row_range {
@@ -160,8 +159,7 @@ impl Node {
                     debug!("Node Tab | Rendering sliders elements");
                     ui.vertical(|ui| {
                         ui.group(|ui| {
-                            ui.style_mut().override_text_style =
-                                Some(Name("MonospaceSmall".into()));
+                            ui.style_mut().override_text_style = Some(TextStyle::Small);
                             ui.horizontal(|ui| {
                                 // ui.label("Out peers [10-450]:");
                                 ui.add_sized(

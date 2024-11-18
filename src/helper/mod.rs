@@ -33,6 +33,7 @@
 // This also includes all things related to handling the child processes (P2Pool/XMRig):
 // piping their stdout/stderr/stdin, accessing their APIs (HTTP + disk files), etc.
 
+use crate::components::update::{NODE_BINARY, P2POOL_BINARY, XMRIG_BINARY, XMRIG_PROXY_BINARY};
 //---------------------------------------------------------------------------------------------------- Import
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
 use crate::helper::{
@@ -40,6 +41,7 @@ use crate::helper::{
     xrig::{xmrig::ImgXmrig, xmrig::PubXmrigApi},
 };
 use crate::{constants::*, disk::gupax_p2pool_api::GupaxP2poolApi, human::*, macros::*};
+use derive_more::derive::Display;
 use log::*;
 use node::PubNodeApi;
 use portable_pty::Child;
@@ -52,6 +54,7 @@ use std::{
     thread,
     time::*,
 };
+use strum::EnumIter;
 
 use self::xvb::{nodes::XvbNode, PubXvbApi};
 pub mod node;
@@ -247,13 +250,26 @@ impl Default for ProcessSignal {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Display, EnumIter)]
 pub enum ProcessName {
+    Node,
     P2pool,
     Xmrig,
+    #[display("Proxy")]
     XmrigProxy,
     Xvb,
-    Node,
+}
+
+impl ProcessName {
+    pub fn binary_name(&self) -> &str {
+        match self {
+            ProcessName::Node => NODE_BINARY,
+            ProcessName::P2pool => P2POOL_BINARY,
+            ProcessName::Xmrig => XMRIG_BINARY,
+            ProcessName::XmrigProxy => XMRIG_PROXY_BINARY,
+            ProcessName::Xvb => "",
+        }
+    }
 }
 
 impl std::fmt::Display for ProcessState {
@@ -264,17 +280,6 @@ impl std::fmt::Display for ProcessState {
 impl std::fmt::Display for ProcessSignal {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         write!(f, "{:#?}", self)
-    }
-}
-impl std::fmt::Display for ProcessName {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match *self {
-            ProcessName::P2pool => write!(f, "P2Pool"),
-            ProcessName::Xmrig => write!(f, "XMRig"),
-            ProcessName::XmrigProxy => write!(f, "XMRig-Proxy"),
-            ProcessName::Xvb => write!(f, "XvB"),
-            ProcessName::Node => write!(f, "Node"),
-        }
     }
 }
 

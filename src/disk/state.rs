@@ -73,10 +73,7 @@ impl State {
             // Create
             _ => {
                 Self::create_new(path)?;
-                match read_to_string(file, path) {
-                    Ok(s) => s,
-                    Err(e) => return Err(e),
-                }
+                read_to_string(file, path)?
             }
         };
         // Deserialize, attempt merge if failed

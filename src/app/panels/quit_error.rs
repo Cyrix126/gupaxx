@@ -1,5 +1,6 @@
 use std::process::exit;
 
+use crate::app::eframe_impl::ProcessStateGui;
 use crate::app::keys::KeyPressed;
 use crate::disk::node::Node;
 use crate::disk::state::State;
@@ -9,15 +10,13 @@ use crate::utils::ferris::*;
 use crate::utils::macros::{arc_mut, flip};
 use crate::utils::resets::{reset_nodes, reset_state};
 use crate::utils::sudo::SudoState;
-use egui::TextStyle::Name;
 use egui::*;
 
 impl crate::app::App {
     pub(in crate::app) fn quit_error_panel(
         &mut self,
         ctx: &egui::Context,
-        p2pool_is_alive: bool,
-        xmrig_is_alive: bool,
+        processes: &[ProcessStateGui],
         key: &KeyPressed,
     ) {
         CentralPanel::default().show(ctx, |ui| {
@@ -25,7 +24,7 @@ impl crate::app::App {
                 // Set width/height/font
                 let width = self.size.x;
                 let height = self.size.y / 4.0;
-                ui.style_mut().override_text_style = Some(Name("MonospaceLarge".into()));
+                ui.style_mut().override_text_style = Some(TextStyle::Heading);
 
                 // Display ferris
                 use crate::utils::errors::ErrorButtons;
@@ -59,11 +58,10 @@ impl crate::app::App {
                                 text
                             );
                         }
-                        if p2pool_is_alive {
-                            text = format!("{}\nP2Pool is online...!", text);
-                        }
-                        if xmrig_is_alive {
-                            text = format!("{}\nXMRig is online...!", text);
+                        for process in processes {
+                            if process.alive {
+                            text = format!("{}\n{} is online...!", text, process.name);
+                            }
                         }
                         ui.add_sized(
                             [width, height],
@@ -107,7 +105,7 @@ impl crate::app::App {
                                 &self.error_state.msg
                             )),
                         );
-                        ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
+                        ui.style_mut().override_text_style = Some(TextStyle::Small);
                         ui.add_sized([width / 2.0, height], Label::new(text));
                         ui.add_sized(
                             [width, height],

@@ -39,6 +39,7 @@ use crate::APP_DEFAULT_HEIGHT;
 use crate::APP_DEFAULT_WIDTH;
 use crate::GUPAX_VERSION;
 use crate::OS;
+use derive_more::derive::Display;
 use eframe::CreationContext;
 use egui::vec2;
 use egui::Vec2;
@@ -53,12 +54,13 @@ use std::process::exit;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Instant;
+use strum::EnumCount;
+use strum::EnumIter;
 
 pub mod eframe_impl;
 pub mod keys;
 pub mod panels;
 pub mod quit;
-pub mod resize;
 //---------------------------------------------------------------------------------------------------- Struct + Impl
 // The state of the outer main [App].
 // See the [State] struct in [state.rs] for the
@@ -158,7 +160,6 @@ impl App {
     pub fn cc(cc: &CreationContext<'_>, resolution: Vec2, app: Self) -> Self {
         init_text_styles(
             &cc.egui_ctx,
-            resolution[0],
             crate::miscs::clamp_scale(app.state.gupax.selected_scale),
         );
         cc.egui_ctx.set_visuals(VISUALS.clone());
@@ -195,7 +196,7 @@ impl App {
             PathBuf::new()
         ));
         let xmrig_proxy = arc_mut!(Process::new(
-            ProcessName::Xmrig,
+            ProcessName::XmrigProxy,
             String::new(),
             PathBuf::new()
         ));
@@ -711,14 +712,18 @@ impl App {
 }
 //---------------------------------------------------------------------------------------------------- [Tab] Enum + Impl
 // The tabs inside [App].
-#[derive(Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize)]
+#[derive(
+    Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, Display, EnumIter, EnumCount,
+)]
 pub enum Tab {
     About,
     Status,
+    #[display("Gupaxx")]
     Gupax,
     Node,
     P2pool,
     Xmrig,
+    #[display("Proxy")]
     XmrigProxy,
     Xvb,
 }
@@ -726,6 +731,21 @@ pub enum Tab {
 impl Default for Tab {
     fn default() -> Self {
         Self::About
+    }
+}
+
+impl Tab {
+    pub fn linked_process(&self) -> Option<ProcessName> {
+        match self {
+            Tab::About => None,
+            Tab::Status => None,
+            Tab::Gupax => None,
+            Tab::Node => Some(ProcessName::Node),
+            Tab::P2pool => Some(ProcessName::P2pool),
+            Tab::Xmrig => Some(ProcessName::Xmrig),
+            Tab::XmrigProxy => Some(ProcessName::XmrigProxy),
+            Tab::Xvb => Some(ProcessName::Xvb),
+        }
     }
 }
 //---------------------------------------------------------------------------------------------------- [Restart] Enum

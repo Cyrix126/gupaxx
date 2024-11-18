@@ -24,8 +24,7 @@ use crate::regex::{num_lines, REGEXES};
 use crate::utils::regex::Regexes;
 use egui::{
     vec2, Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, Slider, TextEdit,
-    TextStyle::{self, *},
-    Vec2,
+    TextStyle, Vec2,
 };
 use log::*;
 
@@ -57,7 +56,7 @@ impl Xmrig {
                 (size.y / 2.8, size.x - SPACE)
             };
             egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
-                ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
+                ui.style_mut().override_text_style = Some(TextStyle::Small);
                 egui::ScrollArea::vertical()
                     .stick_to_bottom(true)
                     .max_width(width)
@@ -66,7 +65,7 @@ impl Xmrig {
                     // .show_viewport(ui, |ui, _| {
                     .show_rows(
                         ui,
-                        ui.text_style_height(&TextStyle::Name("MonospaceSmall".into())),
+                        ui.text_style_height(&TextStyle::Small),
                         nb_lines,
                         |ui, row_range| {
                             for i in row_range {

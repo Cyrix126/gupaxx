@@ -71,7 +71,7 @@ walkdir = "2.5.0"
 zeroize = "1.8.1"
 strsim = "0.11.1"
 strip-ansi-escapes = "0.2.0"
-derive_more = {version="1.0.0", default-features=false, features=["display"]}
+derive_more = {version="1.0.0", default-features=false, features=["display", "deref", "deref_mut"]}
 serde-this-or-that = "0.4.2"
 readable = "0.16"
 chrono = {version="0.4.38", default-features=false, features=["clock", "std"]}
@@ -80,6 +80,7 @@ bounded-vec-deque = {version="0.1.1", default-features=false}
 cfg-if = "1.0"
 flexi_logger = "0.29"
 eframe = {version="0.29.1", features=["wgpu"]}
+strum = {version="0.26", features=["derive"]}
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
 tar = "0.4.42"

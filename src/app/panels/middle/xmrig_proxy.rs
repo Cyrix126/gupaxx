@@ -1,7 +1,8 @@
-use egui::{vec2, Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, TextEdit, Vec2};
+use egui::{
+    vec2, Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, TextEdit, TextStyle, Vec2,
+};
 use std::sync::{Arc, Mutex};
 
-use egui::TextStyle::{self, Name};
 use log::{debug, info};
 
 use crate::disk::pool::Pool;
@@ -48,7 +49,8 @@ impl XmrigProxy {
             let height = size.y / 2.8;
             let width = size.x - (space_h / 2.0);
             egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
-                ui.style_mut().override_text_style = Some(Name("MonospaceSmall".into()));
+                ui.style_mut().override_text_style = Some(egui::TextStyle::Small
+                );
                 egui::ScrollArea::vertical()
                     .stick_to_bottom(true)
                     .max_width(width)
@@ -57,7 +59,7 @@ impl XmrigProxy {
                     // .show_viewport(ui, |ui, _| {
                     .show_rows(
                         ui,
-                        ui.text_style_height(&TextStyle::Name("MonospaceSmall".into())),
+                        ui.text_style_height(&TextStyle::Small),
                         nb_lines,
                         |ui, row_range| {
                             for i in row_range {

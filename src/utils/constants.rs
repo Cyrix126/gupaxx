@@ -505,7 +505,18 @@ pub const XVB_HELP: &str = "You need to register an account by clicking on the l
 pub const XVB_MANUAL_SLIDER_MANUAL_XVB_HELP: &str = "Set the hashrate amount to donate to XvB manually, The remaining hashrate will be sent to p2pool. If the selected hashrate is more than your xmrig hashrate it will be overwritten";
 pub const XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP: &str = "Set the hashrate amount to keep on p2pool manually, The remaining hasrate will be donated to xvb. If the selected hashrate is more than your xmrig hashrate it will be overwritten ";
 pub const XVB_URL: &str = "https://xmrvsbeast.com";
-
+// Simple/Advanced Submenu hover text
+pub const XVB_SIMPLE: &str = r#"Use simple XvB settings:
+  - Auto mode by default
+  - Hero mode available"#;
+pub const XVB_ADVANCED: &str = r#"Use advanced XvB settings:
+  - Selection of mode: 
+      Auto,
+      Hero,
+      Manual XvB,
+      Manual P2pool,
+      Round
+  - P2Pool Buffer"#;
 pub const XVB_URL_PUBLIC_API: &str = "https://xmrvsbeast.com/p2pool/stats";
 pub const XVB_NODE_PORT: &str = "4247";
 pub const XVB_NODE_EU: &str = "eu.xmrvsbeast.com";

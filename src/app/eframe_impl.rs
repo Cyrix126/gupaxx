@@ -1,11 +1,14 @@
+use std::sync::{Arc, Mutex};
+
 use super::App;
 #[cfg(target_os = "windows")]
 use crate::errors::{process_running, ErrorButtons, ErrorFerris};
 #[cfg(target_os = "windows")]
 use crate::helper::ProcessName;
-use crate::helper::ProcessState;
-use crate::SECOND;
-use egui::CentralPanel;
+use crate::helper::{Helper, ProcessName, ProcessState};
+use crate::inits::init_text_styles;
+use crate::{NODE_MIDDLE, P2POOL_MIDDLE, SECOND, XMRIG_MIDDLE, XMRIG_PROXY_MIDDLE, XVB_MIDDLE};
+use derive_more::derive::{Deref, DerefMut};
 use log::debug;
 
 impl eframe::App for App {
@@ -27,52 +30,12 @@ impl eframe::App for App {
         // These values are checked multiple times so
         // might as well check only once here to save
         // on a bunch of [.lock().unwrap()]s.
-        debug!("App | Locking and collecting Node state...");
-        let node = self.node.lock().unwrap();
-        let node_is_alive = node.is_alive();
-        let node_is_waiting = node.is_waiting();
-        let node_state = node.state;
-        drop(node);
-        debug!("App | Locking and collecting P2Pool state...");
-        let p2pool = self.p2pool.lock().unwrap();
-        let p2pool_is_alive = p2pool.is_alive();
-        let p2pool_is_waiting = p2pool.is_waiting();
-        let p2pool_state = p2pool.state;
-        drop(p2pool);
-        debug!("App | Locking and collecting XMRig state...");
-        let xmrig = self.xmrig.lock().unwrap();
-        let xmrig_is_alive = xmrig.is_alive();
-        let xmrig_is_waiting = xmrig.is_waiting();
-        let xmrig_state = xmrig.state;
-        drop(xmrig);
-        debug!("App | Locking and collecting XMRig-Proxy state...");
-        let xmrig_proxy = self.xmrig_proxy.lock().unwrap();
-        let xmrig_proxy_is_alive = xmrig_proxy.is_alive();
-        let xmrig_proxy_is_waiting = xmrig_proxy.is_waiting();
-        let xmrig_proxy_state = xmrig_proxy.state;
-        drop(xmrig_proxy);
-        debug!("App | Locking and collecting XvB state...");
-        let xvb = self.xvb.lock().unwrap();
-        let xvb_is_alive = xvb.is_alive();
-        let xvb_is_waiting = xvb.is_waiting();
-        let xvb_is_running = xvb.state == ProcessState::Alive;
-        let xvb_state = xvb.state;
-        drop(xvb);
-
-        // This sets the top level Ui dimensions.
-        // Used as a reference for other uis.
-        debug!("App | Setting width/height");
-        CentralPanel::default().show(ctx, |ui| {
-            let available_width = ui.available_width();
-            if self.size.x != available_width {
-                self.size.x = available_width;
-                if self.now.elapsed().as_secs() > 5 {
-                    self.must_resize = true;
-                }
-            };
-            self.size.y = ui.available_height();
-        });
-        self.resize(ctx);
+        let mut process_states = ProcessStatesGui::new(self);
+        // resize window and fonts if button "set" has been clicked in Gupaxx tab
+        if self.must_resize {
+            init_text_styles(ctx, self.state.gupax.selected_scale);
+            self.must_resize = false;
+        }
         // check for windows that a local instance of xmrig is not running outside of Gupaxx. Important because it could lead to crashes on this platform.
         // Warn only once per restart of Gupaxx.
         #[cfg(target_os = "windows")]
@@ -86,7 +49,7 @@ impl eframe::App for App {
         // If there's an error, display [ErrorState] on the whole screen until user responds
         debug!("App | Checking if there is an error in [ErrorState]");
         if self.error_state.error {
-            self.quit_error_panel(ctx, p2pool_is_alive, xmrig_is_alive, &key);
+            self.quit_error_panel(ctx, &process_states, &key);
             return;
         }
         // Compare [og == state] & [node_vec/pool_vec] and enable diff if found.
@@ -107,40 +70,80 @@ impl eframe::App for App {
         drop(og);
 
         self.top_panel(ctx);
-        self.bottom_panel(
-            ctx,
-            node_state,
-            p2pool_state,
-            xmrig_state,
-            xmrig_proxy_state,
-            xvb_state,
-            &key,
-            wants_input,
-            p2pool_is_waiting,
-            xmrig_is_waiting,
-            node_is_waiting,
-            xmrig_proxy_is_waiting,
-            xvb_is_waiting,
-            p2pool_is_alive,
-            xmrig_is_alive,
-            node_is_alive,
-            xmrig_proxy_is_alive,
-            xvb_is_alive,
-        );
+        self.bottom_panel(ctx, &key, wants_input, &process_states);
         // xvb_is_alive is not the same for bottom and for middle.
-        // for status we don't want to enable the column when it is retrying request
-        // but for bottom we don't want the user to be able to start it in this case.
-        let xvb_is_alive = xvb_state != ProcessState::Dead;
-        self.middle_panel(
-            ctx,
-            frame,
-            key,
-            node_is_alive,
-            p2pool_is_alive,
-            xmrig_is_alive,
-            xmrig_proxy_is_alive,
-            xvb_is_alive,
-            xvb_is_running,
-        );
+        // for status we don't want to enable the column when it is retrying requests.
+        // but also we don't want the user to be able to start it in this case.
+        let p_xvb = process_states.find_mut(ProcessName::Xvb);
+        p_xvb.alive = p_xvb.state != ProcessState::Dead;
+        self.middle_panel(ctx, frame, key, &process_states);
+    }
+}
+#[derive(Debug)]
+pub struct ProcessStateGui {
+    pub name: ProcessName,
+    pub state: ProcessState,
+    pub alive: bool,
+    pub waiting: bool,
+}
+
+impl ProcessStateGui {
+    pub fn run_middle_msg(&self) -> &str {
+        match self.name {
+            ProcessName::Node => NODE_MIDDLE,
+            ProcessName::P2pool => P2POOL_MIDDLE,
+            ProcessName::Xmrig => XMRIG_MIDDLE,
+            ProcessName::XmrigProxy => XMRIG_PROXY_MIDDLE,
+            ProcessName::Xvb => XVB_MIDDLE,
+        }
+    }
+    pub fn stop(&self, helper: &Arc<Mutex<Helper>>) {
+        match self.name {
+            ProcessName::Node => Helper::stop_node(helper),
+            ProcessName::P2pool => Helper::stop_p2pool(helper),
+            ProcessName::Xmrig => Helper::stop_xmrig(helper),
+            ProcessName::XmrigProxy => Helper::stop_xp(helper),
+            ProcessName::Xvb => Helper::stop_xvb(helper),
+        }
+    }
+}
+
+#[derive(Deref, DerefMut, Debug)]
+pub struct ProcessStatesGui(Vec<ProcessStateGui>);
+
+impl ProcessStatesGui {
+    // order is important for lock
+    pub fn new(app: &App) -> Self {
+        let mut process_states = ProcessStatesGui(vec![]);
+        for process in [&app.node,
+            &app.p2pool,
+            &app.xmrig,
+            &app.xmrig_proxy,
+            &app.xvb] {
+            let lock = process.lock().unwrap();
+            process_states.push(ProcessStateGui {
+                name: lock.name,
+                alive: lock.is_alive(),
+                waiting: lock.is_waiting(),
+                state: lock.state,
+            });
+        }
+        process_states
+    }
+    pub fn is_alive(&self, name: ProcessName) -> bool {
+        self.iter()
+            .find(|p| p.name == name)
+            .unwrap_or_else(|| panic!("This vec should always contains all Processes {:?}",
+                self))
+            .alive
+    }
+    pub fn find(&self, name: ProcessName) -> &ProcessStateGui {
+        self.iter().find(|p| p.name == name).unwrap_or_else(|| panic!("This vec should always contains all Processes {:?}",
+            self))
+    }
+    pub fn find_mut(&mut self, name: ProcessName) -> &mut ProcessStateGui {
+        self.iter_mut()
+            .find(|p| p.name == name)
+            .expect("This vec should always contains all Processes")
     }
 }
