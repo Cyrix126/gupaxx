@@ -52,6 +52,8 @@ To notify the user that content is present in the bottom, an arrow pointing down
 For custom command arguments, some args are required. To help the user not make any errors, theses args must be prefilled. The user will need to enable a checkbox to apply the custom command arguments. A button reset will replace the text fields by only the required fields.
 #### Allow to hide status column
 Status columns can take together lots of space and user can use only a number of them. Allows to hide/restore them with button on the bottom on the columns for each one.
+### Warning about new update available
+If the user disabled auto updates, show a message when a new update is available with the changelog. Allows user to dismiss the update.
 ### Better defaults
 [Done](https://github.com/Cyrix126/gupaxx/commit/6cb767a342bec2df3358b10826a1ec1dee57fc76) and [Done](https://github.com/Cyrix126/gupaxx/commit/a102bdbee2e4c0bc8785f9e638d3e54958d79489)
 Reduce in/out peers, remote nodes by default
@@ -102,6 +104,8 @@ To make the Algorithm controllable outside of Gupaxx.
 The user could see how the HR was given on P2Pool and XvB.
 ### Update XMRig benchmark from Gupaxx
 To have the latest benchmark from XMRig, but still including one by default. Also automates the inclusion on release.
+### Auto restart after updates
+Updates can be applied only when Gupaxx is restarted. Make a button to auto-restart after updates.
 ### Manually set HR for XvB algo
 Done by [Sina](https://github.com/mostafaei2002) [PR](https://github.com/Cyrix126/gupaxx/pull/11)
 An advanced tab on XvB tab with multiple tools to set the HR manually.
