@@ -420,7 +420,7 @@ impl PrivNodeApi {
         {
             if let Ok(metadata) = std::fs::metadata(if !state.path_db.is_empty() {
                 let mut path_db = state.path_db.clone();
-                path_db.push_str("lmdb/data/mdb");
+                path_db.push_str("lmdb/data.mdb");
                 path_db
             } else {
                 r#"C:\ProgramData\bitmonero\lmdb\data.mdb"#.to_string()
