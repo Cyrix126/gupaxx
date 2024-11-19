@@ -17,7 +17,7 @@ jobs:
         run: |
          git clone https://github.com/BurtonQin/lockbud.git
          cd lockbud
-         sed -i 's/2024-10-05/2024-10-11/g' rust-toolchain.toml
+         sed -i 's/-2024-10-05//g' rust-toolchain.toml
          cargo install --path .
          cd ..
          cargo clean
