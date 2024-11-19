@@ -22,14 +22,11 @@ jobs:
     - name: Format
       run: cargo fmt --all --check
   test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest]
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Test
-      run: cargo test 
+      run: cargo test
   clippy:
     runs-on: ${{ matrix.os }}
     strategy:
@@ -49,10 +46,7 @@ jobs:
     - name: Check compilation
       run: cargo check  --verbose
   doc:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [macos-latest, ubuntu-latest]
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
     - name: Documentation
