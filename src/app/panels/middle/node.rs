@@ -11,9 +11,9 @@ use log::debug;
 
 use crate::components::gupax::{FileType, FileWindow};
 use crate::disk::state::{Gupax, Node};
-use crate::helper::node::PubNodeApi;
 use crate::helper::Process;
-use crate::regex::{num_lines, REGEXES};
+use crate::helper::node::PubNodeApi;
+use crate::regex::{REGEXES, num_lines};
 use crate::utils::constants::DARK_GRAY;
 use crate::{GREEN, LIGHT_GRAY, P2POOL_IN, P2POOL_LOG, P2POOL_OUT, RED, SPACE};
 

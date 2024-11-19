@@ -1,9 +1,9 @@
+use crate::XVB_MIN_TIME_SEND;
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
 use crate::helper::xvb::api_url_xmrig;
 use crate::helper::xvb::current_controllable_hr;
 use crate::miscs::output_console;
 use crate::miscs::output_console_without_time;
-use crate::XVB_MIN_TIME_SEND;
 use std::{
     sync::{Arc, Mutex},
     time::Duration,
@@ -15,17 +15,17 @@ use reqwest_middleware::ClientWithMiddleware as Client;
 use tokio::time::sleep;
 
 use crate::{
+    BLOCK_PPLNS_WINDOW_MAIN, BLOCK_PPLNS_WINDOW_MINI, SECOND_PER_BLOCK_P2POOL,
+    XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR, XVB_ROUND_DONOR_VIP_MIN_HR,
+    XVB_ROUND_DONOR_WHALE_MIN_HR, XVB_TIME_ALGO,
     helper::{
         p2pool::PubP2poolApi,
         xrig::{update_xmrig_config, xmrig::PubXmrigApi},
         xvb::{nodes::XvbNode, priv_stats::RuntimeMode},
     },
-    BLOCK_PPLNS_WINDOW_MAIN, BLOCK_PPLNS_WINDOW_MINI, SECOND_PER_BLOCK_P2POOL,
-    XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR, XVB_ROUND_DONOR_VIP_MIN_HR,
-    XVB_ROUND_DONOR_WHALE_MIN_HR, XVB_TIME_ALGO,
 };
 
-use super::{priv_stats::RuntimeDonationLevel, PubXvbApi, SamplesAverageHour};
+use super::{PubXvbApi, SamplesAverageHour, priv_stats::RuntimeDonationLevel};
 
 #[allow(clippy::too_many_arguments)]
 pub(crate) async fn algorithm(
@@ -138,7 +138,9 @@ impl<'a> Algorithm<'a> {
         );
         let p2pool_external_hashrate =
             (p2pool_total_hashrate - p2pool_avg_last_hour_hashrate).max(0.0);
-        info!("p2pool external hashrate({p2pool_external_hashrate}) = p2ool_total_hashrate({p2pool_total_hashrate}) - p2pool_avg_last_hour_hashrate({p2pool_avg_last_hour_hashrate})");
+        info!(
+            "p2pool external hashrate({p2pool_external_hashrate}) = p2ool_total_hashrate({p2pool_total_hashrate}) - p2pool_avg_last_hour_hashrate({p2pool_avg_last_hour_hashrate})"
+        );
 
         let share_min_hashrate = Self::minimum_hashrate_share(
             gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64,
@@ -161,7 +163,9 @@ impl<'a> Algorithm<'a> {
             &gui_api_xvb.lock().unwrap().xvb_sent_last_hour_samples,
         );
         let xvb_external_hashrate = (xvb_1h_avg - xvb_avg_last_hour_hashrate).max(0.0);
-        info!("xvb external hashrate({xvb_external_hashrate}) = xvb_1h_avg({xvb_1h_avg}) - xvb_avg_last_hour_hashrate({xvb_avg_last_hour_hashrate})");
+        info!(
+            "xvb external hashrate({xvb_external_hashrate}) = xvb_1h_avg({xvb_1h_avg}) - xvb_avg_last_hour_hashrate({xvb_avg_last_hour_hashrate})"
+        );
         let stats = Stats {
             share,
             hashrate_xmrig,
@@ -429,10 +433,10 @@ impl<'a> Algorithm<'a> {
                 let target_donation_hashrate =
                     self.stats.hashrate_xmrig - (self.stats.runtime_amount as f32);
 
-                info!("Algorithm | ManualP2poolMode target_donation_hashrate({})=hashrate_xmrig({})-runtime_amount({})",
-                target_donation_hashrate,
-                self.stats.hashrate_xmrig,
-                self.stats.runtime_amount);
+                info!(
+                    "Algorithm | ManualP2poolMode target_donation_hashrate({})=hashrate_xmrig({})-runtime_amount({})",
+                    target_donation_hashrate, self.stats.hashrate_xmrig, self.stats.runtime_amount
+                );
 
                 target_donation_hashrate
             }
@@ -441,9 +445,10 @@ impl<'a> Algorithm<'a> {
                 let target_donation_hashrate = self.stats.runtime_donation_level.get_hashrate()
                     - self.stats.xvb_external_hashrate;
 
-                info!("Algorithm | ManualDonationLevelMode target_donation_hashrate({})={:#?}.get_hashrate()",
-                target_donation_hashrate,
-                self.stats.runtime_donation_level);
+                info!(
+                    "Algorithm | ManualDonationLevelMode target_donation_hashrate({})={:#?}.get_hashrate()",
+                    target_donation_hashrate, self.stats.runtime_donation_level
+                );
 
                 target_donation_hashrate
             }
@@ -511,13 +516,15 @@ impl<'a> Algorithm<'a> {
             * (1.0 + (p2pool_buffer as f32 / 100.0)))
             - p2pool_external_hashrate;
 
-        info!("Algorithm | (difficulty({}) / (window pplns blocks({}) * seconds per p2pool block({})) * (BUFFER 1 + ({})) / 100) - outside HR({}H/s) = minimum HR({}H/s) to keep a share.",
-         difficulty,
-         pws,
-         SECOND_PER_BLOCK_P2POOL,
-         p2pool_buffer,
-         p2pool_external_hashrate,
-         minimum_hr);
+        info!(
+            "Algorithm | (difficulty({}) / (window pplns blocks({}) * seconds per p2pool block({})) * (BUFFER 1 + ({})) / 100) - outside HR({}H/s) = minimum HR({}H/s) to keep a share.",
+            difficulty,
+            pws,
+            SECOND_PER_BLOCK_P2POOL,
+            p2pool_buffer,
+            p2pool_external_hashrate,
+            minimum_hr
+        );
 
         if minimum_hr.is_sign_negative() {
             info!("Algorithm | if minimum HR is negative, it is 0.");
@@ -567,16 +574,23 @@ impl<'a> Algorithm<'a> {
 
         match self.stats.needed_time_xvb {
             x if x <= XVB_MIN_TIME_SEND => {
-                info!("Algorithm | Needed time: {x} to send on XvB is less than minimum time to send, sending all HR to p2pool");
+                info!(
+                    "Algorithm | Needed time: {x} to send on XvB is less than minimum time to send, sending all HR to p2pool"
+                );
                 self.send_all_p2pool().await;
             }
             x if x <= XVB_TIME_ALGO - XVB_MIN_TIME_SEND => {
-                info!("Algorithm | There is a share in p2pool and 24H avg XvB is achieved. Sending  {} seconds to XvB!", self.stats.needed_time_xvb);
+                info!(
+                    "Algorithm | There is a share in p2pool and 24H avg XvB is achieved. Sending  {} seconds to XvB!",
+                    self.stats.needed_time_xvb
+                );
                 self.target_p2pool_node().await;
                 self.sleep_then_update_node_xmrig().await;
             }
             x if x >= XVB_TIME_ALGO - XVB_MIN_TIME_SEND => {
-                info!("Algorithm | time : {x} seconds for XvB is more than time algo - minimum time to send, sending all to XvB");
+                info!(
+                    "Algorithm | time : {x} seconds for XvB is more than time algo - minimum time to send, sending all to XvB"
+                );
                 self.send_all_xvb().await;
             }
             _ => error!("should not be possible"),
@@ -635,11 +649,10 @@ impl<'a> Algorithm<'a> {
     fn get_needed_time_xvb(target_donation_hashrate: f32, hashrate_xmrig: f32) -> u32 {
         let needed_time = target_donation_hashrate / hashrate_xmrig * (XVB_TIME_ALGO as f32);
 
-        info!("Algorithm | Calculating... needed time for XvB ({}seconds)=target_donation_hashrate({})/hashrate_xmrig({})*XVB_TIME_ALGO({})",
-        needed_time,
-        target_donation_hashrate,
-        hashrate_xmrig,
-        XVB_TIME_ALGO);
+        info!(
+            "Algorithm | Calculating... needed time for XvB ({}seconds)=target_donation_hashrate({})/hashrate_xmrig({})*XVB_TIME_ALGO({})",
+            needed_time, target_donation_hashrate, hashrate_xmrig, XVB_TIME_ALGO
+        );
         // never go above time of algo
         // it could be the case if manual donation level is set
         needed_time.clamp(0.0, XVB_TIME_ALGO as f32) as u32

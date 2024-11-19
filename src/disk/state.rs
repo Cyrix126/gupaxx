@@ -1,5 +1,5 @@
 use anyhow::Result;
-use rand::{distributions::Alphanumeric, thread_rng, Rng};
+use rand::{Rng, distributions::Alphanumeric, thread_rng};
 
 use super::*;
 use crate::{components::node::RemoteNode, disk::status::*};

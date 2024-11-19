@@ -1,4 +1,5 @@
 /target
+/ra_target
 /feature
 .DS_Store
 rustc-ice-*

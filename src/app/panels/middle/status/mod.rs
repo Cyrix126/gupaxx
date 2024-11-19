@@ -18,9 +18,10 @@
 use egui::Vec2;
 
 use crate::{
-    app::{eframe_impl::ProcessStatesGui, Benchmark},
+    app::{Benchmark, eframe_impl::ProcessStatesGui},
     disk::{gupax_p2pool_api::GupaxP2poolApi, state::Status, status::*},
     helper::{
+        ProcessName, Sys,
         node::PubNodeApi,
         p2pool::{ImgP2pool, PubP2poolApi},
         xrig::{
@@ -28,7 +29,6 @@ use crate::{
             xmrig_proxy::PubXmrigProxyApi,
         },
         xvb::PubXvbApi,
-        ProcessName, Sys,
     },
 };
 use std::sync::{Arc, Mutex};

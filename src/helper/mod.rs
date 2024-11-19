@@ -56,7 +56,7 @@ use std::{
 };
 use strum::EnumIter;
 
-use self::xvb::{nodes::XvbNode, PubXvbApi};
+use self::xvb::{PubXvbApi, nodes::XvbNode};
 pub mod node;
 pub mod p2pool;
 pub mod tests;
@@ -339,7 +339,10 @@ impl Helper {
                 "{} Watchdog | Output is nearing {} bytes, resetting!",
                 name, MAX_GUI_OUTPUT_BYTES
             );
-            let text = format!("{}\n{} GUI log is exceeding the maximum: {} bytes!\nI've reset the logs for you!\n{}\n\n\n\n", HORI_CONSOLE, name, MAX_GUI_OUTPUT_BYTES, HORI_CONSOLE);
+            let text = format!(
+                "{}\n{} GUI log is exceeding the maximum: {} bytes!\nI've reset the logs for you!\n{}\n\n\n\n",
+                HORI_CONSOLE, name, MAX_GUI_OUTPUT_BYTES, HORI_CONSOLE
+            );
             output.clear();
             output.push_str(&text);
             debug!("{} Watchdog | Resetting GUI output ... OK", name);
@@ -455,7 +458,9 @@ impl Helper {
         let sysinfo_processes = sysinfo::ProcessRefreshKind::new().with_cpu();
 
         thread::spawn(move || {
-            info!("Helper | Hello from helper thread! Entering loop where I will spend the rest of my days...");
+            info!(
+                "Helper | Hello from helper thread! Entering loop where I will spend the rest of my days..."
+            );
             // Begin loop
             loop {
                 // 1. Loop init timestamp

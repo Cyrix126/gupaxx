@@ -32,8 +32,8 @@
 
 use crate::disk::consts::*;
 use crate::{app::Tab, components::gupax::Ratio, constants::*, human::*, macros::*, xmr::*};
-use figment::providers::{Format, Toml};
 use figment::Figment;
+use figment::providers::{Format, Toml};
 use log::*;
 use serde::{Deserialize, Serialize};
 #[cfg(target_family = "unix")]

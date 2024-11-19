@@ -1,5 +1,5 @@
 use egui::{
-    vec2, Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, TextEdit, TextStyle, Vec2,
+    Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, TextEdit, TextStyle, Vec2, vec2,
 };
 use std::sync::{Arc, Mutex};
 
@@ -7,9 +7,9 @@ use log::{debug, info};
 
 use crate::disk::pool::Pool;
 use crate::disk::state::XmrigProxy;
-use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
 use crate::helper::Process;
-use crate::regex::{num_lines, REGEXES};
+use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
+use crate::regex::{REGEXES, num_lines};
 use crate::utils::constants::DARK_GRAY;
 use crate::{
     GREEN, LIGHT_GRAY, LIST_ADD, LIST_CLEAR, LIST_DELETE, LIST_SAVE, RED, SPACE, XMRIG_API_IP,

@@ -2,7 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use super::App;
 #[cfg(target_os = "windows")]
-use crate::errors::{process_running, ErrorButtons, ErrorFerris};
+use crate::errors::{ErrorButtons, ErrorFerris, process_running};
 use crate::helper::{Helper, ProcessName, ProcessState};
 use crate::inits::init_text_styles;
 use crate::{NODE_MIDDLE, P2POOL_MIDDLE, SECOND, XMRIG_MIDDLE, XMRIG_PROXY_MIDDLE, XVB_MIDDLE};

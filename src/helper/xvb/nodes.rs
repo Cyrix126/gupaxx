@@ -9,9 +9,9 @@ use reqwest_middleware::ClientWithMiddleware as Client;
 use tokio::spawn;
 
 use crate::{
-    components::node::{GetInfo, TIMEOUT_NODE_PING},
-    helper::{xvb::output_console, Process, ProcessName, ProcessState},
     GUPAX_VERSION_UNDERSCORE, XVB_NODE_EU, XVB_NODE_NA, XVB_NODE_PORT, XVB_NODE_RPC,
+    components::node::{GetInfo, TIMEOUT_NODE_PING},
+    helper::{Process, ProcessName, ProcessState, xvb::output_console},
 };
 
 use super::PubXvbApi;

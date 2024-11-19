@@ -33,10 +33,10 @@ use crate::{
     miscs::get_exe_dir,
     utils::errors::{ErrorButtons, ErrorFerris, ErrorState},
 };
-use anyhow::{anyhow, Error};
+use anyhow::{Error, anyhow};
 use log::*;
 use rand::distributions::Alphanumeric;
-use rand::{thread_rng, Rng};
+use rand::{Rng, thread_rng};
 use reqwest::header::{LOCATION, USER_AGENT};
 use reqwest::{Client, RequestBuilder};
 use serde::{Deserialize, Serialize};
@@ -130,8 +130,7 @@ const MSG_DOWNLOAD: &str = "Downloading packages";
 const MSG_EXTRACT: &str = "Extracting packages";
 const MSG_UPGRADE: &str = "Upgrading packages";
 pub const MSG_FAILED: &str = "Update failed";
-pub const MSG_FAILED_HELP: &str =
-    "Consider manually replacing your executable from github releases: https://github.com/Cyrix126/gupaxx/releases";
+pub const MSG_FAILED_HELP: &str = "Consider manually replacing your executable from github releases: https://github.com/Cyrix126/gupaxx/releases";
 const INIT: &str = "------------------- Init -------------------";
 const METADATA: &str = "----------------- Metadata -----------------";
 const COMPARE: &str = "----------------- Compare ------------------";

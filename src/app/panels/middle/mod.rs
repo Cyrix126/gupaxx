@@ -1,6 +1,6 @@
+use crate::app::Tab;
 use crate::app::eframe_impl::ProcessStatesGui;
 use crate::app::keys::KeyPressed;
-use crate::app::Tab;
 use crate::helper::ProcessName;
 use crate::utils::constants::*;
 use crate::utils::errors::{ErrorButtons, ErrorFerris};

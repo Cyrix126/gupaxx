@@ -2,20 +2,20 @@ use super::Helper;
 use super::Process;
 use crate::components::node::RemoteNode;
 use crate::disk::state::P2pool;
+use crate::helper::ProcessName;
+use crate::helper::ProcessSignal;
+use crate::helper::ProcessState;
 use crate::helper::check_died;
 use crate::helper::check_user_input;
 use crate::helper::signal_end;
 use crate::helper::sleep_end_loop;
-use crate::helper::ProcessName;
-use crate::helper::ProcessSignal;
-use crate::helper::ProcessState;
+use crate::regex::P2POOL_REGEX;
 use crate::regex::contains_end_status;
 use crate::regex::contains_statuscommand;
 use crate::regex::contains_yourhashrate;
 use crate::regex::contains_yourshare;
 use crate::regex::estimated_hr;
 use crate::regex::nb_current_shares;
-use crate::regex::P2POOL_REGEX;
 use crate::{
     constants::*,
     disk::{gupax_p2pool_api::GupaxP2poolApi, node::Node},
@@ -99,7 +99,10 @@ impl Helper {
                             gui_api.lock().unwrap().sidechain_ehr
                         );
                     } else {
-                        error!("P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {}", line);
+                        error!(
+                            "P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {}",
+                            line
+                        );
                     }
                 }
                 if contains_yourshare(&line) {
@@ -111,7 +114,10 @@ impl Helper {
                         );
                         gui_api.lock().unwrap().sidechain_shares = shares;
                     } else {
-                        error!("P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {}", line);
+                        error!(
+                            "P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {}",
+                            line
+                        );
                     }
                 }
                 if contains_end_status(&line) {
@@ -203,12 +209,9 @@ impl Helper {
 
         // Print arguments & user settings to console
         crate::disk::print_dash(&format!(
-			"P2Pool | Launch arguments: {:#?} | Local API Path: {:#?} | Network API Path: {:#?} | Pool API Path: {:#?}",
-			 args,
-			 api_path_local,
-			 api_path_network,
-			 api_path_pool,
-		));
+            "P2Pool | Launch arguments: {:#?} | Local API Path: {:#?} | Network API Path: {:#?} | Pool API Path: {:#?}",
+            args, api_path_local, api_path_network, api_path_pool,
+        ));
 
         // Spawn watchdog thread
         let process = Arc::clone(&helper.lock().unwrap().p2pool);
@@ -914,7 +917,10 @@ impl PubP2poolApi {
                 xmr_new
             );
             debug!("P2Pool Watchdog | Total [XMR mined] should be ... {}", xmr);
-            debug!("P2Pool Watchdog | Correct [XMR mined per] should be ... [{}/hour, {}/day, {}/month]", xmr_hour, xmr_day, xmr_month);
+            debug!(
+                "P2Pool Watchdog | Correct [XMR mined per] should be ... [{}/hour, {}/day, {}/month]",
+                xmr_hour, xmr_day, xmr_month
+            );
         }
 
         // 6. Mutate the struct with the new info

@@ -14,17 +14,17 @@ use tokio::spawn;
 
 use crate::miscs::client;
 use crate::{
+    GUPAX_VERSION_UNDERSCORE, UNKNOWN_DATA,
     disk::state::Xmrig,
     helper::{
-        check_died, check_user_input, signal_end, sleep_end_loop,
+        Helper, Process, ProcessName, ProcessSignal, ProcessState, check_died, check_user_input,
+        signal_end, sleep_end_loop,
         xrig::update_xmrig_config,
-        xvb::{nodes::XvbNode, PubXvbApi},
-        Helper, Process, ProcessName, ProcessSignal, ProcessState,
+        xvb::{PubXvbApi, nodes::XvbNode},
     },
     macros::{arc_mut, sleep},
     miscs::output_console,
-    regex::{contains_timeout, contains_usepool, detect_new_node_xmrig, XMRIG_REGEX},
-    GUPAX_VERSION_UNDERSCORE, UNKNOWN_DATA,
+    regex::{XMRIG_REGEX, contains_timeout, contains_usepool, detect_new_node_xmrig},
 };
 use crate::{NO_POOL, XMRIG_CONFIG_URL, XMRIG_PROXY_SUMMARY_URL};
 
@@ -72,8 +72,8 @@ impl Helper {
                         // updating current node to None, will stop sending signal of FailedNode until new node is set
                         // send signal to update node.
                         warn!(
-                        "XMRig-Proxy PTY Parse | node is offline, sending signal to update nodes."
-                    );
+                            "XMRig-Proxy PTY Parse | node is offline, sending signal to update nodes."
+                        );
                         if current_node != XvbNode::P2pool {
                             process_xvb.lock().unwrap().signal =
                                 ProcessSignal::UpdateNodes(current_node);
@@ -412,7 +412,9 @@ impl Helper {
                 match PrivXmrigProxyApi::request_xp_api(&client, api_summary_xp, token_proxy).await
                 {
                     Ok(priv_api) => {
-                        debug!("XMRig-Proxy Watchdog | HTTP API request OK, attempting [update_from_priv()]");
+                        debug!(
+                            "XMRig-Proxy Watchdog | HTTP API request OK, attempting [update_from_priv()]"
+                        );
                         PubXmrigProxyApi::update_from_priv(pub_api, priv_api);
                     }
                     Err(err) => {
@@ -455,7 +457,7 @@ impl Helper {
                     }
                 }
             } // locked are dropped here
-              // do not use more than 1 second for the loop
+            // do not use more than 1 second for the loop
             sleep_end_loop(now, ProcessName::XmrigProxy).await;
         }
 

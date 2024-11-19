@@ -1,9 +1,9 @@
-use crate::app::panels::middle::*;
 use crate::app::ErrorState;
 use crate::app::Restart;
+use crate::app::panels::middle::*;
 use crate::components::gupax::*;
-use crate::components::update::check_binary_path;
 use crate::components::update::Update;
+use crate::components::update::check_binary_path;
 use crate::disk::state::*;
 use log::debug;
 use std::path::Path;

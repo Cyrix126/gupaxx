@@ -16,8 +16,8 @@ use tokio::spawn;
 use crate::{
     disk::state::Node,
     helper::{
-        check_died, check_user_input, signal_end, sleep_end_loop, ProcessName, ProcessSignal,
-        ProcessState,
+        ProcessName, ProcessSignal, ProcessState, check_died, check_user_input, signal_end,
+        sleep_end_loop,
     },
     macros::{arc_mut, sleep},
 };

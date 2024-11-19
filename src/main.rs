@@ -29,9 +29,7 @@ use crate::app::App;
 use crate::cli::Cli;
 //---------------------------------------------------------------------------------------------------- Imports
 use crate::constants::*;
-use crate::inits::init_auto;
-use crate::inits::init_logger;
-use crate::inits::init_options;
+use crate::inits::{init_auto, init_logger, init_options};
 use crate::miscs::clean_dir;
 use crate::utils::*;
 use clap::Parser;
@@ -71,7 +69,9 @@ fn main() {
     let selected_height = app.state.gupax.selected_height as f32;
     let initial_window_size = if selected_width > APP_MAX_WIDTH || selected_height > APP_MAX_HEIGHT
     {
-        warn!("App | Set width or height was greater than the maximum! Starting with the default resolution...");
+        warn!(
+            "App | Set width or height was greater than the maximum! Starting with the default resolution..."
+        );
         Some(Vec2::new(APP_DEFAULT_WIDTH, APP_DEFAULT_HEIGHT))
     } else {
         Some(Vec2::new(
@@ -90,7 +90,9 @@ fn main() {
     let resolution = Vec2::new(selected_width, selected_height);
 
     // Run Gupax.
-    info!("/*************************************/ Init ... OK /*************************************/");
+    info!(
+        "/*************************************/ Init ... OK /*************************************/"
+    );
     eframe::run_native(
         &app.name_version.clone(),
         options,

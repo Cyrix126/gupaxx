@@ -18,13 +18,13 @@
 use crate::constants::*;
 use crate::disk::pool::Pool;
 use crate::disk::state::Xmrig;
-use crate::helper::xrig::xmrig::PubXmrigApi;
 use crate::helper::Process;
-use crate::regex::{num_lines, REGEXES};
+use crate::helper::xrig::xmrig::PubXmrigApi;
+use crate::regex::{REGEXES, num_lines};
 use crate::utils::regex::Regexes;
 use egui::{
-    vec2, Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, Slider, TextEdit,
-    TextStyle, Vec2,
+    Button, Checkbox, ComboBox, Label, RichText, SelectableLabel, Slider, TextEdit, TextStyle,
+    Vec2, vec2,
 };
 use log::*;
 

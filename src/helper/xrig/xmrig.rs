@@ -1,10 +1,10 @@
 use crate::constants::*;
 use crate::helper::xrig::update_xmrig_config;
-use crate::helper::{arc_mut, check_died, check_user_input, sleep, sleep_end_loop, Process};
 use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
+use crate::helper::{Process, arc_mut, check_died, check_user_input, sleep, sleep_end_loop};
 use crate::helper::{PubXvbApi, XvbNode};
 use crate::miscs::{client, output_console};
-use crate::regex::{contains_error, contains_usepool, detect_new_node_xmrig, XMRIG_REGEX};
+use crate::regex::{XMRIG_REGEX, contains_error, contains_usepool, detect_new_node_xmrig};
 use crate::utils::human::HumanNumber;
 use crate::utils::sudo::SudoState;
 use enclose::enclose;
@@ -555,7 +555,9 @@ impl Helper {
                 && !process_xp.lock().unwrap().is_alive()
                 && process_p2pool.lock().unwrap().is_alive()
             {
-                info!("XMRig Process |  redirect xmrig to p2pool since XMRig-Proxy is not alive anymore");
+                info!(
+                    "XMRig Process |  redirect xmrig to p2pool since XMRig-Proxy is not alive anymore"
+                );
                 let node = XvbNode::P2pool;
                 if let Err(err) = update_xmrig_config(
                     &client,

@@ -9,11 +9,11 @@ use serde::Deserialize;
 use serde_this_or_that::as_u64;
 
 use crate::{
-    helper::{xvb::output_console, Process, ProcessName, ProcessState},
     XVB_URL_PUBLIC_API,
+    helper::{Process, ProcessName, ProcessState, xvb::output_console},
 };
 
-use super::{rounds::XvbRound, PubXvbApi};
+use super::{PubXvbApi, rounds::XvbRound};
 
 #[allow(dead_code)] // because deserialize doesn't use all the fields
 #[derive(Debug, Clone, Default, Deserialize)]

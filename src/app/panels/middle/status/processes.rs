@@ -8,7 +8,7 @@ use crate::helper::node::PubNodeApi;
 use crate::helper::p2pool::{ImgP2pool, PubP2poolApi};
 use crate::helper::xrig::xmrig::{ImgXmrig, PubXmrigApi};
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
-use crate::helper::xvb::{rounds::XvbRound, PubXvbApi};
+use crate::helper::xvb::{PubXvbApi, rounds::XvbRound};
 use crate::helper::{ProcessName, Sys};
 
 use crate::constants::*;
