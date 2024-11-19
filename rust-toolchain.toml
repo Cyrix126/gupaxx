@@ -1,4 +1,5 @@
 [toolchain]
-channel = "nightly-2024-10-11"
-components = [ "rustfmt", "rustc-dev", "cargo", "clippy", "rust-analyzer", "rust-src", "llvm-tools-preview"]
+# channel = "nightly-2024-10-11"
+channel = "nightly"
+components = [ "rustfmt", "rustc-dev", "cargo", "clippy", "rust-analyzer", "rust-src", "llvm-tools-preview", "rustc-codegen-cranelift-preview"]
 target = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-apple-darwin","x86_64-pc-windows-gnu"]

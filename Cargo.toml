@@ -1,4 +1,4 @@
-cargo-features = ["profile-rustflags"]
+cargo-features = ["profile-rustflags", "codegen-backend"]
 [package]
 name = "gupaxx"
 version = "1.5.3"
@@ -8,20 +8,15 @@ documentation = "https://github.com/cyrix126/gupaxx"
 edition = "2021"
 
 [profile.release]
-# panic = "abort"
+panic = "abort"
 lto = "fat"
 codegen-units = 1
 incremental = false
-# strip = "symbols"
+strip = "symbols"
 rustflags = ["-Zlocation-detail=none"]
 
 [profile.dev]
-opt-level = 1
-debug = true
-strip = "none"
-debug-assertions = true
-overflow-checks = true
-incremental = true
+codegen-backend = "cranelift"
 
 [features]
 default = []
