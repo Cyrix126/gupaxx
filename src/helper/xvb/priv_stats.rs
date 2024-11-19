@@ -10,16 +10,16 @@ use reqwest_middleware::ClientWithMiddleware as Client;
 use serde::Deserialize;
 
 use crate::{
-    disk::state::ManualDonationLevel,
-    helper::{xvb::output_console, Process, ProcessName, ProcessState},
-    XVB_URL,
+    XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR, XVB_ROUND_DONOR_VIP_MIN_HR,
+    XVB_ROUND_DONOR_WHALE_MIN_HR, disk::state::XvbMode,
 };
 use crate::{
-    disk::state::XvbMode, XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR,
-    XVB_ROUND_DONOR_VIP_MIN_HR, XVB_ROUND_DONOR_WHALE_MIN_HR,
+    XVB_URL,
+    disk::state::ManualDonationLevel,
+    helper::{Process, ProcessName, ProcessState, xvb::output_console},
 };
 
-use super::{nodes::XvbNode, rounds::XvbRound, PubXvbApi};
+use super::{PubXvbApi, nodes::XvbNode, rounds::XvbRound};
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq, Default)]
 pub enum RuntimeMode {
@@ -97,7 +97,10 @@ impl XvbPrivStats {
             StatusCode::OK => match resp.json::<Self>().await {
                 Ok(s) => Ok(s),
                 Err(err) => {
-                    error!("XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}", err);
+                    error!(
+                        "XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}",
+                        err
+                    );
                     bail!(
                         "Data provided from private API is not deserializ-able.Error: {}",
                         err

@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::app::eframe_impl::{ProcessStateGui, ProcessStatesGui};
-use crate::app::{keys::KeyPressed, Restart};
+use crate::app::{Restart, keys::KeyPressed};
 use crate::disk::node::Node;
 use crate::disk::pool::Pool;
 use crate::disk::state::{Gupax, State};
@@ -583,7 +583,9 @@ impl crate::app::App {
         };
         // check path of binary except for XvB
         if name != ProcessName::Xvb && !crate::components::update::check_binary_path(path, name) {
-            let msg_error = format!("{name} binary at the given PATH in the Gupaxx tab doesn't look like {name}! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where {name} is located.");
+            let msg_error = format!(
+                "{name} binary at the given PATH in the Gupaxx tab doesn't look like {name}! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where {name} is located."
+            );
             return Err(msg_error);
         }
 

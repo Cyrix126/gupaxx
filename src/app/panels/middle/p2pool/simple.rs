@@ -4,15 +4,15 @@ use std::sync::Mutex;
 use crate::app::panels::middle::Hyperlink;
 use crate::app::panels::middle::ProgressBar;
 use crate::app::panels::middle::Spinner;
-use crate::components::node::format_ip_location;
-use crate::components::node::format_ms;
 use crate::components::node::Ping;
 use crate::components::node::RemoteNode;
+use crate::components::node::format_ip_location;
+use crate::components::node::format_ms;
 use crate::disk::state::P2pool;
-use egui::vec2;
 use egui::Button;
 use egui::Checkbox;
 use egui::Vec2;
+use egui::vec2;
 
 use crate::constants::*;
 use egui::{Color32, ComboBox, Label, RichText, Ui};

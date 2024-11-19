@@ -1,9 +1,9 @@
+use clap::Parser;
+use clap::Subcommand;
 use clap::crate_authors;
 use clap::crate_description;
 use clap::crate_name;
 use clap::crate_version;
-use clap::Parser;
-use clap::Subcommand;
 use log::debug;
 use log::info;
 use log::warn;

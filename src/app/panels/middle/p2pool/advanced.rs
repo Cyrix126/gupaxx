@@ -20,7 +20,7 @@ impl P2pool {
         let space_h = size.y / 128.0;
         debug!("P2Pool Tab | Rendering [Node List] elements");
         let mut incorrect_input = false; // This will disable [Add/Delete] on bad input
-                                         // [Monero node IP/RPC/ZMQ]
+        // [Monero node IP/RPC/ZMQ]
         ui.horizontal(|ui| {
 		    ui.group(|ui| {
 			let width = size.x/10.0;

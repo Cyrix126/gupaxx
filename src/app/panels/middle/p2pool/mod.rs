@@ -19,7 +19,7 @@ use crate::regex::num_lines;
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 use crate::{components::node::*, constants::*, helper::*, utils::regex::Regexes};
-use egui::{vec2, Color32, Label, RichText, TextEdit, TextStyle, Vec2};
+use egui::{Color32, Label, RichText, TextEdit, TextStyle, Vec2, vec2};
 use log::*;
 
 use std::sync::{Arc, Mutex};

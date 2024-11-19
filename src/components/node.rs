@@ -19,7 +19,7 @@ use crate::components::update::get_user_agent;
 use crate::{constants::*, macros::*};
 use egui::Color32;
 use log::*;
-use rand::{thread_rng, Rng};
+use rand::{Rng, thread_rng};
 use reqwest::{Client, RequestBuilder};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -467,7 +467,7 @@ mod test {
     use log::error;
     use reqwest::Client;
 
-    use crate::components::node::{format_ip, REMOTE_NODES, REMOTE_NODE_LENGTH};
+    use crate::components::node::{REMOTE_NODE_LENGTH, REMOTE_NODES, format_ip};
     use crate::components::update::get_user_agent;
     // Iterate through all nodes, find the longest domain.
     pub const REMOTE_NODE_MAX_CHARS: usize = {

@@ -184,7 +184,9 @@ pub fn detect_new_node_xmrig(s: &str) -> Option<XvbNode> {
             }
         }
     }
-    warn!("a line on xmrig console was detected as using a new pool but the syntax was not recognized or it was not a pool useable for the algorithm.");
+    warn!(
+        "a line on xmrig console was detected as using a new pool but the syntax was not recognized or it was not a pool useable for the algorithm."
+    );
     None
 }
 // this detection removes the need to update pub_api.node everytime xmrig/proxy are updated to mine to another p2pool node.
@@ -204,7 +206,9 @@ pub fn detect_node_xmrig(s: &str) -> Option<String> {
             return Some(name);
         }
     }
-    warn!("a line on xmrig console was detected as using a new pool but the syntax was not recognized or it was not a pool useable for the algorithm.");
+    warn!(
+        "a line on xmrig console was detected as using a new pool but the syntax was not recognized or it was not a pool useable for the algorithm."
+    );
     None
 }
 pub fn estimated_hr(s: &str) -> Option<f32> {
@@ -282,7 +286,10 @@ mod test {
     fn build_regexes() {
         let r = Regexes::new();
         assert!(Regex::is_match(&r.name, "_this_ is... a n-a-m-e."));
-        assert!(Regex::is_match(&r.address, "44hintoFpuo3ugKfcqJvh5BmrsTRpnTasJmetKC4VXCt6QDtbHVuixdTtsm6Ptp7Y8haXnJ6j8Gj2dra8CKy5ewz7Vi9CYW"));
+        assert!(Regex::is_match(
+            &r.address,
+            "44hintoFpuo3ugKfcqJvh5BmrsTRpnTasJmetKC4VXCt6QDtbHVuixdTtsm6Ptp7Y8haXnJ6j8Gj2dra8CKy5ewz7Vi9CYW"
+        ));
         assert!(Regex::is_match(&r.ipv4, "192.168.1.2"));
         assert!(Regex::is_match(&r.ipv4, "127.0.0.1"));
         assert!(Regex::is_match(&r.domain, "sub.domain.com"));

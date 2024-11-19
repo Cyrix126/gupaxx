@@ -1,9 +1,13 @@
-use crate::cli::parse_args;
+use crate::APP_DEFAULT_HEIGHT;
+use crate::APP_DEFAULT_WIDTH;
+use crate::GUPAX_VERSION;
+use crate::OS;
 use crate::cli::Cli;
+use crate::cli::parse_args;
 use crate::components::gupax::FileWindow;
 use crate::components::node::Ping;
-use crate::components::node::RemoteNode;
 use crate::components::node::REMOTE_NODES;
+use crate::components::node::RemoteNode;
 use crate::components::update::Update;
 use crate::disk::consts::NODE_TOML;
 use crate::disk::consts::POOL_TOML;
@@ -16,18 +20,18 @@ use crate::disk::state::State;
 use crate::errors::ErrorButtons;
 use crate::errors::ErrorFerris;
 use crate::errors::ErrorState;
+use crate::helper::Helper;
+use crate::helper::Process;
+use crate::helper::ProcessName;
+use crate::helper::Sys;
 use crate::helper::node::PubNodeApi;
 use crate::helper::p2pool::ImgP2pool;
 use crate::helper::p2pool::PubP2poolApi;
 use crate::helper::xrig::xmrig::ImgXmrig;
 use crate::helper::xrig::xmrig::PubXmrigApi;
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
-use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::helper::xvb::PubXvbApi;
-use crate::helper::Helper;
-use crate::helper::Process;
-use crate::helper::ProcessName;
-use crate::helper::Sys;
+use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::inits::init_text_styles;
 use crate::miscs::cmp_f64;
 use crate::miscs::get_exe;
@@ -35,14 +39,10 @@ use crate::miscs::get_exe_dir;
 use crate::utils::constants::VISUALS;
 use crate::utils::macros::arc_mut;
 use crate::utils::sudo::SudoState;
-use crate::APP_DEFAULT_HEIGHT;
-use crate::APP_DEFAULT_WIDTH;
-use crate::GUPAX_VERSION;
-use crate::OS;
 use derive_more::derive::Display;
 use eframe::CreationContext;
-use egui::vec2;
 use egui::Vec2;
+use egui::vec2;
 use log::debug;
 use log::error;
 use log::info;
@@ -501,7 +501,7 @@ impl App {
 
         //----------------------------------------------------------------------------------------------------
         let mut og = app.og.lock().unwrap(); // Lock [og]
-                                             // Handle max threads
+        // Handle max threads
         info!("App Init | Handling max thread overflow...");
         og.xmrig.max_threads = app.max_threads;
         let current = og.xmrig.current_threads;

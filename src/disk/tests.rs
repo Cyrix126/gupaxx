@@ -327,9 +327,10 @@ mod test {
         assert_eq!(api.payout_u64, 1);
         assert_eq!(api.xmr.to_u64(), 2);
         assert!(!api.payout_ord.is_empty());
-        assert!(api
-            .log
-            .contains("2022-01-27 01:30:23.1377 | 0.000000000001 XMR | Block 2,642,816"));
+        assert!(
+            api.log
+                .contains("2022-01-27 01:30:23.1377 | 0.000000000001 XMR | Block 2,642,816")
+        );
     }
 
     #[test]

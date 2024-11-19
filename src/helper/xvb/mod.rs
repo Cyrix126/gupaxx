@@ -2,7 +2,7 @@ use crate::helper::xrig::update_xmrig_config;
 use crate::helper::xvb::algorithm::algorithm;
 use crate::helper::xvb::priv_stats::XvbPrivStats;
 use crate::helper::xvb::public_stats::XvbPubStats;
-use crate::helper::{sleep_end_loop, ProcessName};
+use crate::helper::{ProcessName, sleep_end_loop};
 use crate::miscs::{client, output_console};
 use crate::{XMRIG_CONFIG_URL, XMRIG_PROXY_CONFIG_URL, XMRIG_PROXY_SUMMARY_URL, XMRIG_SUMMARY_URL};
 use bounded_vec_deque::BoundedVecDeque;
@@ -18,7 +18,7 @@ use std::{
 };
 use tokio::spawn;
 use tokio::task::JoinHandle;
-use tokio::time::{sleep, Instant};
+use tokio::time::{Instant, sleep};
 
 use crate::helper::xvb::rounds::round_type;
 use crate::utils::constants::{XVB_PUBLIC_ONLY, XVB_TIME_ALGO};
@@ -488,8 +488,18 @@ async fn check_conditions_for_start(
     {
         info!("XvB | verify address and token");
         // send to console: token non existent for address on XvB server
-        warn!("Xvb | Start ... Partially failed because token and associated address are not existent on XvB server: {}\n", err);
-        output_console(&mut gui_api.lock().unwrap().output, &format!("Token and associated address are not valid on XvB API.\nCheck if you are registered.\nError: {}", err), ProcessName::Xvb);
+        warn!(
+            "Xvb | Start ... Partially failed because token and associated address are not existent on XvB server: {}\n",
+            err
+        );
+        output_console(
+            &mut gui_api.lock().unwrap().output,
+            &format!(
+                "Token and associated address are not valid on XvB API.\nCheck if you are registered.\nError: {}",
+                err
+            ),
+            ProcessName::Xvb,
+        );
         ProcessState::NotMining
     } else if process_p2pool.lock().unwrap().state != ProcessState::Alive {
         info!("XvB | verify p2pool node");
@@ -506,7 +516,9 @@ async fn check_conditions_for_start(
         && process_xp.lock().unwrap().state != ProcessState::Alive
     {
         // send to console: xmrig process is not running
-        warn!("Xvb | Start ... Partially failed because Xmrig or Xmrig-Proxy instance is not running.");
+        warn!(
+            "Xvb | Start ... Partially failed because Xmrig or Xmrig-Proxy instance is not running."
+        );
         // output the error to console
         output_console(
             &mut gui_api.lock().unwrap().output,
@@ -573,7 +585,7 @@ async fn check_state_outcauses_xvb(
             output_console(
                 &mut gui_api.lock().unwrap().output,
                 "XvB process can not completely continue, algorithm of distribution of HR is stopped.",
-                ProcessName::Xvb
+                ProcessName::Xvb,
             );
             // only update xmrig if it is alive and wasn't on p2pool already.
             if gui_api.lock().unwrap().current_node != Some(XvbNode::P2pool)
@@ -638,16 +650,18 @@ async fn check_state_outcauses_xvb(
     match state {
         ProcessState::Alive if !p2pool_xmrig_alive => {
             // they are not both alives, so state will be at syncing and data reset, state of loop also.
-            warn!("XvB | stopped partially because P2pool node or xmrig/xmrig-proxy are not reachable.");
+            warn!(
+                "XvB | stopped partially because P2pool node or xmrig/xmrig-proxy are not reachable."
+            );
             // stats must be empty put to default so the UI reflect that XvB private is not running.
             reset_data_xvb(pub_api, gui_api);
             // request from public API must be executed at next loop, do not wait for 1 minute.
             *first_loop = true;
             output_console(
-                            &mut gui_api.lock().unwrap().output,
-                            "XvB is now partially stopped because p2pool node or XMRig/XMRig-Proxy came offline.\nCheck P2pool and Xmrig/Xmrig-Proxy Tabs", 
-                            ProcessName::Xvb
-                        );
+                &mut gui_api.lock().unwrap().output,
+                "XvB is now partially stopped because p2pool node or XMRig/XMRig-Proxy came offline.\nCheck P2pool and Xmrig/Xmrig-Proxy Tabs",
+                ProcessName::Xvb,
+            );
             output_console(
                 &mut gui_api.lock().unwrap().output,
                 XVB_PUBLIC_ONLY,
@@ -806,7 +820,7 @@ fn signal_interrupt(
                             err
                         ), ProcessName::Xvb
                     );
-                            } 
+                        } 
                         }
                             ));}
             },

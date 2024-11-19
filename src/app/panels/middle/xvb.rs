@@ -1,15 +1,16 @@
 use std::sync::{Arc, Mutex};
 
-use egui::{vec2, Image, RichText, TextEdit, TextStyle, Ui, Vec2};
+use egui::{Image, RichText, TextEdit, TextStyle, Ui, Vec2, vec2};
 use log::debug;
 use readable::num::Float;
 use readable::up::Uptime;
 
+use crate::XVB_MINING_ON_FIELD;
 use crate::disk::state::{ManualDonationLevel, ManualDonationMetric, XvbMode};
 use crate::helper::xrig::xmrig::PubXmrigApi;
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
-use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::helper::xvb::PubXvbApi;
+use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::regex::num_lines;
 use crate::utils::constants::{
     GREEN, LIGHT_GRAY, ORANGE, RED, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD,
@@ -21,7 +22,6 @@ use crate::utils::constants::{
     XVB_TOKEN_LEN, XVB_URL_RULES, XVB_WINNER_FIELD,
 };
 use crate::utils::regex::Regexes;
-use crate::XVB_MINING_ON_FIELD;
 use crate::{
     constants::{BYTES_XVB, SPACE},
     utils::constants::{DARK_GRAY, XVB_URL},

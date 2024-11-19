@@ -21,8 +21,8 @@ pub const XMRIG_VERSION: &str = "v6.21.1";
 pub const XMRIG_PROXY_VERSION: &str = "v6.21.1";
 pub const NODE_VERSION: &str = "v18.3.4";
 pub const COMMIT: &str = env!("COMMIT"); // set in build.rs
-                                         // e.g: Gupax_v1_0_0
-                                         // Would have been [Gupax_v1.0.0] but P2Pool truncates everything after [.]
+// e.g: Gupax_v1_0_0
+// Would have been [Gupax_v1.0.0] but P2Pool truncates everything after [.]
 pub const GUPAX_VERSION_UNDERSCORE: &str = concat!(
     "Gupaxx_v",
     env!("CARGO_PKG_VERSION_MAJOR"),
@@ -88,8 +88,8 @@ pub const P2POOL_API_PATH_NETWORK: &str = "network/stats";
 #[cfg(target_family = "unix")]
 pub const P2POOL_API_PATH_POOL: &str = "pool/stats";
 pub const XMRIG_API_SUMMARY_URI: &str = "1/summary"; // The default relative URI of XMRig's API summary
-                                                     // pub const XMRIG_API_CONFIG_URI: &str = "1/config"; // The default relative URI of XMRig's API config
-                                                     // todo allow user to change the port of the http api for xmrig and xmrig-proxy
+// pub const XMRIG_API_CONFIG_URI: &str = "1/config"; // The default relative URI of XMRig's API config
+// todo allow user to change the port of the http api for xmrig and xmrig-proxy
 pub const XMRIG_CONFIG_URL: &str = "http://127.0.0.1:18088/1/config"; // The default relative URI of XMRig's API config
 pub const XMRIG_PROXY_CONFIG_URL: &str = "http://127.0.0.1:18089/1/config"; // The default relative URI of XMRig Proxy's API config
 pub const XMRIG_SUMMARY_URL: &str = "http://127.0.0.1:18088/1/summary"; // The default relative URI of XMRig's API config
@@ -137,10 +137,10 @@ pub const XMRIG_PROXY_ADVANCED: &str = r#"Use advanced XMRig-Proxy settings:
   - Custom HTTP API IP/Port
   - TLS setting
   - Keepalive setting"#;
-pub const XMRIG_PROXY_PATH_NOT_FILE:  &str = "XMRig-Proxy binary not found at the given PATH in the Gupaxx tab! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where XMRig-Proxy is located.";
+pub const XMRIG_PROXY_PATH_NOT_FILE: &str = "XMRig-Proxy binary not found at the given PATH in the Gupaxx tab! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where XMRig-Proxy is located.";
 pub const XMRIG_PROXY_PATH_NOT_VALID: &str = "XMRig-Proxy binary at the given PATH in the Gupaxx tab doesn't look like XMRig-Proxy! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where XMRig-Proxy is located.";
 pub const XMRIG_PROXY_PATH_OK: &str = "XMRig-Proxy was found at the given PATH";
-pub const XMRIG_PROXY_PATH_EMPTY:     &str = "XMRig-Proxy PATH is empty! To fix: goto the [GupaxxAdvanced] tab, select [Open] and specify where XMRig is located.";
+pub const XMRIG_PROXY_PATH_EMPTY: &str = "XMRig-Proxy PATH is empty! To fix: goto the [GupaxxAdvanced] tab, select [Open] and specify where XMRig is located.";
 pub const STATUS_XMRIG_PROXY_UPTIME: &str = "How long XMRig-Proxy has been online";
 pub const STATUS_XMRIG_PROXY_POOL: &str = "The pool XMRig-Proxy is currently mining to";
 pub const STATUS_XMRIG_PROXY_HASHRATE: &str = "The average hashrate of XMRig-Proxy";
@@ -204,8 +204,7 @@ pub const OS_NAME: &str = "Linux";
 // Tooltips
 // Status
 pub const STATUS_GUPAX_UPTIME: &str = "How long Gupaxx has been online";
-pub const STATUS_GUPAX_CPU_USAGE: &str =
-    "How much CPU Gupaxx is currently using. This accounts for all your threads (it is out of 100%)";
+pub const STATUS_GUPAX_CPU_USAGE: &str = "How much CPU Gupaxx is currently using. This accounts for all your threads (it is out of 100%)";
 pub const STATUS_GUPAX_MEMORY_USAGE: &str =
     "How much memory Gupaxx is currently using in Megabytes";
 pub const STATUS_GUPAX_SYSTEM_CPU_USAGE: &str = "How much CPU your entire system is currently using. This accounts for all your threads (it is out of 100%)";
@@ -215,9 +214,9 @@ pub const STATUS_GUPAX_SYSTEM_CPU_MODEL: &str =
     "The detected model of your system's CPU and its current frequency";
 //--
 pub const STATUS_P2POOL_UPTIME: &str = "How long P2Pool has been online";
-pub const STATUS_P2POOL_PAYOUTS:     &str = "The total amount of payouts received in this instance of P2Pool and an extrapolated estimate of how many you will receive. Warning: these stats will be quite inaccurate if your P2Pool hasn't been running for a long time!";
-pub const STATUS_P2POOL_XMR:         &str = "The total amount of XMR mined in this instance of P2Pool and an extrapolated estimate of how many you will mine in the future. Warning: these stats will be quite inaccurate if your P2Pool hasn't been running for a long time!";
-pub const STATUS_P2POOL_HASHRATE:    &str = "The total amount of hashrate your P2Pool has pointed at it in 15 minute, 1 hour, and 24 hour averages";
+pub const STATUS_P2POOL_PAYOUTS: &str = "The total amount of payouts received in this instance of P2Pool and an extrapolated estimate of how many you will receive. Warning: these stats will be quite inaccurate if your P2Pool hasn't been running for a long time!";
+pub const STATUS_P2POOL_XMR: &str = "The total amount of XMR mined in this instance of P2Pool and an extrapolated estimate of how many you will mine in the future. Warning: these stats will be quite inaccurate if your P2Pool hasn't been running for a long time!";
+pub const STATUS_P2POOL_HASHRATE: &str = "The total amount of hashrate your P2Pool has pointed at it in 15 minute, 1 hour, and 24 hour averages";
 pub const STATUS_P2POOL_SHARES: &str = "The total amount of shares found on P2Pool";
 pub const STATUS_P2POOL_CURRENT_SHARES: &str =
     "Current shares valid in the PPLNS Window for your address";
@@ -261,15 +260,15 @@ pub const STATUS_SUBMENU_PROCESSES: &str =
 pub const STATUS_SUBMENU_P2POOL: &str = "View P2Pool specific data";
 pub const STATUS_SUBMENU_HASHRATE: &str = "Compare your CPU hashrate with others";
 //-- P2Pool
-pub const STATUS_SUBMENU_PAYOUT:    &str = "The total amount of payouts received via P2Pool across all time. This includes all payouts you have ever received using Gupaxx and P2Pool.";
-pub const STATUS_SUBMENU_XMR:       &str = "The total of XMR mined via P2Pool across all time. This includes all the XMR you have ever mined using Gupaxx and P2Pool.";
+pub const STATUS_SUBMENU_PAYOUT: &str = "The total amount of payouts received via P2Pool across all time. This includes all payouts you have ever received using Gupaxx and P2Pool.";
+pub const STATUS_SUBMENU_XMR: &str = "The total of XMR mined via P2Pool across all time. This includes all the XMR you have ever mined using Gupaxx and P2Pool.";
 pub const STATUS_SUBMENU_LATEST: &str = "Sort the payouts from latest to oldest";
 pub const STATUS_SUBMENU_OLDEST: &str = "Sort the payouts from oldest to latest";
 pub const STATUS_SUBMENU_BIGGEST: &str = "Sort the payouts from biggest to smallest";
 pub const STATUS_SUBMENU_SMALLEST: &str = "Sort the payouts from smallest to biggest";
 pub const STATUS_SUBMENU_AUTOMATIC: &str =
     "Automatically calculate share/block time with your current P2Pool 1 hour average hashrate";
-pub const STATUS_SUBMENU_MANUAL:    &str = "Manually input a hashrate to calculate share/block time with current P2Pool/Monero network stats";
+pub const STATUS_SUBMENU_MANUAL: &str = "Manually input a hashrate to calculate share/block time with current P2Pool/Monero network stats";
 pub const STATUS_SUBMENU_HASH: &str = "Use [Hash] as the hashrate metric";
 pub const STATUS_SUBMENU_KILO: &str = "Use [Kilo] as the hashrate metric (1,000x hash)";
 pub const STATUS_SUBMENU_MEGA: &str = "Use [Mega] as the hashrate metric (1,000,000x hash)";
@@ -281,9 +280,9 @@ pub const STATUS_SUBMENU_P2POOL_SHARE_MEAN: &str =
     "The average time it takes for your hashrate to find a share on P2Pool";
 pub const STATUS_SUBMENU_SOLO_BLOCK_MEAN: &str =
     "The average time it would take for your hashrate to find a block solo mining Monero";
-pub const STATUS_SUBMENU_MONERO_DIFFICULTY:     &str = "The current Monero network's difficulty (how many hashes it will take on average to find a block)";
+pub const STATUS_SUBMENU_MONERO_DIFFICULTY: &str = "The current Monero network's difficulty (how many hashes it will take on average to find a block)";
 pub const STATUS_SUBMENU_MONERO_HASHRATE: &str = "The current Monero network's hashrate";
-pub const STATUS_SUBMENU_P2POOL_DIFFICULTY:     &str = "The current P2Pool network's difficulty (how many hashes it will take on average to find a share)";
+pub const STATUS_SUBMENU_P2POOL_DIFFICULTY: &str = "The current P2Pool network's difficulty (how many hashes it will take on average to find a share)";
 pub const STATUS_SUBMENU_P2POOL_HASHRATE: &str = "The current P2Pool network's hashrate";
 pub const STATUS_SUBMENU_P2POOL_MINERS: &str = "The current amount of miners on P2Pool";
 pub const STATUS_SUBMENU_P2POOL_DOMINANCE: &str =
@@ -305,9 +304,9 @@ pub const STATUS_SUBMENU_YOUR_AVERAGE: &str =
     "The average hashrate of your CPU based off the data at [https://xmrig.com/benchmark]";
 pub const STATUS_SUBMENU_YOUR_LOW: &str =
     "The lowest hashrate recorded for your CPU on [https://xmrig.com/benchmark]";
-pub const STATUS_SUBMENU_OTHER_CPUS:       &str = "A list of ALL the recorded CPU benchmarks. The CPUs most similar to yours are listed first. All this data is taken from [https://xmrig.com/benchmark].";
+pub const STATUS_SUBMENU_OTHER_CPUS: &str = "A list of ALL the recorded CPU benchmarks. The CPUs most similar to yours are listed first. All this data is taken from [https://xmrig.com/benchmark].";
 pub const STATUS_SUBMENU_OTHER_CPU: &str = "The CPU name";
-pub const STATUS_SUBMENU_OTHER_RELATIVE:   &str = "The relative hashrate power compared to the fastest recorded CPU, which is current: [AMD EPYC 7T83 64-Core Processor]";
+pub const STATUS_SUBMENU_OTHER_RELATIVE: &str = "The relative hashrate power compared to the fastest recorded CPU, which is current: [AMD EPYC 7T83 64-Core Processor]";
 pub const STATUS_SUBMENU_OTHER_HIGH: &str = "Highest hashrate record";
 pub const STATUS_SUBMENU_OTHER_AVERAGE: &str = "Average hashrate";
 pub const STATUS_SUBMENU_OTHER_LOW: &str = "Lowest hashrate record";
@@ -316,11 +315,9 @@ pub const STATUS_SUBMENU_OTHER_BENCHMARKS: &str =
     "How many benchmarks this CPU has had posted to [https://xmrig.com/benchmark]";
 
 // Gupaxx
-pub const GUPAX_UPDATE: &str =
-    "Check for updates on Gupaxx and bundled versions of P2Pool and XMRig via GitHub's API and upgrade automatically";
+pub const GUPAX_UPDATE: &str = "Check for updates on Gupaxx and bundled versions of P2Pool and XMRig via GitHub's API and upgrade automatically";
 pub const GUPAX_AUTO_UPDATE: &str = "Automatically check for updates at startup";
-pub const GUPAX_BUNDLED_UPDATE: &str =
-    "Update XMRig and P2Pool with bundled versions of latest Gupaxx. It will replace any present xmrig and p2pool binary in their specified path.";
+pub const GUPAX_BUNDLED_UPDATE: &str = "Update XMRig and P2Pool with bundled versions of latest Gupaxx. It will replace any present xmrig and p2pool binary in their specified path.";
 pub const GUPAX_SHOULD_RESTART: &str =
     "Gupaxx was updated. A restart is recommended but not required";
 // #[cfg(not(target_os = "macos"))]
@@ -329,11 +326,11 @@ pub const GUPAX_SHOULD_RESTART: &str =
 // pub const GUPAX_UPDATE_VIA_TOR:   &str = "WARNING: This option is unstable on macOS. Update through the Tor network. Tor is embedded within Gupax; a Tor system proxy is not required";
 pub const GUPAX_ASK_BEFORE_QUIT: &str = "Ask before quitting Gupaxx";
 pub const GUPAX_SAVE_BEFORE_QUIT: &str = "Automatically save any changed settings before quitting";
-pub const GUPAX_AUTO_P2POOL:      &str = "Automatically start P2Pool on Gupaxx startup. If you are using [P2Pool Simple], this will NOT wait for your [Auto-Ping] to finish, it will start P2Pool on the pool you already have selected. This option will fail if your P2Pool settings aren't valid!";
-pub const GUPAX_AUTO_NODE:      &str = "Automatically start Node on Gupaxx startup. This option will fail if your P2Pool settings aren't valid!";
-pub const GUPAX_AUTO_XMRIG:       &str = "Automatically start XMRig on Gupaxx startup. This option will fail if your XMRig settings aren't valid!";
+pub const GUPAX_AUTO_P2POOL: &str = "Automatically start P2Pool on Gupaxx startup. If you are using [P2Pool Simple], this will NOT wait for your [Auto-Ping] to finish, it will start P2Pool on the pool you already have selected. This option will fail if your P2Pool settings aren't valid!";
+pub const GUPAX_AUTO_NODE: &str = "Automatically start Node on Gupaxx startup. This option will fail if your P2Pool settings aren't valid!";
+pub const GUPAX_AUTO_XMRIG: &str = "Automatically start XMRig on Gupaxx startup. This option will fail if your XMRig settings aren't valid!";
 pub const GUPAX_AUTO_XMRIG_PROXY: &str = "Automatically start XMRig-Proxy on Gupaxx startup.";
-pub const GUPAX_AUTO_XVB:       &str = "Automatically start XvB on Gupaxx startup. This option will fail if your XvB settings aren't valid!";
+pub const GUPAX_AUTO_XVB: &str = "Automatically start XvB on Gupaxx startup. This option will fail if your XvB settings aren't valid!";
 pub const GUPAX_ADJUST: &str = "Adjust and set the width/height of the Gupaxx window";
 pub const GUPAX_WIDTH: &str = "Set the width of the Gupaxx window";
 pub const GUPAX_HEIGHT: &str = "Set the height of the Gupaxx window";
@@ -369,8 +366,8 @@ pub const GUPAX_PATH_XMRIG: &str = "The location of the XMRig binary: Both absol
 pub const GUPAX_PATH_XMRIG_PROXY: &str = "The location of the XMRig-Proxy binary: Both absolute and relative paths are accepted; A red [X] will appear if there is no file found at the given path";
 
 // P2Pool
-pub const P2POOL_MAIN:                   &str = "Use the P2Pool main-chain. This P2Pool finds blocks faster, but has a higher difficulty. Suitable for miners with more than 50kH/s";
-pub const P2POOL_MINI:                   &str = "Use the P2Pool mini-chain. This P2Pool finds blocks slower, but has a lower difficulty. Suitable for miners with less than 50kH/s";
+pub const P2POOL_MAIN: &str = "Use the P2Pool main-chain. This P2Pool finds blocks faster, but has a higher difficulty. Suitable for miners with more than 50kH/s";
+pub const P2POOL_MINI: &str = "Use the P2Pool mini-chain. This P2Pool finds blocks slower, but has a lower difficulty. Suitable for miners with less than 50kH/s";
 pub const P2POOL_OUT: &str = "How many out-bound peers to connect to? (you connecting to others)";
 pub const P2POOL_IN: &str = "How many in-bound peers to allow? (others connecting to you)";
 pub const P2POOL_LOG: &str = "Verbosity of the console log";
@@ -387,7 +384,7 @@ pub const P2POOL_SELECT_RANDOM: &str = "Select a random remote Monero node";
 pub const P2POOL_SELECT_LAST: &str = "Select the previous remote Monero node";
 pub const P2POOL_SELECT_NEXT: &str = "Select the next remote Monero node";
 pub const P2POOL_PING: &str = "Ping the built-in remote Monero nodes";
-pub const P2POOL_ADDRESS:                &str = "You must use a primary Monero address to mine on P2Pool (starts with a 4). It is highly recommended to create a new wallet since addresses are public on P2Pool!";
+pub const P2POOL_ADDRESS: &str = "You must use a primary Monero address to mine on P2Pool (starts with a 4). It is highly recommended to create a new wallet since addresses are public on P2Pool!";
 pub const P2POOL_COMMUNITY_NODE_WARNING: &str = r#"TL;DR: Run & use your own Monero Node.
 
 Using a Remote Monero Node is convenient but comes at the cost of privacy and reliability.
@@ -479,11 +476,11 @@ pub const XMRIG_INPUT: &str = "Send a command to XMRig";
 pub const XMRIG_ARGUMENTS: &str = r#"WARNING: Use [--no-color] and make sure to set [--http-host <IP>] & [--http-port <PORT>] so that the [Status] tab can work!
 
 Start XMRig with these arguments and override all below settings"#;
-pub const XMRIG_ADDRESS:        &str = "Specify which Monero address to payout to. This does nothing if mining to P2Pool since the address being paid out to will be the one P2Pool started with. This doubles as a rig identifier for P2Pool and some pools.";
-pub const XMRIG_NAME:           &str = "Add a unique name to identify this pool; Only [A-Za-z0-9-_.] and spaces allowed; Max length = 30 characters";
-pub const XMRIG_IP:             &str = "Specify the pool IP to connect to with XMRig; It must be a valid IPv4 address or a valid domain name; Max length = 255 characters";
+pub const XMRIG_ADDRESS: &str = "Specify which Monero address to payout to. This does nothing if mining to P2Pool since the address being paid out to will be the one P2Pool started with. This doubles as a rig identifier for P2Pool and some pools.";
+pub const XMRIG_NAME: &str = "Add a unique name to identify this pool; Only [A-Za-z0-9-_.] and spaces allowed; Max length = 30 characters";
+pub const XMRIG_IP: &str = "Specify the pool IP to connect to with XMRig; It must be a valid IPv4 address or a valid domain name; Max length = 255 characters";
 pub const XMRIG_PORT: &str = "Specify the port of the pool; [1-65535]";
-pub const XMRIG_RIG:            &str = "Add an optional rig ID. This will be the name shown on the pool; Only [A-Za-z0-9-_] and spaces allowed; Max length = 30 characters";
+pub const XMRIG_RIG: &str = "Add an optional rig ID. This will be the name shown on the pool; Only [A-Za-z0-9-_] and spaces allowed; Max length = 30 characters";
 #[cfg(not(target_os = "linux"))]
 pub const XMRIG_PAUSE: &str =
     "THIS SETTING IS DISABLED IF SET TO [0]. Pause mining if user is active, resume after";
@@ -494,10 +491,10 @@ pub const XMRIG_API_PORT: &str =
 pub const XMRIG_TLS: &str = "Enable SSL/TLS connections (needs pool support)";
 pub const XMRIG_KEEPALIVE: &str = "Send keepalive packets to prevent timeout (needs pool support)";
 pub const XMRIG_THREADS: &str = "Number of CPU threads to use for mining";
-pub const XMRIG_PATH_NOT_FILE:  &str = "XMRig binary not found at the given PATH in the Gupaxxtab! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where XMRig is located.";
+pub const XMRIG_PATH_NOT_FILE: &str = "XMRig binary not found at the given PATH in the Gupaxxtab! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where XMRig is located.";
 pub const XMRIG_PATH_NOT_VALID: &str = "XMRig binary at the given PATH in the Gupaxxtab doesn't look like XMRig! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where XMRig is located.";
 pub const XMRIG_PATH_OK: &str = "XMRig was found at the given PATH";
-pub const XMRIG_PATH_EMPTY:     &str = "XMRig PATH is empty! To fix: goto the [GupaxxAdvanced] tab, select [Open] and specify where XMRig is located.";
+pub const XMRIG_PATH_EMPTY: &str = "XMRig PATH is empty! To fix: goto the [GupaxxAdvanced] tab, select [Open] and specify where XMRig is located.";
 pub const XMRIG_PROXY_URL: &str = "https://github.com/xmrig/xmrig-proxy";
 
 // XvB
@@ -528,8 +525,7 @@ pub const XVB_SIDE_MARGIN_1H: f32 = 1.20;
 pub const XVB_TIME_ALGO: u32 = 600;
 pub const XVB_MIN_TIME_SEND: u32 = (XVB_TIME_ALGO as f32 * 0.01) as u32;
 pub const XVB_TOKEN_LEN: usize = 9;
-pub const XVB_HERO_SELECT: &str =
-    "Donate as much as possible while keeping a share on p2pool, increases the odds of your round winning\nWhen modified, the algorithm will use the new choice at the next decision.";
+pub const XVB_HERO_SELECT: &str = "Donate as much as possible while keeping a share on p2pool, increases the odds of your round winning\nWhen modified, the algorithm will use the new choice at the next decision.";
 pub const XVB_TOKEN_FIELD: &str = "Token";
 pub const XVB_FAILURE_FIELD: &str = "Failures";
 pub const XVB_DONATED_1H_FIELD: &str = "Donated last hour";

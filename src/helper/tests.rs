@@ -4,9 +4,9 @@ mod test {
     use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
     use crate::helper::xvb::algorithm::Algorithm;
     use crate::helper::{
+        Helper, Process, ProcessName, ProcessState,
         p2pool::{PrivP2poolLocalApi, PrivP2poolNetworkApi},
         xvb::{priv_stats::RuntimeDonationLevel, priv_stats::RuntimeMode},
-        Helper, Process, ProcessName, ProcessState,
     };
     use crate::miscs::client;
 
@@ -241,11 +241,11 @@ Uptime         = 0h 2m 4s
 
     #[test]
     fn update_pub_p2pool_from_local_network_pool() {
+        use crate::helper::PubP2poolApi;
         use crate::helper::p2pool::PoolStatistics;
         use crate::helper::p2pool::PrivP2poolLocalApi;
         use crate::helper::p2pool::PrivP2poolNetworkApi;
         use crate::helper::p2pool::PrivP2poolPoolApi;
-        use crate::helper::PubP2poolApi;
         use std::sync::{Arc, Mutex};
         let public = Arc::new(Mutex::new(PubP2poolApi::new()));
         let local = PrivP2poolLocalApi {
@@ -338,7 +338,9 @@ Uptime         = 0h 2m 4s
         println!("{:#?}", process);
         assert!(process.lock().unwrap().state == ProcessState::NotMining);
 
-        let output_parse = Arc::new(Mutex::new(String::from("[2022-02-12 12:49:30.311]  net      new job from 192.168.2.1:3333 diff 402K algo rx/0 height 2241142 (11 tx)")));
+        let output_parse = Arc::new(Mutex::new(String::from(
+            "[2022-02-12 12:49:30.311]  net      new job from 192.168.2.1:3333 diff 402K algo rx/0 height 2241142 (11 tx)",
+        )));
         PubXmrigApi::update_from_output(
             &mut public.lock().unwrap(),
             &output_parse,
@@ -547,7 +549,7 @@ Uptime         = 0h 2m 4s
         helper::{p2pool::PubP2poolApi, xrig::xmrig::PubXmrigApi},
     };
 
-    use crate::helper::xvb::{public_stats::XvbPubStats, PubXvbApi};
+    use crate::helper::xvb::{PubXvbApi, public_stats::XvbPubStats};
     use reqwest_middleware::ClientWithMiddleware as Client;
 
     #[test]

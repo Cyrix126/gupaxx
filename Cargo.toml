@@ -1,11 +1,11 @@
-cargo-features = ["profile-rustflags", "codegen-backend"]
+cargo-features = ["profile-rustflags", "codegen-backend", "edition2024"]
 [package]
 name = "gupaxx"
 version = "1.5.3"
 authors = ["cyrix126 <gupaxx@baermail.fr>"]
 description = "Fork of Gupax integrating the XMRvsBeast Raffle "
 documentation = "https://github.com/cyrix126/gupaxx"
-edition = "2021"
+edition = "2024"
 
 [profile.release]
 panic = "abort"
@@ -16,7 +16,8 @@ strip = "symbols"
 rustflags = ["-Zlocation-detail=none"]
 
 [profile.dev]
-codegen-backend = "cranelift"
+# can induce issue when using rust-analyzer, but allows smaller dev build time
+# codegen-backend = "cranelift"
 
 [features]
 default = []
