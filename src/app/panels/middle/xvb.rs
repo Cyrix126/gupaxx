@@ -130,8 +130,9 @@ impl crate::disk::state::Xvb {
         ui.style_mut().spacing.icon_spacing = space_h;
 
         // --------------------------- XVB Simple -------------------------------------------
-        if self.simple && ui.checkbox(&mut self.simple_hero_mode, "Hero Mode").on_hover_text(XVB_HERO_SELECT).clicked() {
-            // change rutime mode immediately.
+        if self.simple {
+            ui.checkbox(&mut self.simple_hero_mode, "Hero Mode").on_hover_text(XVB_HERO_SELECT);
+            // set runtime mode immediately if we are on simple mode.
             if self.simple_hero_mode {
                 api.lock().unwrap().stats_priv.runtime_mode = RuntimeMode::Hero;
             }  else {
@@ -139,10 +140,7 @@ impl crate::disk::state::Xvb {
             }
         }
     });
-
-
         ui.add_space(space_h);
-
          // --------------------------- XVB Advanced -----------------------------------------
          if !self.simple {
 
