@@ -46,7 +46,7 @@ impl Gupax {
                     // If [Gupax] is being built for a Linux distro,
                     // disable built-in updating completely.
                     #[cfg(feature = "distro")]
-                    ui.disable(true);
+                    ui.disable();
                     #[cfg(feature = "distro")]
                     ui.add_sized([width, button], Button::new("Updates are disabled"))
                         .on_disabled_hover_text(DISTRO_NO_UPDATE);
