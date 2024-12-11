@@ -12,7 +12,7 @@ use crate::utils::constants::*;
 use crate::utils::errors::{ErrorButtons, ErrorFerris};
 use crate::utils::regex::Regexes;
 use egui::*;
-use log::debug;
+use log::{debug, error};
 
 use crate::app::Tab;
 use crate::helper::ProcessState::*;
@@ -300,6 +300,16 @@ impl crate::app::App {
                             .on_disabled_hover_text(text_err)
                             .clicked()
                     {
+                        // check if process is running outside of Gupaxx, warn about it and do not start it.
+                        if process_running(name) {
+                            error!("Process already running outside: {}", name);
+                            self.error_state.set(
+                                PROCESS_OUTSIDE,
+                                ErrorFerris::Error,
+                                ErrorButtons::Okay,
+                            );
+                            return;
+                        }
                         let _ = self.og.lock().unwrap().update_absolute_path();
                         let _ = self.state.update_absolute_path();
                         // start process
@@ -550,13 +560,8 @@ impl crate::app::App {
         });
     }
     pub fn start_ready(&self, state: &ProcessStateGui) -> Result<(), String> {
-        // check if process running outside
-        let name = state.name;
-
-        if process_running(name) {
-            return Err(format!("Error: {}", PROCESS_OUTSIDE));
-        }
         // custom check and var
+        let name = state.name;
         let path = match name {
             ProcessName::Node => {
                 // check path of DB valid, empty valid.
