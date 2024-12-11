@@ -8,10 +8,11 @@ use std::{
     path::Path,
     sync::{Arc, Mutex},
     thread,
-    time::{Duration, Instant},
+    time::Instant,
 };
 use tokio::spawn;
 
+use crate::human::HumanTime;
 use crate::miscs::client;
 use crate::{
     GUPAX_VERSION_UNDERSCORE, UNKNOWN_DATA,
@@ -469,7 +470,7 @@ impl Helper {
 #[derive(Debug, Clone)]
 pub struct PubXmrigProxyApi {
     pub output: String,
-    pub uptime: Duration,
+    pub uptime: HumanTime,
     pub accepted: u32,
     pub rejected: u32,
     pub hashrate_1m: f32,
@@ -489,7 +490,7 @@ impl PubXmrigProxyApi {
     pub fn new() -> Self {
         Self {
             output: String::new(),
-            uptime: Duration::from_secs(0),
+            uptime: HumanTime::new(),
             accepted: 0,
             rejected: 0,
             hashrate_1m: 0.0,
@@ -515,7 +516,7 @@ impl PubXmrigProxyApi {
                 public.output.push_str(&std::mem::take(&mut *output_pub));
             }
             // Update uptime
-            public.uptime = elapsed;
+            public.uptime = HumanTime::into_human(elapsed);
         }
 
         drop(output_pub);
