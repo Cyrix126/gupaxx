@@ -301,6 +301,7 @@ if priv_stats.win_current {
                             ui.set_width(width_column);
                             ui.set_height(height_column);
                             ui.vertical_centered(|ui| {
+                                ui.spacing_mut().item_spacing = [style_height / 2.0, style_height / 2.0].into();
                                 ui.add_space(SPACE);
                                     ui.label(XVB_MINING_ON_FIELD)
                                         .on_hover_text_at_pointer(&priv_stats.msg_indicator);
