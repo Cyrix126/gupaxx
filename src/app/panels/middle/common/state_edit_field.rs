@@ -28,7 +28,7 @@ pub fn slider_state_field(
         ui.style_mut().spacing.slider_width = (ui.available_width()
             - ui.spacing().item_spacing.x * 4.0
             - ui.spacing().scroll.bar_width
-            - SPACE * 2.0
+            - SPACE * 1.0
             + 2.0)
             .max(80.0);
         ui.add_sized(

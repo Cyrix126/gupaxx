@@ -100,62 +100,78 @@ impl Xmrig {
                 );
             });
             if !self.simple {
-                debug!("XMRig Tab | Rendering [Pool List] elements");
-                let mut incorrect_input = false; // This will disable [Add/Delete] on bad input
-                ui.horizontal(|ui| {
-                    ui.group(|ui| {
-                        ui.vertical(|ui| {
-                            if !self.name_field(ui) {
-                                incorrect_input = false;
-                            }
-                            if !self.ip_field(ui) {
-                                incorrect_input = false;
-                            }
-                            if !self.rpc_port_field(ui) {
-                                incorrect_input = false;
-                            }
-                            if !self.rig_field(ui) {
-                                incorrect_input = false;
-                            }
+                egui::ScrollArea::horizontal()
+                    .id_salt("xmrig_horizontal")
+                    .show(ui, |ui| {
+                        debug!("XMRig Tab | Rendering [Pool List] elements");
+                        let mut incorrect_input = false; // This will disable [Add/Delete] on bad input
+                        ui.horizontal(|ui| {
+                            ui.group(|ui| {
+                                ui.vertical(|ui| {
+                                    if !self.name_field(ui) {
+                                        incorrect_input = false;
+                                    }
+                                    if !self.ip_field(ui) {
+                                        incorrect_input = false;
+                                    }
+                                    if !self.rpc_port_field(ui) {
+                                        incorrect_input = false;
+                                    }
+                                    if !self.rig_field(ui) {
+                                        incorrect_input = false;
+                                    }
+                                });
+                                ui.vertical(|ui| {
+                                    list_poolnode(
+                                        ui,
+                                        &mut (
+                                            &mut self.name,
+                                            &mut self.ip,
+                                            &mut self.port,
+                                            &mut self.rig,
+                                        ),
+                                        &mut self.selected_pool,
+                                        pool_vec,
+                                        incorrect_input,
+                                    );
+                                });
+                            });
                         });
-                        ui.vertical(|ui| {
-                            list_poolnode(
-                                ui,
-                                &mut (&mut self.name, &mut self.ip, &mut self.port, &mut self.rig),
-                                &mut self.selected_pool,
-                                pool_vec,
-                                incorrect_input,
-                            );
-                        });
-                    });
-                });
-                ui.add_space(5.0);
-                debug!("XMRig Tab | Rendering [API] TextEdits");
-                // [HTTP API IP/Port]
-                ui.group(|ui| {
-                    ui.horizontal(|ui| {
-                        ui.vertical(|ui| {
-                            self.api_ip_field(ui);
-                            self.api_port_field(ui);
-                        });
-                        ui.separator();
-                        debug!("XMRig Tab | Rendering [TLS/Keepalive] buttons");
-                        ui.vertical(|ui| {
-                            // TLS/Keepalive
+                        ui.add_space(5.0);
+                        debug!("XMRig Tab | Rendering [API] TextEdits");
+                        // [HTTP API IP/Port]
+                        ui.group(|ui| {
                             ui.horizontal(|ui| {
-                                let width = (ui.available_width() / 2.0) - 11.0;
-                                let height =
-                                    height_txt_before_button(ui, &egui::TextStyle::Button) * 2.0;
-                                let size = vec2(width, height);
-                                ui.add_sized(size, Checkbox::new(&mut self.tls, "TLS Connection"))
-                                    .on_hover_text(XMRIG_TLS);
+                                ui.vertical(|ui| {
+                                    self.api_ip_field(ui);
+                                    self.api_port_field(ui);
+                                });
                                 ui.separator();
-                                ui.add_sized(size, Checkbox::new(&mut self.keepalive, "Keepalive"))
-                                    .on_hover_text(XMRIG_KEEPALIVE);
+                                debug!("XMRig Tab | Rendering [TLS/Keepalive] buttons");
+                                ui.vertical(|ui| {
+                                    // TLS/Keepalive
+                                    ui.horizontal(|ui| {
+                                        let width = (ui.available_width() / 2.0) - 11.0;
+                                        let height =
+                                            height_txt_before_button(ui, &egui::TextStyle::Button)
+                                                * 2.0;
+                                        let size = vec2(width, height);
+                                        ui.add_sized(
+                                            size,
+                                            Checkbox::new(&mut self.tls, "TLS Connection"),
+                                        )
+                                        .on_hover_text(XMRIG_TLS);
+                                        ui.separator();
+                                        ui.add_sized(
+                                            size,
+                                            Checkbox::new(&mut self.keepalive, "Keepalive"),
+                                        )
+                                        .on_hover_text(XMRIG_KEEPALIVE);
+                                    });
+                                });
                             });
                         });
                     });
-                });
             }
         });
     }
