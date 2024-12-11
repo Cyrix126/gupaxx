@@ -164,10 +164,11 @@ impl Gupax {
                 ui.push_id(1, |ui| {
                     ScrollArea::horizontal().show(ui, |ui| {
                         ui.horizontal(|ui| {
-                            let width = (ui.available_width() / Tab::COUNT as f32)
+                            let width = ((ui.available_width() / Tab::COUNT as f32)
                                 - (ui.spacing().button_padding.y * 2.0
                                     + ui.spacing().item_spacing.x)
-                                - SPACE;
+                                - SPACE)
+                                .max(height_txt_before_button(ui, &TextStyle::Button) * 2.0);
                             Tab::iter().enumerate().for_each(|(count, tab)| {
                                 if ui
                                     .add_sized(
