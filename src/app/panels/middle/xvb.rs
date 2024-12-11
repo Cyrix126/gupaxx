@@ -248,6 +248,7 @@ impl crate::disk::state::Xvb {
             // private stats
             ui.add_space(SPACE);
             // ui.add_enabled_ui(is_alive, |ui| {
+                ScrollArea::horizontal().id_salt("horizontal").show(ui, |ui| {
             ui.add_enabled_ui(is_alive, |ui| {
                 let api = &api.lock().unwrap();
                 let priv_stats = &api.stats_priv;
@@ -259,7 +260,6 @@ impl crate::disk::state::Xvb {
         let width_column = ui.text_style_height(&TextStyle::Body) * 16.0;
         let height_column = 0.0;
         ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
-                ScrollArea::horizontal().id_salt("horizontal").show(ui, |ui| {
             ui.horizontal(|ui| {
                     // Failures
                     stat_box(ui, XVB_FAILURE_FIELD, &priv_stats.fails.to_string(), width_column, height_column, style_height);
@@ -295,7 +295,6 @@ if priv_stats.win_current {
                                     }
                         , width_column, height_column, style_height);
                 });
-                });
                     ui.vertical(|ui| {
                         ui.group(|ui| {
                             ui.set_width(width_column);
@@ -320,6 +319,7 @@ if priv_stats.win_current {
                         .on_disabled_hover_text("Algorithm is not running.");
                 // indicators
                     })
+                });
                     // currently mining on
                 });
     }

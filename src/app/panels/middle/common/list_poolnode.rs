@@ -1,4 +1,4 @@
-use egui::{Button, ComboBox, RichText, SelectableLabel, Ui};
+use egui::{Button, ComboBox, RichText, SelectableLabel, TextStyle, Ui};
 use log::{debug, info};
 
 use crate::{
@@ -54,18 +54,6 @@ impl PoolNode {
             PoolNode::Pool(p) => p.rig = new_custom,
         }
     }
-    // pub fn from_vec_node(vec_node: Vec<(String, Node)>) -> Vec<(String, Self)> {
-    //     vec_node
-    //         .into_iter()
-    //         .map(|(name, node)| (name, PoolNode::Node(node)))
-    //         .collect()
-    // }
-    // pub fn from_vec_pool(vec_node: Vec<(String, Pool)>) -> Vec<(String, Self)> {
-    //     vec_node
-    //         .into_iter()
-    //         .map(|(name, pool)| (name, PoolNode::Pool(pool)))
-    //         .collect()
-    // }
 }
 /// compatible for P2Pool and Xmrig/Proxy
 /// current is (name, ip, port, zmq/rig)
@@ -78,8 +66,9 @@ pub fn list_poolnode(
 ) {
     ui.vertical(|ui| {
         ui.spacing_mut().item_spacing.y = 0.0;
-        // ui.spacing_mut().button_padding.x = ui.available_width() / 2.0;
-        let width = ui.available_width();
+        let width = ui
+            .available_width()
+            .max(ui.text_style_height(&TextStyle::Button) * 28.0);
         // [Manual node selection]
         // [Ping List]
         debug!("P2Pool Tab | Rendering [Node List]");
