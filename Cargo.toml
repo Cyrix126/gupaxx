@@ -23,6 +23,7 @@ rustflags = ["-Zlocation-detail=none"]
 default = []
 bundle = []
 distro = []
+log=[]
 
 [dependencies]
 clap = {version="4.5", features=["cargo", "derive"]}
