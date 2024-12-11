@@ -430,9 +430,13 @@ pub const LIST_CLEAR: &str = "Clear all current values";
 pub const NODE_ARGUMENTS: &str = r#"WARNING: Make sure to set [--zmq-pub <tcp://127.0.0.1:18081>] so that P2Pool can connect to it !"#;
 pub const NODE_INPUT: &str = "Send a command to Node";
 pub const NODE_PRUNNING: &str = "Reduce the database size to a third. Does not have any security/privacy impact.If you have enough storage, a full node is preferable to make the network even more decentralized.";
+#[cfg(not(windows))]
 pub const NODE_DB_PATH_EMPTY: &str =
     "If the PATH of the DB is empty, the default ~/.bitmonero will be used.";
-pub const NODE_DB_DIR: &str = "The PATH needs to be a correct path to a directory";
+#[cfg(windows)]
+pub const NODE_DB_PATH_EMPTY: &str =
+    r#"If the PATH of the DB is empty, the default C:\ProgramData\bitmonero will be used."#;
+pub const NODE_DB_DIR: &str = "The DB path needs to be a correct path to a directory if not empty";
 pub const NODE_SIMPLE: &str = r#"Use simple Node settings:
   - Default Node settings"#;
 pub const NODE_ADVANCED: &str = r#"Use advanced Node settings:
@@ -445,7 +449,7 @@ pub const NODE_ADVANCED: &str = r#"Use advanced Node settings:
   - Log level setting
   - Disable DNS checkpoint
   - DNS blocking"#;
-pub const GUPAX_PATH_NODE: &str = "The location of the DB for the Node: Both absolute and relative paths are accepted; A red [X] will appear if there is no directory found at the given path";
+pub const GUPAX_PATH_NODE: &str = "The location of the Node binary: Both absolute and relative paths are accepted; A red [X] will appear if there is no directory found at the given path";
 pub const NODE_PATH_OK: &str = "PATH for DB is valid.";
 pub const NODE_PATH_NOT_FILE: &str = "Node binary not found at the given PATH in the Gupaxx tab! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where NODE is located.";
 pub const NODE_PATH_NOT_VALID: &str = "Node binary at the given PATH in the Gupaxx tab doesn't look like Node! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where Node is located.";

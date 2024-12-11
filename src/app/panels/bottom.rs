@@ -565,8 +565,10 @@ impl crate::app::App {
         let path = match name {
             ProcessName::Node => {
                 // check path of DB valid, empty valid.
-                if !Gupax::path_is_file(&self.state.node.path_db) {
-                    return Err(format!("Error: {}", NODE_PATH_NOT_FILE));
+                if !self.state.node.path_db.is_empty()
+                    && !Gupax::path_is_file(&self.state.node.path_db)
+                {
+                    return Err(format!("Error: {}", NODE_DB_DIR));
                 }
                 &self.state.gupax.node_path
             }
@@ -587,13 +589,17 @@ impl crate::app::App {
             }
         };
         // check path of binary except for XvB
-        if name != ProcessName::Xvb && !crate::components::update::check_binary_path(path, name) {
-            let msg_error = format!(
-                "{name} binary at the given PATH in the Gupaxx tab doesn't look like {name}! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where {name} is located."
-            );
-            return Err(msg_error);
+        if name != ProcessName::Xvb {
+            if path.is_empty() {
+                return Err(name.msg_binary_path_empty().to_string());
+            }
+            if !Gupax::path_is_file(path) {
+                return Err(name.msg_binary_path_not_file().to_string());
+            }
+            if !crate::components::update::check_binary_path(path, name) {
+                return Err(name.msg_binary_path_invalid().to_string());
+            }
         }
-
         Ok(())
     }
 }
