@@ -1,3 +1,6 @@
+use derive_more::derive::Display;
+use strum::{EnumCount, EnumIter};
+
 use super::*;
 //---------------------------------------------------------------------------------------------------- [Submenu] enum for [Status] tab
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Deserialize, Serialize)]
@@ -25,12 +28,25 @@ impl Display for Submenu {
 
 //---------------------------------------------------------------------------------------------------- [PayoutView] enum for [Status/P2Pool] tab
 // The enum buttons for selecting which "view" to sort the payout log in.
-#[derive(Clone, Copy, Eq, PartialEq, Debug, Deserialize, Serialize)]
+#[derive(
+    Clone, Copy, Eq, PartialEq, Debug, Deserialize, Serialize, Display, EnumIter, EnumCount,
+)]
 pub enum PayoutView {
     Latest,   // Shows the most recent logs first
     Oldest,   // Shows the oldest logs first
     Biggest,  // Shows highest to lowest payouts
     Smallest, // Shows lowest to highest payouts
+}
+
+impl PayoutView {
+    pub const fn msg_help(&self) -> &str {
+        match self {
+            Self::Latest => STATUS_SUBMENU_LATEST,
+            Self::Oldest => STATUS_SUBMENU_OLDEST,
+            Self::Biggest => STATUS_SUBMENU_SMALLEST,
+            Self::Smallest => STATUS_SUBMENU_BIGGEST,
+        }
+    }
 }
 
 impl PayoutView {
@@ -42,12 +58,6 @@ impl PayoutView {
 impl Default for PayoutView {
     fn default() -> Self {
         Self::new()
-    }
-}
-
-impl Display for PayoutView {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:?}", self)
     }
 }
 
@@ -110,8 +120,10 @@ impl Hash {
 impl Display for Hash {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
-            Hash::Hash => write!(f, "Hash"),
-            _ => write!(f, "{:?}hash", self),
+            Hash::Hash => write!(f, "H/s"),
+            Hash::Kilo => write!(f, "KH/s"),
+            Hash::Mega => write!(f, "MH/s"),
+            Hash::Giga => write!(f, "GH/s"),
         }
     }
 }

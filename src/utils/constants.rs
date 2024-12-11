@@ -348,6 +348,7 @@ pub const GUPAX_TAB_STATUS: &str = "Set the tab Gupaxx starts on to: Status";
 pub const GUPAX_TAB_GUPAX: &str = "Set the tab Gupaxx starts on to: Gupaxx";
 pub const GUPAX_TAB_P2POOL: &str = "Set the tab Gupaxx starts on to: P2Pool";
 pub const GUPAX_TAB_XMRIG: &str = "Set the tab Gupaxx starts on to: XMRig";
+pub const GUPAX_TAB_XMRIG_PROXY: &str = "Set the tab Gupaxx starts on to: Proxy";
 pub const GUPAX_TAB_XVB: &str = "Set the tab Gupaxx starts on to: XvB";
 pub const GUPAX_TAB_NODE: &str = "Set the default tab Gupaxx starts on to: Node";
 
@@ -526,7 +527,6 @@ pub const XVB_TIME_ALGO: u32 = 600;
 pub const XVB_MIN_TIME_SEND: u32 = (XVB_TIME_ALGO as f32 * 0.01) as u32;
 pub const XVB_TOKEN_LEN: usize = 9;
 pub const XVB_HERO_SELECT: &str = "Donate as much as possible while keeping a share on p2pool, increases the odds of your round winning\nWhen modified, the algorithm will use the new choice at the next decision.";
-pub const XVB_TOKEN_FIELD: &str = "Token";
 pub const XVB_FAILURE_FIELD: &str = "Failures";
 pub const XVB_DONATED_1H_FIELD: &str = "Donated last hour";
 pub const XVB_DONATED_24H_FIELD: &str = "Donated last 24 hours";

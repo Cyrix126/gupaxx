@@ -51,6 +51,13 @@ mod test {
 			ratio = "Width"
 			bundled = false
 
+			[gupax.auto]
+            update = false
+            bundled = false
+            ask_before_quit = false
+            save_before_quit = true
+            processes = []
+
 			[status]
 			submenu = "P2pool"
 			payout_view = "Oldest"
@@ -76,11 +83,13 @@ mod test {
 			ip = "192.168.1.123"
 			rpc = "18089"
 			zmq = "18083"
-			selected_index = 0
-			selected_name = "Local Monero Node"
-			selected_ip = "192.168.1.123"
-			selected_rpc = "18089"
-			selected_zmq = "18083"
+            
+            [p2pool.selected_node]
+            index = 0
+            name = "Local Monero Node"
+            ip = "localhost"
+            rpc = "18081"
+            zmq_rig = "18083"
 
 			[xmrig]
 			simple = true
@@ -98,12 +107,16 @@ mod test {
 			rig = "Gupaxx"
 			ip = "192.168.1.122"
 			port = "3333"
-			selected_index = 1
-			selected_name = "linux"
-			selected_rig = "Gupaxx"
-			selected_ip = "192.168.1.122"
-			selected_port = "3333"
             token = "testtoken"
+
+
+            [xmrig.selected_pool]
+            index = 0
+            name = "Local Monero Node"
+            ip = "localhost"
+            rpc = "18081"
+            zmq_rig = "18083"
+
 
             [xmrig_proxy]
             simple = true
@@ -121,12 +134,14 @@ mod test {
 			p2pool_ip = "localhost"
 			p2pool_port = "18088"
             token = "testtoken"
-			selected_index = 1
-			selected_name = "linux"
-			selected_rig = "Gupaxx"
-			selected_ip = "192.168.1.122"
-			selected_port = "3333"
             redirect_local_xmrig = true
+
+            [xmrig_proxy.selected_pool]
+            index = 0
+            name = "Local Monero Node"
+            ip = "localhost"
+            rpc = "18081"
+            zmq_rig = "18083"
 
             [xvb]
 			simple = true

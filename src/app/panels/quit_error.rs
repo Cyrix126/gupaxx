@@ -189,7 +189,7 @@ impl crate::app::App {
                             .add_sized([width, height / 2.0], Button::new("Quit"))
                             .clicked()
                         {
-                            if self.state.gupax.save_before_quit {
+                            if self.state.gupax.auto.save_before_quit {
                                 self.save_before_quit();
                             }
                             exit(0);

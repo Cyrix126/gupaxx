@@ -1,25 +1,25 @@
-use crate::disk::*;
+use crate::{app::panels::middle::common::list_poolnode::PoolNode, disk::*};
 use serde::{Deserialize, Serialize};
 //---------------------------------------------------------------------------------------------------- [Node] Impl
 impl Node {
-    pub fn localhost() -> Self {
-        Self {
+    pub fn localhost() -> PoolNode {
+        PoolNode::Node(Self {
             ip: "localhost".to_string(),
             rpc: "18081".to_string(),
             zmq: "18083".to_string(),
-        }
+        })
     }
 
-    pub fn new_vec() -> Vec<(String, Self)> {
+    pub fn new_vec() -> Vec<(String, PoolNode)> {
         vec![("Local Monero Node".to_string(), Self::localhost())]
     }
 
-    pub fn new_tuple() -> (String, Self) {
+    pub fn new_tuple() -> (String, PoolNode) {
         ("Local Monero Node".to_string(), Self::localhost())
     }
 
     // Convert [String] to [Node] Vec
-    pub fn from_str_to_vec(string: &str) -> Result<Vec<(String, Self)>, TomlError> {
+    pub fn from_str_to_vec(string: &str) -> Result<Vec<(String, PoolNode)>, TomlError> {
         let nodes: toml::map::Map<String, toml::Value> = match toml::de::from_str(string) {
             Ok(map) => {
                 info!("Node | Parse ... OK");
@@ -73,20 +73,23 @@ impl Node {
                 }
             };
             let node = Node { ip, rpc, zmq };
-            vec.push((key.clone(), node));
+            vec.push((key.clone(), PoolNode::Node(node)));
         }
         Ok(vec)
     }
 
     // Convert [Vec<(String, Self)>] into [String]
     // that can be written as a proper TOML file
-    pub fn to_string(vec: &[(String, Self)]) -> Result<String, TomlError> {
+    pub fn to_string(vec: &[(String, PoolNode)]) -> Result<String, TomlError> {
         let mut toml = String::new();
         for (key, value) in vec.iter() {
             write!(
                 toml,
                 "[\'{}\']\nip = {:#?}\nrpc = {:#?}\nzmq = {:#?}\n\n",
-                key, value.ip, value.rpc, value.zmq,
+                key,
+                value.ip(),
+                value.port(),
+                value.custom(),
             )?;
         }
         Ok(toml)
@@ -97,7 +100,7 @@ impl Node {
     //      |_ Create a default file if not found
     //   2. Deserialize [String] into a proper [Struct]
     //      |_ Attempt to merge if deserialization fails
-    pub fn get(path: &PathBuf) -> Result<Vec<(String, Self)>, TomlError> {
+    pub fn get(path: &PathBuf) -> Result<Vec<(String, PoolNode)>, TomlError> {
         // Read
         let file = File::Node;
         let string = match read_to_string(file, path) {
@@ -114,7 +117,7 @@ impl Node {
 
     // Completely overwrite current [node.toml]
     // with a new default version, and return [Vec<String, Self>].
-    pub fn create_new(path: &PathBuf) -> Result<Vec<(String, Self)>, TomlError> {
+    pub fn create_new(path: &PathBuf) -> Result<Vec<(String, PoolNode)>, TomlError> {
         info!("Node | Creating new default...");
         let new = Self::new_vec();
         let string = Self::to_string(&Self::new_vec())?;
@@ -124,7 +127,7 @@ impl Node {
     }
 
     // Save [Node] onto disk file [node.toml]
-    pub fn save(vec: &[(String, Self)], path: &PathBuf) -> Result<(), TomlError> {
+    pub fn save(vec: &[(String, PoolNode)], path: &PathBuf) -> Result<(), TomlError> {
         info!("Node | Saving to disk ... [{}]", path.display());
         let string = Self::to_string(vec)?;
         match fs::write(path, string) {

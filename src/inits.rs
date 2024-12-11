@@ -24,6 +24,7 @@ use std::time::Instant;
 
 #[cold]
 #[inline(never)]
+// everything is resized from here with the scale.
 pub fn init_text_styles(ctx: &egui::Context, pixels_per_point: f32) {
     ctx.all_styles_mut(|style| {
         style.text_styles = [
@@ -34,13 +35,15 @@ pub fn init_text_styles(ctx: &egui::Context, pixels_per_point: f32) {
             (Heading, FontId::new(22.0, egui::FontFamily::Monospace)),
         ]
         .into();
-        style.spacing.icon_width_inner = 32.0;
-        style.spacing.icon_width = 64.0;
-        style.spacing.icon_spacing = 20.0;
-        style.spacing.scroll = egui::style::ScrollStyle {
-            bar_width: 8.0,
-            ..egui::style::ScrollStyle::solid()
-        };
+        style.spacing.icon_width_inner = 24.0;
+        style.spacing.icon_width = 48.0;
+        style.spacing.icon_spacing = 16.0;
+        style.spacing.button_padding = [8.0, 8.0].into();
+        style.spacing.item_spacing = [8.0, 8.0].into();
+        // style.spacing.scroll = egui::style::ScrollStyle {
+        // bar_width: 8.0,
+        // ..egui::style::ScrollStyle::solid()
+        // };
     });
     // Make sure scale f32 is a regular number.
     let pixels_per_point = clamp_scale(pixels_per_point);
@@ -134,7 +137,7 @@ pub fn init_auto(app: &mut App) {
 
     // [Auto-Update]
     #[cfg(not(feature = "distro"))]
-    if app.state.gupax.auto_update {
+    if app.state.gupax.auto.is_enabled(&AutoStart::Update) {
         Update::spawn_thread(
             &app.og,
             &app.state.gupax,
@@ -155,7 +158,12 @@ pub fn init_auto(app: &mut App) {
     }
 
     // [Auto-Node]
-    if app.state.gupax.auto_node {
+    if app
+        .state
+        .gupax
+        .auto
+        .is_enabled(&AutoStart::Process(ProcessName::Node))
+    {
         if !Gupax::path_is_file(&app.state.gupax.node_path) {
             warn!("Gupaxx | Node path is not a file! Skipping auto-node...");
         } else if !check_binary_path(&app.state.gupax.node_path, ProcessName::Node) {
@@ -177,7 +185,12 @@ pub fn init_auto(app: &mut App) {
         info!("Skipping auto-node...");
     }
     // [Auto-P2Pool]
-    if app.state.gupax.auto_p2pool {
+    if app
+        .state
+        .gupax
+        .auto
+        .is_enabled(&AutoStart::Process(ProcessName::P2pool))
+    {
         if !Regexes::addr_ok(&app.state.p2pool.address) {
             warn!("Gupaxx | P2Pool address is not valid! Skipping auto-p2pool...");
         } else if !Gupax::path_is_file(&app.state.gupax.p2pool_path) {
@@ -202,7 +215,12 @@ pub fn init_auto(app: &mut App) {
     }
 
     // [Auto-XMRig]
-    if app.state.gupax.auto_xmrig {
+    if app
+        .state
+        .gupax
+        .auto
+        .is_enabled(&AutoStart::Process(ProcessName::Xmrig))
+    {
         if !Gupax::path_is_file(&app.state.gupax.xmrig_path) {
             warn!("Gupaxx | XMRig path is not an executable! Skipping auto-xmrig...");
         } else if !check_binary_path(&app.state.gupax.xmrig_path, ProcessName::Xmrig) {
@@ -226,7 +244,12 @@ pub fn init_auto(app: &mut App) {
         info!("Skipping auto-xmrig...");
     }
     // [Auto-XMRig-Proxy]
-    if app.state.gupax.auto_xp {
+    if app
+        .state
+        .gupax
+        .auto
+        .is_enabled(&AutoStart::Process(ProcessName::XmrigProxy))
+    {
         if !Gupax::path_is_file(&app.state.gupax.xmrig_proxy_path) {
             warn!("Gupaxx | Xmrig-Proxy path is not a file! Skipping auto-xmrig_proxy...");
         } else if !check_binary_path(&app.state.gupax.xmrig_proxy_path, ProcessName::XmrigProxy) {
@@ -247,7 +270,12 @@ pub fn init_auto(app: &mut App) {
         info!("Skipping auto-XMRig-Proxy...");
     }
     // [Auto-XvB]
-    if app.state.gupax.auto_xvb {
+    if app
+        .state
+        .gupax
+        .auto
+        .is_enabled(&AutoStart::Process(ProcessName::Xvb))
+    {
         Helper::start_xvb(
             &app.helper,
             &app.state.xvb,

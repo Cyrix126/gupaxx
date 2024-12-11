@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use crate::{app::Benchmark, disk::state::Status, helper::xrig::xmrig::PubXmrigApi};
-use egui::{Hyperlink, ProgressBar, ScrollArea, Spinner, Vec2};
+use egui::{ProgressBar, ScrollArea, TextWrapMode};
 use egui_extras::{Column, TableBuilder};
 use readable::num::{Float, Percent, Unsigned};
 
@@ -11,85 +11,56 @@ use log::*;
 impl Status {
     pub(super) fn benchmarks(
         &mut self,
-        size: Vec2,
         ui: &mut egui::Ui,
         benchmarks: &[Benchmark],
         xmrig_alive: bool,
         xmrig_api: &Arc<Mutex<PubXmrigApi>>,
     ) {
         debug!("Status Tab | Rendering [Benchmarks]");
-        let text = size.y / 20.0;
+        let text = ui.text_style_height(&egui::TextStyle::Body);
         let double = text * 2.0;
-        let log = size.y / 3.0;
 
-        let width = size.x;
+        let width = ui.available_width();
         // [0], The user's CPU (most likely).
         let cpu = &benchmarks[0];
         ui.horizontal(|ui| {
-            let width = (width / 2.0) - (SPACE * 1.666);
-            let min_height = log;
             ui.group(|ui| {
-                ui.vertical(|ui| {
-                    ui.set_min_height(min_height);
-                    ui.add_sized(
-                        [width, text],
-                        Label::new(RichText::new("Your CPU").underline().color(BONE)),
-                    )
-                    .on_hover_text(STATUS_SUBMENU_YOUR_CPU);
-                    ui.add_sized([width, text], Label::new(cpu.cpu.as_str()));
-                    ui.add_sized(
-                        [width, text],
-                        Label::new(RichText::new("Total Benchmarks").underline().color(BONE)),
-                    )
-                    .on_hover_text(STATUS_SUBMENU_YOUR_BENCHMARKS);
-                    ui.add_sized([width, text], Label::new(format!("{}", cpu.benchmarks)));
-                    ui.add_sized(
-                        [width, text],
-                        Label::new(RichText::new("Rank").underline().color(BONE)),
-                    )
-                    .on_hover_text(STATUS_SUBMENU_YOUR_RANK);
-                    ui.add_sized(
-                        [width, text],
-                        Label::new(format!("{}/{}", cpu.rank, &benchmarks.len())),
-                    );
+                ui.set_max_width(ui.available_width() / 2.0);
+                ui.vertical_centered(|ui| {
+                    ui.label(RichText::new("Your CPU").underline().color(BONE))
+                        .on_hover_text(STATUS_SUBMENU_YOUR_CPU);
+                    ui.label(cpu.cpu.as_str());
+                    ui.label(RichText::new("Total Banchmarks").underline().color(BONE))
+                        .on_hover_text(STATUS_SUBMENU_YOUR_BENCHMARKS);
+                    ui.label(format!("{}", cpu.benchmarks));
+                    // ui.add_sized([width, text], Label::new(format!("{}", cpu.benchmarks)));
+                    ui.label(RichText::new("Rank").underline().color(BONE))
+                        .on_hover_text(STATUS_SUBMENU_YOUR_RANK);
+                    ui.label(format!("{}/{}", cpu.rank, &benchmarks.len()));
                 })
             });
             ui.group(|ui| {
-                ui.vertical(|ui| {
-                    ui.set_min_height(min_height);
-                    ui.add_sized(
-                        [width, text],
-                        Label::new(RichText::new("High Hashrate").underline().color(BONE)),
-                    )
-                    .on_hover_text(STATUS_SUBMENU_YOUR_HIGH);
-                    ui.add_sized(
-                        [width, text],
-                        Label::new(format!("{} H/s", Float::from_0(cpu.high.into()))),
-                    );
-                    ui.add_sized(
-                        [width, text],
-                        Label::new(RichText::new("Average Hashrate").underline().color(BONE)),
-                    )
-                    .on_hover_text(STATUS_SUBMENU_YOUR_AVERAGE);
-                    ui.add_sized(
-                        [width, text],
-                        Label::new(format!("{} H/s", Float::from_0(cpu.average.into()))),
-                    );
-                    ui.add_sized(
-                        [width, text],
-                        Label::new(RichText::new("Low Hashrate").underline().color(BONE)),
-                    )
-                    .on_hover_text(STATUS_SUBMENU_YOUR_LOW);
-                    ui.add_sized(
-                        [width, text],
-                        Label::new(format!("{} H/s", Float::from_0(cpu.low.into()))),
-                    );
+                ui.vertical_centered(|ui| {
+                    ui.label(RichText::new("High Hashrate").underline().color(BONE))
+                        .on_hover_text(STATUS_SUBMENU_YOUR_HIGH);
+                    ui.label(format!("{} H/s", Float::from_0(cpu.high.into())));
+                    ui.label(RichText::new("Average Hashrate").underline().color(BONE))
+                        .on_hover_text(STATUS_SUBMENU_YOUR_AVERAGE);
+                    ui.label(format!("{} H/s", Float::from_0(cpu.average.into())));
+                    ui.label(RichText::new("Low Hashrate").underline().color(BONE))
+                        .on_hover_text(STATUS_SUBMENU_YOUR_LOW);
+                    ui.label(RichText::new(format!(
+                        "{} H/s",
+                        Float::from_0(cpu.low.into())
+                    )));
                 })
             })
         });
 
         // User's CPU hashrate comparison (if XMRig is alive).
-        ui.scope(|ui| {
+        // User's CPU hashrate comparison (if XMRig is alive).
+        ui.vertical_centered(|ui| {
+            ui.add_space(SPACE);
             if xmrig_alive {
                 let api = xmrig_api.lock().unwrap();
                 let percent = (api.hashrate_raw / cpu.high) * 100.0;
@@ -102,11 +73,11 @@ impl Status {
                         human, api.hashrate
                     )),
                     );
-                    ui.add_sized([width, text], ProgressBar::new(1.0));
+                    ui.add(ProgressBar::new(1.0));
                 } else if api.hashrate_raw == 0.0 {
-                    ui.add_sized([width, text], Label::new("Measuring hashrate..."));
-                    ui.add_sized([width, text], Spinner::new().size(text));
-                    ui.add_sized([width, text], ProgressBar::new(0.0));
+                    ui.label("Measuring hashrate...");
+                    ui.spinner();
+                    ui.add(ProgressBar::new(0.0));
                 } else {
                     ui.add_sized(
                         [width, double],
@@ -115,7 +86,7 @@ impl Status {
                             human, api.hashrate
                         )),
                     );
-                    ui.add_sized([width, text], ProgressBar::new(percent / 100.0));
+                    ui.add(ProgressBar::new(percent / 100.0));
                 }
             } else {
                 ui.add_enabled_ui(xmrig_alive, |ui| {
@@ -123,22 +94,21 @@ impl Status {
                         [width, double],
                         Label::new("XMRig is offline. Hashrate cannot be determined."),
                     );
-                    ui.add_sized([width, text], ProgressBar::new(0.0));
+                    ui.add(ProgressBar::new(0.0));
                 });
             }
+            ui.add_space(SPACE);
+            // Comparison
+            ui.group(|ui| {
+                ui.hyperlink_to("Other CPUs", "https://xmrig.com/benchmark")
+                    .on_hover_text(STATUS_SUBMENU_OTHER_CPUS);
+            });
         });
 
         // Comparison
-        ui.group(|ui| {
-            ui.add_sized(
-                [width, text],
-                Hyperlink::from_label_and_url("Other CPUs", "https://xmrig.com/benchmark"),
-            )
-            .on_hover_text(STATUS_SUBMENU_OTHER_CPUS);
-        });
         let width_column = width / 20.0;
         let (cpu, bar, high, average, low, rank, bench) = (
-            width_column * 10.0,
+            width_column * 6.0,
             width_column * 3.0,
             width_column * 2.0,
             width_column * 2.0,
@@ -146,6 +116,7 @@ impl Status {
             width_column,
             width_column * 2.0,
         );
+        ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
         ScrollArea::horizontal().show(ui, |ui| {
             TableBuilder::new(ui)
                 .columns(Column::auto(), 7)

@@ -207,16 +207,30 @@ impl crate::app::App {
             let restart_msg = format!("Restart {}", name);
             if process.waiting {
                 ui.add_enabled_ui(false, |ui| {
-                    ui.add_sized(size, Button::new("⟲"))
+                    ui.add_sized(size, Button::new("▶"))
                         .on_disabled_hover_text(process.run_middle_msg());
                     ui.add(Separator::default().grow(0.0));
                     ui.add_sized(size, Button::new("⏹"))
                         .on_disabled_hover_text(process.run_middle_msg());
                     ui.add(Separator::default().grow(0.0));
-                    ui.add_sized(size, Button::new("▶"))
+                    ui.add_sized(size, Button::new("⟲"))
                         .on_disabled_hover_text(process.run_middle_msg());
                 });
             } else if process.alive {
+                ui.add_enabled_ui(false, |ui| {
+                    ui.add_sized(size, Button::new("▶"))
+                        .on_disabled_hover_text(start_msg)
+                });
+                ui.add(Separator::default().grow(0.0));
+                if key.is_down() && !wants_input
+                    || ui
+                        .add_sized(size, Button::new("⏹"))
+                        .on_hover_text(stop_msg)
+                        .clicked()
+                {
+                    process.stop(&self.helper);
+                }
+                ui.add(Separator::default().grow(0.0));
                 if key.is_up() && !wants_input
                     || ui
                         .add_sized(size, Button::new("⟲"))
@@ -274,29 +288,7 @@ impl crate::app::App {
                         }
                     }
                 }
-                ui.add(Separator::default().grow(0.0));
-                if key.is_down() && !wants_input
-                    || ui
-                        .add_sized(size, Button::new("⏹"))
-                        .on_hover_text(stop_msg)
-                        .clicked()
-                {
-                    process.stop(&self.helper);
-                }
-                ui.add(Separator::default().grow(0.0));
-                ui.add_enabled_ui(false, |ui| {
-                    ui.add_sized(size, Button::new("▶"))
-                        .on_disabled_hover_text(start_msg)
-                });
             } else {
-                ui.add_enabled_ui(false, |ui| {
-                    ui.add_sized(size, Button::new("⟲"))
-                        .on_disabled_hover_text(restart_msg);
-                    ui.add(Separator::default().grow(0.0));
-                    ui.add_sized(size, Button::new("⏹"))
-                        .on_disabled_hover_text(stop_msg);
-                    ui.add(Separator::default().grow(0.0));
-                });
                 let text_err = self.start_ready(process).err().unwrap_or_default();
                 let ui_enabled = text_err.is_empty();
                 ui.add_enabled_ui(ui_enabled, |ui| {
@@ -353,6 +345,14 @@ impl crate::app::App {
                             ),
                         }
                     }
+                });
+                ui.add_enabled_ui(false, |ui| {
+                    ui.add_sized(size, Button::new("⏹"))
+                        .on_disabled_hover_text(stop_msg);
+                    ui.add(Separator::default().grow(0.0));
+                    ui.add_sized(size, Button::new("⟲"))
+                        .on_disabled_hover_text(restart_msg);
+                    ui.add(Separator::default().grow(0.0));
                 });
             }
         });

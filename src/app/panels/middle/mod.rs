@@ -1,11 +1,15 @@
 use crate::app::Tab;
 use crate::app::eframe_impl::ProcessStatesGui;
 use crate::app::keys::KeyPressed;
+use crate::components::gupax::FileWindow;
 use crate::helper::ProcessName;
+use crate::regex::REGEXES;
 use crate::utils::constants::*;
+use common::state_edit_field::StateTextEdit;
 use egui::*;
 use log::debug;
 mod about;
+pub mod common;
 mod gupax;
 mod node;
 mod p2pool;
@@ -47,7 +51,6 @@ impl crate::app::App {
                         self.max_threads,
                         &self.gupax_p2pool_api,
                         &self.benchmarks,
-                        self.size,
                         ctx,
                         ui,
                     );
@@ -62,7 +65,6 @@ impl crate::app::App {
                         &self.file_window,
                         &mut self.error_state,
                         &self.restart,
-                        self.size,
                         frame,
                         ctx,
                         ui,
@@ -76,7 +78,6 @@ impl crate::app::App {
                         &self.node,
                         &self.node_api,
                         &mut self.node_stdin,
-                        self.size,
                         &self.file_window,
                         ui,
                     );
@@ -91,7 +92,6 @@ impl crate::app::App {
                         &self.p2pool,
                         &self.p2pool_api,
                         &mut self.p2pool_stdin,
-                        self.size,
                         ctx,
                         ui,
                     );
@@ -104,7 +104,6 @@ impl crate::app::App {
                         &self.xmrig,
                         &self.xmrig_api,
                         &mut self.xmrig_stdin,
-                        self.size,
                         ctx,
                         ui,
                     );
@@ -117,7 +116,6 @@ impl crate::app::App {
                         &mut self.pool_vec,
                         &self.xmrig_proxy_api,
                         &mut self.xmrig_proxy_stdin,
-                        self.size,
                         ui,
                     );
                 }
@@ -125,7 +123,6 @@ impl crate::app::App {
                     debug!("App | Entering [XvB] Tab");
                     crate::disk::state::Xvb::show(
                         &mut self.state.xvb,
-                        self.size,
                         &self.state.p2pool.address,
                         ctx,
                         ui,
@@ -138,4 +135,50 @@ impl crate::app::App {
             }
         });
     }
+}
+
+// Common widgets that will appears on multiple panels.
+
+// header
+
+// console
+
+// sliders in/out peers/log
+
+// menu node
+
+// premade state edit field
+// return boolean to know if the field input is validated.
+fn rpc_port_field(field: &mut String, ui: &mut Ui) -> bool {
+    StateTextEdit::new(ui)
+        .description("   RPC PORT ")
+        .max_ch(5)
+        .help_msg(NODE_API_PORT)
+        .validations(&[|x| REGEXES.port.is_match(x)])
+        .build(ui, field)
+}
+fn zmq_port_field(field: &mut String, ui: &mut Ui) -> bool {
+    StateTextEdit::new(ui)
+        .description("   ZMQ PORT ")
+        .max_ch(5)
+        .help_msg(NODE_ZMQ_PORT)
+        .validations(&[|x| REGEXES.port.is_match(x)])
+        .build(ui, field)
+}
+fn rpc_bind_field(field: &mut String, ui: &mut Ui) -> bool {
+    StateTextEdit::new(ui)
+        .description("RPC BIND IP ")
+        .max_ch(255)
+        .help_msg(NODE_API_BIND)
+        .validations(&[|x| REGEXES.ipv4.is_match(x), |x| REGEXES.domain.is_match(x)])
+        .build(ui, field)
+}
+
+fn zmq_bind_field(field: &mut String, ui: &mut Ui) -> bool {
+    StateTextEdit::new(ui)
+        .description("API BIND IP ")
+        .max_ch(255)
+        .help_msg(NODE_ZMQ_BIND)
+        .validations(&[|x| REGEXES.ipv4.is_match(x), |x| REGEXES.domain.is_match(x)])
+        .build(ui, field)
 }

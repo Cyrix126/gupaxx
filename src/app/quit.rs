@@ -16,11 +16,11 @@ impl App {
                 return None;
             }
             info!("quit");
-            if self.state.gupax.ask_before_quit {
+            if self.state.gupax.auto.ask_before_quit {
                 // If we're already on the [ask_before_quit] screen and
                 // the user tried to exit again, exit.
                 if self.error_state.quit_twice {
-                    if self.state.gupax.save_before_quit {
+                    if self.state.gupax.auto.save_before_quit {
                         self.save_before_quit();
                     }
                     return Some(ViewportCommand::Close);
@@ -32,7 +32,7 @@ impl App {
                 Some(ViewportCommand::CancelClose)
             // Else, just quit.
             } else {
-                if self.state.gupax.save_before_quit {
+                if self.state.gupax.auto.save_before_quit {
                     self.save_before_quit();
                 }
                 Some(ViewportCommand::Close)

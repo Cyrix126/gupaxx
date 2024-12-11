@@ -1,5 +1,13 @@
 use crate::APP_DEFAULT_HEIGHT;
 use crate::APP_DEFAULT_WIDTH;
+use crate::GUPAX_TAB_ABOUT;
+use crate::GUPAX_TAB_GUPAX;
+use crate::GUPAX_TAB_NODE;
+use crate::GUPAX_TAB_P2POOL;
+use crate::GUPAX_TAB_STATUS;
+use crate::GUPAX_TAB_XMRIG;
+use crate::GUPAX_TAB_XMRIG_PROXY;
+use crate::GUPAX_TAB_XVB;
 use crate::GUPAX_VERSION;
 use crate::OS;
 use crate::cli::Cli;
@@ -47,6 +55,7 @@ use log::debug;
 use log::error;
 use log::info;
 use log::warn;
+use panels::middle::common::list_poolnode::PoolNode;
 use serde::Deserialize;
 use serde::Serialize;
 use std::path::PathBuf;
@@ -87,10 +96,10 @@ pub struct App {
     pub update: Arc<Mutex<Update>>, // State for update data [update.rs]
     pub file_window: Arc<Mutex<FileWindow>>, // State for the path selector in [Gupax]
     pub ping: Arc<Mutex<Ping>>,     // Ping data found in [node.rs]
-    pub og_node_vec: Vec<(String, Node)>, // Manual Node database
-    pub node_vec: Vec<(String, Node)>, // Manual Node database
-    pub og_pool_vec: Vec<(String, Pool)>, // Manual Pool database
-    pub pool_vec: Vec<(String, Pool)>, // Manual Pool database
+    pub og_node_vec: Vec<(String, PoolNode)>, // Manual Node database
+    pub node_vec: Vec<(String, PoolNode)>, // Manual Node database
+    pub og_pool_vec: Vec<(String, PoolNode)>, // Manual Pool database
+    pub pool_vec: Vec<(String, PoolNode)>, // Manual Pool database
     pub diff: bool,                 // This bool indicates state changes
     // Restart state:
     // If Gupax updated itself, this represents that the
@@ -136,7 +145,7 @@ pub struct App {
     // Static stuff
     pub benchmarks: Vec<Benchmark>,     // XMRig CPU benchmarks
     pub pid: sysinfo::Pid,              // Gupax's PID
-    pub max_threads: usize,             // Max amount of detected system threads
+    pub max_threads: u16,               // Max amount of detected system threads
     pub now: Instant,                   // Internal timer
     pub exe: String,                    // Path for [Gupax] binary
     pub dir: String,                    // Directory [Gupax] binary is in
@@ -311,7 +320,7 @@ impl App {
             pub_sys,
             benchmarks,
             pid,
-            max_threads: benri::threads!(),
+            max_threads: benri::threads!() as u16,
             now,
             admin: false,
             exe: String::new(),
@@ -511,65 +520,83 @@ impl App {
         }
         // Handle [node_vec] overflow
         info!("App Init | Handling [node_vec] overflow");
-        if og.p2pool.selected_index > app.og_node_vec.len() {
+        if og.p2pool.selected_node.index > app.og_node_vec.len() {
             warn!(
                 "App | Overflowing manual node index [{} > {}]",
-                og.p2pool.selected_index,
+                og.p2pool.selected_node.index,
                 app.og_node_vec.len()
             );
             let (name, node) = match app.og_node_vec.first() {
                 Some(zero) => zero.clone(),
                 None => Node::new_tuple(),
             };
-            og.p2pool.selected_index = 0;
-            og.p2pool.selected_name.clone_from(&name);
-            og.p2pool.selected_ip.clone_from(&node.ip);
-            og.p2pool.selected_rpc.clone_from(&node.rpc);
-            og.p2pool.selected_zmq.clone_from(&node.zmq);
-            app.state.p2pool.selected_index = 0;
-            app.state.p2pool.selected_name = name;
-            app.state.p2pool.selected_ip = node.ip;
-            app.state.p2pool.selected_rpc = node.rpc;
-            app.state.p2pool.selected_zmq = node.zmq;
+            og.p2pool.selected_node.index = 0;
+            og.p2pool.selected_node.name.clone_from(&name);
+            og.p2pool
+                .selected_node
+                .ip
+                .clone_from(&node.ip().to_string());
+            og.p2pool
+                .selected_node
+                .rpc
+                .clone_from(&node.port().to_string());
+            og.p2pool
+                .selected_node
+                .zmq_rig
+                .clone_from(&node.custom().to_string());
+            app.state.p2pool.selected_node.index = 0;
+            app.state.p2pool.selected_node.name = name;
+            app.state.p2pool.selected_node.ip = node.ip().to_string();
+            app.state.p2pool.selected_node.rpc = node.port().to_string();
+            app.state.p2pool.selected_node.zmq_rig = node.custom().to_string();
         }
         // Handle [pool_vec] overflow
         info!("App Init | Handling [pool_vec] overflow...");
-        if og.xmrig.selected_index > app.og_pool_vec.len() {
+        if og.xmrig.selected_pool.index > app.og_pool_vec.len() {
             warn!(
                 "App | Overflowing manual pool index [{} > {}], resetting to 1",
-                og.xmrig.selected_index,
+                og.xmrig.selected_pool.index,
                 app.og_pool_vec.len()
             );
             let (name, pool) = match app.og_pool_vec.first() {
                 Some(zero) => zero.clone(),
                 None => Pool::new_tuple(),
             };
-            og.xmrig.selected_index = 0;
-            og.xmrig.selected_name.clone_from(&name);
-            og.xmrig.selected_ip.clone_from(&pool.ip);
-            og.xmrig.selected_port.clone_from(&pool.port);
-            app.state.xmrig.selected_index = 0;
-            app.state.xmrig.selected_name = name;
-            app.state.xmrig.selected_ip = pool.ip;
-            app.state.xmrig.selected_port = pool.port;
-            if og.xmrig_proxy.selected_index > app.og_pool_vec.len() {
+            og.xmrig.selected_pool.index = 0;
+            og.xmrig.selected_pool.name.clone_from(&name);
+            og.xmrig.selected_pool.ip.clone_from(&pool.ip().to_string());
+            og.xmrig
+                .selected_pool
+                .rpc
+                .clone_from(&pool.port().to_string());
+            app.state.xmrig.selected_pool.index = 0;
+            app.state.xmrig.selected_pool.name = name;
+            app.state.xmrig.selected_pool.ip = pool.ip().to_string();
+            app.state.xmrig.selected_pool.rpc = pool.port().to_string();
+            if og.xmrig_proxy.selected_pool.index > app.og_pool_vec.len() {
                 warn!(
                     "App | Overflowing manual pool index [{} > {}], resetting to 1",
-                    og.xmrig_proxy.selected_index,
+                    og.xmrig_proxy.selected_pool.index,
                     app.og_pool_vec.len()
                 );
                 let (name, pool) = match app.og_pool_vec.first() {
                     Some(zero) => zero.clone(),
                     None => Pool::new_tuple(),
                 };
-                og.xmrig_proxy.selected_index = 0;
-                og.xmrig_proxy.selected_name.clone_from(&name);
-                og.xmrig_proxy.selected_ip.clone_from(&pool.ip);
-                og.xmrig_proxy.selected_port.clone_from(&pool.port);
-                app.state.xmrig_proxy.selected_index = 0;
-                app.state.xmrig_proxy.selected_name = name;
-                app.state.xmrig_proxy.selected_ip = pool.ip;
-                app.state.xmrig_proxy.selected_port = pool.port;
+                og.xmrig_proxy.selected_pool.index = 0;
+                og.xmrig_proxy.selected_pool.name.clone_from(&name);
+                og.xmrig_proxy
+                    .selected_pool
+                    .ip
+                    .clone_from(&pool.ip().to_string());
+                og.xmrig_proxy
+                    .selected_pool
+                    .rpc
+                    .clone_from(&pool.port().to_string());
+                app.state.xmrig_proxy.selected_pool.index = 0;
+                app.state.xmrig_proxy.selected_pool.name = name;
+                app.state.xmrig_proxy.selected_pool.ip = pool.ip().to_string();
+                app.state.xmrig_proxy.selected_pool.rpc = pool.port().to_string();
             }
         }
 
@@ -648,7 +675,7 @@ impl App {
 
     #[cold]
     #[inline(never)]
-    pub fn gather_backup_hosts(&self) -> Option<Vec<Node>> {
+    pub fn gather_backup_hosts(&self) -> Option<Vec<PoolNode>> {
         if !self.state.p2pool.backup_host {
             return None;
         }
@@ -695,7 +722,7 @@ impl App {
                     zmq: zmq.into(),
                 };
 
-                vec.push(node);
+                vec.push(PoolNode::Node(node));
             }
 
             if vec.is_empty() {
@@ -745,6 +772,18 @@ impl Tab {
             Tab::Xmrig => Some(ProcessName::Xmrig),
             Tab::XmrigProxy => Some(ProcessName::XmrigProxy),
             Tab::Xvb => Some(ProcessName::Xvb),
+        }
+    }
+    pub fn msg_default_tab(&self) -> &str {
+        match self {
+            Tab::About => GUPAX_TAB_ABOUT,
+            Tab::Status => GUPAX_TAB_STATUS,
+            Tab::Gupax => GUPAX_TAB_GUPAX,
+            Tab::Node => GUPAX_TAB_NODE,
+            Tab::P2pool => GUPAX_TAB_P2POOL,
+            Tab::Xmrig => GUPAX_TAB_XMRIG,
+            Tab::XmrigProxy => GUPAX_TAB_XMRIG_PROXY,
+            Tab::Xvb => GUPAX_TAB_XVB,
         }
     }
 }

@@ -1,5 +1,6 @@
 use super::Helper;
 use super::Process;
+use crate::app::panels::middle::common::list_poolnode::PoolNode;
 use crate::components::node::RemoteNode;
 use crate::disk::state::P2pool;
 use crate::helper::ProcessName;
@@ -18,7 +19,7 @@ use crate::regex::estimated_hr;
 use crate::regex::nb_current_shares;
 use crate::{
     constants::*,
-    disk::{gupax_p2pool_api::GupaxP2poolApi, node::Node},
+    disk::gupax_p2pool_api::GupaxP2poolApi,
     helper::{MONERO_BLOCK_TIME_IN_SECONDS, P2POOL_BLOCK_TIME_IN_SECONDS},
     human::*,
     macros::*,
@@ -171,7 +172,7 @@ impl Helper {
         helper: &Arc<Mutex<Self>>,
         state: &P2pool,
         path: &Path,
-        backup_hosts: Option<Vec<Node>>,
+        backup_hosts: Option<Vec<PoolNode>>,
     ) {
         info!("P2Pool | Attempting to restart...");
         helper.lock().unwrap().p2pool.lock().unwrap().signal = ProcessSignal::Restart;
@@ -200,7 +201,7 @@ impl Helper {
         helper: &Arc<Mutex<Self>>,
         state: &P2pool,
         path: &Path,
-        backup_hosts: Option<Vec<Node>>,
+        backup_hosts: Option<Vec<PoolNode>>,
     ) {
         helper.lock().unwrap().p2pool.lock().unwrap().state = ProcessState::Middle;
 
@@ -253,7 +254,7 @@ impl Helper {
         helper: &Arc<Mutex<Self>>,
         state: &P2pool,
         path: &Path,
-        backup_hosts: Option<Vec<Node>>,
+        backup_hosts: Option<Vec<PoolNode>>,
     ) -> (Vec<String>, PathBuf, PathBuf, PathBuf) {
         let mut args = Vec::with_capacity(500);
         let path = path.to_path_buf();
@@ -282,13 +283,13 @@ impl Helper {
             // Push other nodes if `backup_host`.
             if let Some(nodes) = backup_hosts {
                 for node in nodes {
-                    if (node.ip.as_str(), node.rpc.as_str(), node.zmq.as_str()) != (ip, rpc, zmq) {
+                    if (node.ip(), node.port(), node.custom()) != (ip, rpc, zmq) {
                         args.push("--host".to_string());
-                        args.push(node.ip.to_string());
+                        args.push(node.ip().to_string());
                         args.push("--rpc-port".to_string());
-                        args.push(node.rpc.to_string());
+                        args.push(node.port().to_string());
                         args.push("--zmq-port".to_string());
-                        args.push(node.zmq.to_string());
+                        args.push(node.custom().to_string());
                     }
                 }
             }
@@ -395,20 +396,18 @@ impl Helper {
                 // Push other nodes if `backup_host`.
                 if let Some(nodes) = backup_hosts {
                     for node in nodes {
-                        let ip = if node.ip == "localhost" {
+                        let ip = if node.ip() == "localhost" {
                             "127.0.0.1"
                         } else {
-                            &node.ip
+                            node.ip()
                         };
-                        if (node.ip.as_str(), node.rpc.as_str(), node.zmq.as_str())
-                            != (ip, &state.rpc, &state.zmq)
-                        {
+                        if (node.ip(), node.port(), node.custom()) != (ip, &state.rpc, &state.zmq) {
                             args.push("--host".to_string());
-                            args.push(node.ip.to_string());
+                            args.push(node.ip().to_string());
                             args.push("--rpc-port".to_string());
-                            args.push(node.rpc.to_string());
+                            args.push(node.port().to_string());
                             args.push("--zmq-port".to_string());
-                            args.push(node.zmq.to_string());
+                            args.push(node.custom().to_string());
                         }
                     }
                 }
@@ -420,9 +419,9 @@ impl Helper {
                         "P2Pool Main".to_string()
                     },
                     address: Self::head_tail_of_monero_address(&state.address),
-                    host: state.selected_ip.to_string(),
-                    rpc: state.selected_rpc.to_string(),
-                    zmq: state.selected_zmq.to_string(),
+                    host: state.selected_node.ip.to_string(),
+                    rpc: state.selected_node.rpc.to_string(),
+                    zmq: state.selected_node.zmq_rig.to_string(),
                     out_peers: state.out_peers.to_string(),
                     in_peers: state.in_peers.to_string(),
                 };

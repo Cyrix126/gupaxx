@@ -1,8 +1,9 @@
 use anyhow::Result;
 use rand::{Rng, distributions::Alphanumeric, thread_rng};
+use strum::{EnumCount, EnumIter};
 
 use super::*;
-use crate::{components::node::RemoteNode, disk::status::*};
+use crate::{components::node::RemoteNode, disk::status::*, helper::ProcessName};
 //---------------------------------------------------------------------------------------------------- [State] Impl
 impl Default for State {
     fn default() -> Self {
@@ -12,7 +13,7 @@ impl Default for State {
 
 impl State {
     pub fn new() -> Self {
-        let max_threads = benri::threads!();
+        let max_threads = benri::threads!() as u16;
         let current_threads = if max_threads == 1 { 1 } else { max_threads / 2 };
         Self {
             status: Status::default(),
@@ -132,7 +133,6 @@ impl State {
             }
         }
     }
-
     // Take [String] as input, merge it with whatever the current [default] is,
     // leaving behind old keys+values and updating [default] with old valid ones.
     pub fn merge(old: &str) -> Result<Self, TomlError> {
@@ -179,14 +179,7 @@ pub struct Status {
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub struct Gupax {
     pub simple: bool,
-    pub auto_update: bool,
-    pub auto_p2pool: bool,
-    pub auto_node: bool,
-    pub auto_xmrig: bool,
-    pub auto_xp: bool,
-    pub auto_xvb: bool,
-    pub ask_before_quit: bool,
-    pub save_before_quit: bool,
+    pub auto: AutoEnabled,
     pub p2pool_path: String,
     pub node_path: String,
     pub xmrig_path: String,
@@ -200,9 +193,94 @@ pub struct Gupax {
     pub selected_scale: f32,
     pub tab: Tab,
     pub ratio: Ratio,
-    pub bundled: bool,
 }
 
+#[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
+pub struct AutoEnabled {
+    pub update: bool,
+    pub bundled: bool,
+    pub ask_before_quit: bool,
+    pub save_before_quit: bool,
+    pub processes: Vec<ProcessName>,
+}
+impl AutoEnabled {
+    pub fn enable(&mut self, auto: &AutoStart, enable: bool) {
+        match auto {
+            AutoStart::Update => self.update = enable,
+            AutoStart::Bundle => self.bundled = enable,
+            AutoStart::AskBeforeQuit => self.ask_before_quit = enable,
+            AutoStart::SaveBeforequit => self.save_before_quit = enable,
+            AutoStart::Process(p) => {
+                let processes = &mut self.processes;
+                if !processes.iter().any(|a| a == p) && enable {
+                    self.processes.push(*p);
+                } else if let Some(i) = processes.iter().position(|a| a == p) {
+                    if !enable {
+                        processes.remove(i);
+                    }
+                }
+            }
+        }
+    }
+    pub fn is_enabled(&self, auto: &AutoStart) -> bool {
+        match auto {
+            AutoStart::Update => self.update,
+            AutoStart::Bundle => self.bundled,
+            AutoStart::AskBeforeQuit => self.ask_before_quit,
+            AutoStart::SaveBeforequit => self.save_before_quit,
+            AutoStart::Process(p) => self.processes.iter().any(|a| a == p),
+        }
+    }
+}
+#[derive(PartialEq, strum::Display, EnumCount, EnumIter)]
+pub enum AutoStart {
+    #[strum(to_string = "Auto-Update")]
+    Update,
+    Bundle,
+    #[strum(to_string = "Confirm quit")]
+    AskBeforeQuit,
+    #[strum(to_string = "Save on exit")]
+    SaveBeforequit,
+    #[strum(to_string = "Auto-{0}")]
+    Process(ProcessName),
+}
+impl AutoStart {
+    pub const fn help_msg(&self) -> &str {
+        match self {
+            AutoStart::Update => GUPAX_AUTO_UPDATE,
+            AutoStart::Bundle => GUPAX_BUNDLED_UPDATE,
+            AutoStart::AskBeforeQuit => GUPAX_ASK_BEFORE_QUIT,
+            AutoStart::SaveBeforequit => GUPAX_SAVE_BEFORE_QUIT,
+            AutoStart::Process(p) => p.msg_auto_help(),
+        }
+    }
+    // todo: generate as const with all process in middle ?
+    // Would necessities unstable feature https://github.com/rust-lang/rust/issues/87575
+    pub const ALL: &[AutoStart] = &[
+        AutoStart::Update,
+        AutoStart::Bundle,
+        AutoStart::Process(ProcessName::Node),
+        AutoStart::Process(ProcessName::P2pool),
+        AutoStart::Process(ProcessName::Xmrig),
+        AutoStart::Process(ProcessName::XmrigProxy),
+        AutoStart::Process(ProcessName::Xvb),
+        AutoStart::AskBeforeQuit,
+        AutoStart::SaveBeforequit,
+    ];
+    // non const:
+    // let mut autos = AutoStart::iter().collect::<Vec<_>>();
+    // // remove ProcessName default
+    // autos.remove(AutoStart::COUNT - 1);
+    // // insert ProcessName before AskBeforeQuit
+    // let before_quit_index = autos
+    //     .iter()
+    //     .position(|a| *a == AutoStart::AskBeforeQuit)
+    //     .expect("Before quit should be in iter");
+    // ProcessName::iter()
+    //     .rev()
+    //     .for_each(|p| autos.insert(before_quit_index, AutoStart::Process(p)));
+    // autos
+}
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct P2pool {
     pub simple: bool,
@@ -213,7 +291,7 @@ pub struct P2pool {
     pub backup_host: bool,
     pub out_peers: u16,
     pub in_peers: u16,
-    pub log_level: u8,
+    pub log_level: u16,
     pub node: String,
     pub arguments: String,
     pub address: String,
@@ -221,11 +299,17 @@ pub struct P2pool {
     pub ip: String,
     pub rpc: String,
     pub zmq: String,
-    pub selected_index: usize,
-    pub selected_name: String,
-    pub selected_ip: String,
-    pub selected_rpc: String,
-    pub selected_zmq: String,
+    pub selected_node: SelectedPoolNode,
+}
+
+// compatible for P2Pool and Xmrig/Proxy
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
+pub struct SelectedPoolNode {
+    pub index: usize,
+    pub name: String,
+    pub ip: String,
+    pub rpc: String,
+    pub zmq_rig: String,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
@@ -235,7 +319,7 @@ pub struct Node {
     pub api_port: String,
     pub out_peers: u16,
     pub in_peers: u16,
-    pub log_level: u8,
+    pub log_level: u16,
     pub arguments: String,
     pub zmq_ip: String,
     pub zmq_port: String,
@@ -268,13 +352,13 @@ impl Default for Node {
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct Xmrig {
     pub simple: bool,
-    pub pause: u8,
+    pub pause: u16,
     pub simple_rig: String,
     pub arguments: String,
     pub tls: bool,
     pub keepalive: bool,
-    pub max_threads: usize,
-    pub current_threads: usize,
+    pub max_threads: u16,
+    pub current_threads: u16,
     pub address: String,
     pub api_ip: String,
     pub api_port: String,
@@ -282,11 +366,7 @@ pub struct Xmrig {
     pub rig: String,
     pub ip: String,
     pub port: String,
-    pub selected_index: usize,
-    pub selected_name: String,
-    pub selected_rig: String,
-    pub selected_ip: String,
-    pub selected_port: String,
+    pub selected_pool: SelectedPoolNode,
     pub token: String,
 }
 
@@ -307,13 +387,39 @@ pub struct XmrigProxy {
     pub api_port: String,
     pub p2pool_ip: String,
     pub p2pool_port: String,
-    pub selected_index: usize,
-    pub selected_name: String,
-    pub selected_rig: String,
-    pub selected_ip: String,
-    pub selected_port: String,
+    pub selected_pool: SelectedPoolNode,
     pub token: String,
     pub redirect_local_xmrig: bool,
+}
+
+impl Gupax {
+    pub fn path_binary(&mut self, process: &BundledProcess) -> &mut String {
+        match process {
+            BundledProcess::Node => &mut self.node_path,
+            BundledProcess::P2Pool => &mut self.p2pool_path,
+            BundledProcess::Xmrig => &mut self.xmrig_path,
+            BundledProcess::XmrigProxy => &mut self.xmrig_proxy_path,
+        }
+    }
+}
+
+// do not include process that are from Gupaxx
+#[derive(EnumIter)]
+pub enum BundledProcess {
+    Node,
+    P2Pool,
+    Xmrig,
+    XmrigProxy,
+}
+impl BundledProcess {
+    pub fn process_name(&self) -> ProcessName {
+        match self {
+            BundledProcess::Node => ProcessName::Node,
+            BundledProcess::P2Pool => ProcessName::P2pool,
+            BundledProcess::Xmrig => ProcessName::Xmrig,
+            BundledProcess::XmrigProxy => ProcessName::XmrigProxy,
+        }
+    }
 }
 
 impl Default for XmrigProxy {
@@ -335,11 +441,13 @@ impl Default for XmrigProxy {
             port: "3355".to_string(),
             p2pool_ip: "localhost".to_string(),
             p2pool_port: "3333".to_string(),
-            selected_index: 0,
-            selected_name: "Local P2Pool".to_string(),
-            selected_ip: "localhost".to_string(),
-            selected_rig: GUPAX_VERSION_UNDERSCORE.to_string(),
-            selected_port: "3333".to_string(),
+            selected_pool: SelectedPoolNode {
+                index: 0,
+                name: "Local P2Pool".to_string(),
+                ip: "localhost".to_string(),
+                rpc: "3333".to_string(),
+                zmq_rig: GUPAX_VERSION_UNDERSCORE.to_string(),
+            },
             api_ip: "localhost".to_string(),
             api_port: "18089".to_string(),
             tls: false,
@@ -361,7 +469,7 @@ pub struct Xvb {
     pub p2pool_buffer: i8,
 }
 
-#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default)]
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default, EnumCount, EnumIter)]
 pub enum XvbMode {
     #[default]
     Auto,
@@ -435,6 +543,20 @@ pub struct Version {
 }
 
 //---------------------------------------------------------------------------------------------------- [State] Defaults
+impl Default for AutoEnabled {
+    fn default() -> Self {
+        Self {
+            update: false,
+            #[cfg(feature = "bundle")]
+            bundled: true,
+            #[cfg(not(feature = "bundle"))]
+            bundled: false,
+            ask_before_quit: true,
+            save_before_quit: true,
+            processes: Vec::new(),
+        }
+    }
+}
 impl Default for Status {
     fn default() -> Self {
         Self {
@@ -452,14 +574,7 @@ impl Default for Gupax {
     fn default() -> Self {
         Self {
             simple: true,
-            auto_update: false,
-            auto_p2pool: false,
-            auto_node: false,
-            auto_xmrig: false,
-            auto_xp: false,
-            auto_xvb: false,
-            ask_before_quit: true,
-            save_before_quit: true,
+            auto: AutoEnabled::default(),
             p2pool_path: DEFAULT_P2POOL_PATH.to_string(),
             xmrig_path: DEFAULT_XMRIG_PATH.to_string(),
             node_path: DEFAULT_NODE_PATH.to_string(),
@@ -473,10 +588,6 @@ impl Default for Gupax {
             selected_scale: APP_DEFAULT_SCALE,
             ratio: Ratio::Width,
             tab: Tab::Xvb,
-            #[cfg(feature = "bundle")]
-            bundled: true,
-            #[cfg(not(feature = "bundle"))]
-            bundled: false,
         }
     }
 }
@@ -500,17 +611,19 @@ impl Default for P2pool {
             ip: "localhost".to_string(),
             rpc: "18081".to_string(),
             zmq: "18083".to_string(),
-            selected_index: 0,
-            selected_name: "Local Monero Node".to_string(),
-            selected_ip: "localhost".to_string(),
-            selected_rpc: "18081".to_string(),
-            selected_zmq: "18083".to_string(),
+            selected_node: SelectedPoolNode {
+                index: 0,
+                name: "Local Monero Node".to_string(),
+                ip: "localhost".to_string(),
+                rpc: "18081".to_string(),
+                zmq_rig: "18083".to_string(),
+            },
         }
     }
 }
 
 impl Xmrig {
-    fn with_threads(max_threads: usize, current_threads: usize) -> Self {
+    fn with_threads(max_threads: u16, current_threads: u16) -> Self {
         let xmrig = Self::default();
         Self {
             max_threads,
@@ -531,17 +644,19 @@ impl Default for Xmrig {
             rig: GUPAX_VERSION_UNDERSCORE.to_string(),
             ip: "localhost".to_string(),
             port: "3333".to_string(),
-            selected_index: 0,
-            selected_name: "Local P2Pool".to_string(),
-            selected_ip: "localhost".to_string(),
-            selected_rig: GUPAX_VERSION_UNDERSCORE.to_string(),
-            selected_port: "3333".to_string(),
             api_ip: "localhost".to_string(),
             api_port: "18088".to_string(),
             tls: false,
             keepalive: false,
             current_threads: 1,
             max_threads: 1,
+            selected_pool: SelectedPoolNode {
+                index: 0,
+                name: "Local Monero Node".to_string(),
+                ip: "localhost".to_string(),
+                rpc: "18081".to_string(),
+                zmq_rig: "18083".to_string(),
+            },
             token: thread_rng()
                 .sample_iter(Alphanumeric)
                 .take(16)
