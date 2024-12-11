@@ -144,14 +144,14 @@ pub fn check_binary_path(path: &str, process: ProcessName) -> bool {
         Ok(p) => p,
         Err(_) => return false,
     };
-    let path = match path.file_name() {
+    let filename = match path.file_name() {
         Some(p) => p,
         None => {
             error!("Couldn't get {process} file name");
             return false;
         }
     };
-    path == process.binary_name()
+    filename == process.binary_name()
 }
 
 //---------------------------------------------------------------------------------------------------- Update struct/impl
