@@ -6,6 +6,7 @@ use crate::components::update::Update;
 use crate::components::update::check_binary_path;
 use crate::disk::state::*;
 use crate::miscs::height_txt_before_button;
+use common::state_edit_field::slider_state_field;
 use log::debug;
 use std::path::Path;
 use std::sync::Arc;
@@ -205,6 +206,7 @@ impl Gupax {
                 ui.horizontal(|ui| {
                     ScrollArea::horizontal().show(ui, |ui| {
                         ui.vertical(|ui| {
+                            ui.set_max_width(ui.available_width() / 2.0);
                             match self.ratio {
                                 Ratio::None => (),
                                 Ratio::Width => {
@@ -220,34 +222,45 @@ impl Gupax {
                             }
                             // let height = height / 3.5;
                             // let size = vec2(width, height);
-                            ui.horizontal(|ui| {
-                                ui.add_enabled_ui(self.ratio != Ratio::Height, |ui| {
-                                    ui.label(format!(
-                                        " Width   [{}-{}]:",
-                                        APP_MIN_WIDTH as u16, APP_MAX_WIDTH as u16
-                                    ));
-                                    ui.add(Slider::new(
-                                        &mut self.selected_width,
-                                        APP_MIN_WIDTH as u16..=APP_MAX_WIDTH as u16,
-                                    ))
-                                    .on_hover_text(GUPAX_WIDTH);
-                                });
+                            ui.add_enabled_ui(self.ratio != Ratio::Height, |ui| {
+                                let description = format!(
+                                    " Width   [{}-{}]:",
+                                    APP_MIN_WIDTH as u16, APP_MAX_WIDTH as u16
+                                );
+                                slider_state_field(
+                                    ui,
+                                    &description,
+                                    GUPAX_WIDTH,
+                                    &mut self.selected_width,
+                                    APP_MIN_WIDTH as u16..=APP_MAX_WIDTH as u16,
+                                );
+                            });
+                            ui.add_enabled_ui(self.ratio != Ratio::Width, |ui| {
+                                let description = format!(
+                                    " Height  [{}-{}]:",
+                                    APP_MIN_HEIGHT as u16, APP_MAX_HEIGHT as u16
+                                );
+                                slider_state_field(
+                                    ui,
+                                    &description,
+                                    GUPAX_HEIGHT,
+                                    &mut self.selected_height,
+                                    APP_MIN_HEIGHT as u16..=APP_MAX_HEIGHT as u16,
+                                );
                             });
                             ui.horizontal(|ui| {
-                                ui.add_enabled_ui(self.ratio != Ratio::Width, |ui| {
-                                    ui.label(format!(
-                                        " Height  [{}-{}]:",
-                                        APP_MIN_HEIGHT as u16, APP_MAX_HEIGHT as u16
-                                    ));
-                                    ui.add(Slider::new(
-                                        &mut self.selected_height,
-                                        APP_MIN_HEIGHT as u16..=APP_MAX_HEIGHT as u16,
-                                    ))
-                                    .on_hover_text(GUPAX_HEIGHT);
-                                });
-                            });
-                            ui.horizontal(|ui| {
-                                ui.label(format!(" Scaling   [{APP_MIN_SCALE}..{APP_MAX_SCALE}]:"));
+                                let description =
+                                    format!(" Scaling   [{APP_MIN_SCALE}..{APP_MAX_SCALE}]:");
+                                ui.add_sized(
+                                    [0.0, height_txt_before_button(ui, &TextStyle::Body)],
+                                    Label::new(description),
+                                );
+                                ui.style_mut().spacing.slider_width = (ui.available_width()
+                                    - ui.spacing().item_spacing.x * 4.0
+                                    - ui.spacing().scroll.bar_width
+                                    - SPACE * 1.0
+                                    + 2.0)
+                                    .max(80.0);
                                 ui.add(
                                     Slider::new(
                                         &mut self.selected_scale,
