@@ -147,7 +147,7 @@ path_xmr: {:#?}\n
                 ));
             }
             ui.label(format!(
-                "Gupaxx has been running for {}",
+                "Gupaxx has been running for\n{}",
                 self.pub_sys.lock().unwrap().gupax_uptime
             ));
         });

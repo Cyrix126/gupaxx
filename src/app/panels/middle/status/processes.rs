@@ -1,5 +1,4 @@
 use egui::{ScrollArea, Ui};
-use readable::up::UptimeFull;
 use std::sync::{Arc, Mutex};
 
 use crate::app::eframe_impl::ProcessStatesGui;
@@ -42,7 +41,6 @@ impl Status {
                             ui.set_width(width_column);
                             ui.set_height(height_column);
                             ui.vertical_centered(|ui| {
-                                // ui.set_min_width(ui.text_style_height(&TextStyle::Body) * 2.0);
                                 gupax(ui, sys);
                             });
                         });
@@ -242,7 +240,7 @@ fn xmrig_proxy(
         let api = xmrig_proxy_api.lock().unwrap();
         ui.label(RichText::new("Uptime").underline().color(BONE))
             .on_hover_text(STATUS_XMRIG_PROXY_UPTIME);
-        ui.label(UptimeFull::from(api.uptime).as_str());
+        ui.label(api.uptime.to_string());
         ui.label(
             RichText::new("Hashrate\n(1m/10m/1h/12h/24h)")
                 .underline()
@@ -284,7 +282,7 @@ fn xmrig(
         let api = xmrig_api.lock().unwrap();
         ui.label(RichText::new("Uptime").underline().color(BONE))
             .on_hover_text(STATUS_XMRIG_UPTIME);
-        ui.label(UptimeFull::from(api.uptime).as_str());
+        ui.label(api.uptime.to_string());
         ui.label(api.resources.to_string());
         ui.label(
             RichText::new("Hashrate\n(10s/1m/15m)")

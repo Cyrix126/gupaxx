@@ -3,6 +3,7 @@ use crate::helper::xrig::update_xmrig_config;
 use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
 use crate::helper::{Process, arc_mut, check_died, check_user_input, sleep, sleep_end_loop};
 use crate::helper::{PubXvbApi, XvbNode};
+use crate::human::HumanTime;
 use crate::miscs::{client, output_console};
 use crate::regex::{XMRIG_REGEX, contains_error, contains_usepool, detect_new_node_xmrig};
 use crate::utils::human::HumanNumber;
@@ -688,7 +689,7 @@ impl ImgXmrig {
 #[derive(Debug, Clone)]
 pub struct PubXmrigApi {
     pub output: String,
-    pub uptime: Duration,
+    pub uptime: HumanTime,
     pub worker_id: String,
     pub resources: String,
     pub hashrate: String,
@@ -711,7 +712,7 @@ impl PubXmrigApi {
     pub fn new() -> Self {
         Self {
             output: String::new(),
-            uptime: Duration::from_secs(0),
+            uptime: HumanTime::new(),
             worker_id: UNKNOWN_DATA.to_string(),
             resources: UNKNOWN_DATA.to_string(),
             hashrate: UNKNOWN_DATA.to_string(),
@@ -755,7 +756,7 @@ impl PubXmrigApi {
                 public.output.push_str(&std::mem::take(&mut *output_pub));
             }
             // Update uptime
-            public.uptime = elapsed;
+            public.uptime = HumanTime::into_human(elapsed);
         }
         drop(output_pub);
 
