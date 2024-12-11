@@ -241,7 +241,7 @@ impl Update {
         #[cfg(feature = "distro")]
         return;
         // verify validity of absolute path for p2pool, xmrig and xmrig-proxy only if we want to update them.
-        if og.lock().unwrap().gupax.bundled {
+        if og.lock().unwrap().gupax.auto.bundled {
             // Check P2Pool path for safety
             // Attempt relative to absolute path
             // it's ok if file doesn't exist. User could enable bundled version for the first time.
@@ -465,7 +465,7 @@ impl Update {
         // arch
         // standalone or bundled
         // archive extension
-        let bundle = if og.lock().unwrap().gupax.bundled {
+        let bundle = if og.lock().unwrap().gupax.auto.bundled {
             "bundle"
         } else {
             "standalone"
@@ -577,7 +577,7 @@ impl Update {
                 path.display()
             );
             // if bundled, create directory for p2pool, xmrig and xmrig-proxy if not present
-            if og.lock().unwrap().gupax.bundled
+            if og.lock().unwrap().gupax.auto.bundled
                 && (name == P2POOL_BINARY
                     || name == XMRIG_BINARY
                     || name == XMRIG_PROXY_BINARY

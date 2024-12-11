@@ -132,6 +132,8 @@ pub fn cmp_f64(a: f64, b: f64) -> std::cmp::Ordering {
 use crate::disk::gupax_p2pool_api::GupaxP2poolApi;
 use crate::helper::ProcessName;
 use chrono::Local;
+use egui::TextStyle;
+use egui::Ui;
 use log::error;
 use log::warn;
 use regex::Regex;
@@ -181,4 +183,8 @@ pub fn client() -> ClientWithMiddleware {
                 .build_with_total_retry_duration(Duration::from_secs(20)),
         ))
         .build()
+}
+/// to get the right height that a text must take before a button to be aligned in the center correctly.
+pub fn height_txt_before_button(ui: &Ui, style: &TextStyle) -> f32 {
+    ui.style().spacing.button_padding.y * 2.0 + ui.text_style_height(style)
 }

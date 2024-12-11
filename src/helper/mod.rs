@@ -33,6 +33,7 @@
 // This also includes all things related to handling the child processes (P2Pool/XMRig):
 // piping their stdout/stderr/stdin, accessing their APIs (HTTP + disk files), etc.
 
+use crate::components::gupax::FileType;
 use crate::components::update::{NODE_BINARY, P2POOL_BINARY, XMRIG_BINARY, XMRIG_PROXY_BINARY};
 //---------------------------------------------------------------------------------------------------- Import
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
@@ -46,6 +47,7 @@ use log::*;
 use node::PubNodeApi;
 use portable_pty::Child;
 use readable::up::Uptime;
+use serde::{Deserialize, Serialize};
 use std::fmt::Write;
 use std::path::Path;
 use std::{
@@ -54,7 +56,7 @@ use std::{
     thread,
     time::*,
 };
-use strum::EnumIter;
+use strum::{EnumCount, EnumIter};
 
 use self::xvb::{PubXvbApi, nodes::XvbNode};
 pub mod node;
@@ -250,24 +252,90 @@ impl Default for ProcessSignal {
     }
 }
 
-#[derive(Copy, Clone, Eq, PartialEq, Debug, Display, EnumIter)]
+#[derive(
+    Copy, Clone, Eq, PartialEq, Debug, Display, EnumIter, EnumCount, Serialize, Deserialize, Default,
+)]
 pub enum ProcessName {
     Node,
     P2pool,
     Xmrig,
     #[display("Proxy")]
     XmrigProxy,
+    #[default]
     Xvb,
 }
 
 impl ProcessName {
-    pub fn binary_name(&self) -> &str {
+    pub const fn binary_name(&self) -> &str {
         match self {
             ProcessName::Node => NODE_BINARY,
             ProcessName::P2pool => P2POOL_BINARY,
             ProcessName::Xmrig => XMRIG_BINARY,
             ProcessName::XmrigProxy => XMRIG_PROXY_BINARY,
             ProcessName::Xvb => "",
+        }
+    }
+    pub const fn msg_binary_path_empty(&self) -> &str {
+        match self {
+            ProcessName::Node => NODE_PATH_EMPTY,
+            ProcessName::P2pool => P2POOL_PATH_EMPTY,
+            ProcessName::Xmrig => XMRIG_PATH_EMPTY,
+            ProcessName::XmrigProxy => XMRIG_PROXY_PATH_EMPTY,
+            ProcessName::Xvb => "",
+        }
+    }
+    pub const fn msg_binary_path_not_file(&self) -> &str {
+        match self {
+            ProcessName::Node => NODE_PATH_NOT_FILE,
+            ProcessName::P2pool => P2POOL_PATH_NOT_FILE,
+            ProcessName::Xmrig => XMRIG_PATH_NOT_FILE,
+            ProcessName::XmrigProxy => XMRIG_PROXY_PATH_NOT_FILE,
+            ProcessName::Xvb => "",
+        }
+    }
+    pub const fn msg_binary_path_invalid(&self) -> &str {
+        match self {
+            ProcessName::Node => NODE_PATH_NOT_VALID,
+            ProcessName::P2pool => P2POOL_PATH_NOT_VALID,
+            ProcessName::Xmrig => XMRIG_PATH_NOT_VALID,
+            ProcessName::XmrigProxy => XMRIG_PROXY_PATH_NOT_VALID,
+            ProcessName::Xvb => "",
+        }
+    }
+    pub const fn msg_binary_path_ok(&self) -> &str {
+        match self {
+            ProcessName::Node => NODE_PATH_OK,
+            ProcessName::P2pool => P2POOL_PATH_OK,
+            ProcessName::Xmrig => XMRIG_PATH_OK,
+            ProcessName::XmrigProxy => XMRIG_PROXY_PATH_OK,
+            ProcessName::Xvb => "",
+        }
+    }
+    pub const fn msg_path_edit(&self) -> &str {
+        match self {
+            ProcessName::Node => GUPAX_PATH_NODE,
+            ProcessName::P2pool => GUPAX_PATH_P2POOL,
+            ProcessName::Xmrig => GUPAX_PATH_XMRIG,
+            ProcessName::XmrigProxy => GUPAX_PATH_XMRIG_PROXY,
+            ProcessName::Xvb => "",
+        }
+    }
+    pub const fn msg_auto_help(&self) -> &str {
+        match self {
+            ProcessName::Node => GUPAX_AUTO_NODE,
+            ProcessName::P2pool => GUPAX_AUTO_P2POOL,
+            ProcessName::Xmrig => GUPAX_AUTO_XMRIG,
+            ProcessName::XmrigProxy => GUPAX_AUTO_XMRIG_PROXY,
+            ProcessName::Xvb => GUPAX_AUTO_XVB,
+        }
+    }
+    pub const fn file_type(&self) -> Option<FileType> {
+        match self {
+            ProcessName::Node => Some(FileType::Node),
+            ProcessName::P2pool => Some(FileType::P2pool),
+            ProcessName::Xmrig => Some(FileType::Xmrig),
+            ProcessName::XmrigProxy => Some(FileType::XmrigProxy),
+            ProcessName::Xvb => None,
         }
     }
 }
@@ -374,7 +442,7 @@ impl Helper {
         pub_sys: &mut Sys,
         pid: &sysinfo::Pid,
         helper: &Helper,
-        max_threads: usize,
+        max_threads: u16,
     ) {
         let gupax_uptime = helper.uptime.to_string();
         let cpu = &sysinfo.cpus()[0];
@@ -416,7 +484,7 @@ impl Helper {
         helper: &Arc<Mutex<Self>>,
         mut sysinfo: sysinfo::System,
         pid: sysinfo::Pid,
-        max_threads: usize,
+        max_threads: u16,
     ) {
         // The ordering of these locks is _very_ important. They MUST be in sync with how the main GUI thread locks stuff
         // or a deadlock will occur given enough time. They will eventually both want to lock the [Arc<Mutex>] the other

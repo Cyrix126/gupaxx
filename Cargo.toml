@@ -31,8 +31,11 @@ benri = "0.1.12"
 bytes = "1.8.0"
 dirs = "5.0.1"
 #--------------------------------------------------------------------------------
-egui = "0.29.1"
-egui_extras = {version="0.29.1", features = ["image"] }
+# egui = "0.29.1"
+egui = {git="https://github.com/emilk/egui"}
+# egui_extras = {version="0.29.1", features = ["image"] }
+egui_extras = {git="https://github.com/emilk/egui", features = ["image"] }
+
 ## 2023-12-28: https://github.com/hinto-janai/gupax/issues/68
 ##
 ## 2024-03-18: Both `glow` and `wgpu` seem to crash:
@@ -75,7 +78,8 @@ enclose = "1.2.0"
 bounded-vec-deque = {version="0.1.1", default-features=false}
 cfg-if = "1.0"
 flexi_logger = "0.29"
-eframe = {version="0.29.1", features=["wgpu"]}
+# eframe = {version="0.29.1", features=["wgpu"]}
+eframe = {git="https://github.com/emilk/egui", features=["wgpu"]}
 strum = {version="0.26", features=["derive"]}
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
@@ -97,7 +101,8 @@ sudo = "0.6.0"
 # linked as well which causes problems, so statically link it.
 lzma-sys = { version = "0.1", features = ["static"] }
 [dev-dependencies]
-egui = {version="0.29.1", features=["callstack"]}
+# egui = {version="0.29.1", features=["callstack"]}
+egui = {git="https://github.com/emilk/egui", features=["callstack"]}
 
 # [target.'cfg(not(target_os = "macos"))'.dependencies]
 # tls-api-native-tls = "0.9.0"
@@ -107,7 +112,7 @@ egui = {version="0.29.1", features=["callstack"]}
 # glow start on windows but not wgpu
 # need the same version that eframe is using with egui_wgpu
 # feature angle to enable support for old cpu on Windows
-wgpu = {version = "22.1", features=["angle"]}
+wgpu = {version = "23.0", features=["angle"]}
 zip = "2.2.0"
 is_elevated = "0.1.2"
 

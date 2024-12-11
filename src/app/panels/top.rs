@@ -12,8 +12,6 @@ impl crate::app::App {
             ui.style_mut().spacing.item_spacing.x = 4.0;
             // spacing of separator, will reduce width size of the button. Low value so that tabs can be selected easily.
             let spacing_separator = 2.0;
-            // TODO if screen smaller, go on two lines.
-            // TODO if screen really to small, go on tab per line.
             ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
                 ui.style_mut().override_text_style = Some(TextStyle::Heading);
                 let height = ui

@@ -298,13 +298,13 @@ Uptime         = 0h 2m 4s
         assert_eq!(p.miners.to_string(), "1,000");
         assert_eq!(
             p.solo_block_mean.to_string(),
-            "5 months, 21 days, 9 hours, 52 minutes"
+            "5 months\n21 days\n9 hours\n52 minutes"
         );
         assert_eq!(
             p.p2pool_block_mean.to_string(),
-            "3 days, 11 hours, 20 minutes"
+            "3 days\n11 hours\n20 minutes"
         );
-        assert_eq!(p.p2pool_share_mean.to_string(), "8 minutes, 20 seconds");
+        assert_eq!(p.p2pool_share_mean.to_string(), "8 minutes\n20 seconds");
         assert_eq!(p.p2pool_percent.to_string(), "0.040000%");
         assert_eq!(p.user_p2pool_percent.to_string(), "2.000000%");
         assert_eq!(p.user_monero_percent.to_string(), "0.000800%");

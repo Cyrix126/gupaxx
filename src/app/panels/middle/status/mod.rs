@@ -15,8 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use egui::Vec2;
-
 use crate::{
     app::{Benchmark, eframe_impl::ProcessStatesGui},
     disk::{gupax_p2pool_api::GupaxP2poolApi, state::Status, status::*},
@@ -51,10 +49,9 @@ impl Status {
         p2pool_img: &Arc<Mutex<ImgP2pool>>,
         xmrig_img: &Arc<Mutex<ImgXmrig>>,
         states: &ProcessStatesGui,
-        max_threads: usize,
+        max_threads: u16,
         gupax_p2pool_api: &Arc<Mutex<GupaxP2poolApi>>,
         benchmarks: &[Benchmark],
-        size: Vec2,
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
     ) {
@@ -62,7 +59,6 @@ impl Status {
         if self.submenu == Submenu::Processes {
             self.processes(
                 sys,
-                size,
                 ui,
                 node_api,
                 p2pool_api,
@@ -77,7 +73,6 @@ impl Status {
         //---------------------------------------------------------------------------------------------------- [P2Pool]
         } else if self.submenu == Submenu::P2pool {
             self.p2pool(
-                size,
                 ui,
                 gupax_p2pool_api,
                 states.is_alive(ProcessName::P2pool),
@@ -86,7 +81,6 @@ impl Status {
         //---------------------------------------------------------------------------------------------------- [Benchmarks]
         } else if self.submenu == Submenu::Benchmarks {
             self.benchmarks(
-                size,
                 ui,
                 benchmarks,
                 states.is_alive(ProcessName::Xmrig),

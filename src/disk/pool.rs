@@ -1,23 +1,25 @@
+use crate::app::panels::middle::common::list_poolnode::PoolNode;
+
 use super::*;
 //---------------------------------------------------------------------------------------------------- [Pool] impl
 impl Pool {
-    pub fn p2pool() -> Self {
-        Self {
+    pub fn p2pool() -> PoolNode {
+        PoolNode::Pool(Self {
             rig: GUPAX_VERSION_UNDERSCORE.to_string(),
             ip: "localhost".to_string(),
             port: "3333".to_string(),
-        }
+        })
     }
 
-    pub fn new_vec() -> Vec<(String, Self)> {
+    pub fn new_vec() -> Vec<(String, PoolNode)> {
         vec![("Local P2Pool".to_string(), Self::p2pool())]
     }
 
-    pub fn new_tuple() -> (String, Self) {
+    pub fn new_tuple() -> (String, PoolNode) {
         ("Local P2Pool".to_string(), Self::p2pool())
     }
 
-    pub fn from_str_to_vec(string: &str) -> Result<Vec<(String, Self)>, TomlError> {
+    pub fn from_str_to_vec(string: &str) -> Result<Vec<(String, PoolNode)>, TomlError> {
         let pools: toml::map::Map<String, toml::Value> = match toml::de::from_str(string) {
             Ok(map) => {
                 info!("Pool | Parse ... OK");
@@ -72,24 +74,27 @@ impl Pool {
                 }
             };
             let pool = Pool { rig, ip, port };
-            vec.push((key.clone(), pool));
+            vec.push((key.clone(), PoolNode::Pool(pool)));
         }
         Ok(vec)
     }
 
-    pub fn to_string(vec: &[(String, Self)]) -> Result<String, TomlError> {
+    pub fn to_string(vec: &[(String, PoolNode)]) -> Result<String, TomlError> {
         let mut toml = String::new();
         for (key, value) in vec.iter() {
             write!(
                 toml,
                 "[\'{}\']\nrig = {:#?}\nip = {:#?}\nport = {:#?}\n\n",
-                key, value.rig, value.ip, value.port,
+                key,
+                value.custom(),
+                value.ip(),
+                value.port(),
             )?;
         }
         Ok(toml)
     }
 
-    pub fn get(path: &PathBuf) -> Result<Vec<(String, Self)>, TomlError> {
+    pub fn get(path: &PathBuf) -> Result<Vec<(String, PoolNode)>, TomlError> {
         // Read
         let file = File::Pool;
         let string = match read_to_string(file, path) {
@@ -104,7 +109,7 @@ impl Pool {
         Self::from_str_to_vec(&string)
     }
 
-    pub fn create_new(path: &PathBuf) -> Result<Vec<(String, Self)>, TomlError> {
+    pub fn create_new(path: &PathBuf) -> Result<Vec<(String, PoolNode)>, TomlError> {
         info!("Pool | Creating new default...");
         let new = Self::new_vec();
         let string = Self::to_string(&Self::new_vec())?;
@@ -113,7 +118,7 @@ impl Pool {
         Ok(new)
     }
 
-    pub fn save(vec: &[(String, Self)], path: &PathBuf) -> Result<(), TomlError> {
+    pub fn save(vec: &[(String, PoolNode)], path: &PathBuf) -> Result<(), TomlError> {
         info!("Pool | Saving to disk ... [{}]", path.display());
         let string = Self::to_string(vec)?;
         match fs::write(path, string) {

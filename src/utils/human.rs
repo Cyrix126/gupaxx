@@ -59,7 +59,7 @@ impl HumanTime {
     ) -> std::fmt::Result {
         if value > 0 {
             if *started {
-                f.write_str(", ")?;
+                f.write_str("\n")?;
             }
             write!(f, "{} {}", value, name)?;
             if value > 1 {
@@ -332,64 +332,64 @@ mod test {
         assert!(HumanTime::into_human(Duration::from_secs(2)).to_string() == "2 seconds");
         assert!(HumanTime::into_human(Duration::from_secs(59)).to_string() == "59 seconds");
         assert!(HumanTime::into_human(Duration::from_secs(60)).to_string() == "1 minute");
-        assert!(HumanTime::into_human(Duration::from_secs(61)).to_string() == "1 minute, 1 second");
+        assert!(HumanTime::into_human(Duration::from_secs(61)).to_string() == "1 minute\n1 second");
         assert!(
-            HumanTime::into_human(Duration::from_secs(62)).to_string() == "1 minute, 2 seconds"
+            HumanTime::into_human(Duration::from_secs(62)).to_string() == "1 minute\n2 seconds"
         );
         assert!(HumanTime::into_human(Duration::from_secs(120)).to_string() == "2 minutes");
         assert!(
-            HumanTime::into_human(Duration::from_secs(121)).to_string() == "2 minutes, 1 second"
+            HumanTime::into_human(Duration::from_secs(121)).to_string() == "2 minutes\n1 second"
         );
         assert!(
-            HumanTime::into_human(Duration::from_secs(122)).to_string() == "2 minutes, 2 seconds"
+            HumanTime::into_human(Duration::from_secs(122)).to_string() == "2 minutes\n2 seconds"
         );
         assert!(
-            HumanTime::into_human(Duration::from_secs(179)).to_string() == "2 minutes, 59 seconds"
+            HumanTime::into_human(Duration::from_secs(179)).to_string() == "2 minutes\n59 seconds"
         );
         assert!(
             HumanTime::into_human(Duration::from_secs(3599)).to_string()
-                == "59 minutes, 59 seconds"
+                == "59 minutes\n59 seconds"
         );
         assert!(HumanTime::into_human(Duration::from_secs(3600)).to_string() == "1 hour");
-        assert!(HumanTime::into_human(Duration::from_secs(3601)).to_string() == "1 hour, 1 second");
+        assert!(HumanTime::into_human(Duration::from_secs(3601)).to_string() == "1 hour\n1 second");
         assert!(
-            HumanTime::into_human(Duration::from_secs(3602)).to_string() == "1 hour, 2 seconds"
+            HumanTime::into_human(Duration::from_secs(3602)).to_string() == "1 hour\n2 seconds"
         );
-        assert!(HumanTime::into_human(Duration::from_secs(3660)).to_string() == "1 hour, 1 minute");
+        assert!(HumanTime::into_human(Duration::from_secs(3660)).to_string() == "1 hour\n1 minute");
         assert!(
-            HumanTime::into_human(Duration::from_secs(3720)).to_string() == "1 hour, 2 minutes"
+            HumanTime::into_human(Duration::from_secs(3720)).to_string() == "1 hour\n2 minutes"
         );
         assert!(
             HumanTime::into_human(Duration::from_secs(86399)).to_string()
-                == "23 hours, 59 minutes, 59 seconds"
+                == "23 hours\n59 minutes\n59 seconds"
         );
         assert!(HumanTime::into_human(Duration::from_secs(86400)).to_string() == "1 day");
-        assert!(HumanTime::into_human(Duration::from_secs(86401)).to_string() == "1 day, 1 second");
+        assert!(HumanTime::into_human(Duration::from_secs(86401)).to_string() == "1 day\n1 second");
         assert!(
-            HumanTime::into_human(Duration::from_secs(86402)).to_string() == "1 day, 2 seconds"
+            HumanTime::into_human(Duration::from_secs(86402)).to_string() == "1 day\n2 seconds"
         );
-        assert!(HumanTime::into_human(Duration::from_secs(86460)).to_string() == "1 day, 1 minute");
+        assert!(HumanTime::into_human(Duration::from_secs(86460)).to_string() == "1 day\n1 minute");
         assert!(
-            HumanTime::into_human(Duration::from_secs(86520)).to_string() == "1 day, 2 minutes"
+            HumanTime::into_human(Duration::from_secs(86520)).to_string() == "1 day\n2 minutes"
         );
-        assert!(HumanTime::into_human(Duration::from_secs(90000)).to_string() == "1 day, 1 hour");
-        assert!(HumanTime::into_human(Duration::from_secs(93600)).to_string() == "1 day, 2 hours");
+        assert!(HumanTime::into_human(Duration::from_secs(90000)).to_string() == "1 day\n1 hour");
+        assert!(HumanTime::into_human(Duration::from_secs(93600)).to_string() == "1 day\n2 hours");
         assert!(
             HumanTime::into_human(Duration::from_secs(604799)).to_string()
-                == "6 days, 23 hours, 59 minutes, 59 seconds"
+                == "6 days\n23 hours\n59 minutes\n59 seconds"
         );
         assert!(HumanTime::into_human(Duration::from_secs(604800)).to_string() == "7 days");
         assert!(HumanTime::into_human(Duration::from_secs(2630016)).to_string() == "1 month");
         assert!(
             HumanTime::into_human(Duration::from_secs(3234815)).to_string()
-                == "1 month, 6 days, 23 hours, 59 minutes, 59 seconds"
+                == "1 month\n6 days\n23 hours\n59 minutes\n59 seconds"
         );
         assert!(HumanTime::into_human(Duration::from_secs(5260032)).to_string() == "2 months");
         assert!(HumanTime::into_human(Duration::from_secs(31557600)).to_string() == "1 year");
         assert!(HumanTime::into_human(Duration::from_secs(63115200)).to_string() == "2 years");
         assert_eq!(
             HumanTime::into_human(Duration::from_secs(18446744073709551615)).to_string(),
-            "584542046090 years, 7 months, 15 days, 17 hours, 5 minutes, 3 seconds",
+            "584542046090 years\n7 months\n15 days\n17 hours\n5 minutes\n3 seconds",
         );
     }
 }
