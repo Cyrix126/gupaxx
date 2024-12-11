@@ -31,7 +31,7 @@ impl Status {
         states: &ProcessStatesGui,
     ) {
         let width_column = ui.text_style_height(&TextStyle::Body) * 16.0;
-        let height_column = width_column * 2.4;
+        let height_column = width_column * 2.5;
         ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
         // let width = ((ui.available_width() / 5.0) - (SPACE * 1.7500)).max(0.0);
         ScrollArea::vertical().show(ui, |ui| {
