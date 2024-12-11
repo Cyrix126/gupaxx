@@ -1,4 +1,4 @@
-cargo-features = ["profile-rustflags", "codegen-backend", "edition2024"]
+cargo-features = ["profile-rustflags", "codegen-backend"]
 [package]
 name = "gupaxx"
 version = "1.5.3"
