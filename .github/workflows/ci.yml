@@ -52,7 +52,7 @@ jobs:
           mv target/aarch64-apple-darwin/release/bundle/osx/Gupaxx.app Gupaxx-macos-arm64.app
           cargo bundle --release  --target x86_64-apple-darwin --features=bundle
           cargo bundle --release --target aarch64-apple-darwin --features=bundle
-          mv target/release/bundle/osx/Gupaxx.app Gupaxx-macos-x64.app_b
+          mv target/x86_64-apple-darwin/release/bundle/osx/Gupaxx.app Gupaxx-macos-x64.app_b
           mv target/aarch64-apple-darwin/release/bundle/osx/Gupaxx.app Gupaxx-macos-arm64.app_b
           tar -cf macos.tar Gupaxx-macos-arm64.app Gupaxx-macos-x64.app Gupaxx-macos-arm64.app_b Gupaxx-macos-x64.app_b
         elif [ "$RUNNER_OS" == "Linux" ]; then
