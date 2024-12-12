@@ -12,7 +12,7 @@ use std::{
 };
 use tokio::spawn;
 
-use crate::human::HumanTime;
+use crate::human::{HumanNumber, HumanTime};
 use crate::miscs::client;
 use crate::{
     GUPAX_VERSION_UNDERSCORE, UNKNOWN_DATA,
@@ -467,12 +467,14 @@ impl Helper {
         // sleep
     }
 }
+#[allow(unused)]
 #[derive(Debug, Clone)]
 pub struct PubXmrigProxyApi {
     pub output: String,
     pub uptime: HumanTime,
     pub accepted: u32,
     pub rejected: u32,
+    pub hashrate: String,
     pub hashrate_1m: f32,
     pub hashrate_10m: f32,
     pub hashrate_1h: f32,
@@ -493,6 +495,7 @@ impl PubXmrigProxyApi {
             uptime: HumanTime::new(),
             accepted: 0,
             rejected: 0,
+            hashrate: HumanNumber::from_hashrate(&[None, None, None, None, None, None]).to_string(),
             hashrate_1m: 0.0,
             hashrate_10m: 0.0,
             hashrate_1h: 0.0,
@@ -555,9 +558,17 @@ impl PubXmrigProxyApi {
     }
     fn update_from_priv(public: &Arc<Mutex<Self>>, private: PrivXmrigProxyApi) {
         let mut public = public.lock().unwrap();
+        let mut total_hashrate = private
+            .hashrate
+            .total
+            .iter()
+            .map(|x| Some(*x as u64))
+            .collect::<Vec<Option<u64>>>();
+        total_hashrate.remove(5);
         *public = Self {
             accepted: private.results.accepted,
             rejected: private.results.rejected,
+            hashrate: HumanNumber::from_hashrate(&total_hashrate).to_string(),
             hashrate_1m: private.hashrate.total[0],
             hashrate_10m: private.hashrate.total[1],
             hashrate_1h: private.hashrate.total[2],

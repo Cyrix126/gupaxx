@@ -1,4 +1,4 @@
-use egui::{ScrollArea, Ui};
+use egui::{Label, ScrollArea, Ui};
 use std::sync::{Arc, Mutex};
 
 use crate::app::eframe_impl::ProcessStatesGui;
@@ -30,7 +30,7 @@ impl Status {
         states: &ProcessStatesGui,
     ) {
         let width_column = ui.text_style_height(&TextStyle::Body) * 16.0;
-        let height_column = width_column * 2.5;
+        let height_column = width_column * 2.7;
         ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
         // let width = ((ui.available_width() / 5.0) - (SPACE * 1.7500)).max(0.0);
         ScrollArea::vertical().show(ui, |ui| {
@@ -121,7 +121,14 @@ fn gupax(ui: &mut Ui, sys: &Arc<Mutex<Sys>>) {
     let sys = sys.lock().unwrap();
     ui.label(RichText::new("Uptime").underline().color(BONE))
         .on_hover_text(STATUS_GUPAX_UPTIME);
-    ui.label(sys.gupax_uptime.to_string());
+    // put some space for uptime so that when seconds appears every minutes, no label is moved.
+    ui.add_sized(
+        [
+            0.0,
+            (ui.text_style_height(&TextStyle::Body) + ui.spacing().item_spacing.y) * 1.5,
+        ],
+        Label::new(sys.gupax_uptime.to_string()),
+    );
     ui.label(RichText::new("Gupaxx CPU").underline().color(BONE))
         .on_hover_text(STATUS_GUPAX_CPU_USAGE);
     ui.label(sys.gupax_cpu_usage.to_string());
@@ -159,7 +166,14 @@ fn p2pool(
         let api = p2pool_api.lock().unwrap();
         ui.label(RichText::new("Uptime").underline().color(BONE))
             .on_hover_text(STATUS_P2POOL_UPTIME);
-        ui.label(format!("{}", api.uptime));
+        // put some space for uptime so that when seconds appears every minutes, no label is moved.
+        ui.add_sized(
+            [
+                0.0,
+                (ui.text_style_height(&TextStyle::Body) + ui.spacing().item_spacing.y) * 1.5,
+            ],
+            Label::new(api.uptime.display(true)),
+        );
         ui.label(RichText::new("Current Shares").underline().color(BONE))
             .on_hover_text(STATUS_P2POOL_CURRENT_SHARES);
         ui.label(api.sidechain_shares.to_string());
@@ -193,10 +207,7 @@ fn p2pool(
                 .color(BONE),
         )
         .on_hover_text(STATUS_P2POOL_HASHRATE);
-        ui.label(format!(
-            "[{} H/s]\n[{} H/s]\n[{} H/s]",
-            api.hashrate_15m, api.hashrate_1h, api.hashrate_24h
-        ));
+        ui.label(&api.hashrate);
         ui.label(RichText::new("Miners Connected").underline().color(BONE))
             .on_hover_text(STATUS_P2POOL_CONNECTIONS);
         ui.label(format!("{}", api.connections));
@@ -240,17 +251,21 @@ fn xmrig_proxy(
         let api = xmrig_proxy_api.lock().unwrap();
         ui.label(RichText::new("Uptime").underline().color(BONE))
             .on_hover_text(STATUS_XMRIG_PROXY_UPTIME);
-        ui.label(api.uptime.to_string());
+        // put some space for uptime so that when seconds appears every minutes, no label is moved.
+        ui.add_sized(
+            [
+                0.0,
+                (ui.text_style_height(&TextStyle::Body) + ui.spacing().item_spacing.y) * 1.5,
+            ],
+            Label::new(api.uptime.display(true)),
+        );
         ui.label(
             RichText::new("Hashrate\n(1m/10m/1h/12h/24h)")
                 .underline()
                 .color(BONE),
         )
         .on_hover_text(STATUS_XMRIG_PROXY_HASHRATE);
-        ui.label(format!(
-            "[{} H/s]\n[{} H/s]\n[{} H/s]\n[{} H/s]\n[{} H/s]",
-            api.hashrate_1m, api.hashrate_10m, api.hashrate_1h, api.hashrate_12h, api.hashrate_24h
-        ));
+        ui.label(&api.hashrate);
         ui.label(format!(
             "[Accepted: {}]\n[Rejected: {}]",
             api.accepted, api.rejected
@@ -282,7 +297,14 @@ fn xmrig(
         let api = xmrig_api.lock().unwrap();
         ui.label(RichText::new("Uptime").underline().color(BONE))
             .on_hover_text(STATUS_XMRIG_UPTIME);
-        ui.label(api.uptime.to_string());
+        // put some space for uptime so that when seconds appears every minutes, no label is moved.
+        ui.add_sized(
+            [
+                0.0,
+                (ui.text_style_height(&TextStyle::Body) + ui.spacing().item_spacing.y) * 1.5,
+            ],
+            Label::new(api.uptime.display(true)),
+        );
         ui.label(api.resources.to_string());
         ui.label(
             RichText::new("Hashrate\n(10s/1m/15m)")
@@ -407,7 +429,14 @@ fn node(ui: &mut Ui, node_alive: bool, node_api: &Arc<Mutex<PubNodeApi>>) {
         let api = node_api.lock().unwrap();
         ui.label(RichText::new("Uptime").underline().color(BONE))
             .on_hover_text(STATUS_NODE_UPTIME);
-        ui.label(api.uptime.to_string());
+        // put some space for uptime so that when seconds appears every minutes, no label is moved.
+        ui.add_sized(
+            [
+                0.0,
+                (ui.text_style_height(&TextStyle::Body) + ui.spacing().item_spacing.y) * 1.5,
+            ],
+            Label::new(api.uptime.display(true)),
+        );
 
         ui.label(RichText::new("Block Height").underline().color(BONE))
             .on_hover_text(STATUS_NODE_BLOCK_HEIGHT);
