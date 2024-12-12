@@ -234,21 +234,21 @@ impl Status {
                                         RichText::new("P2Pool Block Mean").underline().color(BONE),
                                     )
                                     .on_hover_text(STATUS_SUBMENU_P2POOL_BLOCK_MEAN);
-                                    ui.label(api.p2pool_block_mean.to_string());
+                                    ui.label(api.p2pool_block_mean.display(false));
                                     ui.label(
                                         RichText::new("Your P2Pool Share Mean")
                                             .underline()
                                             .color(BONE),
                                     )
                                     .on_hover_text(STATUS_SUBMENU_P2POOL_SHARE_MEAN);
-                                    ui.label(p2pool_share_mean.to_string());
+                                    ui.label(p2pool_share_mean.display(false));
                                     ui.label(
                                         RichText::new("Your Solo Block Mean")
                                             .underline()
                                             .color(BONE),
                                     )
                                     .on_hover_text(STATUS_SUBMENU_SOLO_BLOCK_MEAN);
-                                    ui.label(solo_block_mean.to_string());
+                                    ui.label(solo_block_mean.display(false));
                                 } else {
                                     ui.label(
                                         RichText::new("Your P2Pool Hashrate")
@@ -261,21 +261,21 @@ impl Status {
                                         RichText::new("P2Pool Block Mean").underline().color(BONE),
                                     )
                                     .on_hover_text(STATUS_SUBMENU_P2POOL_BLOCK_MEAN);
-                                    ui.label(api.p2pool_block_mean.to_string());
+                                    ui.label(api.p2pool_block_mean.display(false));
                                     ui.label(
                                         RichText::new("Your P2Pool Share Mean")
                                             .underline()
                                             .color(BONE),
                                     )
                                     .on_hover_text(STATUS_SUBMENU_P2POOL_SHARE_MEAN);
-                                    ui.label(api.p2pool_share_mean.to_string());
+                                    ui.label(api.p2pool_share_mean.display(false));
                                     ui.label(
                                         RichText::new("Your Solo Block Mean")
                                             .underline()
                                             .color(BONE),
                                     )
                                     .on_hover_text(STATUS_SUBMENU_SOLO_BLOCK_MEAN);
-                                    ui.label(api.solo_block_mean.to_string());
+                                    ui.label(api.solo_block_mean.display(false));
                                 }
                             })
                         });

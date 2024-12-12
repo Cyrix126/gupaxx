@@ -706,9 +706,10 @@ pub struct PubP2poolApi {
     pub xmr_day: f64,
     pub xmr_month: f64,
     // Local API
-    pub hashrate_15m: HumanNumber,
-    pub hashrate_1h: HumanNumber,
-    pub hashrate_24h: HumanNumber,
+    pub hashrate: String,
+    pub hashrate_15m: u64,
+    pub hashrate_1h: u64,
+    pub hashrate_24h: u64,
     pub shares_found: Option<u64>,
     pub average_effort: HumanNumber,
     pub current_effort: HumanNumber,
@@ -766,9 +767,10 @@ impl PubP2poolApi {
             xmr_hour: 0.0,
             xmr_day: 0.0,
             xmr_month: 0.0,
-            hashrate_15m: HumanNumber::unknown(),
-            hashrate_1h: HumanNumber::unknown(),
-            hashrate_24h: HumanNumber::unknown(),
+            hashrate: HumanNumber::from_hashrate(&[None, None, None]).to_string(),
+            hashrate_15m: 0,
+            hashrate_1h: 0,
+            hashrate_24h: 0,
             shares_found: None,
             average_effort: HumanNumber::unknown(),
             current_effort: HumanNumber::unknown(),
@@ -940,9 +942,15 @@ impl PubP2poolApi {
     // Mutate [PubP2poolApi] with data from a [PrivP2poolLocalApi] and the process output.
     pub(super) fn update_from_local(public: &mut Self, local: PrivP2poolLocalApi) {
         *public = Self {
-            hashrate_15m: HumanNumber::from_u64(local.hashrate_15m),
-            hashrate_1h: HumanNumber::from_u64(local.hashrate_1h),
-            hashrate_24h: HumanNumber::from_u64(local.hashrate_24h),
+            hashrate: HumanNumber::from_hashrate(&[
+                Some(local.hashrate_15m),
+                Some(local.hashrate_1h),
+                Some(local.hashrate_24h),
+            ])
+            .to_string(),
+            hashrate_15m: local.hashrate_15m,
+            hashrate_1h: local.hashrate_1h,
+            hashrate_24h: local.hashrate_24h,
             shares_found: Some(local.shares_found),
             average_effort: HumanNumber::to_percent(local.average_effort),
             current_effort: HumanNumber::to_percent(local.current_effort),

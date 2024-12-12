@@ -274,9 +274,9 @@ Uptime         = 0h 2m 4s
         let mut p = public.lock().unwrap();
         PubP2poolApi::update_from_local(&mut p, local);
         println!("AFTER LOCAL: {:#?}", p);
-        assert_eq!(p.hashrate_15m.to_string(), "10,000");
-        assert_eq!(p.hashrate_1h.to_string(), "20,000");
-        assert_eq!(p.hashrate_24h.to_string(), "30,000");
+        assert_eq!(p.hashrate_15m.to_string(), "10000");
+        assert_eq!(p.hashrate_1h.to_string(), "20000");
+        assert_eq!(p.hashrate_24h.to_string(), "30000");
         assert_eq!(
             p.shares_found.expect("the value is set").to_string(),
             "1000"
@@ -297,14 +297,14 @@ Uptime         = 0h 2m 4s
         assert_eq!(p.p2pool_hashrate.to_string(), "1.000 MH/s");
         assert_eq!(p.miners.to_string(), "1,000");
         assert_eq!(
-            p.solo_block_mean.to_string(),
-            "5 months\n21 days\n9 hours\n52 minutes"
+            p.solo_block_mean.display(false),
+            "5 months, 21 days, 9 hours, 52 minutes"
         );
         assert_eq!(
-            p.p2pool_block_mean.to_string(),
-            "3 days\n11 hours\n20 minutes"
+            p.p2pool_block_mean.display(false),
+            "3 days, 11 hours, 20 minutes"
         );
-        assert_eq!(p.p2pool_share_mean.to_string(), "8 minutes\n20 seconds");
+        assert_eq!(p.p2pool_share_mean.display(false), "8 minutes, 20 seconds");
         assert_eq!(p.p2pool_percent.to_string(), "0.040000%");
         assert_eq!(p.user_p2pool_percent.to_string(), "2.000000%");
         assert_eq!(p.user_monero_percent.to_string(), "0.000800%");

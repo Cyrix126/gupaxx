@@ -793,11 +793,16 @@ impl PubXmrigApi {
             Some(Some(h)) => *h,
             _ => 0.0,
         };
-
+        let total_hasrate = private
+            .hashrate
+            .total
+            .iter()
+            .map(|x| x.as_ref().map(|y| *y as u64))
+            .collect::<Vec<Option<u64>>>();
         *public = Self {
             worker_id: private.worker_id,
             resources: HumanNumber::from_load(private.resources.load_average).to_string(),
-            hashrate: HumanNumber::from_hashrate(private.hashrate.total).to_string(),
+            hashrate: HumanNumber::from_hashrate(&total_hasrate).to_string(),
             diff: Unsigned::from(private.connection.diff as usize).to_string(),
             accepted: Unsigned::from(private.connection.accepted as usize).to_string(),
             rejected: Unsigned::from(private.connection.rejected as usize).to_string(),

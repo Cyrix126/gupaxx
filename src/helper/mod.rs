@@ -444,7 +444,7 @@ impl Helper {
         helper: &Helper,
         max_threads: u16,
     ) {
-        let gupax_uptime = helper.uptime.to_string();
+        let gupax_uptime = helper.uptime.display(true);
         let cpu = &sysinfo.cpus()[0];
         let gupax_cpu_usage = format!(
             "{:.2}%",
@@ -793,14 +793,20 @@ fn signal_end(
         let uptime = HumanTime::into_human(start.elapsed());
         info!(
             "{} Watchdog | Stopped ... Uptime was: [{}], Exit status: [{}]",
-            process.name, uptime, exit_status
+            process.name,
+            uptime.display(false),
+            exit_status
         );
         // This is written directly into the GUI API, because sometimes the 900ms event loop can't catch it.
         let name = process.name.to_owned();
         if let Err(e) = writeln!(
             gui_api_output_raw,
             "{}\n{} stopped | Uptime: [{}] | Exit status: [{}]\n{}\n\n\n\n",
-            name, HORI_CONSOLE, uptime, exit_status, HORI_CONSOLE
+            name,
+            HORI_CONSOLE,
+            uptime.display(false),
+            exit_status,
+            HORI_CONSOLE
         ) {
             error!(
                 "{} Watchdog | GUI Uptime/Exit status write failed: {}",
@@ -831,14 +837,20 @@ fn signal_end(
         let uptime = HumanTime::into_human(start.elapsed());
         info!(
             "{} Watchdog | Stopped ... Uptime was: [{}], Exit status: [{}]",
-            process.name, uptime, exit_status
+            process.name,
+            uptime.display(false),
+            exit_status
         );
         // This is written directly into the GUI API, because sometimes the 900ms event loop can't catch it.
         let name = process.name.to_owned();
         if let Err(e) = writeln!(
             gui_api_output_raw,
             "{}\n{} stopped | Uptime: [{}] | Exit status: [{}]\n{}\n\n\n\n",
-            name, HORI_CONSOLE, uptime, exit_status, HORI_CONSOLE
+            name,
+            HORI_CONSOLE,
+            uptime.display(false),
+            exit_status,
+            HORI_CONSOLE
         ) {
             error!(
                 "{} Watchdog | GUI Uptime/Exit status write failed: {}",
