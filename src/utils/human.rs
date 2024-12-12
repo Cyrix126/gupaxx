@@ -83,11 +83,8 @@ impl HumanTime {
         let days = mdays / 86400;
         let day_secs = mdays % 86400;
         let hours = day_secs / 3600;
-        dbg!(&day_secs);
         let minutes = day_secs % 3600 / 60;
-        dbg!(&minutes);
         let seconds = day_secs % 60;
-        dbg!(&seconds);
         let mut started = false;
         let mut string = String::new();
         string.push_str(&Self::plural(&mut started, "year", years, separator));
