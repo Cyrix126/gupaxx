@@ -98,6 +98,7 @@ impl crate::disk::state::Xvb {
          if !self.simple {
 
             ui.group(|ui| {
+                ui.set_width(0.0);
                 ui.vertical_centered(|ui| {
                         ui.style_mut().override_text_valign = Some(Align::Center);
                         ui.set_height(0.0);
@@ -173,8 +174,7 @@ impl crate::disk::state::Xvb {
                                     self.manual_donation_metric = ManualDonationMetric::Mega;
                                     self.manual_slider_amount = self.manual_amount_raw / 1_000_000.0;
                                 };
-                                // less menu, less metrics buttons,less space, less metrics.
-                                ui.spacing_mut().slider_width = ui.available_width() * 0.3;
+                                ui.spacing_mut().slider_width = ui.text_style_height(&TextStyle::Button) * 15.3;
                                 ui.add_sized(
                                     [ui.available_width(), text_height],
                                     egui::Slider::new(&mut self.manual_slider_amount, 0.0..=(hashrate_xmrig as f64))
@@ -183,6 +183,7 @@ impl crate::disk::state::Xvb {
                                 ).on_hover_text(slider_help_text);
 
                             });
+            ui.add_space(SPACE);
                         }
 
                         if self.mode ==  XvbMode::ManualDonationLevel {
@@ -203,8 +204,8 @@ impl crate::disk::state::Xvb {
 
                             api.lock().unwrap().stats_priv.runtime_manual_donation_level = self.manual_donation_level.clone().into();
                             });
-                        }
             ui.add_space(SPACE);
+                        }
                     });
                 });
             // });
