@@ -1,9 +1,10 @@
-use egui::{Checkbox, Label, TextStyle, Ui, vec2};
+use egui::{Checkbox, TextStyle, Ui, vec2};
 use std::sync::{Arc, Mutex};
 
 use log::debug;
 
 use crate::app::panels::middle::common::console::{console, input_args_field, start_options_field};
+use crate::app::panels::middle::common::header_tab::header_tab;
 use crate::app::panels::middle::common::list_poolnode::list_poolnode;
 use crate::disk::state::XmrigProxy;
 use crate::helper::Process;
@@ -29,14 +30,13 @@ impl XmrigProxy {
         buffer: &mut String,
         ui: &mut egui::Ui,
     ) {
-        ui.vertical_centered(|ui| {
-            ui.add_space(SPACE);
-            ui.style_mut().override_text_style = Some(TextStyle::Heading);
-            ui.hyperlink_to("XMRig-Proxy", XMRIG_PROXY_URL);
-            ui.style_mut().override_text_style = Some(TextStyle::Body);
-            ui.add(Label::new("High performant proxy for your miners"));
-            ui.add_space(SPACE);
-        });
+        header_tab(
+            ui,
+            None,
+            &[("XMRig-Proxy", XMRIG_PROXY_URL, "")],
+            Some("High performant proxy for your miners"),
+            true,
+        );
         // console output for log
         debug!("Xmrig-Proxy Tab | Rendering [Console]");
         egui::ScrollArea::vertical().show(ui, |ui| {

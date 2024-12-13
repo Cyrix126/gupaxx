@@ -1,10 +1,11 @@
 use crate::app::panels::middle::common::console::{console, input_args_field, start_options_field};
+use crate::app::panels::middle::common::header_tab::header_tab;
 use crate::app::panels::middle::common::state_edit_field::{path_db_field, slider_state_field};
 use crate::app::panels::middle::{rpc_bind_field, rpc_port_field, zmq_bind_field, zmq_port_field};
 use crate::{
     NODE_ARGUMENTS, NODE_DNS_BLOCKLIST, NODE_DNS_CHECKPOINT, NODE_INPUT, NODE_PRUNNING, NODE_URL,
 };
-use egui::{Label, TextStyle};
+use egui::TextStyle;
 use std::sync::{Arc, Mutex};
 
 use log::debug;
@@ -26,14 +27,13 @@ impl Node {
         ui: &mut egui::Ui,
     ) {
         ui.style_mut().override_text_style = Some(TextStyle::Body);
-        ui.vertical_centered(|ui| {
-            ui.add_space(SPACE);
-            ui.style_mut().override_text_style = Some(TextStyle::Heading);
-            ui.hyperlink_to("Monerod", NODE_URL);
-            ui.style_mut().override_text_style = None;
-            ui.add(Label::new("C++ Monero Node"));
-            ui.add_space(SPACE);
-        });
+        header_tab(
+            ui,
+            None,
+            &[("Monerod", NODE_URL, "")],
+            Some("C++ Monero Node"),
+            true,
+        );
         // console output for log
         debug!("Node Tab | Rendering [Console]");
         egui::ScrollArea::vertical().show(ui, |ui| {
