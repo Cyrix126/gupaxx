@@ -1,6 +1,6 @@
 use std::sync::{Arc, Mutex};
 
-use egui::{Label, TextEdit, TextStyle, Ui};
+use egui::{Label, TextEdit, TextStyle, TextWrapMode, Ui};
 
 use crate::{DARK_GRAY, helper::Process, miscs::height_txt_before_button, regex::num_lines};
 
@@ -8,6 +8,7 @@ pub fn console(ui: &mut Ui, text: &str) {
     let nb_lines = num_lines(text);
     let height = ui.available_height() / 2.8;
     egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
+        ui.style_mut().wrap_mode = Some(TextWrapMode::Wrap);
         ui.style_mut().override_text_style = Some(TextStyle::Small);
         egui::ScrollArea::vertical()
             .stick_to_bottom(true)
