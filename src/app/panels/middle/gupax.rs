@@ -321,20 +321,16 @@ impl Gupax {
     /// widget: AutoStart variant and selectable label (true) or checkbox (false)
     pub fn horizontal_flex_auto_start(&mut self, ui: &mut Ui, auto_starts: &[AutoStart]) {
         let text_style = TextStyle::Button;
-        // let height = ui.style().text_styles.get(&text_style).unwrap().size;
         ui.style_mut().override_text_style = Some(text_style);
-        // width = (width - / number of tab) - (space between widget * 2.0 + space of separator / 2.0)
-        // ui.style_mut().spacing.item_spacing.x = 4.0;
         let spacing = 2.0;
-        // ui.with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
-        // ui.horizontal(|ui| {
         ScrollArea::horizontal().show(ui, |ui| {
             ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
                 let width = (((ui.available_width()) / auto_starts.len() as f32)
-                    - ((ui.style().spacing.item_spacing.x * 2.0) + (spacing / 2.0)))
+                    - ((ui.style().spacing.item_spacing.x * 2.0) + spacing))
                     .max(0.0);
                 // TODO: calculate minimum width needed, if ui.available width is less, show items on two lines, then on 3 etc..
                 // checkbox padding + item spacing + text + separator
+
                 let size = [width, 0.0];
                 let len = auto_starts.iter().len();
                 for (count, auto) in auto_starts.iter().enumerate() {

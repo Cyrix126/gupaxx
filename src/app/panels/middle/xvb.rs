@@ -43,9 +43,6 @@ impl crate::disk::state::Xvb {
         gui_api_xp: &Arc<Mutex<PubXmrigProxyApi>>,
         is_alive: bool,
     ) {
-        // let text_edit = ui.available_height() / 25.0;
-        // let website_height = ui.available_height() / 10.0;
-
         // logo and website link
         let logo = Some(Image::from_bytes("bytes:/xvb.png", BYTES_XVB));
         header_tab(
@@ -95,6 +92,7 @@ impl crate::disk::state::Xvb {
     });
         ui.add_space(SPACE);
          // --------------------------- XVB Advanced -----------------------------------------
+                ScrollArea::horizontal().id_salt("horizontal").show(ui, |ui| {
          if !self.simple {
 
             ui.group(|ui| {
@@ -174,7 +172,7 @@ impl crate::disk::state::Xvb {
                                     self.manual_donation_metric = ManualDonationMetric::Mega;
                                     self.manual_slider_amount = self.manual_amount_raw / 1_000_000.0;
                                 };
-                                ui.spacing_mut().slider_width = ui.text_style_height(&TextStyle::Button) * 15.3;
+                                ui.spacing_mut().slider_width = ui.text_style_height(&TextStyle::Button) * 18.0;
                                 ui.add_sized(
                                     [ui.available_width(), text_height],
                                     egui::Slider::new(&mut self.manual_slider_amount, 0.0..=(hashrate_xmrig as f64))
@@ -186,6 +184,7 @@ impl crate::disk::state::Xvb {
             ui.add_space(SPACE);
                         }
 
+        // ui.spacing_mut().item_spacing.x = ui.text_style_height(&TextStyle::Button);
                         if self.mode ==  XvbMode::ManualDonationLevel {
                             ui.add_space(SPACE);
                             ui.horizontal(|ui| {
@@ -249,7 +248,6 @@ impl crate::disk::state::Xvb {
             // private stats
             ui.add_space(SPACE);
             // ui.add_enabled_ui(is_alive, |ui| {
-                ScrollArea::horizontal().id_salt("horizontal").show(ui, |ui| {
             ui.add_enabled_ui(is_alive, |ui| {
                 let api = &api.lock().unwrap();
                 let priv_stats = &api.stats_priv;

@@ -40,10 +40,10 @@ pub fn init_text_styles(ctx: &egui::Context, pixels_per_point: f32) {
         style.spacing.icon_spacing = 16.0;
         style.spacing.button_padding = [8.0, 8.0].into();
         style.spacing.item_spacing = [8.0, 8.0].into();
-        // style.spacing.scroll = egui::style::ScrollStyle {
-        // bar_width: 8.0,
-        // ..egui::style::ScrollStyle::solid()
-        // };
+        style.spacing.scroll = egui::style::ScrollStyle {
+            bar_width: 12.0,
+            ..egui::style::ScrollStyle::solid()
+        };
     });
     // Make sure scale f32 is a regular number.
     let pixels_per_point = clamp_scale(pixels_per_point);
