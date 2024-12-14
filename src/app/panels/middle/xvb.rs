@@ -95,7 +95,7 @@ impl crate::disk::state::Xvb {
 
             ui.group(|ui| {
                 ui.set_width(0.0);
-                ui.vertical_centered(|ui| {
+                ui.vertical(|ui| {
                         ui.style_mut().override_text_valign = Some(Align::Center);
                         ui.set_height(0.0);
                         ui.set_height(0.0);
@@ -247,32 +247,32 @@ impl crate::disk::state::Xvb {
                 let current_node = &api.current_node;
                 let style_height = ui.text_style_height(&TextStyle::Body);
 
-        let width_column = ui.text_style_height(&TextStyle::Body) * 16.0;
+        let width_column = ui.text_style_height(&TextStyle::Body) * 12.0;
         let height_column = 0.0;
         ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
             ui.horizontal(|ui| {
                     // Failures
-                    stat_box(ui, XVB_FAILURE_FIELD, &priv_stats.fails.to_string(), width_column, height_column, style_height);
+                    stat_box(ui, XVB_FAILURE_FIELD, &priv_stats.fails.to_string(), height_column);
                     stat_box(ui, XVB_DONATED_1H_FIELD,
                                         &[
                                             Float::from_3(priv_stats.donor_1hr_avg as f64).to_string(),
                                             " kH/s".to_string(),
                                         ]
                                         .concat()
-                        , width_column, height_column, style_height);
+                        ,  height_column);
                     stat_box(ui, XVB_DONATED_24H_FIELD,
                                         &[
                                             Float::from_3(priv_stats.donor_24hr_avg as f64).to_string(),
                                             " kH/s".to_string(),
                                         ]
                                         .concat()
-                        , width_column, height_column, style_height);
+                        ,  height_column);
                             ui.add_enabled_ui(priv_stats.round_participate.is_some(), |ui| {
                                  let round = match &priv_stats.round_participate {
                         Some(r) => r.to_string(),
                         None => "None".to_string(),
                     };
-                    stat_box(ui, XVB_ROUND_TYPE_FIELD, &round, width_column, height_column, style_height);
+                    stat_box(ui, XVB_ROUND_TYPE_FIELD, &round, height_column);
                     }).response
                                 .on_disabled_hover_text(
                                     "You do not yet have a share in the PPLNS Window.",
@@ -283,7 +283,7 @@ if priv_stats.win_current {
                                     } else {
                                         "You are not the winner"
                                     }
-                        , width_column, height_column, style_height);
+                        , height_column);
                 });
                     ui.vertical(|ui| {
                         ui.group(|ui| {
@@ -323,20 +323,16 @@ if priv_stats.win_current {
             .build(ui, &mut self.token);
     }
 }
-fn stat_box(
-    ui: &mut Ui,
-    title: &str,
-    value: &str,
-    column_width: f32,
-    column_height: f32,
-    style_height: f32,
-) {
+fn stat_box(ui: &mut Ui, title: &str, value: &str, column_height: f32) {
     ui.vertical(|ui| {
         ui.group(|ui| {
-            ui.set_width(column_width);
+            let width_txt = (title.len().max(value.len()) as f32
+                * ui.text_style_height(&TextStyle::Button)
+                / 2.0)
+                + ui.spacing().item_spacing.x * 2.0;
+            ui.set_width(width_txt);
             ui.set_height(column_height);
             ui.vertical_centered(|ui| {
-                ui.spacing_mut().item_spacing = [style_height / 2.0, style_height / 2.0].into();
                 ui.add_space(SPACE * 3.0);
                 ui.label(title);
                 ui.label(value);
