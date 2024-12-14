@@ -270,7 +270,6 @@ mod test {
         assert!(HumanNumber::to_percent(0.001).to_string() == "0%");
         assert!(HumanNumber::to_percent(12.123_123).to_string() == "12.12%");
         assert!(HumanNumber::to_percent_3_point(0.001).to_string() == "0.001%");
-        dbg!(HumanNumber::from_hashrate(&[Some(123), Some(11111), None]).to_string());
         assert!(
             HumanNumber::from_hashrate(&[Some(123), Some(11111), None]).to_string()
                 == "[123 H/s]\n[11.111 KH/s]\n[??? H/s]"
@@ -339,7 +338,6 @@ mod test {
         assert!(HumanTime::into_human(Duration::from_secs(1)).display(true) == "1 second");
         assert!(HumanTime::into_human(Duration::from_secs(2)).display(true) == "2 seconds");
         assert!(HumanTime::into_human(Duration::from_secs(59)).display(true) == "59 seconds");
-        dbg!(HumanTime::into_human(Duration::from_secs(60)).display(true));
         assert!(HumanTime::into_human(Duration::from_secs(60)).display(true) == "1 minute");
         assert!(
             HumanTime::into_human(Duration::from_secs(61)).display(true) == "1 minute\n1 second"
