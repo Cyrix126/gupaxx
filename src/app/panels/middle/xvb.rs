@@ -253,7 +253,6 @@ impl crate::disk::state::Xvb {
                 let priv_stats = &api.stats_priv;
                 let current_node = &api.current_node;
                 let style_height = ui.text_style_height(&TextStyle::Body);
-        ui.spacing_mut().item_spacing = [style_height * 2.0, style_height * 2.0].into();
 
                 // let width_stat = (ui.available_width() - SPACE * 4.0) / 5.0;
         let width_column = ui.text_style_height(&TextStyle::Body) * 16.0;
