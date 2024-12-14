@@ -66,7 +66,6 @@ impl crate::disk::state::Xvb {
             debug!("XvB Tab | Rendering [Console]");
             ui.group(|ui| {
                 let text = &api.lock().unwrap().output;
-                // let nb_lines = num_lines(text);
                 console(ui, text);
             });
             // input token
@@ -74,7 +73,6 @@ impl crate::disk::state::Xvb {
             ui.horizontal(|ui| {
                 ui.group(|ui|{
                     ui.style_mut().override_text_valign = Some(Align::Center);
-                    // ui.set_height(height_txt_before_button(ui, &TextStyle::Body));
                     self.field_token(ui);
                 });
 
@@ -100,10 +98,8 @@ impl crate::disk::state::Xvb {
                 ui.vertical_centered(|ui| {
                         ui.style_mut().override_text_valign = Some(Align::Center);
                         ui.set_height(0.0);
-                    // ui.horizontal_centered(|ui| {
                         ui.set_height(0.0);
                         let text_height = height_txt_before_button(ui, &TextStyle::Heading) * 1.4;
-                        // let text_height = 0.0;
                         egui::ComboBox::from_label("").height(XvbMode::COUNT as f32 * (ui.text_style_height(&TextStyle::Button) + (ui.spacing().button_padding.y * 2.0) + ui.spacing().item_spacing.y))
                         .selected_text(self.mode.to_string())
                         .show_ui(ui, |ui| {
@@ -184,7 +180,6 @@ impl crate::disk::state::Xvb {
             ui.add_space(SPACE);
                         }
 
-        // ui.spacing_mut().item_spacing.x = ui.text_style_height(&TextStyle::Button);
                         if self.mode ==  XvbMode::ManualDonationLevel {
                             ui.add_space(SPACE);
                             ui.horizontal(|ui| {
@@ -207,7 +202,6 @@ impl crate::disk::state::Xvb {
                         }
                     });
                 });
-            // });
 
             // Update manual_amount_raw based on slider
             match self.manual_donation_metric {
@@ -247,14 +241,12 @@ impl crate::disk::state::Xvb {
         }
             // private stats
             ui.add_space(SPACE);
-            // ui.add_enabled_ui(is_alive, |ui| {
             ui.add_enabled_ui(is_alive, |ui| {
                 let api = &api.lock().unwrap();
                 let priv_stats = &api.stats_priv;
                 let current_node = &api.current_node;
                 let style_height = ui.text_style_height(&TextStyle::Body);
 
-                // let width_stat = (ui.available_width() - SPACE * 4.0) / 5.0;
         let width_column = ui.text_style_height(&TextStyle::Body) * 16.0;
         let height_column = 0.0;
         ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
