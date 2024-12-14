@@ -836,9 +836,9 @@ dependencies = [
 
 [[package]]
 name = "cc"
-version = "1.2.3"
+version = "1.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27f657647bcff5394bf56c7317665bbf790a137a50eaaa5c6bfbb9e27a518f2d"
+checksum = "9157bbaa6b165880c27a4293a474c91cdcf265cc68cc829bf10be0964a391caf"
 dependencies = [
  "jobserver",
  "libc",
@@ -1301,7 +1301,7 @@ checksum = "f25c0e292a7ca6d6498557ff1df68f32c99850012b6ea401cf8daf771f22ff53"
 [[package]]
 name = "ecolor"
 version = "0.29.1"
-source = "git+https://github.com/emilk/egui#36a70e12c3a8a70308a4faa15799d557a5c0a064"
+source = "git+https://github.com/emilk/egui#9aae14cdf4e50907805303c60cc96b6b2fff788e"
 dependencies = [
  "bytemuck",
  "emath",
@@ -1310,7 +1310,7 @@ dependencies = [
 [[package]]
 name = "eframe"
 version = "0.29.1"
-source = "git+https://github.com/emilk/egui#36a70e12c3a8a70308a4faa15799d557a5c0a064"
+source = "git+https://github.com/emilk/egui#9aae14cdf4e50907805303c60cc96b6b2fff788e"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1346,7 +1346,7 @@ dependencies = [
 [[package]]
 name = "egui"
 version = "0.29.1"
-source = "git+https://github.com/emilk/egui#36a70e12c3a8a70308a4faa15799d557a5c0a064"
+source = "git+https://github.com/emilk/egui#9aae14cdf4e50907805303c60cc96b6b2fff788e"
 dependencies = [
  "accesskit",
  "ahash",
@@ -1360,7 +1360,7 @@ dependencies = [
 [[package]]
 name = "egui-wgpu"
 version = "0.29.1"
-source = "git+https://github.com/emilk/egui#36a70e12c3a8a70308a4faa15799d557a5c0a064"
+source = "git+https://github.com/emilk/egui#9aae14cdf4e50907805303c60cc96b6b2fff788e"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1378,7 +1378,7 @@ dependencies = [
 [[package]]
 name = "egui-winit"
 version = "0.29.1"
-source = "git+https://github.com/emilk/egui#36a70e12c3a8a70308a4faa15799d557a5c0a064"
+source = "git+https://github.com/emilk/egui#9aae14cdf4e50907805303c60cc96b6b2fff788e"
 dependencies = [
  "accesskit_winit",
  "ahash",
@@ -1395,7 +1395,7 @@ dependencies = [
 [[package]]
 name = "egui_extras"
 version = "0.29.1"
-source = "git+https://github.com/emilk/egui#36a70e12c3a8a70308a4faa15799d557a5c0a064"
+source = "git+https://github.com/emilk/egui#9aae14cdf4e50907805303c60cc96b6b2fff788e"
 dependencies = [
  "ahash",
  "egui",
@@ -1408,7 +1408,7 @@ dependencies = [
 [[package]]
 name = "egui_glow"
 version = "0.29.1"
-source = "git+https://github.com/emilk/egui#36a70e12c3a8a70308a4faa15799d557a5c0a064"
+source = "git+https://github.com/emilk/egui#9aae14cdf4e50907805303c60cc96b6b2fff788e"
 dependencies = [
  "ahash",
  "bytemuck",
@@ -1430,7 +1430,7 @@ checksum = "60b1af1c220855b6ceac025d3f6ecdd2b7c4894bfe9cd9bda4fbb4bc7c0d4cf0"
 [[package]]
 name = "emath"
 version = "0.29.1"
-source = "git+https://github.com/emilk/egui#36a70e12c3a8a70308a4faa15799d557a5c0a064"
+source = "git+https://github.com/emilk/egui#9aae14cdf4e50907805303c60cc96b6b2fff788e"
 dependencies = [
  "bytemuck",
 ]
@@ -1515,7 +1515,7 @@ dependencies = [
 [[package]]
 name = "epaint"
 version = "0.29.1"
-source = "git+https://github.com/emilk/egui#36a70e12c3a8a70308a4faa15799d557a5c0a064"
+source = "git+https://github.com/emilk/egui#9aae14cdf4e50907805303c60cc96b6b2fff788e"
 dependencies = [
  "ab_glyph",
  "ahash",
@@ -1531,7 +1531,7 @@ dependencies = [
 [[package]]
 name = "epaint_default_fonts"
 version = "0.29.1"
-source = "git+https://github.com/emilk/egui#36a70e12c3a8a70308a4faa15799d557a5c0a064"
+source = "git+https://github.com/emilk/egui#9aae14cdf4e50907805303c60cc96b6b2fff788e"
 
 [[package]]
 name = "equivalent"
@@ -1662,7 +1662,7 @@ dependencies = [
  "log",
  "nu-ansi-term",
  "regex",
- "thiserror 2.0.6",
+ "thiserror 2.0.7",
 ]
 
 [[package]]
@@ -3618,7 +3618,7 @@ dependencies = [
  "rustc-hash 2.1.0",
  "rustls",
  "socket2",
- "thiserror 2.0.6",
+ "thiserror 2.0.7",
  "tokio",
  "tracing",
 ]
@@ -3637,7 +3637,7 @@ dependencies = [
  "rustls",
  "rustls-pki-types",
  "slab",
- "thiserror 2.0.6",
+ "thiserror 2.0.7",
  "tinyvec",
  "tracing",
  "web-time",
@@ -4064,9 +4064,9 @@ dependencies = [
 
 [[package]]
 name = "rustls-pki-types"
-version = "1.10.0"
+version = "1.10.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16f1201b3c9a7ee8039bcadc17b7e605e2945b27eee7631788c1bd2b0643674b"
+checksum = "d2bf47e6ff922db3825eb750c4e2ff784c6ff8fb9e13046ef6a1d1c5401b0b37"
 dependencies = [
  "web-time",
 ]
@@ -4130,9 +4130,9 @@ dependencies = [
 
 [[package]]
 name = "semver"
-version = "1.0.23"
+version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61697e0a1c7e512e84a621326239844a24d8207b4669b41bc18b32ea5cbf988b"
+checksum = "3cb6eb87a131f756572d7fb904f6e7b68633f09cca868c5df1c4b8d1a694bbba"
 
 [[package]]
 name = "seq-macro"
@@ -4599,11 +4599,11 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "2.0.6"
+version = "2.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8fec2a1820ebd077e2b90c4df007bebf344cd394098a13c563957d0afc83ea47"
+checksum = "93605438cbd668185516ab499d589afb7ee1859ea3d5fc8f6b0755e1c7443767"
 dependencies = [
- "thiserror-impl 2.0.6",
+ "thiserror-impl 2.0.7",
 ]
 
 [[package]]
@@ -4619,9 +4619,9 @@ dependencies = [
 
 [[package]]
 name = "thiserror-impl"
-version = "2.0.6"
+version = "2.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d65750cab40f4ff1929fb1ba509e9914eb756131cef4210da8d5d700d26f6312"
+checksum = "e1d8749b4531af2117677a5fcd12b1348a3fe2b81e36e61ffeac5c4aa3273e36"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -6219,7 +6219,7 @@ dependencies = [
  "pbkdf2",
  "rand",
  "sha1",
- "thiserror 2.0.6",
+ "thiserror 2.0.7",
  "time",
  "zeroize",
  "zopfli",
@@ -6285,9 +6285,9 @@ dependencies = [
 
 [[package]]
 name = "zune-jpeg"
-version = "0.4.13"
+version = "0.4.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "16099418600b4d8f028622f73ff6e3deaabdff330fb9a2a131dea781ee8b0768"
+checksum = "99a5bab8d7dedf81405c4bb1f2b83ea057643d9cb28778cea9eecddeedd2e028"
 dependencies = [
  "zune-core",
 ]
