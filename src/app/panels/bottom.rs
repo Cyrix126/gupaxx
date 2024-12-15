@@ -566,7 +566,7 @@ impl crate::app::App {
             ProcessName::Node => {
                 // check path of DB valid, empty valid.
                 if !self.state.node.path_db.is_empty()
-                    && !Gupax::path_is_file(&self.state.node.path_db)
+                    && !Gupax::path_is_dir(&self.state.node.path_db)
                 {
                     return Err(format!("Error: {}", NODE_DB_DIR));
                 }
