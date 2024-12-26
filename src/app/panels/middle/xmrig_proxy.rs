@@ -193,7 +193,7 @@ impl XmrigProxy {
     }
     fn rig_field(&mut self, ui: &mut Ui) -> bool {
         StateTextEdit::new(ui)
-            .description("   Name     ")
+            .description(" RIG ID   ")
             .max_ch(30)
             .help_msg(XMRIG_RIG)
             .build(ui, &mut self.rig)
