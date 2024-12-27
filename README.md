@@ -94,11 +94,14 @@ See this [issue](https://github.com/hinto-janai/gupax/issues/51).
 
 
 ## License
-The GUI library Gupaxx uses is [egui](https://github.com/emilk/egui). It is licensed under [MIT](https://github.com/emilk/egui/blob/master/LICENSE-MIT) & [Apache 2.0.](https://github.com/emilk/egui/blob/master/LICENSE-APACHE)
 
-[Many other libraries are used that have various licenses.](https://github.com/Cyrix126/gupaxx/blob/master/Cargo.toml)
+![GPL v3](assets/images/gplv3-with-text-136x68.png)
 
-[Gupaxx](https://github.com/cyrix126/gupax/blob/master/LICENSE), [P2Pool](https://github.com/SChernykh/p2pool/blob/master/LICENSE), and [XMRig](https://github.com/xmrig/xmrig/blob/master/LICENSE) are licensed under the GNU General Public License v3.0.
+[Gupaxx](https://github.com/cyrix126/gupax/blob/master/LICENSE), [P2Pool](https://github.com/SChernykh/p2pool/blob/master/LICENSE), [XMRig](https://github.com/xmrig/xmrig/blob/master/LICENSE) and [XMRig-Proxy](https://github.com/xmrig/xmrig-proxy/blob/master/LICENSE) are licensed under the GNU General Public License v3.0.
+
+[Monerod](https://github.com/monero-project/monero) [licence](https://github.com/monero-project/monero?tab=License-1-ov-file)
+
+[See the licenses of various dependencies.](https://github.com/Cyrix126/gupaxx/blob/master/Cargo.toml)
 
 ## Mirror
 In case Github repository is down, you can still find the source code at [librejo](https://librejo.monerodevs.org/Ecosystem/gupaxx)

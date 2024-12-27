@@ -1,9 +1,9 @@
 use crate::app::panels::middle::common::console::{console, input_args_field, start_options_field};
 use crate::disk::state::{P2pool, State};
 use crate::helper::p2pool::PubP2poolApi;
-// Gupax - GUI Uniting P2Pool And XMRig
+// Gupaxx - Fork of Gupax
 //
-// Copyright (c) 2022-2023 hinto-janai
+// Copyright (c) 2024-2025 Cyrix126
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
