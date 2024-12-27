@@ -95,6 +95,8 @@ See this [issue](https://github.com/hinto-janai/gupax/issues/51).
 
 ## License
 
+![GPL v3](assets/images/gplv3-with-text-136x68.png)
+
 [Gupaxx](https://github.com/cyrix126/gupax/blob/master/LICENSE), [P2Pool](https://github.com/SChernykh/p2pool/blob/master/LICENSE), [XMRig](https://github.com/xmrig/xmrig/blob/master/LICENSE) and [XMRig-Proxy](https://github.com/xmrig/xmrig-proxy/blob/master/LICENSE) are licensed under the GNU General Public License v3.0.
 
 [Monerod](https://github.com/monero-project/monero) [licence](https://github.com/monero-project/monero?tab=License-1-ov-file)
