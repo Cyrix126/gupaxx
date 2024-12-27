@@ -1,6 +1,6 @@
-// Gupax - GUI Uniting P2Pool And XMRig
+// Gupaxx - Fork of Gupax
 //
-// Copyright (c) 2022-2023 hinto-janai
+// Copyright (c) 2024-2025 Cyrix126
 //
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
