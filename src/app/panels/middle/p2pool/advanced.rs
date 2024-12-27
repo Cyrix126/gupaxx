@@ -107,10 +107,10 @@ impl P2pool {
                             ui.add_space(SPACE);
                             slider_state_field(
                                 ui,
-                                "Log level [ 0-6 ]:",
+                                "Log level [ 2-6 ]:",
                                 P2POOL_LOG,
                                 &mut self.log_level,
-                                0..=6,
+                                2..=6,
                             );
                         })
                     });

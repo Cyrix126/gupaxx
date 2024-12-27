@@ -12,9 +12,11 @@ use crate::helper::signal_end;
 use crate::helper::sleep_end_loop;
 use crate::regex::P2POOL_REGEX;
 use crate::regex::contains_end_status;
+use crate::regex::contains_newchain_tip;
 use crate::regex::contains_statuscommand;
 use crate::regex::contains_yourhashrate;
 use crate::regex::contains_yourshare;
+use crate::regex::contains_zmq_failure;
 use crate::regex::estimated_hr;
 use crate::regex::nb_current_shares;
 use crate::{
@@ -370,6 +372,12 @@ impl Helper {
                 } else {
                     &state.ip
                 };
+                // log level of p2pool must be minimum 2 so Gupaxx works correctly.
+                let log_level = if state.log_level < 2 {
+                    2
+                } else {
+                    state.log_level
+                };
                 args.push("--wallet".to_string());
                 args.push(state.address.clone()); // Wallet
                 args.push("--host".to_string());
@@ -379,7 +387,7 @@ impl Helper {
                 args.push("--zmq-port".to_string());
                 args.push(state.zmq.to_string()); // ZMQ
                 args.push("--loglevel".to_string());
-                args.push(state.log_level.to_string()); // Log Level
+                args.push(log_level.to_string()); // Log Level
                 args.push("--out-peers".to_string());
                 args.push(state.out_peers.to_string()); // Out Peers
                 args.push("--in-peers".to_string());
@@ -859,7 +867,7 @@ impl PubP2poolApi {
         // 2. Parse the full STDOUT
         let mut output_parse = output_parse.lock().unwrap();
         let (payouts_new, xmr_new) = Self::calc_payouts_and_xmr(&output_parse);
-        // Check for "SYNCHRONIZED" only if we aren't already.
+        // Check for "SYNCHRONIZED" only if we aren't already. Works at level 0 and above.
         if process.state == ProcessState::Syncing {
             // How many times the word was captured.
             let synchronized_captures = P2POOL_REGEX.synchronized.find_iter(&output_parse).count();
@@ -880,6 +888,15 @@ impl PubP2poolApi {
                 // just finding 1 instance of "SYNCHRONIZED".
                 process.state = ProcessState::Alive;
             }
+            // if the p2pool node was synced but is not anymore due to faulty monero node and is synced again, the status must be alive again
+            // required log level 2 minimum
+            if contains_newchain_tip(&output_parse) {
+                process.state = ProcessState::Alive;
+            }
+        }
+        // if the node is offline, p2pool can not function properly. Requires at least p2pool log level 1
+        if process.state == ProcessState::Alive && contains_zmq_failure(&output_parse) {
+            process.state = ProcessState::Syncing;
         }
 
         // 3. Throw away [output_parse]

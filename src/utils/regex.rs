@@ -277,6 +277,21 @@ pub fn contains_end_status(l: &str) -> bool {
     static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^Uptime         ").unwrap());
     LINE_SHARE.is_match(l)
 }
+// P2Pool
+/// if the node is disconnected
+/// this error will be present if log > 1 and Node is disconnected
+pub fn contains_zmq_failure(l: &str) -> bool {
+    static LINE_SHARE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(r"(p2pool with offline node: failed: error Error (empty response)|ZMQReader failed to connect to|P2Pool Couldn't restart ZMQ reader: exception Operation cannot be accomplished in current state)").unwrap()
+    });
+    LINE_SHARE.is_match(l)
+}
+/// a way to detect that p2pool is alive
+pub fn contains_newchain_tip(l: &str) -> bool {
+    static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"new chain tip").unwrap());
+    LINE_SHARE.is_match(l)
+}
+
 //---------------------------------------------------------------------------------------------------- TEST
 #[cfg(test)]
 mod test {
