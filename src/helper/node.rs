@@ -415,36 +415,12 @@ impl PrivNodeApi {
         state: &Node,
     ) -> std::result::Result<Self, anyhow::Error> {
         let adr = format!("http://{}:{}/json_rpc", state.api_ip, state.api_port);
-        #[cfg(target_os = "windows")]
-        let mut private = client
+        Ok(client
             .post(adr)
             .body(r#"{"jsonrpc":"2.0","id":"0","method":"get_info"}"#)
             .send()
             .await?
             .json::<PrivNodeApi>()
-            .await?;
-        #[cfg(not(target_os = "windows"))]
-        let private = client
-            .post(adr)
-            .body(r#"{"jsonrpc":"2.0","id":"0","method":"get_info"}"#)
-            .send()
-            .await?
-            .json::<PrivNodeApi>()
-            .await?;
-        #[cfg(target_os = "windows")]
-        // api returns 0 for DB size for Windows so we read the size directly from the filesystem.
-        // https://github.com/monero-project/monero/issues/9513
-        {
-            if let Ok(metadata) = std::fs::metadata(if !state.path_db.is_empty() {
-                let mut path_db = std::path::PathBuf::from(&state.path_db);
-                path_db.push("lmdb/data.mdb");
-                path_db.to_str().unwrap().to_string()
-            } else {
-                r#"C:\ProgramData\bitmonero\lmdb\data.mdb"#.to_string()
-            }) {
-                private.result.database_size = metadata.file_size();
-            }
-        }
-        Ok(private)
+            .await?)
     }
 }
