@@ -373,12 +373,6 @@ impl Helper {
                 } else {
                     &state.ip
                 };
-                // log level of p2pool must be minimum 2 so Gupaxx works correctly.
-                let log_level = if state.log_level < 2 {
-                    2
-                } else {
-                    state.log_level
-                };
                 args.push("--wallet".to_string());
                 args.push(state.address.clone()); // Wallet
                 args.push("--host".to_string());
@@ -388,7 +382,7 @@ impl Helper {
                 args.push("--zmq-port".to_string());
                 args.push(state.zmq.to_string()); // ZMQ
                 args.push("--loglevel".to_string());
-                args.push(log_level.to_string()); // Log Level
+                args.push(state.log_level.to_string()); // Log Level
                 args.push("--out-peers".to_string());
                 args.push(state.out_peers.to_string()); // Out Peers
                 args.push("--in-peers".to_string());
