@@ -8,6 +8,7 @@ mod test {
         p2pool::{PrivP2poolLocalApi, PrivP2poolNetworkApi},
         xvb::{priv_stats::RuntimeDonationLevel, priv_stats::RuntimeMode},
     };
+    use crate::human::HumanNumber;
     use crate::miscs::client;
 
     #[test]
@@ -291,7 +292,7 @@ Uptime         = 0h 2m 4s
         assert_eq!(p.monero_difficulty.to_string(), "300,000,000,000");
         assert_eq!(p.monero_hashrate.to_string(), "2.500 GH/s");
         assert_eq!(p.hash.to_string(), "asdf");
-        assert_eq!(p.height.to_string(), "1,234");
+        assert_eq!(HumanNumber::from_u32(p.height).to_string(), "1,234");
         assert_eq!(p.reward.to_u64(), 2345);
         assert_eq!(p.p2pool_difficulty.to_string(), "10,000,000");
         assert_eq!(p.p2pool_hashrate.to_string(), "1.000 MH/s");

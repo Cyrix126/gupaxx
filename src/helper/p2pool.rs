@@ -207,13 +207,13 @@ impl Helper {
     ) {
         helper.lock().unwrap().p2pool.lock().unwrap().state = ProcessState::Middle;
 
-        let (args, api_path_local, api_path_network, api_path_pool) =
+        let (args, api_path_local, api_path_network, api_path_pool, api_path_p2p) =
             Self::build_p2pool_args_and_mutate_img(helper, state, path, backup_hosts);
 
         // Print arguments & user settings to console
         crate::disk::print_dash(&format!(
-            "P2Pool | Launch arguments: {:#?} | Local API Path: {:#?} | Network API Path: {:#?} | Pool API Path: {:#?}",
-            args, api_path_local, api_path_network, api_path_pool,
+            "P2Pool | Launch arguments: {:#?} | Local API Path: {:#?} | Network API Path: {:#?} | Pool API Path: {:#?} | P2P API Path {:#?}",
+            args, api_path_local, api_path_network, api_path_pool, api_path_p2p
         ));
 
         // Spawn watchdog thread
@@ -232,6 +232,7 @@ impl Helper {
                 api_path_local,
                 api_path_network,
                 api_path_pool,
+                api_path_p2p,
                 gupax_p2pool_api,
             );
         });
@@ -257,7 +258,7 @@ impl Helper {
         state: &P2pool,
         path: &Path,
         backup_hosts: Option<Vec<PoolNode>>,
-    ) -> (Vec<String>, PathBuf, PathBuf, PathBuf) {
+    ) -> (Vec<String>, PathBuf, PathBuf, PathBuf, PathBuf) {
         let mut args = Vec::with_capacity(500);
         let path = path.to_path_buf();
         let mut api_path = path;
@@ -438,10 +439,18 @@ impl Helper {
         let mut api_path_local = api_path.clone();
         let mut api_path_network = api_path.clone();
         let mut api_path_pool = api_path.clone();
+        let mut api_path_p2p = api_path.clone();
         api_path_local.push(P2POOL_API_PATH_LOCAL);
         api_path_network.push(P2POOL_API_PATH_NETWORK);
         api_path_pool.push(P2POOL_API_PATH_POOL);
-        (args, api_path_local, api_path_network, api_path_pool)
+        api_path_p2p.push(P2POOL_API_PATH_P2P);
+        (
+            args,
+            api_path_local,
+            api_path_network,
+            api_path_pool,
+            api_path_p2p,
+        )
     }
 
     #[cold]
@@ -460,6 +469,7 @@ impl Helper {
         api_path_local: std::path::PathBuf,
         api_path_network: std::path::PathBuf,
         api_path_pool: std::path::PathBuf,
+        api_path_p2p: std::path::PathBuf,
         gupax_p2pool_api: Arc<Mutex<GupaxP2poolApi>>,
     ) {
         // 1a. Create PTY
@@ -533,6 +543,26 @@ impl Helper {
                 ),
             }
         }
+        debug!("P2Pool | Cleaning old [p2p] API files...");
+        // Attempt to remove stale API file
+        match std::fs::remove_file(&api_path_p2p) {
+            Ok(_) => info!("P2Pool | Attempting to remove stale API file ... OK"),
+            Err(e) => warn!(
+                "P2Pool | Attempting to remove stale API file ... FAIL ... {}",
+                e
+            ),
+        }
+        // Attempt to create a default empty one.
+        if std::fs::File::create(&api_path_p2p).is_ok() {
+            let text = r#"{"connections":0,"incoming_connections":0,"peer_list_size":0,"peers":[],"uptime":0}"#;
+            match std::fs::write(&api_path_p2p, text) {
+                Ok(_) => info!("P2Pool | Creating default empty API file ... OK"),
+                Err(e) => warn!(
+                    "P2Pool | Creating default empty API file ... FAIL ... {}",
+                    e
+                ),
+            }
+        }
         let start = process.lock().unwrap().start;
 
         // Reset stats before loop
@@ -599,6 +629,20 @@ impl Helper {
                         PubP2poolApi::update_from_local(&mut pub_api_lock, local_api);
                     }
                 }
+                // Read [p2p] API
+                // allows to know if p2p is synced and connected to a Node.
+                debug!("P2Pool Watchdog | Attempting [p2p] API file read");
+                if let Ok(string) = Self::path_to_string(&api_path_p2p, ProcessName::P2pool) {
+                    // Deserialize
+                    if let Ok(p2p_api) = PrivP2PoolP2PApi::from_str(&string) {
+                        // Update the structs.
+                        PubP2poolApi::update_from_p2p(&mut pub_api_lock, p2p_api);
+                    }
+                }
+
+                // check if state must be changed based on local and p2p API
+                pub_api_lock.update_state(&process);
+
                 // If more than 1 minute has passed, read the other API files.
                 let last_p2pool_request_expired =
                     last_p2pool_request.elapsed() >= Duration::from_secs(60);
@@ -737,7 +781,7 @@ pub struct PubP2poolApi {
     pub monero_difficulty: HumanNumber, // e.g: [15,000,000]
     pub monero_hashrate: HumanNumber,   // e.g: [1.000 GH/s]
     pub hash: String,                   // Current block hash
-    pub height: HumanNumber,
+    pub height: u32,
     pub reward: AtomicUnit,
     // Pool API
     pub p2pool_difficulty: HumanNumber,
@@ -754,6 +798,11 @@ pub struct PubP2poolApi {
     // from status
     pub sidechain_shares: u32,
     pub sidechain_ehr: f32,
+    // from height
+    pub synchronised: bool,
+    // from local/p2p
+    pub p2p_connected: u32,
+    pub node_connected: bool,
 }
 
 impl Default for PubP2poolApi {
@@ -792,7 +841,7 @@ impl PubP2poolApi {
             monero_difficulty: HumanNumber::unknown(),
             monero_hashrate: HumanNumber::unknown(),
             hash: String::from("???"),
-            height: HumanNumber::unknown(),
+            height: 0,
             reward: AtomicUnit::new(),
             p2pool_difficulty: HumanNumber::unknown(),
             p2pool_hashrate: HumanNumber::unknown(),
@@ -805,6 +854,9 @@ impl PubP2poolApi {
             user_monero_percent: HumanNumber::unknown(),
             sidechain_shares: 0,
             sidechain_ehr: 0.0,
+            p2p_connected: 0,
+            synchronised: false,
+            node_connected: false,
         }
     }
 
@@ -976,6 +1028,15 @@ impl PubP2poolApi {
             ..std::mem::take(&mut *public)
         };
     }
+    // Mutate [PubP2poolApi] with data from a [PrivP2PoolP2PApi] and the process output.
+    pub(super) fn update_from_p2p(public: &mut Self, p2p: PrivP2PoolP2PApi) {
+        *public = Self {
+            p2p_connected: p2p.connections,
+            // 30 seconds before concluding the monero node connection is lost
+            node_connected: p2p.zmq_last_active < 30,
+            ..std::mem::take(&mut *public)
+        };
+    }
 
     // Mutate [PubP2poolApi] with data from a [PrivP2pool(Network|Pool)Api].
     pub(super) fn update_from_network_pool(
@@ -1033,7 +1094,7 @@ impl PubP2poolApi {
             monero_difficulty: HumanNumber::from_u64(monero_difficulty),
             monero_hashrate: HumanNumber::from_u64_to_gigahash_3_point(monero_hashrate),
             hash: net.hash,
-            height: HumanNumber::from_u32(net.height),
+            height: net.height,
             reward: AtomicUnit::from_u64(net.reward),
             p2pool_difficulty: HumanNumber::from_u64(p2pool_difficulty),
             p2pool_hashrate: HumanNumber::from_u64_to_megahash_3_point(p2pool_hashrate),
@@ -1046,6 +1107,15 @@ impl PubP2poolApi {
             user_monero_percent,
             ..std::mem::take(&mut *public)
         };
+    }
+    /// Check if all conditions are met to be alive or if something is wrong
+    fn update_state(&self, process: &Arc<Mutex<Process>>) {
+        let mut process = process.lock().unwrap();
+        if self.synchronised && self.node_connected && self.p2p_connected > 1 && self.height > 10 {
+            process.state = ProcessState::Alive;
+        } else {
+            process.state = ProcessState::Syncing;
+        }
     }
 
     #[inline]
@@ -1270,6 +1340,38 @@ impl PoolStatistics {
         Self {
             hashRate: 0,
             miners: 0,
+        }
+    }
+}
+//---------------------------------------------------------------------------------------------------- Private P2Pool "Network" API
+// This matches P2Pool's [local/p2p] JSON API file.
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub(super) struct PrivP2PoolP2PApi {
+    pub connections: u32,
+    pub zmq_last_active: u32,
+}
+
+impl Default for PrivP2PoolP2PApi {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl PrivP2PoolP2PApi {
+    fn new() -> Self {
+        Self {
+            connections: 0,
+            zmq_last_active: 0,
+        }
+    }
+
+    pub(super) fn from_str(string: &str) -> std::result::Result<Self, serde_json::Error> {
+        match serde_json::from_str::<Self>(string) {
+            Ok(a) => Ok(a),
+            Err(e) => {
+                warn!("P2Pool Network API | Could not deserialize API data: {}", e);
+                Err(e)
+            }
         }
     }
 }
