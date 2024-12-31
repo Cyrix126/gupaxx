@@ -783,6 +783,7 @@ Uptime         = 0h 2m 4s
         gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64 = 95_000_000;
         gui_api_xmrig.lock().unwrap().hashrate_raw_15m = 20000.0;
         gui_api_xvb.lock().unwrap().stats_priv.runtime_mode = RuntimeMode::Hero;
+        gui_api_xvb.lock().unwrap().use_p2pool_sidechain_hr = true;
 
         let algo = Algorithm::new(
             &client,
