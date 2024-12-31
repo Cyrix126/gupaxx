@@ -81,12 +81,16 @@ pub const P2POOL_API_PATH_LOCAL: &str = r"local\stratum";
 pub const P2POOL_API_PATH_NETWORK: &str = r"network\stats";
 #[cfg(target_os = "windows")]
 pub const P2POOL_API_PATH_POOL: &str = r"pool\stats";
+#[cfg(target_family = "windows")]
+pub const P2POOL_API_PATH_P2P: &str = r"local\p2p";
 #[cfg(target_family = "unix")]
 pub const P2POOL_API_PATH_LOCAL: &str = "local/stratum";
 #[cfg(target_family = "unix")]
 pub const P2POOL_API_PATH_NETWORK: &str = "network/stats";
 #[cfg(target_family = "unix")]
 pub const P2POOL_API_PATH_POOL: &str = "pool/stats";
+#[cfg(target_family = "unix")]
+pub const P2POOL_API_PATH_P2P: &str = "local/p2p";
 pub const XMRIG_API_SUMMARY_URI: &str = "1/summary"; // The default relative URI of XMRig's API summary
 // pub const XMRIG_API_CONFIG_URI: &str = "1/config"; // The default relative URI of XMRig's API config
 // todo allow user to change the port of the http api for xmrig and xmrig-proxy
