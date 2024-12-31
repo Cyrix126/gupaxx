@@ -384,6 +384,8 @@ pub const P2POOL_BACKUP_HOST_SIMPLE: &str = r#"Automatically switch to the other
 Note: you must ping the remote nodes or this feature will default to only using the currently selected node."#;
 pub const P2POOL_BACKUP_HOST_ADVANCED: &str =
     "Automatically switch to the other nodes in your list if the current one is down.";
+pub const P2POOL_AUTOSWITCH_LOCAL_NODE: &str =
+    "Automatically switch to the local node when it will be ready to be used.";
 pub const P2POOL_SELECT_FASTEST: &str = "Select the fastest remote Monero node";
 pub const P2POOL_SELECT_RANDOM: &str = "Select a random remote Monero node";
 pub const P2POOL_SELECT_LAST: &str = "Select the previous remote Monero node";

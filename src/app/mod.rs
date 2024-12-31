@@ -623,6 +623,9 @@ impl App {
         info!("App Init | Setting saved [Tab]...");
         app.tab = app.state.gupax.tab;
 
+        // Set saved prefer local node to runtime
+        app.p2pool_api.lock().unwrap().prefer_local_node = app.state.p2pool.prefer_local_node;
+
         // Set saved Hero mode to runtime.
         debug!("Setting runtime_mode & runtime_manual_amount");
         // apply hero if simple mode saved with checkbox true, will let default to auto otherwise
