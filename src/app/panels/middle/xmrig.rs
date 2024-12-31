@@ -16,6 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::app::panels::middle::common::console::{console, input_args_field, start_options_field};
+use crate::app::panels::middle::common::header_tab::header_tab;
 use crate::app::panels::middle::common::list_poolnode::list_poolnode;
 use crate::app::panels::middle::common::state_edit_field::{
     monero_address_field, slider_state_field,
@@ -46,6 +47,13 @@ impl Xmrig {
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
     ) {
+        header_tab(
+            ui,
+            None,
+            &[("XMRig", XMRIG_URL, "")],
+            Some("High performant miner for RandomX"),
+            true,
+        );
         debug!("XMRig Tab | Rendering [Console]");
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.group(|ui| {

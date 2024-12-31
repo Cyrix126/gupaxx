@@ -22,6 +22,7 @@ use log::*;
 
 use std::sync::{Arc, Mutex};
 
+use super::common::header_tab::header_tab;
 use super::common::list_poolnode::PoolNode;
 
 mod advanced;
@@ -45,6 +46,13 @@ impl P2pool {
         // debug!("P2Pool Tab | Rendering [Console]");
         let mut api_lock = api.lock().unwrap();
         // let mut prefer_local_node = api.lock().unwrap().prefer_local_node;
+        header_tab(
+            ui,
+            None,
+            &[("P2Pool", P2POOL_URL, "")],
+            Some("Decentralized pool for Monero mining"),
+            true,
+        );
         egui::ScrollArea::vertical().show(ui, |ui| {
             let text = &api_lock.output;
             ui.group(|ui| {
