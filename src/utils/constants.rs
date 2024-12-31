@@ -432,6 +432,7 @@ pub const P2POOL_PATH_NOT_FILE: &str = "P2Pool binary not found at the given PAT
 pub const P2POOL_PATH_NOT_VALID: &str = "P2Pool binary at the given PATH in the Gupaxx tab doesn't look like P2Pool! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where P2Pool is located.";
 pub const P2POOL_PATH_OK: &str = "P2Pool was found at the given PATH";
 pub const P2POOL_PATH_EMPTY: &str = "P2Pool PATH is empty! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where P2Pool is located.";
+pub const P2POOL_URL: &str = "https://github.com/SChernykh/p2pool";
 
 // Node/Pool list
 pub const LIST_ADD: &str = "Add the current values to the list";
@@ -498,6 +499,7 @@ pub const XMRIG_NAME: &str = "Add a unique name to identify this pool; Only [A-Z
 pub const XMRIG_IP: &str = "Specify the pool IP to connect to with XMRig; It must be a valid IPv4 address or a valid domain name; Max length = 255 characters";
 pub const XMRIG_PORT: &str = "Specify the port of the pool; [1-65535]";
 pub const XMRIG_RIG: &str = "Add an optional rig ID. This will be the name shown on the pool; Only [A-Za-z0-9-_] and spaces allowed; Max length = 30 characters";
+pub const XMRIG_URL: &str = "https://github.com/xmrig/xmrig";
 #[cfg(not(target_os = "linux"))]
 pub const XMRIG_PAUSE: &str =
     "THIS SETTING IS DISABLED IF SET TO [0]. Pause mining if user is active, resume after";
