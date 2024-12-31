@@ -635,7 +635,7 @@ impl Helper {
                 }
 
                 // check if state must be changed based on local and p2p API
-                pub_api_lock.update_state(&process);
+                pub_api_lock.update_state(&mut process_lock);
 
                 // If more than 1 minute has passed, read the other API files.
                 let last_p2pool_request_expired =
@@ -1103,8 +1103,7 @@ impl PubP2poolApi {
         };
     }
     /// Check if all conditions are met to be alive or if something is wrong
-    fn update_state(&self, process: &Arc<Mutex<Process>>) {
-        let mut process = process.lock().unwrap();
+    fn update_state(&self, process: &mut Process) {
         if self.synchronised && self.node_connected && self.p2p_connected > 1 && self.height > 10 {
             process.state = ProcessState::Alive;
         } else {
