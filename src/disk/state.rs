@@ -300,6 +300,7 @@ pub struct P2pool {
     pub rpc: String,
     pub zmq: String,
     pub selected_node: SelectedPoolNode,
+    pub prefer_local_node: bool,
 }
 
 // compatible for P2Pool and Xmrig/Proxy
@@ -618,6 +619,7 @@ impl Default for P2pool {
                 rpc: "18081".to_string(),
                 zmq_rig: "18083".to_string(),
             },
+            prefer_local_node: true,
         }
     }
 }

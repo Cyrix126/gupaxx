@@ -83,7 +83,8 @@ mod test {
 			ip = "192.168.1.123"
 			rpc = "18089"
 			zmq = "18083"
-            
+            prefer_local_node = true
+
             [p2pool.selected_node]
             index = 0
             name = "Local Monero Node"

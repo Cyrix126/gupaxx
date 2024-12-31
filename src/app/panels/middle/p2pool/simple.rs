@@ -35,11 +35,14 @@ use egui::vec2;
 use crate::constants::*;
 use egui::{Color32, ComboBox, RichText, Ui};
 use log::*;
+
+use super::p2pool::PubP2poolApi;
+
 impl P2pool {
-    pub(super) fn simple(&mut self, ui: &mut Ui, ping: &Arc<Mutex<Ping>>) {
+    pub(super) fn simple(&mut self, ui: &mut Ui, ping: &Arc<Mutex<Ping>>, api: &mut PubP2poolApi) {
         ui.vertical_centered(|ui|{
             ui.add_space(SPACE);
-            ui.checkbox(&mut self.local_node, "Use a local node").on_hover_text("If checked (recommended), p2pool will automatically use the local node.\nCheck the Node tab to start a local node.\nIf unchecked, p2pool will attempt to use a remote node.");
+            ui.checkbox(&mut self.local_node, "Start with a local node").on_hover_text("If checked (recommended), p2pool will start trying to use the local node.\nCheck the Node tab to start a local node.\nIf unchecked, p2pool will attempt to use a remote node.");
         });
         ui.add_space(SPACE * 2.0);
         // if checked, use only local node
@@ -99,7 +102,6 @@ impl P2pool {
                         ui.style_mut().override_text_style = Some(egui::TextStyle::Button);
                         ui.horizontal(|ui| {
                             ui.style_mut().wrap_mode = Some(TextWrapMode::Extend);
-                            // ui.columns_const(|[col1, col2, col3, col4, col5]| {
                             let width = ((ui.available_width() / 5.0)
                                 - (ui.spacing().item_spacing.x * (4.0 / 5.0)))
                                 .max(20.0);
@@ -195,33 +197,43 @@ impl P2pool {
                         ui.group(|ui| {
                             ui.horizontal(|ui| {
                                 let width =
-                                    (((ui.available_width() - ui.spacing().item_spacing.x) / 3.0)
+                                    (((ui.available_width() - ui.spacing().item_spacing.x) / 4.0)
                                         - SPACE * 1.5)
                                         .max(ui.text_style_height(&TextStyle::Button) * 7.0);
                                 let size = vec2(
                                     width,
                                     height_txt_before_button(ui, &TextStyle::Button) * 2.0,
                                 );
-                                // [Auto-node]
                                 ui.add_sized(
                                     size,
                                     Checkbox::new(&mut self.auto_select, "Auto-select"),
                                 )
-                                // ui.checkbox(&mut self.auto_select, "Auto-select")
                                 .on_hover_text(P2POOL_AUTO_SELECT);
                                 ui.separator();
-                                // [Auto-node]
                                 ui.add_sized(size, Checkbox::new(&mut self.auto_ping, "Auto-ping"))
-                                    // ui.checkbox(&mut self.auto_ping, "Auto-ping")
                                     .on_hover_text(P2POOL_AUTO_NODE);
                                 ui.separator();
-                                // [Backup host]
                                 ui.add_sized(
                                     size,
                                     Checkbox::new(&mut self.backup_host, "Backup host"),
                                 )
-                                // ui.checkbox(&mut self.backup_host, "Backup host")
                                 .on_hover_text(P2POOL_BACKUP_HOST_SIMPLE);
+                                ui.separator();
+                                // set preferred local node immediately if we are on simple mode.
+                                if ui
+                                    .add_sized(
+                                        size,
+                                        Checkbox::new(
+                                            &mut self.prefer_local_node,
+                                            "Auto-Switch to Local Node",
+                                        ),
+                                    )
+                                    .on_hover_text(P2POOL_AUTOSWITCH_LOCAL_NODE)
+                                    .clicked()
+                                {
+                                    api.prefer_local_node = self.prefer_local_node;
+                                    // api.lock().unwrap().prefer_local_node = self.prefer_local_node;
+                                }
                             })
                         });
                     });

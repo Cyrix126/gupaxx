@@ -44,8 +44,10 @@ use crate::{
     macros::*,
     xmr::*,
 };
+use enclose::enc;
 use log::*;
 use serde::{Deserialize, Serialize};
+use std::mem;
 use std::path::Path;
 use std::{
     fmt::Write,
@@ -54,6 +56,7 @@ use std::{
     thread,
     time::*,
 };
+use tokio::time::sleep;
 impl Helper {
     #[cold]
     #[inline(never)]
@@ -192,6 +195,7 @@ impl Helper {
         state: &P2pool,
         path: &Path,
         backup_hosts: Option<Vec<PoolNode>>,
+        override_to_local_node: bool,
     ) {
         info!("P2Pool | Attempting to restart...");
         helper.lock().unwrap().p2pool.lock().unwrap().signal = ProcessSignal::Restart;
@@ -208,7 +212,7 @@ impl Helper {
             }
             // Ok, process is not alive, start the new one!
             info!("P2Pool | Old process seems dead, starting new one!");
-            Self::start_p2pool(&helper, &state, &path, backup_hosts);
+            Self::start_p2pool(&helper, &state, &path, backup_hosts, override_to_local_node);
         });
         info!("P2Pool | Restart ... OK");
     }
@@ -221,11 +225,17 @@ impl Helper {
         state: &P2pool,
         path: &Path,
         backup_hosts: Option<Vec<PoolNode>>,
+        override_to_local_node: bool,
     ) {
         helper.lock().unwrap().p2pool.lock().unwrap().state = ProcessState::Middle;
-
         let (args, api_path_local, api_path_network, api_path_pool, api_path_p2p) =
-            Self::build_p2pool_args_and_mutate_img(helper, state, path, backup_hosts);
+            Self::build_p2pool_args_and_mutate_img(
+                helper,
+                state,
+                path,
+                &backup_hosts,
+                override_to_local_node,
+            );
 
         // Print arguments & user settings to console
         crate::disk::print_dash(&format!(
@@ -239,6 +249,20 @@ impl Helper {
         let pub_api = Arc::clone(&helper.lock().unwrap().pub_api_p2pool);
         let gupax_p2pool_api = Arc::clone(&helper.lock().unwrap().gupax_p2pool_api);
         let path = path.to_path_buf();
+        // thread to check if the button for switching to local node if it is synced to restart p2pool.
+        // starting the thread even if the option is disabled allows to apply the change immediately in case it is enabled again without asking the user to restart p2pool.
+        // Start this thread only if we don't already override to local node
+        if !override_to_local_node {
+            thread::spawn(enc!((helper, state, path, backup_hosts) move || {
+                Self::watch_switch_p2pool_to_local_node(
+                    &helper,
+                    &state,
+                    &path,
+                    backup_hosts,
+                );
+            }));
+        }
+
         thread::spawn(move || {
             Self::spawn_p2pool_watchdog(
                 process,
@@ -274,7 +298,8 @@ impl Helper {
         helper: &Arc<Mutex<Self>>,
         state: &P2pool,
         path: &Path,
-        backup_hosts: Option<Vec<PoolNode>>,
+        backup_hosts: &Option<Vec<PoolNode>>,
+        override_to_local_node: bool,
     ) -> (Vec<String>, PathBuf, PathBuf, PathBuf, PathBuf) {
         let mut args = Vec::with_capacity(500);
         let path = path.to_path_buf();
@@ -282,7 +307,7 @@ impl Helper {
         api_path.pop();
 
         // [Simple]
-        if state.simple && !state.local_node {
+        if state.simple && (!state.local_node && !override_to_local_node) {
             // Build the p2pool argument
             let (ip, rpc, zmq) = RemoteNode::get_ip_rpc_zmq(&state.node); // Get: (IP, RPC, ZMQ)
             args.push("--wallet".to_string());
@@ -323,7 +348,7 @@ impl Helper {
                 out_peers: "10".to_string(),
                 in_peers: "10".to_string(),
             };
-        } else if state.simple && state.local_node {
+        } else if state.simple && (state.local_node || override_to_local_node) {
             // use the local node
             // Build the p2pool argument
             args.push("--wallet".to_string());
@@ -576,9 +601,8 @@ impl Helper {
         }
         let start = process.lock().unwrap().start;
 
-        // Reset stats before loop
-        *pub_api.lock().unwrap() = PubP2poolApi::new();
-        *gui_api.lock().unwrap() = PubP2poolApi::new();
+        // Reset stats before loop, except action parameters without a need for saving to state.
+        reset_data_p2pool(&pub_api, &gui_api);
 
         // 4. Loop as watchdog
         let mut first_loop = true;
@@ -611,6 +635,8 @@ impl Helper {
                 ) {
                     break;
                 }
+                // check that if prefer local node is true and local node is alived and p2pool was not started with local node
+
                 // Check vector of user input
                 check_user_input(&process, &mut stdin);
                 // Check if logs need resetting
@@ -713,6 +739,43 @@ impl Helper {
         // 5. If loop broke, we must be done here.
         info!("P2Pool Watchdog | Watchdog thread exiting... Goodbye!");
     }
+    #[tokio::main]
+    #[allow(clippy::await_holding_lock)]
+    async fn watch_switch_p2pool_to_local_node(
+        helper: &Arc<Mutex<Helper>>,
+        state: &P2pool,
+        path_p2pool: &Path,
+        backup_hosts: Option<Vec<PoolNode>>,
+    ) {
+        // do not try to restart immediately after a first start, or else the two start will be in conflict.
+        sleep(Duration::from_secs(10)).await;
+
+        // check every seconds
+        loop {
+            let helper_lock = helper.lock().unwrap();
+            let node_process = helper_lock.node.lock().unwrap();
+            let process = helper_lock.p2pool.lock().unwrap();
+            let gui_api = helper_lock.gui_api_p2pool.lock().unwrap();
+            if gui_api.prefer_local_node
+                && state.simple
+                && !state.local_node
+                && node_process.state == ProcessState::Alive
+                && process.is_alive()
+            {
+                drop(gui_api);
+                drop(process);
+                drop(node_process);
+                drop(helper_lock);
+                Helper::restart_p2pool(helper, state, path_p2pool, backup_hosts, true);
+                break;
+            }
+            drop(gui_api);
+            drop(process);
+            drop(node_process);
+            drop(helper_lock);
+            sleep(Duration::from_secs(1)).await;
+        }
+    }
 }
 //---------------------------------------------------------------------------------------------------- [ImgP2pool]
 // A static "image" of data that P2Pool started with.
@@ -814,6 +877,7 @@ pub struct PubP2poolApi {
     // from local/p2p
     pub p2p_connected: u32,
     pub node_connected: bool,
+    pub prefer_local_node: bool,
 }
 
 impl Default for PubP2poolApi {
@@ -868,6 +932,7 @@ impl PubP2poolApi {
             p2p_connected: 0,
             synchronised: false,
             node_connected: false,
+            prefer_local_node: true,
         }
     }
 
@@ -887,6 +952,7 @@ impl PubP2poolApi {
             tick: std::mem::take(&mut gui_api.tick),
             sidechain_shares: std::mem::take(&mut gui_api.sidechain_shares),
             sidechain_ehr: std::mem::take(&mut gui_api.sidechain_ehr),
+            prefer_local_node: std::mem::take(&mut gui_api.prefer_local_node),
             ..pub_api.clone()
         };
     }
@@ -1121,10 +1187,13 @@ impl PubP2poolApi {
     }
     /// Check if all conditions are met to be alive or if something is wrong
     fn update_state(&self, process: &mut Process) {
-        if self.synchronised && self.node_connected && self.p2p_connected > 1 && self.height > 10 {
+        if process.state == ProcessState::Syncing
+            && self.synchronised
+            && self.node_connected
+            && self.p2p_connected > 1
+            && self.height > 10
+        {
             process.state = ProcessState::Alive;
-        } else {
-            process.state = ProcessState::Syncing;
         }
     }
 
@@ -1384,4 +1453,13 @@ impl PrivP2PoolP2PApi {
             }
         }
     }
+}
+fn reset_data_p2pool(pub_api: &Arc<Mutex<PubP2poolApi>>, gui_api: &Arc<Mutex<PubP2poolApi>>) {
+    let current_pref = mem::take(&mut pub_api.lock().unwrap().prefer_local_node);
+    // even if it is a restart, we want to keep set values by the user without the need from him to click on save button.
+
+    *pub_api.lock().unwrap() = PubP2poolApi::new();
+    *gui_api.lock().unwrap() = PubP2poolApi::new();
+    // to keep the value modified by xmrig even if xvb is dead.
+    pub_api.lock().unwrap().prefer_local_node = current_pref;
 }
