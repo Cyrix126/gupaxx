@@ -156,6 +156,7 @@ mod test {
             hero = false
             node = "Europe"
             p2pool_buffer = 5
+            use_p2pool_sidechain_hr = false
 
             [node]
             simple = false
