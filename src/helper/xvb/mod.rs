@@ -441,6 +441,9 @@ pub struct PubXvbApi {
     // will be updated by output of xmrig.
     // could also be retrieved by fetching current config.
     pub current_node: Option<XvbNode>,
+    // Instead of watching stratum data that will account for HR sent only on this p2pool node,
+    // Take the value of estimated HR that will account for external miners mininf on the same address.
+    pub use_p2pool_sidechain_hr: bool,
 }
 #[derive(Debug, Clone)]
 pub struct SamplesAverageHour(BoundedVecDeque<f32>);
@@ -485,6 +488,7 @@ impl PubXvbApi {
                 &mut gui_api.p2pool_sent_last_hour_samples,
             ),
             xvb_sent_last_hour_samples: std::mem::take(&mut gui_api.xvb_sent_last_hour_samples),
+            use_p2pool_sidechain_hr: std::mem::take(&mut gui_api.use_p2pool_sidechain_hr),
             ..pub_api.clone()
         };
     }
@@ -857,7 +861,7 @@ fn reset_data_xvb(pub_api: &Arc<Mutex<PubXvbApi>>, gui_api: &Arc<Mutex<PubXvbApi
     let runtime_mode = mem::take(&mut gui_api.lock().unwrap().stats_priv.runtime_mode);
     let runtime_manual_amount =
         mem::take(&mut gui_api.lock().unwrap().stats_priv.runtime_manual_amount);
-
+    let use_sidechain_hr = mem::take(&mut gui_api.lock().unwrap().use_p2pool_sidechain_hr);
     // let output = mem::take(&mut gui_api.lock().unwrap().output);
     *pub_api.lock().unwrap() = PubXvbApi::new();
     *gui_api.lock().unwrap() = PubXvbApi::new();
@@ -868,6 +872,8 @@ fn reset_data_xvb(pub_api: &Arc<Mutex<PubXvbApi>>, gui_api: &Arc<Mutex<PubXvbApi
     gui_api.lock().unwrap().stats_priv.runtime_manual_amount = runtime_manual_amount;
     // message while starting must be preserved.
     // pub_api.lock().unwrap().output = output;
+    // to not lose information about the use of sidechain hr
+    gui_api.lock().unwrap().use_p2pool_sidechain_hr = use_sidechain_hr;
 }
 // print date time to console output in same format than xmrig
 fn update_indicator_algo(

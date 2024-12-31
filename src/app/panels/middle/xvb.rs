@@ -23,7 +23,6 @@ use readable::num::Float;
 use readable::up::Uptime;
 use strum::EnumCount;
 
-use crate::XVB_MINING_ON_FIELD;
 use crate::app::panels::middle::common::console::console;
 use crate::app::panels::middle::common::header_tab::header_tab;
 use crate::app::panels::middle::common::state_edit_field::StateTextEdit;
@@ -42,6 +41,7 @@ use crate::utils::constants::{
     XVB_ROUND_TYPE_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES, XVB_WINNER_FIELD,
 };
 use crate::utils::regex::Regexes;
+use crate::{XVB_MINING_ON_FIELD, XVB_P2POOL_BUFFER, XVB_SIDECHAIN};
 use crate::{
     constants::{BYTES_XVB, SPACE},
     utils::constants::XVB_URL,
@@ -107,6 +107,7 @@ impl crate::disk::state::Xvb {
     });
         ui.add_space(SPACE);
          // --------------------------- XVB Advanced -----------------------------------------
+                        let text_height = height_txt_before_button(ui, &TextStyle::Heading) * 1.4;
                 ScrollArea::horizontal().id_salt("horizontal").show(ui, |ui| {
          if !self.simple {
 
@@ -116,7 +117,6 @@ impl crate::disk::state::Xvb {
                         ui.style_mut().override_text_valign = Some(Align::Center);
                         ui.set_height(0.0);
                         ui.set_height(0.0);
-                        let text_height = height_txt_before_button(ui, &TextStyle::Heading) * 1.4;
                         egui::ComboBox::from_label("").height(XvbMode::COUNT as f32 * (ui.text_style_height(&TextStyle::Button) + (ui.spacing().button_padding.y * 2.0) + ui.spacing().item_spacing.y))
                         .selected_text(self.mode.to_string())
                         .show_ui(ui, |ui| {
@@ -238,16 +238,25 @@ impl crate::disk::state::Xvb {
             api.lock().unwrap().stats_priv.runtime_manual_amount = self.manual_amount_raw;
          ui.add_space(SPACE);
 
+         ui.horizontal(|ui|{
             // allow user to modify the buffer for p2pool
             // button
             ui.add_sized(
-                [ui.available_width() * 0.8, height_txt_before_button(ui, &TextStyle::Button)],
+                [0.0 , text_height],
                 egui::Slider::new(&mut self.p2pool_buffer, -100..=100)
                 .text("% P2Pool Buffer" )
-            ).on_hover_text("Set the % amount of additional HR to send to p2pool. Will reduce (if positive) or augment (if negative) the chances to miss the p2pool window");
-        }
+            ).on_hover_text(XVB_P2POOL_BUFFER);
 
          ui.add_space(SPACE);
+         // p2pool sidechain HR or stratum data
+            if ui.add_sized(
+                [0.0, text_height],
+                egui::Checkbox::new(&mut self.use_p2pool_sidechain_hr, "Watch P2Pool Sidechain HR")).on_hover_text(XVB_SIDECHAIN).clicked() {
+                api.lock().unwrap().use_p2pool_sidechain_hr = self.use_p2pool_sidechain_hr;
+            }
+         });
+        }
+
         // need to warn the user if no address is set in p2pool tab
         if !Regexes::addr_ok(address) {
             debug!("XvB Tab | Rendering warning text");

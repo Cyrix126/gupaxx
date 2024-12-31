@@ -626,6 +626,9 @@ impl App {
         // Set saved prefer local node to runtime
         app.p2pool_api.lock().unwrap().prefer_local_node = app.state.p2pool.prefer_local_node;
 
+        // Set saved choice of use of sidechain HR
+        app.xvb_api.lock().unwrap().use_p2pool_sidechain_hr = app.state.xvb.use_p2pool_sidechain_hr;
+
         // Set saved Hero mode to runtime.
         debug!("Setting runtime_mode & runtime_manual_amount");
         // apply hero if simple mode saved with checkbox true, will let default to auto otherwise
