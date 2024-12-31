@@ -156,7 +156,13 @@ pub const XVB_FAILED: &str = "XvB process is misconfigured or the XvB node is of
 pub const XVB_MIDDLE: &str = "XvB is in the middle of (re)starting/stopping";
 pub const XVB_NOT_CONFIGURED: &str = "You need to insert an existent token before starting XvB";
 pub const XVB_PUBLIC_ONLY: &str = "XvB process is started only to get public stats.";
-
+pub const XVB_SIDECHAIN: &str = "
+If checked:\n
+The algorithm will watch the estimated HR given for your address on the P2Pool network. This way, it will take into account external miners that are mining on P2Pool for your address without using the P2Pool node of Gupaxx. This estimation can be imprecised.\n
+If unchecked (default):\n
+The algorithm will watch the HR estimated by the stratum data of the p2pool node, which is more accurate but will only take into account the miners that are using your P2Pool node.
+";
+pub const XVB_P2POOL_BUFFER: &str = "Set the % amount of additional HR to send to p2pool. Will reduce (if positive) or augment (if negative) the chances to miss the p2pool window";
 // This is the typical space added when using
 // [ui.separator()] or [ui.group()]
 // Used for subtracting the width/height so

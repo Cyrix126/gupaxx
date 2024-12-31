@@ -135,6 +135,7 @@ impl<'a> Algorithm<'a> {
         xp_alive: bool,
         p2pool_buffer: i8,
     ) -> Self {
+        let use_sidechain_hr = gui_api_xvb.lock().unwrap().use_p2pool_sidechain_hr;
         let hashrate_xmrig = current_controllable_hr(xp_alive, gui_api_xp, gui_api_xmrig);
 
         let address = state_p2pool.address.clone();
@@ -148,7 +149,13 @@ impl<'a> Algorithm<'a> {
             .clone();
         let runtime_amount = gui_api_xvb.lock().unwrap().stats_priv.runtime_manual_amount;
 
-        let p2pool_total_hashrate = gui_api_p2pool.lock().unwrap().sidechain_ehr;
+        let p2pool_total_hashrate = if use_sidechain_hr {
+            gui_api_p2pool.lock().unwrap().sidechain_ehr
+        } else if gui_api_p2pool.lock().unwrap().hashrate_1h > 0 {
+            gui_api_p2pool.lock().unwrap().hashrate_1h as f32
+        } else {
+            gui_api_p2pool.lock().unwrap().hashrate_15m as f32
+        };
 
         let p2pool_avg_last_hour_hashrate = Self::calc_last_hour_avg_hash_rate(
             &gui_api_xvb.lock().unwrap().p2pool_sent_last_hour_samples,

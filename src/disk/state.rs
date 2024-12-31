@@ -468,6 +468,7 @@ pub struct Xvb {
     pub manual_donation_level: ManualDonationLevel,
     pub manual_donation_metric: ManualDonationMetric,
     pub p2pool_buffer: i8,
+    pub use_p2pool_sidechain_hr: bool,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default, EnumCount, EnumIter)]
@@ -680,6 +681,7 @@ impl Default for Xvb {
             manual_donation_level: Default::default(),
             manual_donation_metric: Default::default(),
             p2pool_buffer: 25,
+            use_p2pool_sidechain_hr: false,
         }
     }
 }
