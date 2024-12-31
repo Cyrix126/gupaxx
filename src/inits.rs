@@ -208,6 +208,7 @@ pub fn init_auto(app: &mut App) {
                 &app.state.p2pool,
                 &app.state.gupax.absolute_p2pool_path,
                 backup_hosts,
+                false,
             );
         }
     } else {

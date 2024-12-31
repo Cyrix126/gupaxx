@@ -254,6 +254,7 @@ impl crate::app::App {
                                 &self.state.p2pool,
                                 &self.state.gupax.absolute_p2pool_path,
                                 self.gather_backup_hosts(),
+                                false,
                             );
                         }
                         ProcessName::Xmrig => {
@@ -324,6 +325,7 @@ impl crate::app::App {
                                 &self.state.p2pool,
                                 &self.state.gupax.absolute_p2pool_path,
                                 self.gather_backup_hosts(),
+                                false,
                             ),
 
                             ProcessName::Xmrig => {

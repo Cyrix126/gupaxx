@@ -43,8 +43,10 @@ impl P2pool {
     ) {
         //---------------------------------------------------------------------------------------------------- [Simple] Console
         // debug!("P2Pool Tab | Rendering [Console]");
+        let mut api_lock = api.lock().unwrap();
+        // let mut prefer_local_node = api.lock().unwrap().prefer_local_node;
         egui::ScrollArea::vertical().show(ui, |ui| {
-            let text = &api.lock().unwrap().output;
+            let text = &api_lock.output;
             ui.group(|ui| {
                 console(ui, text);
                 if !self.simple {
@@ -74,7 +76,7 @@ impl P2pool {
             );
 
             if self.simple {
-                self.simple(ui, ping);
+                self.simple(ui, ping, &mut api_lock);
             } else {
                 self.advanced(ui, node_vec);
             }
