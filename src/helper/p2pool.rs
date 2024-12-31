@@ -1044,7 +1044,7 @@ impl PubP2poolApi {
         *public = Self {
             p2p_connected: p2p.connections,
             // 30 seconds before concluding the monero node connection is lost
-            node_connected: p2p.zmq_last_active < 30,
+            node_connected: p2p.zmq_last_active.is_some_and(|x| x < 30),
             ..std::mem::take(&mut *public)
         };
     }
@@ -1358,7 +1358,7 @@ impl PoolStatistics {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub(super) struct PrivP2PoolP2PApi {
     pub connections: u32,
-    pub zmq_last_active: u32,
+    pub zmq_last_active: Option<u32>,
 }
 
 impl Default for PrivP2PoolP2PApi {
@@ -1371,7 +1371,7 @@ impl PrivP2PoolP2PApi {
     fn new() -> Self {
         Self {
             connections: 0,
-            zmq_last_active: 0,
+            zmq_last_active: None,
         }
     }
 
