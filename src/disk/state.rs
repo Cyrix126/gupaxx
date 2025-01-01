@@ -301,6 +301,7 @@ pub struct P2pool {
     pub zmq: String,
     pub selected_node: SelectedPoolNode,
     pub prefer_local_node: bool,
+    pub console_height: u32,
 }
 
 // compatible for P2Pool and Xmrig/Proxy
@@ -328,6 +329,7 @@ pub struct Node {
     pub dns_blocklist: bool,
     pub disable_dns_checkpoint: bool,
     pub path_db: String,
+    pub console_height: u32,
 }
 
 impl Default for Node {
@@ -346,6 +348,7 @@ impl Default for Node {
             dns_blocklist: true,
             disable_dns_checkpoint: true,
             path_db: String::new(),
+            console_height: APP_DEFAULT_CONSOLE_HEIGHT,
         }
     }
 }
@@ -369,6 +372,7 @@ pub struct Xmrig {
     pub port: String,
     pub selected_pool: SelectedPoolNode,
     pub token: String,
+    pub console_height: u32,
 }
 
 // present for future.
@@ -391,6 +395,7 @@ pub struct XmrigProxy {
     pub selected_pool: SelectedPoolNode,
     pub token: String,
     pub redirect_local_xmrig: bool,
+    pub console_height: u32,
 }
 
 impl Gupax {
@@ -453,6 +458,7 @@ impl Default for XmrigProxy {
             api_port: "18089".to_string(),
             tls: false,
             keepalive: false,
+            console_height: APP_DEFAULT_CONSOLE_HEIGHT,
         }
     }
 }
@@ -469,6 +475,7 @@ pub struct Xvb {
     pub manual_donation_metric: ManualDonationMetric,
     pub p2pool_buffer: i8,
     pub use_p2pool_sidechain_hr: bool,
+    pub console_height: u32,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default, EnumCount, EnumIter)]
@@ -621,6 +628,7 @@ impl Default for P2pool {
                 zmq_rig: "18083".to_string(),
             },
             prefer_local_node: true,
+            console_height: APP_DEFAULT_CONSOLE_HEIGHT,
         }
     }
 }
@@ -665,6 +673,7 @@ impl Default for Xmrig {
                 .take(16)
                 .map(char::from)
                 .collect(),
+            console_height: APP_DEFAULT_CONSOLE_HEIGHT,
         }
     }
 }
@@ -682,6 +691,7 @@ impl Default for Xvb {
             manual_donation_metric: Default::default(),
             p2pool_buffer: 25,
             use_p2pool_sidechain_hr: false,
+            console_height: APP_DEFAULT_CONSOLE_HEIGHT,
         }
     }
 }

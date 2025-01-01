@@ -27,6 +27,7 @@ use crate::app::panels::middle::common::console::console;
 use crate::app::panels::middle::common::header_tab::header_tab;
 use crate::app::panels::middle::common::state_edit_field::StateTextEdit;
 use crate::disk::state::{ManualDonationLevel, ManualDonationMetric, XvbMode};
+use crate::helper::ProcessName;
 use crate::helper::xrig::xmrig::PubXmrigApi;
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
 use crate::helper::xvb::PubXvbApi;
@@ -83,7 +84,7 @@ impl crate::disk::state::Xvb {
             debug!("XvB Tab | Rendering [Console]");
             ui.group(|ui| {
                 let text = &api.lock().unwrap().output;
-                console(ui, text);
+                console(ui, text, &mut self.console_height, ProcessName::Xvb);
             });
             // input token
             ui.add_space(SPACE);

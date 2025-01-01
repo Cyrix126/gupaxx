@@ -19,33 +19,47 @@ use std::sync::{Arc, Mutex};
 
 use egui::{Label, TextEdit, TextStyle, TextWrapMode, Ui};
 
-use crate::{DARK_GRAY, helper::Process, miscs::height_txt_before_button, regex::num_lines};
+use crate::{
+    DARK_GRAY,
+    helper::{Process, ProcessName},
+    miscs::height_txt_before_button,
+    regex::num_lines,
+};
 
-pub fn console(ui: &mut Ui, text: &str) {
+pub fn console(ui: &mut Ui, text: &str, console_height: &mut u32, process_name: ProcessName) {
     let nb_lines = num_lines(text);
-    let height = ui.available_height() / 2.8;
-    egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
-        ui.style_mut().wrap_mode = Some(TextWrapMode::Wrap);
-        ui.style_mut().override_text_style = Some(TextStyle::Small);
-        egui::ScrollArea::vertical()
-            .stick_to_bottom(true)
-            .max_width(ui.available_width())
-            .max_height(height)
-            .auto_shrink([false; 2])
-            // .show_viewport(ui, |ui, _| {
-            .show_rows(
-                ui,
-                ui.text_style_height(&TextStyle::Small),
-                nb_lines,
-                |ui, row_range| {
-                    for i in row_range {
-                        if let Some(line) = text.lines().nth(i) {
-                            ui.label(line);
-                        }
-                    }
-                },
-            );
-    });
+    *console_height = egui::Resize::default()
+        .id_salt(process_name.to_string())
+        .default_height(*console_height as f32)
+        .min_width(ui.available_width())
+        .max_width(ui.available_width())
+        .show(ui, |ui| {
+            egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
+                ui.style_mut().wrap_mode = Some(TextWrapMode::Wrap);
+                ui.style_mut().override_text_style = Some(TextStyle::Small);
+                egui::ScrollArea::vertical()
+                    .stick_to_bottom(true)
+                    .max_width(ui.available_width())
+                    .max_height(ui.available_height())
+                    .auto_shrink([false; 2])
+                    // .show_viewport(ui, |ui, _| {
+                    .show_rows(
+                        ui,
+                        ui.text_style_height(&TextStyle::Small),
+                        nb_lines,
+                        |ui, row_range| {
+                            for i in row_range {
+                                if let Some(line) = text.lines().nth(i) {
+                                    ui.label(line);
+                                }
+                            }
+                        },
+                    );
+            })
+        })
+        .response
+        .rect
+        .height() as u32;
 }
 
 // input args

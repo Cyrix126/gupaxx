@@ -40,6 +40,7 @@ pub const APP_MAX_HEIGHT: f32 = 2160.0;
 // Default, 1280x960
 pub const APP_DEFAULT_WIDTH: f32 = 1280.0;
 pub const APP_DEFAULT_HEIGHT: f32 = 960.0;
+pub const APP_DEFAULT_CONSOLE_HEIGHT: u32 = 360;
 // App resolution scaling
 pub const APP_MIN_SCALE: f32 = 0.1;
 pub const APP_MAX_SCALE: f32 = 2.0;
