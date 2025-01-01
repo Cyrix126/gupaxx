@@ -23,8 +23,8 @@ use crate::app::panels::middle::common::state_edit_field::{
 };
 use crate::constants::*;
 use crate::disk::state::Xmrig;
-use crate::helper::Process;
 use crate::helper::xrig::xmrig::PubXmrigApi;
+use crate::helper::{Process, ProcessName};
 use crate::miscs::height_txt_before_button;
 use crate::regex::REGEXES;
 use egui::{Checkbox, Ui, vec2};
@@ -58,7 +58,7 @@ impl Xmrig {
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.group(|ui| {
                 let text = &api.lock().unwrap().output;
-                console(ui, text);
+                console(ui, text, &mut self.console_height, ProcessName::Xmrig);
                 if !self.simple {
                     ui.separator();
                     input_args_field(
