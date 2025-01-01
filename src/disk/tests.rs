@@ -84,6 +84,7 @@ mod test {
 			rpc = "18089"
 			zmq = "18083"
             prefer_local_node = true
+            console_height = 360
 
             [p2pool.selected_node]
             index = 0
@@ -109,6 +110,7 @@ mod test {
 			ip = "192.168.1.122"
 			port = "3333"
             token = "testtoken"
+            console_height = 360
 
 
             [xmrig.selected_pool]
@@ -136,6 +138,7 @@ mod test {
 			p2pool_port = "18088"
             token = "testtoken"
             redirect_local_xmrig = true
+            console_height = 360
 
             [xmrig_proxy.selected_pool]
             index = 0
@@ -157,6 +160,7 @@ mod test {
             node = "Europe"
             p2pool_buffer = 5
             use_p2pool_sidechain_hr = false
+            console_height = 360
 
             [node]
             simple = false
@@ -172,6 +176,7 @@ mod test {
             dns_blocklist = true
             disable_dns_checkpoint = true
             path_db = ""
+            console_height = 360
 
 			[version]
 			gupax = "v1.3.0"

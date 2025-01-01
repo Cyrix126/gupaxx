@@ -24,8 +24,8 @@ use crate::app::panels::middle::common::console::{console, input_args_field, sta
 use crate::app::panels::middle::common::header_tab::header_tab;
 use crate::app::panels::middle::common::list_poolnode::list_poolnode;
 use crate::disk::state::XmrigProxy;
-use crate::helper::Process;
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
+use crate::helper::{Process, ProcessName};
 use crate::miscs::height_txt_before_button;
 use crate::regex::REGEXES;
 use crate::{
@@ -59,7 +59,7 @@ impl XmrigProxy {
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.group(|ui| {
                 let text = &api.lock().unwrap().output;
-                console(ui, text);
+                console(ui, text, &mut self.console_height, ProcessName::XmrigProxy);
                 //---------------------------------------------------------------------------------------------------- [Advanced] Console
                 if !self.simple {
                     ui.separator();

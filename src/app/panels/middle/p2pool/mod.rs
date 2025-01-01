@@ -56,7 +56,7 @@ impl P2pool {
         egui::ScrollArea::vertical().show(ui, |ui| {
             let text = &api_lock.output;
             ui.group(|ui| {
-                console(ui, text);
+                console(ui, text, &mut self.console_height, ProcessName::P2pool);
                 if !self.simple {
                     ui.separator();
                     input_args_field(

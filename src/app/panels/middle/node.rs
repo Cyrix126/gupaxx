@@ -29,8 +29,8 @@ use log::debug;
 
 use crate::components::gupax::FileWindow;
 use crate::disk::state::Node;
-use crate::helper::Process;
 use crate::helper::node::PubNodeApi;
+use crate::helper::{Process, ProcessName};
 use crate::{P2POOL_IN, P2POOL_LOG, P2POOL_OUT, SPACE};
 
 impl Node {
@@ -56,7 +56,7 @@ impl Node {
         egui::ScrollArea::vertical().show(ui, |ui| {
             let text = &api.lock().unwrap().output;
             ui.group(|ui| {
-                console(ui, text);
+                console(ui, text, &mut self.console_height, ProcessName::Node);
                 if !self.simple {
                     ui.separator();
                     input_args_field(
