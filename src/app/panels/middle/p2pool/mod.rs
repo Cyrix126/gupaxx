@@ -1,5 +1,5 @@
 use crate::app::panels::middle::common::console::{console, input_args_field, start_options_field};
-use crate::disk::state::{P2pool, State};
+use crate::disk::state::{P2pool, StartOptionsMode, State};
 use crate::helper::p2pool::PubP2poolApi;
 // Gupaxx - Fork of Gupax
 //
@@ -20,6 +20,7 @@ use crate::helper::p2pool::PubP2poolApi;
 use crate::{components::node::*, constants::*, helper::*};
 use log::*;
 
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 use super::common::header_tab::header_tab;
@@ -41,6 +42,8 @@ impl P2pool {
         buffer: &mut String,
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
+        backup_nodes: Option<Vec<PoolNode>>,
+        path: &Path,
     ) {
         //---------------------------------------------------------------------------------------------------- [Simple] Console
         // debug!("P2Pool Tab | Rendering [Console]");
@@ -69,11 +72,17 @@ impl P2pool {
                 }
             });
             if !self.simple {
+                let default_args_simple =
+                    self.start_options(path, &backup_nodes, StartOptionsMode::Simple);
+                let default_args_advanced =
+                    self.start_options(path, &backup_nodes, StartOptionsMode::Advanced);
                 start_options_field(
                     ui,
                     &mut self.arguments,
-                    r#"--wallet <...> --host <...>"#,
-                    P2POOL_ARGUMENTS,
+                    &default_args_simple,
+                    &default_args_advanced,
+                    Self::process_name().start_options_hint(),
+                    START_OPTIONS_HOVER,
                 );
             }
             debug!("P2Pool Tab | Rendering [Address]");
@@ -86,6 +95,9 @@ impl P2pool {
             if self.simple {
                 self.simple(ui, ping, &mut api_lock);
             } else {
+                if !self.arguments.is_empty() {
+                    ui.disable();
+                }
                 self.advanced(ui, node_vec);
             }
         });

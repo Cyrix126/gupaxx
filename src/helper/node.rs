@@ -31,7 +31,7 @@ use std::{
 use tokio::spawn;
 
 use crate::{
-    disk::state::Node,
+    disk::state::{Node, StartOptionsMode},
     helper::{
         ProcessName, ProcessSignal, ProcessState, check_died, check_user_input, signal_end,
         sleep_end_loop,
@@ -72,64 +72,69 @@ impl Helper {
             }
         }
     }
-    pub fn build_node_args(state: &crate::disk::state::Node) -> Vec<String> {
+    pub fn build_node_args(
+        state: &crate::disk::state::Node,
+        mode: StartOptionsMode,
+    ) -> Vec<String> {
         let mut args = Vec::with_capacity(500);
 
         // [Simple]
-        if state.simple {
-            // Build the node argument to be compatible with p2pool, prune by default
-            args.push("--zmq-pub".to_string());
-            args.push("tcp://127.0.0.1:18083".to_string()); // Local P2Pool (the default)
-            args.push("--out-peers".to_string());
-            args.push("32".to_string());
-            args.push("--in-peers".to_string());
-            args.push("64".to_string()); // Rig name
-            args.push("--add-priority-node".to_string());
-            args.push("p2pmd.xmrvsbeast.com:18080".to_string());
-            args.push("--add-priority-node".to_string());
-            args.push("nodes.hashvault.pro:18080".to_string());
-            args.push("--disable-dns-checkpoints".to_string());
-            args.push("--enable-dns-blocklist".to_string());
-            args.push("--sync-pruned-blocks".to_string());
-            args.push("--prune-blockchain".to_string());
-
-        // [Advanced]
-        } else if !state.arguments.is_empty() {
-            // This parses the input
-            // todo: set the state if user change port and token
-            for arg in state.arguments.split_whitespace() {
-                let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
-                args.push(arg.to_string());
-            }
-        } else {
-            let dir = if state.path_db.is_empty() {
-                String::from(".bitmonero")
-            } else {
-                state.path_db.to_string()
-            };
-            args.push("--data-dir".to_string());
-            args.push(dir);
-            args.push("--zmq-pub".to_string());
-            args.push(format!("tcp://{}:{}", state.zmq_ip, state.zmq_port));
-            args.push("--rpc-bind-ip".to_string());
-            args.push(state.api_ip.clone());
-            args.push("--rpc-bind-port".to_string());
-            args.push(state.api_port.to_string());
-            args.push("--out-peers".to_string());
-            args.push(state.out_peers.to_string());
-            args.push("--in-peers".to_string());
-            args.push(state.in_peers.to_string());
-            args.push("--log-level".to_string());
-            args.push(state.log_level.to_string());
-            args.push("--sync-pruned-blocks".to_string());
-            if state.dns_blocklist {
-                args.push("--enable-dns-blocklist".to_string());
-            }
-            if state.disable_dns_checkpoint {
+        match mode {
+            StartOptionsMode::Simple => {
+                // Build the node argument to be compatible with p2pool, prune by default
+                args.push("--zmq-pub".to_string());
+                args.push("tcp://127.0.0.1:18083".to_string()); // Local P2Pool (the default)
+                args.push("--out-peers".to_string());
+                args.push("32".to_string());
+                args.push("--in-peers".to_string());
+                args.push("64".to_string()); // Rig name
+                args.push("--add-priority-node".to_string());
+                args.push("p2pmd.xmrvsbeast.com:18080".to_string());
+                args.push("--add-priority-node".to_string());
+                args.push("nodes.hashvault.pro:18080".to_string());
                 args.push("--disable-dns-checkpoints".to_string());
-            }
-            if state.pruned {
+                args.push("--enable-dns-blocklist".to_string());
+                args.push("--sync-pruned-blocks".to_string());
                 args.push("--prune-blockchain".to_string());
+            }
+            StartOptionsMode::Advanced => {
+                let dir = if state.path_db.is_empty() {
+                    String::from(".bitmonero")
+                } else {
+                    state.path_db.to_string()
+                };
+                args.push("--data-dir".to_string());
+                args.push(dir);
+                args.push("--zmq-pub".to_string());
+                args.push(format!("tcp://{}:{}", state.zmq_ip, state.zmq_port));
+                args.push("--rpc-bind-ip".to_string());
+                args.push(state.api_ip.clone());
+                args.push("--rpc-bind-port".to_string());
+                args.push(state.api_port.to_string());
+                args.push("--out-peers".to_string());
+                args.push(state.out_peers.to_string());
+                args.push("--in-peers".to_string());
+                args.push(state.in_peers.to_string());
+                args.push("--log-level".to_string());
+                args.push(state.log_level.to_string());
+                args.push("--sync-pruned-blocks".to_string());
+                if state.dns_blocklist {
+                    args.push("--enable-dns-blocklist".to_string());
+                }
+                if state.disable_dns_checkpoint {
+                    args.push("--disable-dns-checkpoints".to_string());
+                }
+                if state.pruned {
+                    args.push("--prune-blockchain".to_string());
+                }
+            }
+            StartOptionsMode::Custom => {
+                // This parses the input
+                // todo: set the state if user change port and token
+                for arg in state.arguments.split_whitespace() {
+                    let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
+                    args.push(arg.to_string());
+                }
             }
         }
         args
@@ -175,8 +180,14 @@ impl Helper {
     // The "frontend" function that parses the arguments, and spawns either the [Simple] or [Advanced] Node watchdog thread.
     pub fn start_node(helper: &Arc<Mutex<Self>>, state: &Node, path: &Path) {
         helper.lock().unwrap().node.lock().unwrap().state = ProcessState::Middle;
-
-        let args = Self::build_node_args(state);
+        let mode = if state.simple {
+            StartOptionsMode::Simple
+        } else if !state.arguments.is_empty() {
+            StartOptionsMode::Custom
+        } else {
+            StartOptionsMode::Advanced
+        };
+        let args = Self::build_node_args(state, mode);
 
         // Print arguments & user settings to console
         crate::disk::print_dash(&format!("Node | Launch arguments: {:#?}", args));

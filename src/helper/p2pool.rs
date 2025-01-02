@@ -20,6 +20,7 @@ use super::Process;
 use crate::app::panels::middle::common::list_poolnode::PoolNode;
 use crate::components::node::RemoteNode;
 use crate::disk::state::P2pool;
+use crate::disk::state::StartOptionsMode;
 use crate::helper::ProcessName;
 use crate::helper::ProcessSignal;
 use crate::helper::ProcessState;
@@ -228,14 +229,17 @@ impl Helper {
         override_to_local_node: bool,
     ) {
         helper.lock().unwrap().p2pool.lock().unwrap().state = ProcessState::Middle;
-        let (args, api_path_local, api_path_network, api_path_pool, api_path_p2p) =
-            Self::build_p2pool_args_and_mutate_img(
-                helper,
-                state,
-                path,
-                &backup_hosts,
-                override_to_local_node,
-            );
+        let (api_path_local, api_path_network, api_path_pool, api_path_p2p) =
+            Self::mutate_img_p2pool(state, helper, path);
+        let mode = if state.simple {
+            StartOptionsMode::Simple
+        } else if !state.arguments.is_empty() {
+            StartOptionsMode::Custom
+        } else {
+            StartOptionsMode::Advanced
+        };
+        let args =
+            Self::build_p2pool_args(state, path, &backup_hosts, override_to_local_node, mode);
 
         // Print arguments & user settings to console
         crate::disk::print_dash(&format!(
@@ -288,57 +292,16 @@ impl Helper {
         let tail = &address[87..95];
         head.to_owned() + "..." + tail
     }
-
-    #[cold]
-    #[inline(never)]
-    // Takes in some [State/P2pool] and parses it to build the actual command arguments.
-    // Returns the [Vec] of actual arguments, and mutates the [ImgP2pool] for the main GUI thread
-    // It returns a value... and mutates a deeply nested passed argument... this is some pretty bad code...
-    pub fn build_p2pool_args_and_mutate_img(
-        helper: &Arc<Mutex<Self>>,
+    pub fn mutate_img_p2pool(
         state: &P2pool,
+        helper: &Arc<Mutex<Self>>,
         path: &Path,
-        backup_hosts: &Option<Vec<PoolNode>>,
-        override_to_local_node: bool,
-    ) -> (Vec<String>, PathBuf, PathBuf, PathBuf, PathBuf) {
-        let mut args = Vec::with_capacity(500);
+    ) -> (PathBuf, PathBuf, PathBuf, PathBuf) {
         let path = path.to_path_buf();
         let mut api_path = path;
         api_path.pop();
-
-        // [Simple]
-        if state.simple && (!state.local_node && !override_to_local_node) {
-            // Build the p2pool argument
+        if state.simple {
             let (ip, rpc, zmq) = RemoteNode::get_ip_rpc_zmq(&state.node); // Get: (IP, RPC, ZMQ)
-            args.push("--wallet".to_string());
-            args.push(state.address.clone()); // Wallet address
-            args.push("--host".to_string());
-            args.push(ip.to_string()); // IP Address
-            args.push("--rpc-port".to_string());
-            args.push(rpc.to_string()); // RPC Port
-            args.push("--zmq-port".to_string());
-            args.push(zmq.to_string()); // ZMQ Port
-            args.push("--data-api".to_string());
-            args.push(api_path.display().to_string()); // API Path
-            args.push("--local-api".to_string()); // Enable API
-            args.push("--no-color".to_string()); // Remove color escape sequences, Gupax terminal can't parse it :(
-            args.push("--mini".to_string()); // P2Pool Mini
-            args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
-
-            // Push other nodes if `backup_host`.
-            if let Some(nodes) = backup_hosts {
-                for node in nodes {
-                    if (node.ip(), node.port(), node.custom()) != (ip, rpc, zmq) {
-                        args.push("--host".to_string());
-                        args.push(node.ip().to_string());
-                        args.push("--rpc-port".to_string());
-                        args.push(node.port().to_string());
-                        args.push("--zmq-port".to_string());
-                        args.push(node.custom().to_string());
-                    }
-                }
-            }
-
             *helper.lock().unwrap().img_p2pool.lock().unwrap() = ImgP2pool {
                 mini: "P2Pool Mini".to_string(),
                 address: Self::head_tail_of_monero_address(&state.address),
@@ -348,68 +311,136 @@ impl Helper {
                 out_peers: "10".to_string(),
                 in_peers: "10".to_string(),
             };
-        } else if state.simple && (state.local_node || override_to_local_node) {
-            // use the local node
-            // Build the p2pool argument
-            args.push("--wallet".to_string());
-            args.push(state.address.clone()); // Wallet address
-            args.push("--host".to_string());
-            args.push("127.0.0.1".to_string()); // IP Address
-            args.push("--rpc-port".to_string());
-            args.push("18081".to_string()); // RPC Port
-            args.push("--zmq-port".to_string());
-            args.push("18083".to_string()); // ZMQ Port
-            args.push("--data-api".to_string());
-            args.push(api_path.display().to_string()); // API Path
-            args.push("--local-api".to_string()); // Enable API
-            args.push("--no-color".to_string()); // Remove color escape sequences, Gupax terminal can't parse it :(
-            args.push("--mini".to_string()); // P2Pool Mini
-            args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
-
+        } else if !state.arguments.is_empty() {
+            // This parses the input and attempts to fill out
+            // the [ImgP2pool]... This is pretty bad code...
+            let mut last = "";
+            let lock = helper.lock().unwrap();
+            let mut p2pool_image = lock.img_p2pool.lock().unwrap();
+            let mut mini = false;
+            for arg in state.arguments.split_whitespace() {
+                match last {
+                    "--mini" => {
+                        mini = true;
+                        p2pool_image.mini = "P2Pool Mini".to_string();
+                    }
+                    "--wallet" => p2pool_image.address = Self::head_tail_of_monero_address(arg),
+                    "--host" => p2pool_image.host = arg.to_string(),
+                    "--rpc-port" => p2pool_image.rpc = arg.to_string(),
+                    "--zmq-port" => p2pool_image.zmq = arg.to_string(),
+                    "--out-peers" => p2pool_image.out_peers = arg.to_string(),
+                    "--in-peers" => p2pool_image.in_peers = arg.to_string(),
+                    "--data-api" => api_path = PathBuf::from(arg),
+                    _ => (),
+                }
+                if !mini {
+                    p2pool_image.mini = "P2Pool Main".to_string();
+                }
+                let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
+                last = arg;
+            }
+        } else {
             *helper.lock().unwrap().img_p2pool.lock().unwrap() = ImgP2pool {
-                mini: "P2Pool Mini".to_string(),
+                mini: if state.mini {
+                    "P2Pool Mini".to_string()
+                } else {
+                    "P2Pool Main".to_string()
+                },
                 address: Self::head_tail_of_monero_address(&state.address),
-                host: "Local node".to_string(),
-                rpc: "18081".to_string(),
-                zmq: "18083".to_string(),
-                out_peers: "10".to_string(),
-                in_peers: "10".to_string(),
+                host: state.selected_node.ip.to_string(),
+                rpc: state.selected_node.rpc.to_string(),
+                zmq: state.selected_node.zmq_rig.to_string(),
+                out_peers: state.out_peers.to_string(),
+                in_peers: state.in_peers.to_string(),
             };
         }
-        // [Advanced]
-        else {
-            // Overriding command arguments
-            if !state.arguments.is_empty() {
-                // This parses the input and attempts to fill out
-                // the [ImgP2pool]... This is pretty bad code...
-                let mut last = "";
-                let lock = helper.lock().unwrap();
-                let mut p2pool_image = lock.img_p2pool.lock().unwrap();
-                let mut mini = false;
-                for arg in state.arguments.split_whitespace() {
-                    match last {
-                        "--mini" => {
-                            mini = true;
-                            p2pool_image.mini = "P2Pool Mini".to_string();
+        let mut api_path_local = api_path.clone();
+        let mut api_path_network = api_path.clone();
+        let mut api_path_pool = api_path.clone();
+        let mut api_path_p2p = api_path.clone();
+        api_path_local.push(P2POOL_API_PATH_LOCAL);
+        api_path_network.push(P2POOL_API_PATH_NETWORK);
+        api_path_pool.push(P2POOL_API_PATH_POOL);
+        api_path_p2p.push(P2POOL_API_PATH_P2P);
+        (
+            api_path_local,
+            api_path_network,
+            api_path_pool,
+            api_path_p2p,
+        )
+    }
+    #[cold]
+    #[inline(never)]
+    // Takes in some [State/P2pool] and parses it to build the actual command arguments.
+    // Returns the [Vec] of actual arguments, and mutates the [ImgP2pool] for the main GUI thread
+    // It returns a value... and mutates a deeply nested passed argument... this is some pretty bad code...
+    pub fn build_p2pool_args(
+        state: &P2pool,
+        path: &Path,
+        backup_hosts: &Option<Vec<PoolNode>>,
+        override_to_local_node: bool,
+        // Allows to provide a different mode without mutating the state
+        mode: StartOptionsMode,
+    ) -> Vec<String> {
+        let mut args = Vec::with_capacity(500);
+        let path = path.to_path_buf();
+        let mut api_path = path;
+        api_path.pop();
+
+        // [Simple]
+        match mode {
+            StartOptionsMode::Simple if !state.local_node && !override_to_local_node => {
+                // Build the p2pool argument
+                let (ip, rpc, zmq) = RemoteNode::get_ip_rpc_zmq(&state.node); // Get: (IP, RPC, ZMQ)
+                args.push("--wallet".to_string());
+                args.push(state.address.clone()); // Wallet address
+                args.push("--host".to_string());
+                args.push(ip.to_string()); // IP Address
+                args.push("--rpc-port".to_string());
+                args.push(rpc.to_string()); // RPC Port
+                args.push("--zmq-port".to_string());
+                args.push(zmq.to_string()); // ZMQ Port
+                args.push("--data-api".to_string());
+                args.push(api_path.display().to_string()); // API Path
+                args.push("--local-api".to_string()); // Enable API
+                args.push("--no-color".to_string()); // Remove color escape sequences, Gupax terminal can't parse it :(
+                args.push("--mini".to_string()); // P2Pool Mini
+                args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
+
+                // Push other nodes if `backup_host`.
+                if let Some(nodes) = backup_hosts {
+                    for node in nodes {
+                        if (node.ip(), node.port(), node.custom()) != (ip, rpc, zmq) {
+                            args.push("--host".to_string());
+                            args.push(node.ip().to_string());
+                            args.push("--rpc-port".to_string());
+                            args.push(node.port().to_string());
+                            args.push("--zmq-port".to_string());
+                            args.push(node.custom().to_string());
                         }
-                        "--wallet" => p2pool_image.address = Self::head_tail_of_monero_address(arg),
-                        "--host" => p2pool_image.host = arg.to_string(),
-                        "--rpc-port" => p2pool_image.rpc = arg.to_string(),
-                        "--zmq-port" => p2pool_image.zmq = arg.to_string(),
-                        "--out-peers" => p2pool_image.out_peers = arg.to_string(),
-                        "--in-peers" => p2pool_image.in_peers = arg.to_string(),
-                        "--data-api" => api_path = PathBuf::from(arg),
-                        _ => (),
                     }
-                    if !mini {
-                        p2pool_image.mini = "P2Pool Main".to_string();
-                    }
-                    let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
-                    args.push(arg.to_string());
-                    last = arg;
                 }
-            // Else, build the argument
-            } else {
+            }
+            StartOptionsMode::Simple if state.local_node || override_to_local_node => {
+                // use the local node
+                // Build the p2pool argument
+                args.push("--wallet".to_string());
+                args.push(state.address.clone()); // Wallet address
+                args.push("--host".to_string());
+                args.push("127.0.0.1".to_string()); // IP Address
+                args.push("--rpc-port".to_string());
+                args.push("18081".to_string()); // RPC Port
+                args.push("--zmq-port".to_string());
+                args.push("18083".to_string()); // ZMQ Port
+                args.push("--data-api".to_string());
+                args.push(api_path.display().to_string()); // API Path
+                args.push("--local-api".to_string()); // Enable API
+                args.push("--no-color".to_string()); // Remove color escape sequences, Gupax terminal can't parse it :(
+                args.push("--mini".to_string()); // P2Pool Mini
+                args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
+            }
+            StartOptionsMode::Advanced => {
+                // build the argument
                 let ip = if state.ip == "localhost" {
                     "127.0.0.1"
                 } else {
@@ -456,37 +487,14 @@ impl Helper {
                         }
                     }
                 }
-
-                *helper.lock().unwrap().img_p2pool.lock().unwrap() = ImgP2pool {
-                    mini: if state.mini {
-                        "P2Pool Mini".to_string()
-                    } else {
-                        "P2Pool Main".to_string()
-                    },
-                    address: Self::head_tail_of_monero_address(&state.address),
-                    host: state.selected_node.ip.to_string(),
-                    rpc: state.selected_node.rpc.to_string(),
-                    zmq: state.selected_node.zmq_rig.to_string(),
-                    out_peers: state.out_peers.to_string(),
-                    in_peers: state.in_peers.to_string(),
-                };
             }
+            StartOptionsMode::Custom => {
+                // Overriding command arguments
+                args.push(state.arguments.split_whitespace().collect());
+            }
+            _ => (),
         }
-        let mut api_path_local = api_path.clone();
-        let mut api_path_network = api_path.clone();
-        let mut api_path_pool = api_path.clone();
-        let mut api_path_p2p = api_path.clone();
-        api_path_local.push(P2POOL_API_PATH_LOCAL);
-        api_path_network.push(P2POOL_API_PATH_NETWORK);
-        api_path_pool.push(P2POOL_API_PATH_POOL);
-        api_path_p2p.push(P2POOL_API_PATH_P2P);
-        (
-            args,
-            api_path_local,
-            api_path_network,
-            api_path_pool,
-            api_path_p2p,
-        )
+        args
     }
 
     #[cold]

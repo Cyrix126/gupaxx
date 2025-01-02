@@ -22,7 +22,7 @@ use crate::app::panels::middle::common::state_edit_field::{
     monero_address_field, slider_state_field,
 };
 use crate::constants::*;
-use crate::disk::state::Xmrig;
+use crate::disk::state::{StartOptionsMode, Xmrig};
 use crate::helper::xrig::xmrig::PubXmrigApi;
 use crate::helper::{Process, ProcessName};
 use crate::miscs::height_txt_before_button;
@@ -30,6 +30,7 @@ use crate::regex::REGEXES;
 use egui::{Checkbox, Ui, vec2};
 use log::*;
 
+use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 use super::common::list_poolnode::PoolNode;
@@ -46,6 +47,7 @@ impl Xmrig {
         buffer: &mut String,
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
+        path: &Path,
     ) {
         header_tab(
             ui,
@@ -72,14 +74,16 @@ impl Xmrig {
             });
             if !self.simple {
                 debug!("XMRig Tab | Rendering [Arguments]");
-                ui.horizontal(|ui| {
-                    start_options_field(
-                        ui,
-                        &mut self.arguments,
-                        r#"--url <...> --user <...> --config <...>"#,
-                        XMRIG_ARGUMENTS,
-                    );
-                });
+                let default_args_simple = self.start_options(path, StartOptionsMode::Simple);
+                let default_args_advanced = self.start_options(path, StartOptionsMode::Advanced);
+                start_options_field(
+                    ui,
+                    &mut self.arguments,
+                    &default_args_simple,
+                    &default_args_advanced,
+                    Self::process_name().start_options_hint(),
+                    START_OPTIONS_HOVER,
+                );
                 ui.add_enabled_ui(self.arguments.is_empty(), |ui| {
                     debug!("XMRig Tab | Rendering [Address]");
                     monero_address_field(&mut self.address, ui, XMRIG_ADDRESS);
@@ -108,6 +112,9 @@ impl Xmrig {
                 );
             });
             if !self.simple {
+                if !self.arguments.is_empty() {
+                    ui.disable();
+                }
                 egui::ScrollArea::horizontal()
                     .id_salt("xmrig_horizontal")
                     .show(ui, |ui| {

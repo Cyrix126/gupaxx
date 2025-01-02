@@ -29,6 +29,7 @@ use std::{
 };
 use tokio::spawn;
 
+use crate::disk::state::StartOptionsMode;
 use crate::human::{HumanNumber, HumanTime};
 use crate::miscs::client;
 use crate::{
@@ -125,90 +126,91 @@ impl Helper {
             }
         }
     }
-    pub fn build_xp_args(state: &crate::disk::state::XmrigProxy) -> Vec<String> {
+    pub fn build_xp_args(
+        state: &crate::disk::state::XmrigProxy,
+        mode: StartOptionsMode,
+    ) -> Vec<String> {
         let mut args = Vec::with_capacity(500);
         let api_ip;
         let api_port;
         let ip;
         let port;
-        // [Simple]
-        if state.simple {
-            // Build the xmrig argument
-            let rig = if state.simple_rig.is_empty() {
-                GUPAX_VERSION_UNDERSCORE.to_string()
-            } else {
-                state.simple_rig.clone()
-            }; // Rig name
-            args.push("-o".to_string());
-            args.push("127.0.0.1:3333".to_string()); // Local P2Pool (the default)
-            args.push("-b".to_string());
-            args.push("0.0.0.0:3355".to_string());
-            args.push("--user".to_string());
-            args.push(rig); // Rig name
-            args.push("--no-color".to_string()); // No color
-            args.push("--http-host".to_string());
-            args.push("127.0.0.1".to_string()); // HTTP API IP
-            args.push("--http-port".to_string());
-            args.push("18089".to_string()); // HTTP API Port
-
-        // [Advanced]
-        } else if !state.arguments.is_empty() {
-            // custom args from user input
-            // This parses the input
-            // todo: set the state if user change port and token
-            for arg in state.arguments.split_whitespace() {
-                let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
-                args.push(arg.to_string());
+        match mode {
+            StartOptionsMode::Simple => {
+                // Build the xmrig argument
+                let rig = if state.simple_rig.is_empty() {
+                    GUPAX_VERSION_UNDERSCORE.to_string()
+                } else {
+                    state.simple_rig.clone()
+                }; // Rig name
+                args.push("-o".to_string());
+                args.push("127.0.0.1:3333".to_string()); // Local P2Pool (the default)
+                args.push("-b".to_string());
+                args.push("0.0.0.0:3355".to_string());
+                args.push("--user".to_string());
+                args.push(rig); // Rig name
+                args.push("--no-color".to_string()); // No color
+                args.push("--http-host".to_string());
+                args.push("127.0.0.1".to_string()); // HTTP API IP
+                args.push("--http-port".to_string());
+                args.push("18089".to_string()); // HTTP API Port
             }
-        } else {
-            // XMRig doesn't understand [localhost]
-            let p2pool_ip = if state.p2pool_ip == "localhost" || state.p2pool_ip.is_empty() {
-                "127.0.0.1"
-            } else {
-                &state.p2pool_ip
-            };
-            api_ip = if state.api_ip == "localhost" || state.api_ip.is_empty() {
-                "127.0.0.1".to_string()
-            } else {
-                state.api_ip.to_string()
-            };
-            api_port = if state.api_port.is_empty() {
-                "18089".to_string()
-            } else {
-                state.api_port.to_string()
-            };
-            ip = if state.api_ip == "localhost" || state.ip.is_empty() {
-                "0.0.0.0".to_string()
-            } else {
-                state.ip.to_string()
-            };
+            StartOptionsMode::Advanced => {
+                // XMRig doesn't understand [localhost]
+                let p2pool_ip = if state.p2pool_ip == "localhost" || state.p2pool_ip.is_empty() {
+                    "127.0.0.1"
+                } else {
+                    &state.p2pool_ip
+                };
+                api_ip = if state.api_ip == "localhost" || state.api_ip.is_empty() {
+                    "127.0.0.1".to_string()
+                } else {
+                    state.api_ip.to_string()
+                };
+                api_port = if state.api_port.is_empty() {
+                    "18089".to_string()
+                } else {
+                    state.api_port.to_string()
+                };
+                ip = if state.api_ip == "localhost" || state.ip.is_empty() {
+                    "0.0.0.0".to_string()
+                } else {
+                    state.ip.to_string()
+                };
 
-            port = if state.port.is_empty() {
-                "3355".to_string()
-            } else {
-                state.port.to_string()
-            };
-            let p2pool_url = format!("{}:{}", p2pool_ip, state.p2pool_port); // Combine IP:Port into one string
-            let bind_url = format!("{}:{}", ip, port); // Combine IP:Port into one string
-            args.push("--user".to_string());
-            args.push(state.address.clone()); // Wallet
-            args.push("--rig-id".to_string());
-            args.push(state.rig.to_string()); // Rig ID
-            args.push("-o".to_string());
-            args.push(p2pool_url.clone()); // IP/Port
-            args.push("-b".to_string());
-            args.push(bind_url.clone()); // IP/Port
-            args.push("--http-host".to_string());
-            args.push(api_ip.to_string()); // HTTP API IP
-            args.push("--http-port".to_string());
-            args.push(api_port.to_string()); // HTTP API Port
-            args.push("--no-color".to_string()); // No color escape codes
-            if state.tls {
-                args.push("--tls".to_string());
-            } // TLS
-            if state.keepalive {
-                args.push("--keepalive".to_string());
-            } // Keepalive
+                port = if state.port.is_empty() {
+                    "3355".to_string()
+                } else {
+                    state.port.to_string()
+                };
+                let p2pool_url = format!("{}:{}", p2pool_ip, state.p2pool_port); // Combine IP:Port into one string
+                let bind_url = format!("{}:{}", ip, port); // Combine IP:Port into one string
+                args.push("--user".to_string());
+                args.push(state.address.clone()); // Wallet
+                args.push("--rig-id".to_string());
+                args.push(state.rig.to_string()); // Rig ID
+                args.push("-o".to_string());
+                args.push(p2pool_url.clone()); // IP/Port
+                args.push("-b".to_string());
+                args.push(bind_url.clone()); // IP/Port
+                args.push("--http-host".to_string());
+                args.push(api_ip.to_string()); // HTTP API IP
+                args.push("--http-port".to_string());
+                args.push(api_port.to_string()); // HTTP API Port
+                args.push("--no-color".to_string()); // No color escape codes
+                if state.tls {
+                    args.push("--tls".to_string());
+                } // TLS
+                if state.keepalive {
+                    args.push("--keepalive".to_string());
+                } // Keepalive
+            }
+            StartOptionsMode::Custom => {
+                for arg in state.arguments.split_whitespace() {
+                    let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
+                    args.push(arg.to_string());
+                }
+            }
         }
         args.push(format!("--http-access-token={}", state.token)); // HTTP API Port
         args.push("--http-no-restricted".to_string());
@@ -267,7 +269,14 @@ impl Helper {
     ) {
         helper.lock().unwrap().xmrig_proxy.lock().unwrap().state = ProcessState::Middle;
 
-        let args = Self::build_xp_args(state_proxy);
+        let mode = if state_proxy.simple {
+            StartOptionsMode::Simple
+        } else if !state_proxy.arguments.is_empty() {
+            StartOptionsMode::Custom
+        } else {
+            StartOptionsMode::Advanced
+        };
+        let args = Self::build_xp_args(state_proxy, mode);
         // Print arguments & user settings to console
         crate::disk::print_dash(&format!("XMRig-Proxy | Launch arguments: {:#?}", args));
         info!("XMRig-Proxy | Using path: [{}]", path.display());
