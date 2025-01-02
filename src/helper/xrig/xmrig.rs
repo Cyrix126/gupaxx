@@ -1,4 +1,5 @@
 use crate::constants::*;
+use crate::disk::state::StartOptionsMode;
 use crate::helper::xrig::update_xmrig_config;
 use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
 use crate::helper::{Process, arc_mut, check_died, check_user_input, sleep, sleep_end_loop};
@@ -180,8 +181,15 @@ impl Helper {
         sudo: Arc<Mutex<SudoState>>,
     ) {
         helper.lock().unwrap().xmrig.lock().unwrap().state = ProcessState::Middle;
-
-        let (args, api_ip_port) = Self::build_xmrig_args_and_mutate_img(helper, state, path);
+        let api_ip_port = Self::mutate_img_xmrig(helper, state);
+        let mode = if state.simple {
+            StartOptionsMode::Simple
+        } else if !state.arguments.is_empty() {
+            StartOptionsMode::Custom
+        } else {
+            StartOptionsMode::Advanced
+        };
+        let args = Self::build_xmrig_args(state, path, mode);
         // Print arguments & user settings to console
         crate::disk::print_dash(&format!("XMRig | Launch arguments: {:#?}", args));
         info!("XMRig | Using path: [{}]", path.display());
@@ -213,20 +221,76 @@ impl Helper {
             );
         });
     }
+    pub fn mutate_img_xmrig(
+        helper: &Arc<Mutex<Self>>,
+        state: &crate::disk::state::Xmrig,
+    ) -> String {
+        let mut api_ip = String::with_capacity(15);
+        let mut api_port = String::with_capacity(5);
+        if state.simple {
+            *helper.lock().unwrap().img_xmrig.lock().unwrap() = ImgXmrig {
+                threads: state.current_threads.to_string(),
+                url: "127.0.0.1:3333 (Local P2Pool)".to_string(),
+            };
+        } else if !state.arguments.is_empty() {
+            // This parses the input and attempts to fill out
+            // the [ImgXmrig]... This is pretty bad code...
+            let mut last = "";
+            let lock = helper.lock().unwrap();
+            let mut xmrig_image = lock.img_xmrig.lock().unwrap();
+            for arg in state.arguments.split_whitespace() {
+                match last {
+                    "--threads" => xmrig_image.threads = arg.to_string(),
+                    "--url" => xmrig_image.url = arg.to_string(),
+                    "--http-host" => {
+                        api_ip = if arg == "localhost" {
+                            "127.0.0.1".to_string()
+                        } else {
+                            arg.to_string()
+                        }
+                    }
+                    "--http-port" => api_port = arg.to_string(),
+                    _ => (),
+                }
+                last = arg;
+            }
+        } else {
+            let ip = if state.ip == "localhost" || state.ip.is_empty() {
+                "127.0.0.1"
+            } else {
+                &state.ip
+            };
+            api_ip = if state.api_ip == "localhost" || state.api_ip.is_empty() {
+                "127.0.0.1".to_string()
+            } else {
+                state.api_ip.to_string()
+            };
+            api_port = if state.api_port.is_empty() {
+                "18088".to_string()
+            } else {
+                state.api_port.to_string()
+            };
+            let url = format!("{}:{}", ip, state.port); // Combine IP:Port into one string
+            *helper.lock().unwrap().img_xmrig.lock().unwrap() = ImgXmrig {
+                url: url.clone(),
+                threads: state.current_threads.to_string(),
+            };
+        }
 
+        format!("{}:{}", api_ip, api_port)
+    }
     #[cold]
     #[inline(never)]
     // Takes in some [State/Xmrig] and parses it to build the actual command arguments.
     // Returns the [Vec] of actual arguments, and mutates the [ImgXmrig] for the main GUI thread
     // It returns a value... and mutates a deeply nested passed argument... this is some pretty bad code...
-    pub fn build_xmrig_args_and_mutate_img(
-        helper: &Arc<Mutex<Self>>,
+    pub fn build_xmrig_args(
         state: &crate::disk::state::Xmrig,
         path: &std::path::Path,
-    ) -> (Vec<String>, String) {
+        // Allows to provide a different mode without mutating the state
+        mode: StartOptionsMode,
+    ) -> Vec<String> {
         let mut args = Vec::with_capacity(500);
-        let mut api_ip = String::with_capacity(15);
-        let mut api_port = String::with_capacity(5);
         let path = path.to_path_buf();
         // The actual binary we're executing is [sudo], technically
         // the XMRig path is just an argument to sudo, so add it.
@@ -237,81 +301,43 @@ impl Helper {
             args.push("--".to_string());
             args.push(path.display().to_string());
         }
-
-        // [Simple]
-        if state.simple {
-            // Build the xmrig argument
-            let rig = if state.simple_rig.is_empty() {
-                GUPAX_VERSION_UNDERSCORE.to_string()
-            } else {
-                state.simple_rig.clone()
-            }; // Rig name
-            args.push("--url".to_string());
-            args.push("127.0.0.1:3333".to_string()); // Local P2Pool (the default)
-            args.push("--threads".to_string());
-            args.push(state.current_threads.to_string()); // Threads
-            args.push("--user".to_string());
-            args.push(rig); // Rig name
-            args.push("--no-color".to_string()); // No color
-            args.push("--http-host".to_string());
-            args.push("127.0.0.1".to_string()); // HTTP API IP
-            args.push("--http-port".to_string());
-            args.push("18088".to_string()); // HTTP API Port
-            if state.pause != 0 {
-                args.push("--pause-on-active".to_string());
-                args.push(state.pause.to_string());
-            } // Pause on active
-            *helper.lock().unwrap().img_xmrig.lock().unwrap() = ImgXmrig {
-                threads: state.current_threads.to_string(),
-                url: "127.0.0.1:3333 (Local P2Pool)".to_string(),
-            };
-            api_ip = "127.0.0.1".to_string();
-            api_port = "18088".to_string();
-
-        // [Advanced]
-        } else {
-            // Overriding command arguments
-            if !state.arguments.is_empty() {
-                // This parses the input and attempts to fill out
-                // the [ImgXmrig]... This is pretty bad code...
-                let mut last = "";
-                let lock = helper.lock().unwrap();
-                let mut xmrig_image = lock.img_xmrig.lock().unwrap();
-                for arg in state.arguments.split_whitespace() {
-                    match last {
-                        "--threads" => xmrig_image.threads = arg.to_string(),
-                        "--url" => xmrig_image.url = arg.to_string(),
-                        "--http-host" => {
-                            api_ip = if arg == "localhost" {
-                                "127.0.0.1".to_string()
-                            } else {
-                                arg.to_string()
-                            }
-                        }
-                        "--http-port" => api_port = arg.to_string(),
-                        _ => (),
-                    }
-                    args.push(if arg == "localhost" {
-                        "127.0.0.1".to_string()
-                    } else {
-                        arg.to_string()
-                    });
-                    last = arg;
-                }
-            // Else, build the argument
-            } else {
+        match mode {
+            StartOptionsMode::Simple => {
+                // Build the xmrig argument
+                let rig = if state.simple_rig.is_empty() {
+                    GUPAX_VERSION_UNDERSCORE.to_string()
+                } else {
+                    state.simple_rig.clone()
+                }; // Rig name
+                args.push("--url".to_string());
+                args.push("127.0.0.1:3333".to_string()); // Local P2Pool (the default)
+                args.push("--threads".to_string());
+                args.push(state.current_threads.to_string()); // Threads
+                args.push("--user".to_string());
+                args.push(rig); // Rig name
+                args.push("--no-color".to_string()); // No color
+                args.push("--http-host".to_string());
+                args.push("127.0.0.1".to_string()); // HTTP API IP
+                args.push("--http-port".to_string());
+                args.push("18088".to_string()); // HTTP API Port
+                if state.pause != 0 {
+                    args.push("--pause-on-active".to_string());
+                    args.push(state.pause.to_string());
+                } // Pause on active
+            }
+            StartOptionsMode::Advanced => {
                 // XMRig doesn't understand [localhost]
                 let ip = if state.ip == "localhost" || state.ip.is_empty() {
                     "127.0.0.1"
                 } else {
                     &state.ip
                 };
-                api_ip = if state.api_ip == "localhost" || state.api_ip.is_empty() {
+                let api_ip = if state.api_ip == "localhost" || state.api_ip.is_empty() {
                     "127.0.0.1".to_string()
                 } else {
                     state.api_ip.to_string()
                 };
-                api_port = if state.api_port.is_empty() {
+                let api_port = if state.api_port.is_empty() {
                     "18088".to_string()
                 } else {
                     state.api_port.to_string()
@@ -340,15 +366,21 @@ impl Helper {
                     args.push("--pause-on-active".to_string());
                     args.push(state.pause.to_string());
                 } // Pause on active
-                *helper.lock().unwrap().img_xmrig.lock().unwrap() = ImgXmrig {
-                    url: url.clone(),
-                    threads: state.current_threads.to_string(),
-                };
+            }
+            StartOptionsMode::Custom => {
+                // This parses the input and attempts to fill out
+                // the [ImgXmrig]... This is pretty bad code...
+                // custom args from user input
+                // This parses the input
+                for arg in state.arguments.split_whitespace() {
+                    let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
+                    args.push(arg.to_string());
+                }
             }
         }
         args.push(format!("--http-access-token={}", state.token)); // HTTP API Port
         args.push("--http-no-restricted".to_string());
-        (args, format!("{}:{}", api_ip, api_port))
+        args
     }
 
     // We actually spawn [sudo] on Unix, with XMRig being the argument.

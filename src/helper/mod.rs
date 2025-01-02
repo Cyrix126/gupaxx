@@ -338,6 +338,14 @@ impl ProcessName {
             ProcessName::Xvb => None,
         }
     }
+    pub const fn start_options_hint(&self) -> &str {
+        match self {
+            ProcessName::Node => NODE_START_OPTIONS_HINT,
+            ProcessName::P2pool => P2POOL_START_OPTIONS_HINT,
+            ProcessName::Xmrig | ProcessName::XmrigProxy => XMRIG_START_OPTIONS_HINT,
+            ProcessName::Xvb => "",
+        }
+    }
 }
 
 impl std::fmt::Display for ProcessState {

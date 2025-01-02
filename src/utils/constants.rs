@@ -127,9 +127,6 @@ pub const XMRIG_PROXY_FAILED: &str = "XMRig-Proxy is offline and failed when exi
 pub const XMRIG_PROXY_MIDDLE: &str = "XMRig-Proxy is in the middle of (re)starting/stopping";
 pub const XMRIG_PROXY_NOT_MINING: &str = "XMRig-Proxy is online, but not mining to any pool";
 pub const XMRIG_PROXY_REDIRECT: &str = "point local xmrig instance on this proxy instead of the p2pool instance (recommended if using XvB)";
-pub const XMRIG_PROXY_ARGUMENTS: &str = r#"WARNING: Use [--no-color] and make sure to set [--http-host <IP>] & [--http-port <PORT>] so that the [Status] tab can work!
-
-Start XMRig-Proxy with these arguments"#;
 pub const XMRIG_PROXY_INPUT: &str = "Send a command to XMRig-Proxy";
 pub const XMRIG_PROXY_SIMPLE: &str = r#"Use simple XMRig-Proxy settings:
   - Mine to local P2Pool (localhost:3333)
@@ -164,6 +161,14 @@ If unchecked (default):\n
 The algorithm will watch the HR estimated by the stratum data of the p2pool node, which is more accurate but will only take into account the miners that are using your P2Pool node.
 ";
 pub const XVB_P2POOL_BUFFER: &str = "Set the % amount of additional HR to send to p2pool. Will reduce (if positive) or augment (if negative) the chances to miss the p2pool window";
+
+pub const START_OPTIONS_HOVER: &str = "Start the process with theses options.\nThe \"Reset to simple/advanced options\" are arguments constructed from the settings.\nYou can replace them with your own";
+pub const NODE_START_OPTIONS_HINT: &str = "--zmq-pub tcp://<ip>:port --out-peers 32 --in-peers 64 --add-priority-node <ip>:<port> --disable-dns-checkpoints --enable-dns-blocklist --sync-pruned-blocks --prune-blockchain";
+pub const P2POOL_START_OPTIONS_HINT: &str = "--wallet <primary address> --host <IP> --rpc-port <PORT> --zmq-port <PORT> --data-api <PATH> --local-api --no-color --mini --light-mode";
+// also valid for xmrig-proxy
+pub const XMRIG_START_OPTIONS_HINT: &str =
+    "-o <IP:PORT> -t <THREADS> --user <RIG> --no-color --http-host <BIND> --http-port <PORT>";
+
 // This is the typical space added when using
 // [ui.separator()] or [ui.group()]
 // Used for subtracting the width/height so
@@ -410,9 +415,7 @@ Running and using your own local Monero node improves privacy and ensures your c
 For a simple guide, see the [Running a Local Monero Node] section on Gupaxx s GitHub by clicking this message."#;
 
 pub const P2POOL_INPUT: &str = "Send a command to P2Pool";
-pub const P2POOL_ARGUMENTS: &str = r#"WARNING: Use [--no-color] and make sure to set [--data-api <PATH>] & [--local-api] so that the [Status] tab can work!
 
-Start P2Pool with these arguments and override all below settings"#;
 pub const P2POOL_SIMPLE: &str = r#"Use simple P2Pool settings:
   - Remote remote Monero node
   - Default P2Pool settings + Mini
@@ -441,7 +444,6 @@ pub const LIST_SAVE: &str = "Save the current values to the already existing ent
 pub const LIST_DELETE: &str = "Delete the currently selected entry";
 pub const LIST_CLEAR: &str = "Clear all current values";
 // Node
-pub const NODE_ARGUMENTS: &str = r#"WARNING: Make sure to set [--zmq-pub <tcp://127.0.0.1:18081>] so that P2Pool can connect to it !"#;
 pub const NODE_INPUT: &str = "Send a command to Node";
 pub const NODE_PRUNNING: &str = "Reduce the database size to a third. Does not have any security/privacy impact.If you have enough storage, a full node is preferable to make the network even more decentralized.";
 #[cfg(not(windows))]
@@ -492,9 +494,7 @@ pub const XMRIG_ADVANCED: &str = r#"Use advanced XMRig settings:
   - TLS setting
   - Keepalive setting"#;
 pub const XMRIG_INPUT: &str = "Send a command to XMRig";
-pub const XMRIG_ARGUMENTS: &str = r#"WARNING: Use [--no-color] and make sure to set [--http-host <IP>] & [--http-port <PORT>] so that the [Status] tab can work!
 
-Start XMRig with these arguments and override all below settings"#;
 pub const XMRIG_ADDRESS: &str = "Specify which Monero address to payout to. This does nothing if mining to P2Pool since the address being paid out to will be the one P2Pool started with. This doubles as a rig identifier for P2Pool and some pools.";
 pub const XMRIG_NAME: &str = "Add a unique name to identify this pool; Only [A-Za-z0-9-_.] and spaces allowed; Max length = 30 characters";
 pub const XMRIG_IP: &str = "Specify the pool IP to connect to with XMRig; It must be a valid IPv4 address or a valid domain name; Max length = 255 characters";

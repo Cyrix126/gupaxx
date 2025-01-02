@@ -17,12 +17,11 @@
 
 use std::sync::{Arc, Mutex};
 
-use egui::{Label, TextEdit, TextStyle, TextWrapMode, Ui};
+use egui::{Button, TextEdit, TextStyle, TextWrapMode, Ui};
 
 use crate::{
     DARK_GRAY,
     helper::{Process, ProcessName},
-    miscs::height_txt_before_button,
     regex::num_lines,
 };
 
@@ -86,20 +85,53 @@ pub fn input_args_field(
 }
 
 // Command arguments
-pub fn start_options_field(ui: &mut Ui, arguments: &mut String, hint: &str, hover: &str) {
+pub fn start_options_field(
+    ui: &mut Ui,
+    arguments: &mut String,
+    default_args_simple: &str,
+    default_args_advanced: &str,
+    hint: &str,
+    hover: &str,
+) {
     ui.group(|ui| {
+        ui.label("Start options:");
+        ui.style_mut().wrap_mode = Some(TextWrapMode::Wrap);
+        ui.style_mut().spacing.text_edit_width = ui.available_width();
+        ui.add(
+            TextEdit::multiline(arguments)
+                .hint_text(hint)
+                .desired_rows(1),
+        )
+        .on_hover_text(hover);
         ui.horizontal(|ui| {
-            ui.add_sized(
-                [0.0, height_txt_before_button(ui, &TextStyle::Body)],
-                Label::new("Command arguments:"),
-            );
-            ui.style_mut().spacing.text_edit_width = ui.available_width();
-            ui.add(TextEdit::hint_text(TextEdit::singleline(arguments), hint))
-                .on_hover_text(hover);
-            arguments.truncate(1024);
-        })
+            if ui
+                .add_enabled(
+                    default_args_simple != arguments,
+                    Button::new(" Reset to Simple options "),
+                )
+                .on_hover_text("Reset the start options to arguments used for simple mode")
+                .clicked()
+            {
+                *arguments = default_args_simple.to_string();
+            }
+
+            if ui
+                .add_enabled(
+                    default_args_advanced != arguments,
+                    Button::new("Reset to Advanced options"),
+                )
+                .on_hover_text("Reset the start options to arguments used for advanced mode")
+                .clicked()
+            {
+                *arguments = default_args_advanced.to_string();
+            }
+            if ui
+                .add_enabled(!arguments.is_empty(), Button::new("Clear"))
+                .on_hover_text("Clear custom start options to use the advanced settings")
+                .clicked()
+            {
+                *arguments = String::new();
+            }
+        });
     });
-    if !arguments.is_empty() {
-        ui.disable();
-    }
 }

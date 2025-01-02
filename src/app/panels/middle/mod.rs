@@ -101,6 +101,7 @@ impl crate::app::App {
                 }
                 Tab::P2pool => {
                     debug!("App | Entering [P2Pool] Tab");
+                    let backup_hosts = self.gather_backup_hosts();
                     crate::disk::state::P2pool::show(
                         &mut self.state.p2pool,
                         &mut self.node_vec,
@@ -111,6 +112,8 @@ impl crate::app::App {
                         &mut self.p2pool_stdin,
                         ctx,
                         ui,
+                        backup_hosts,
+                        &self.state.gupax.absolute_p2pool_path,
                     );
                 }
                 Tab::Xmrig => {
@@ -123,6 +126,7 @@ impl crate::app::App {
                         &mut self.xmrig_stdin,
                         ctx,
                         ui,
+                        &self.state.gupax.absolute_xmrig_path,
                     );
                 }
                 Tab::XmrigProxy => {
