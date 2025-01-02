@@ -3,7 +3,12 @@ use rand::{Rng, distributions::Alphanumeric, thread_rng};
 use strum::{EnumCount, EnumIter};
 
 use super::*;
-use crate::{components::node::RemoteNode, disk::status::*, helper::ProcessName};
+use crate::{
+    app::panels::middle::common::list_poolnode::PoolNode,
+    components::node::RemoteNode,
+    disk::status::*,
+    helper::{Helper, ProcessName},
+};
 //---------------------------------------------------------------------------------------------------- [State] Impl
 impl Default for State {
     fn default() -> Self {
@@ -704,4 +709,54 @@ impl Default for Version {
             xmrig: XMRIG_VERSION.to_string(),
         }
     }
+}
+
+// Get the process for the state
+impl Node {
+    pub const fn process_name() -> ProcessName {
+        ProcessName::Node
+    }
+    pub fn start_options(&self, mode: StartOptionsMode) -> String {
+        Helper::build_node_args(self, mode).join(" ")
+    }
+}
+impl P2pool {
+    pub const fn process_name() -> ProcessName {
+        ProcessName::P2pool
+    }
+    pub fn start_options(
+        &self,
+        path: &Path,
+        backup_nodes: &Option<Vec<PoolNode>>,
+        mode: StartOptionsMode,
+    ) -> String {
+        Helper::build_p2pool_args(self, path, backup_nodes, false, mode).join(" ")
+    }
+}
+impl Xmrig {
+    pub const fn process_name() -> ProcessName {
+        ProcessName::Xmrig
+    }
+    pub fn start_options(&self, path: &Path, mode: StartOptionsMode) -> String {
+        Helper::build_xmrig_args(self, path, mode).join(" ")
+    }
+}
+impl XmrigProxy {
+    pub const fn process_name() -> ProcessName {
+        ProcessName::XmrigProxy
+    }
+    pub fn start_options(&self, mode: StartOptionsMode) -> String {
+        Helper::build_xp_args(self, mode).join(" ")
+    }
+}
+// impl Xvb {
+//     pub const fn process_name() -> ProcessName {
+//         ProcessName::Xvb
+//     }
+// }
+
+pub enum StartOptionsMode {
+    Simple,
+    Advanced,
+    Custom,
 }

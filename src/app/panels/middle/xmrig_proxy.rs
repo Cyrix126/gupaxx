@@ -23,14 +23,14 @@ use log::debug;
 use crate::app::panels::middle::common::console::{console, input_args_field, start_options_field};
 use crate::app::panels::middle::common::header_tab::header_tab;
 use crate::app::panels::middle::common::list_poolnode::list_poolnode;
-use crate::disk::state::XmrigProxy;
+use crate::disk::state::{StartOptionsMode, XmrigProxy};
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
 use crate::helper::{Process, ProcessName};
 use crate::miscs::height_txt_before_button;
 use crate::regex::REGEXES;
 use crate::{
-    SPACE, XMRIG_API_IP, XMRIG_API_PORT, XMRIG_IP, XMRIG_KEEPALIVE, XMRIG_NAME, XMRIG_PORT,
-    XMRIG_PROXY_ARGUMENTS, XMRIG_PROXY_INPUT, XMRIG_PROXY_REDIRECT, XMRIG_PROXY_URL, XMRIG_RIG,
+    SPACE, START_OPTIONS_HOVER, XMRIG_API_IP, XMRIG_API_PORT, XMRIG_IP, XMRIG_KEEPALIVE,
+    XMRIG_NAME, XMRIG_PORT, XMRIG_PROXY_INPUT, XMRIG_PROXY_REDIRECT, XMRIG_PROXY_URL, XMRIG_RIG,
     XMRIG_TLS,
 };
 
@@ -73,16 +73,21 @@ impl XmrigProxy {
                 }
             });
             if !self.simple {
+                if !self.arguments.is_empty() {
+                    ui.disable();
+                }
                 //---------------------------------------------------------------------------------------------------- Arguments
                 debug!("XMRig-Proxy Tab | Rendering [Arguments]");
-                ui.horizontal(|ui| {
-                    start_options_field(
-                        ui,
-                        &mut self.arguments,
-                        r#"--url <...> --user <...> --config <...>"#,
-                        XMRIG_PROXY_ARGUMENTS,
-                    );
-                });
+                let default_args_simple = self.start_options(StartOptionsMode::Simple);
+                let default_args_advanced = self.start_options(StartOptionsMode::Advanced);
+                start_options_field(
+                    ui,
+                    &mut self.arguments,
+                    &default_args_simple,
+                    &default_args_advanced,
+                    Self::process_name().start_options_hint(),
+                    START_OPTIONS_HOVER,
+                );
                 if !self.arguments.is_empty() {
                     ui.disable();
                 }

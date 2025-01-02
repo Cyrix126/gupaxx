@@ -20,7 +20,8 @@ use crate::app::panels::middle::common::header_tab::header_tab;
 use crate::app::panels::middle::common::state_edit_field::{path_db_field, slider_state_field};
 use crate::app::panels::middle::{rpc_bind_field, rpc_port_field, zmq_bind_field, zmq_port_field};
 use crate::{
-    NODE_ARGUMENTS, NODE_DNS_BLOCKLIST, NODE_DNS_CHECKPOINT, NODE_INPUT, NODE_PRUNNING, NODE_URL,
+    NODE_DNS_BLOCKLIST, NODE_DNS_CHECKPOINT, NODE_INPUT, NODE_PRUNNING, NODE_URL,
+    START_OPTIONS_HOVER,
 };
 use egui::TextStyle;
 use std::sync::{Arc, Mutex};
@@ -28,7 +29,7 @@ use std::sync::{Arc, Mutex};
 use log::debug;
 
 use crate::components::gupax::FileWindow;
-use crate::disk::state::Node;
+use crate::disk::state::{Node, StartOptionsMode};
 use crate::helper::node::PubNodeApi;
 use crate::helper::{Process, ProcessName};
 use crate::{P2POOL_IN, P2POOL_LOG, P2POOL_OUT, SPACE};
@@ -72,13 +73,20 @@ impl Node {
             if !self.simple {
                 //---------------------------------------------------------------------------------------------------- Arguments
                 debug!("Node Tab | Rendering [Arguments]");
+                let default_args_simple = self.start_options(StartOptionsMode::Simple);
+                let default_args_advanced = self.start_options(StartOptionsMode::Advanced);
                 start_options_field(
                     ui,
                     &mut self.arguments,
-                    r#"--zmq-pub tcp://127.0.0.1:18081"#,
-                    NODE_ARGUMENTS,
+                    &default_args_simple,
+                    &default_args_advanced,
+                    Self::process_name().start_options_hint(),
+                    START_OPTIONS_HOVER,
                 );
                 //---------------------------------------------------------------------------------------------------- Prunned checkbox
+                if !self.arguments.is_empty() {
+                    ui.disable();
+                }
                 ui.add_space(SPACE);
                 debug!("Node Tab | Rendering DNS  and Prunning buttons");
                 ui.horizontal(|ui| {
