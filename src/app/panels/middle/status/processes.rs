@@ -305,7 +305,7 @@ fn xmrig(
             ],
             Label::new(api.uptime.display(true)),
         );
-        ui.label(api.resources.to_string());
+        ui.label(api.resources.to_string()).on_hover_text("Load average\nThe current load for your CPU. It should not be above the number of total threads or it could mean that your CPU is currently overloaded and will slow down.\nXmrig should not be the cause for overloading a CPU, but other tasks on your system might.");
         ui.label(
             RichText::new("Hashrate\n(10s/1m/15m)")
                 .underline()
