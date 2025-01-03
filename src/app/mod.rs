@@ -230,9 +230,9 @@ impl App {
         info!("App Init | Sysinfo...");
         // We give this to the [Helper] thread.
         let mut sysinfo = sysinfo::System::new_with_specifics(
-            sysinfo::RefreshKind::new()
+            sysinfo::RefreshKind::nothing()
                 .with_cpu(sysinfo::CpuRefreshKind::everything())
-                .with_processes(sysinfo::ProcessRefreshKind::new().with_cpu())
+                .with_processes(sysinfo::ProcessRefreshKind::nothing().with_cpu())
                 .with_memory(sysinfo::MemoryRefreshKind::everything()),
         );
         sysinfo.refresh_all();

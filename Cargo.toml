@@ -1,7 +1,7 @@
 cargo-features = ["profile-rustflags", "codegen-backend"]
 [package]
 name = "gupaxx"
-version = "1.6.0"
+version = "1.7.0-rc1"
 authors = ["cyrix126 <gupaxx@baermail.fr>"]
 description = "Fork of Gupax integrating the XMRvsBeast Raffle "
 documentation = "https://github.com/cyrix126/gupaxx"
@@ -27,15 +27,15 @@ log=[]
 
 [dependencies]
 clap = {version="4.5", features=["cargo", "derive"]}
-anyhow = "1.0.93"
+anyhow = "1.0.95"
 benri = "0.1.12"
-bytes = "1.8.0"
+bytes = "1.9.0"
 dirs = "5.0.1"
 #--------------------------------------------------------------------------------
-# egui = "0.29.1"
-egui = {git="https://github.com/emilk/egui"}
-# egui_extras = {version="0.29.1", features = ["image"] }
-egui_extras = {git="https://github.com/emilk/egui", features = ["image"] }
+egui = "0.30"
+# egui = {git="https://github.com/emilk/egui"}
+egui_extras = {version="0.30", features = ["image"] }
+# egui_extras = {git="https://github.com/emilk/egui", features = ["image"] }
 
 ## 2023-12-28: https://github.com/hinto-janai/gupax/issues/68
 ##
@@ -48,9 +48,9 @@ egui_extras = {git="https://github.com/emilk/egui", features = ["image"] }
 ## Using [wgpu] actually crashes macOS (fixed in 0.20.x though).
 
 #--------------------------------------------------------------------------------
-env_logger = "0.11.5"
+env_logger = "0.11.6"
 figment = { version = "0.10.19", features = ["toml"] }
-reqwest = {version = "0.12.9", default-features=false, features=["json", "rustls-tls"]}
+reqwest = {version = "0.12.12", default-features=false, features=["json", "rustls-tls"]}
 reqwest-middleware = "0.4"
 reqwest-retry = "0.7"
 image = { version = "0.25.5", features = ["png"] }
@@ -60,12 +60,12 @@ once_cell = "1.20.2"
 portable-pty = "0.8.1"
 rand = "0.8.5"
 regex = { version = "1.11.1", default-features = false, features = ["perf"] }
-rfd = "0.15.1"
-serde = { version = "1.0.215", features = ["rc", "derive"] }
-serde_json = "1.0.133"
-sysinfo = { version = "0.32.0", default-features = false, features=["system"] }
+rfd = "0.15.2"
+serde = { version = "1.0.217", features = ["rc", "derive"] }
+serde_json = "1.0.134"
+sysinfo = { version = "0.33.1", default-features = false, features=["system"] }
 # tls-api = "0.9.0"
-tokio = { version = "1.41.1", features = ["rt", "time", "macros", "process", "rt-multi-thread"] }
+tokio = { version = "1.42.0", features = ["rt", "time", "macros", "process", "rt-multi-thread"] }
 toml = { version = "0.8.19", features = ["preserve_order"] }
 walkdir = "2.5.0"
 zeroize = "1.8.1"
@@ -74,19 +74,21 @@ strip-ansi-escapes = "0.2.0"
 derive_more = {version="1.0.0", default-features=false, features=["display", "deref", "deref_mut"]}
 serde-this-or-that = "0.4.2"
 readable = "0.16"
-chrono = {version="0.4.38", default-features=false, features=["clock", "std"]}
+chrono = {version="0.4.39", default-features=false, features=["clock", "std"]}
 enclose = "1.2.0"
 bounded-vec-deque = {version="0.1.1", default-features=false}
 cfg-if = "1.0"
 flexi_logger = "0.29"
-# eframe = {version="0.29.1", features=["wgpu"]}
-eframe = {git="https://github.com/emilk/egui", features=["wgpu"]}
+eframe = {version="0.30", features=["wgpu"]}
+# eframe = {git="https://github.com/emilk/egui", features=["wgpu"]}
 strum = {version="0.26", features=["derive"]}
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
 tar = "0.4.43"
 flate2 = "1.0"
 sudo = "0.6.0"
+# https://github.com/emilk/egui/releases/tag/0.30.0 see breaking change
+eframe = {version="0.30", features=["x11", "wayland"]}
 # macOS
 [target.'cfg(target_os = "macos")'.dependencies]
 # On apple-darwin targets there is an issue with the native and rustls
@@ -102,8 +104,8 @@ sudo = "0.6.0"
 # linked as well which causes problems, so statically link it.
 lzma-sys = { version = "0.1", features = ["static"] }
 [dev-dependencies]
-# egui = {version="0.29.1", features=["callstack"]}
-egui = {git="https://github.com/emilk/egui", features=["callstack"]}
+egui = {version="0.30", features=["callstack"]}
+# egui = {git="https://github.com/emilk/egui", features=["callstack"]}
 
 # [target.'cfg(not(target_os = "macos"))'.dependencies]
 # tls-api-native-tls = "0.9.0"
@@ -114,7 +116,7 @@ egui = {git="https://github.com/emilk/egui", features=["callstack"]}
 # need the same version that eframe is using with egui_wgpu
 # feature angle to enable support for old cpu on Windows
 wgpu = {version = "23.0", features=["angle"]}
-zip = "2.2.0"
+zip = "2.2.2"
 is_elevated = "0.1.2"
 
 # For Windows build (icon)
