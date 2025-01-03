@@ -179,6 +179,12 @@ pub struct Status {
     pub manual_hash: bool,
     pub hashrate: f64,
     pub hash_metric: Hash,
+    pub show_system: bool,
+    pub show_node: bool,
+    pub show_p2pool: bool,
+    pub show_xmrig: bool,
+    pub show_proxy: bool,
+    pub show_xvb: bool,
 }
 
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
@@ -580,6 +586,12 @@ impl Default for Status {
             manual_hash: false,
             hashrate: 1.0,
             hash_metric: Hash::default(),
+            show_system: true,
+            show_node: true,
+            show_p2pool: true,
+            show_xmrig: true,
+            show_proxy: true,
+            show_xvb: true,
         }
     }
 }
