@@ -189,7 +189,7 @@ impl Helper {
         } else {
             StartOptionsMode::Advanced
         };
-        let args = Self::build_xmrig_args(state, path, mode);
+        let args = Self::build_xmrig_args(state, mode);
         // Print arguments & user settings to console
         crate::disk::print_dash(&format!("XMRig | Launch arguments: {:#?}", args));
         info!("XMRig | Using path: [{}]", path.display());
@@ -286,20 +286,24 @@ impl Helper {
     // It returns a value... and mutates a deeply nested passed argument... this is some pretty bad code...
     pub fn build_xmrig_args(
         state: &crate::disk::state::Xmrig,
-        path: &std::path::Path,
         // Allows to provide a different mode without mutating the state
         mode: StartOptionsMode,
     ) -> Vec<String> {
         let mut args = Vec::with_capacity(500);
-        let path = path.to_path_buf();
-        // The actual binary we're executing is [sudo], technically
-        // the XMRig path is just an argument to sudo, so add it.
-        // Before that though, add the ["--prompt"] flag and set it
-        // to emptiness so that it doesn't show up in the output.
-        if cfg!(unix) {
-            args.push(r#"--prompt="#.to_string());
-            args.push("--".to_string());
-            args.push(path.display().to_string());
+        // some args needs to be added to both simple/advanced
+        match mode {
+            StartOptionsMode::Simple | StartOptionsMode::Advanced => {
+                args.push("--no-color".to_string()); // No color escape codes
+                args.push(format!("--http-access-token={}", state.token)); // HTTP API Port
+                args.push("--http-no-restricted".to_string());
+                args.push("--threads".to_string());
+                args.push(state.current_threads.to_string()); // Threads
+                if state.pause != 0 {
+                    args.push("--pause-on-active".to_string());
+                    args.push(state.pause.to_string());
+                } // Pause on active
+            }
+            _ => (),
         }
         match mode {
             StartOptionsMode::Simple => {
@@ -311,19 +315,12 @@ impl Helper {
                 }; // Rig name
                 args.push("--url".to_string());
                 args.push("127.0.0.1:3333".to_string()); // Local P2Pool (the default)
-                args.push("--threads".to_string());
-                args.push(state.current_threads.to_string()); // Threads
                 args.push("--user".to_string());
                 args.push(rig); // Rig name
-                args.push("--no-color".to_string()); // No color
                 args.push("--http-host".to_string());
                 args.push("127.0.0.1".to_string()); // HTTP API IP
                 args.push("--http-port".to_string());
                 args.push("18088".to_string()); // HTTP API Port
-                if state.pause != 0 {
-                    args.push("--pause-on-active".to_string());
-                    args.push(state.pause.to_string());
-                } // Pause on active
             }
             StartOptionsMode::Advanced => {
                 // XMRig doesn't understand [localhost]
@@ -345,8 +342,6 @@ impl Helper {
                 let url = format!("{}:{}", ip, state.port); // Combine IP:Port into one string
                 args.push("--user".to_string());
                 args.push(state.address.clone()); // Wallet
-                args.push("--threads".to_string());
-                args.push(state.current_threads.to_string()); // Threads
                 args.push("--rig-id".to_string());
                 args.push(state.rig.to_string()); // Rig ID
                 args.push("--url".to_string());
@@ -355,17 +350,12 @@ impl Helper {
                 args.push(api_ip.to_string()); // HTTP API IP
                 args.push("--http-port".to_string());
                 args.push(api_port.to_string()); // HTTP API Port
-                args.push("--no-color".to_string()); // No color escape codes
                 if state.tls {
                     args.push("--tls".to_string());
                 } // TLS
                 if state.keepalive {
                     args.push("--keepalive".to_string());
                 } // Keepalive
-                if state.pause != 0 {
-                    args.push("--pause-on-active".to_string());
-                    args.push(state.pause.to_string());
-                } // Pause on active
             }
             StartOptionsMode::Custom => {
                 // This parses the input and attempts to fill out
@@ -378,8 +368,6 @@ impl Helper {
                 }
             }
         }
-        args.push(format!("--http-access-token={}", state.token)); // HTTP API Port
-        args.push("--http-no-restricted".to_string());
         args
     }
 
@@ -412,7 +400,7 @@ impl Helper {
         process: Arc<Mutex<Process>>,
         gui_api: Arc<Mutex<PubXmrigApi>>,
         pub_api: Arc<Mutex<PubXmrigApi>>,
-        args: Vec<String>,
+        mut args: Vec<String>,
         path: std::path::PathBuf,
         sudo: Arc<Mutex<SudoState>>,
         mut api_ip_port: String,
@@ -422,6 +410,15 @@ impl Helper {
         process_p2pool: Arc<Mutex<Process>>,
         pub_api_xvb: &Arc<Mutex<PubXvbApi>>,
     ) {
+        // The actual binary we're executing is [sudo], technically
+        // the XMRig path is just an argument to sudo, so add it.
+        // Before that though, add the ["--prompt"] flag and set it
+        // to emptiness so that it doesn't show up in the output.
+        if cfg!(unix) {
+            args.splice(..0, vec![path.display().to_string()]);
+            args.splice(..0, vec![r#"--"#.to_string()]);
+            args.splice(..0, vec![r#"--prompt="#.to_string()]);
+        }
         // 1a. Create PTY
         debug!("XMRig | Creating PTY...");
         let pty = portable_pty::native_pty_system();

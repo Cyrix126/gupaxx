@@ -136,6 +136,14 @@ impl Helper {
         let ip;
         let port;
         match mode {
+            StartOptionsMode::Simple | StartOptionsMode::Advanced => {
+                args.push(format!("--http-access-token={}", state.token)); // HTTP API Port
+                args.push("--http-no-restricted".to_string());
+                args.push("--no-color".to_string()); // No color
+            }
+            _ => (),
+        }
+        match mode {
             StartOptionsMode::Simple => {
                 // Build the xmrig argument
                 let rig = if state.simple_rig.is_empty() {
@@ -149,7 +157,6 @@ impl Helper {
                 args.push("0.0.0.0:3355".to_string());
                 args.push("--user".to_string());
                 args.push(rig); // Rig name
-                args.push("--no-color".to_string()); // No color
                 args.push("--http-host".to_string());
                 args.push("127.0.0.1".to_string()); // HTTP API IP
                 args.push("--http-port".to_string());
@@ -197,7 +204,6 @@ impl Helper {
                 args.push(api_ip.to_string()); // HTTP API IP
                 args.push("--http-port".to_string());
                 args.push(api_port.to_string()); // HTTP API Port
-                args.push("--no-color".to_string()); // No color escape codes
                 if state.tls {
                     args.push("--tls".to_string());
                 } // TLS
@@ -212,8 +218,6 @@ impl Helper {
                 }
             }
         }
-        args.push(format!("--http-access-token={}", state.token)); // HTTP API Port
-        args.push("--http-no-restricted".to_string());
         args
     }
 

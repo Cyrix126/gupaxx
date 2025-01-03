@@ -749,8 +749,8 @@ impl Xmrig {
     pub const fn process_name() -> ProcessName {
         ProcessName::Xmrig
     }
-    pub fn start_options(&self, path: &Path, mode: StartOptionsMode) -> String {
-        Helper::build_xmrig_args(self, path, mode).join(" ")
+    pub fn start_options(&self, mode: StartOptionsMode) -> String {
+        Helper::build_xmrig_args(self, mode).join(" ")
     }
 }
 impl XmrigProxy {
