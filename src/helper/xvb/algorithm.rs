@@ -256,7 +256,7 @@ impl<'a> Algorithm<'a> {
         }
         // add external to target to have the real total target
         let is_criteria_fulfilled = self.stats.xvb_24h_avg
-            > self.stats.target_donation_hashrate + self.stats.xvb_external_hashrate;
+            >= self.stats.target_donation_hashrate + self.stats.xvb_external_hashrate;
         info!(
             "Algorithm | xvb_24h_avg({}) > target_donation_hashrate({}) : {}",
             self.stats.xvb_24h_avg,
