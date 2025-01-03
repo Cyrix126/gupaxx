@@ -30,7 +30,6 @@ use crate::helper::signal_end;
 use crate::helper::sleep_end_loop;
 use crate::regex::P2POOL_REGEX;
 use crate::regex::contains_end_status;
-use crate::regex::contains_newchain_tip;
 use crate::regex::contains_statuscommand;
 use crate::regex::contains_yourhashrate;
 use crate::regex::contains_yourshare;
@@ -691,30 +690,21 @@ impl Helper {
                 // check if state must be changed based on local and p2p API
                 pub_api_lock.update_state(&mut process_lock);
 
-                // If more than 1 minute has passed, read the other API files.
-                let last_p2pool_request_expired =
-                    last_p2pool_request.elapsed() >= Duration::from_secs(60);
-                // need to reload fast to get the first right values after syncing.
-                // check if value is 100k or under and request immediately if that's the case. fixed in release of p2pool including commit https://github.com/SChernykh/p2pool/commit/64a199be6dec7924b41f857a401086f25e1ec9be
-                if (last_p2pool_request_expired || pub_api_lock.p2pool_difficulty_u64 <= 100000)
-                    && process_lock.state == ProcessState::Alive
-                {
-                    debug!("P2Pool Watchdog | Attempting [network] & [pool] API file read");
+                debug!("P2Pool Watchdog | Attempting [network] & [pool] API file read");
+                if let (Ok(network_api), Ok(pool_api)) = (
+                    Self::path_to_string(&api_path_network, ProcessName::P2pool),
+                    Self::path_to_string(&api_path_pool, ProcessName::P2pool),
+                ) {
                     if let (Ok(network_api), Ok(pool_api)) = (
-                        Self::path_to_string(&api_path_network, ProcessName::P2pool),
-                        Self::path_to_string(&api_path_pool, ProcessName::P2pool),
+                        PrivP2poolNetworkApi::from_str(&network_api),
+                        PrivP2poolPoolApi::from_str(&pool_api),
                     ) {
-                        if let (Ok(network_api), Ok(pool_api)) = (
-                            PrivP2poolNetworkApi::from_str(&network_api),
-                            PrivP2poolPoolApi::from_str(&pool_api),
-                        ) {
-                            PubP2poolApi::update_from_network_pool(
-                                &mut pub_api_lock,
-                                network_api,
-                                pool_api,
-                            );
-                            last_p2pool_request = tokio::time::Instant::now();
-                        }
+                        PubP2poolApi::update_from_network_pool(
+                            &mut pub_api_lock,
+                            network_api,
+                            pool_api,
+                        );
+                        last_p2pool_request = tokio::time::Instant::now();
                     }
                 }
 
@@ -883,8 +873,7 @@ pub struct PubP2poolApi {
     // from status
     pub sidechain_shares: u32,
     pub sidechain_ehr: f32,
-    // from height
-    pub synchronised: bool,
+    pub sidechain_height: u32,
     // from local/p2p
     pub p2p_connected: u32,
     pub node_connected: bool,
@@ -940,8 +929,8 @@ impl PubP2poolApi {
             user_monero_percent: HumanNumber::unknown(),
             sidechain_shares: 0,
             sidechain_ehr: 0.0,
+            sidechain_height: 0,
             p2p_connected: 0,
-            synchronised: false,
             node_connected: false,
             prefer_local_node: true,
         }
@@ -1007,33 +996,6 @@ impl PubP2poolApi {
         // 2. Parse the full STDOUT
         let mut output_parse = output_parse.lock().unwrap();
         let (payouts_new, xmr_new) = Self::calc_payouts_and_xmr(&output_parse);
-        // Check for "SYNCHRONIZED" only if we aren't already. Works at level 0 and above.
-        if process.state == ProcessState::Syncing {
-            // How many times the word was captured.
-            let synchronized_captures = P2POOL_REGEX.synchronized.find_iter(&output_parse).count();
-
-            // If P2Pool receives shares before syncing, it will start mining on its own sidechain.
-            // In this instance, we technically are "synced" on block 1 and P2Pool will print "SYNCHRONIZED"
-            // although, that doesn't necessarily mean we're synced on main/mini-chain.
-            //
-            // So, if we find a `next block = 1`, that means we
-            // must look for at least 2 instances of "SYNCHRONIZED",
-            // one for the sidechain, one for main/mini.
-            if P2POOL_REGEX.next_height_1.is_match(&output_parse) {
-                if synchronized_captures > 1 {
-                    process.state = ProcessState::Alive;
-                }
-            } else if synchronized_captures > 0 {
-                // if there is no `next block = 1`, fallback to
-                // just finding 1 instance of "SYNCHRONIZED".
-                process.state = ProcessState::Alive;
-            }
-            // if the p2pool node was synced but is not anymore due to faulty monero node and is synced again, the status must be alive again
-            // required log level 2 minimum
-            if contains_newchain_tip(&output_parse) {
-                process.state = ProcessState::Alive;
-            }
-        }
         // if the node is offline, p2pool can not function properly. Requires at least p2pool log level 1
         if process.state == ProcessState::Alive && contains_zmq_failure(&output_parse) {
             process.state = ProcessState::Syncing;
@@ -1120,8 +1082,8 @@ impl PubP2poolApi {
     pub(super) fn update_from_p2p(public: &mut Self, p2p: PrivP2PoolP2PApi) {
         *public = Self {
             p2p_connected: p2p.connections,
-            // 30 seconds before concluding the monero node connection is lost
-            node_connected: p2p.zmq_last_active.is_some_and(|x| x < 30),
+            // 10 seconds before concluding the monero node connection is lost
+            node_connected: p2p.zmq_last_active.is_some_and(|x| x < 10),
             ..std::mem::take(&mut *public)
         };
     }
@@ -1187,6 +1149,7 @@ impl PubP2poolApi {
             p2pool_difficulty: HumanNumber::from_u64(p2pool_difficulty),
             p2pool_hashrate: HumanNumber::from_u64_to_megahash_3_point(p2pool_hashrate),
             miners: HumanNumber::from_u32(pool.pool_statistics.miners),
+            sidechain_height: pool.pool_statistics.sidechainHeight,
             solo_block_mean,
             p2pool_block_mean,
             p2pool_share_mean,
@@ -1196,15 +1159,18 @@ impl PubP2poolApi {
             ..std::mem::take(&mut *public)
         };
     }
-    /// Check if all conditions are met to be alive or if something is wrong
     fn update_state(&self, process: &mut Process) {
         if process.state == ProcessState::Syncing
-            && self.synchronised
             && self.node_connected
             && self.p2p_connected > 1
-            && self.height > 10
+            && self.sidechain_height > 1000
         {
             process.state = ProcessState::Alive;
+        }
+        if process.state == ProcessState::Alive
+            && (self.sidechain_height < 1000 || !self.node_connected || self.p2p_connected == 0)
+        {
+            process.state = ProcessState::Syncing;
         }
     }
 
@@ -1224,77 +1190,6 @@ impl PubP2poolApi {
         } else {
             let f = (my_hashrate as f64 / global_hashrate as f64) * 100.0;
             HumanNumber::from_f64_to_percent_6_point(f)
-        }
-    }
-
-    pub const fn calculate_tick_bar(&self) -> &'static str {
-        // The stars are reduced by one because it takes a frame to render the stats.
-        // We want 0 stars at the same time stats are rendered, so it looks a little off here.
-        // let stars = "*".repeat(self.tick - 1);
-        // let blanks = " ".repeat(60 - (self.tick - 1));
-        // [use crate::PubP2poolApi;use crate::PubP2poolApi;"[", &stars, &blanks, "]"].concat().as_str()
-        match self.tick {
-            0 => "[                                                            ]",
-            1 => "[*                                                           ]",
-            2 => "[**                                                          ]",
-            3 => "[***                                                         ]",
-            4 => "[****                                                        ]",
-            5 => "[*****                                                       ]",
-            6 => "[******                                                      ]",
-            7 => "[*******                                                     ]",
-            8 => "[********                                                    ]",
-            9 => "[*********                                                   ]",
-            10 => "[**********                                                  ]",
-            11 => "[***********                                                 ]",
-            12 => "[************                                                ]",
-            13 => "[*************                                               ]",
-            14 => "[**************                                              ]",
-            15 => "[***************                                             ]",
-            16 => "[****************                                            ]",
-            17 => "[*****************                                           ]",
-            18 => "[******************                                          ]",
-            19 => "[*******************                                         ]",
-            20 => "[********************                                        ]",
-            21 => "[*********************                                       ]",
-            22 => "[**********************                                      ]",
-            23 => "[***********************                                     ]",
-            24 => "[************************                                    ]",
-            25 => "[*************************                                   ]",
-            26 => "[**************************                                  ]",
-            27 => "[***************************                                 ]",
-            28 => "[****************************                                ]",
-            29 => "[*****************************                               ]",
-            30 => "[******************************                              ]",
-            31 => "[*******************************                             ]",
-            32 => "[********************************                            ]",
-            33 => "[*********************************                           ]",
-            34 => "[**********************************                          ]",
-            35 => "[***********************************                         ]",
-            36 => "[************************************                        ]",
-            37 => "[*************************************                       ]",
-            38 => "[**************************************                      ]",
-            39 => "[***************************************                     ]",
-            40 => "[****************************************                    ]",
-            41 => "[*****************************************                   ]",
-            42 => "[******************************************                  ]",
-            43 => "[*******************************************                 ]",
-            44 => "[********************************************                ]",
-            45 => "[*********************************************               ]",
-            46 => "[**********************************************              ]",
-            47 => "[***********************************************             ]",
-            48 => "[************************************************            ]",
-            49 => "[*************************************************           ]",
-            50 => "[**************************************************          ]",
-            51 => "[***************************************************         ]",
-            52 => "[****************************************************        ]",
-            53 => "[*****************************************************       ]",
-            54 => "[******************************************************      ]",
-            55 => "[*******************************************************     ]",
-            56 => "[********************************************************    ]",
-            57 => "[*********************************************************   ]",
-            58 => "[**********************************************************  ]",
-            59 => "[*********************************************************** ]",
-            _ => "[************************************************************]",
         }
     }
 }
@@ -1419,6 +1314,7 @@ impl PrivP2poolPoolApi {
 pub(super) struct PoolStatistics {
     pub hashRate: u64,
     pub miners: u32,
+    pub sidechainHeight: u32,
 }
 impl Default for PoolStatistics {
     fn default() -> Self {
@@ -1430,6 +1326,7 @@ impl PoolStatistics {
         Self {
             hashRate: 0,
             miners: 0,
+            sidechainHeight: 0,
         }
     }
 }

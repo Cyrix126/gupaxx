@@ -156,37 +156,6 @@ Uptime         = 0h 2m 4s
     }
 
     #[test]
-    fn set_p2pool_synchronized() {
-        use crate::helper::PubP2poolApi;
-        use std::sync::{Arc, Mutex};
-        let public = Arc::new(Mutex::new(PubP2poolApi::new()));
-        let output_parse = Arc::new(Mutex::new(String::from(
-            r#"payout of 5.000000000001 XMR in block 1111
-			NOTICE  2021-12-27 21:42:17.2008 SideChain SYNCHRONIZED
-			payout of 5.000000000001 XMR in block 1113"#,
-        )));
-        let output_pub = Arc::new(Mutex::new(String::new()));
-        let elapsed = std::time::Duration::from_secs(60);
-        let process = Arc::new(Mutex::new(Process::new(
-            ProcessName::P2pool,
-            "".to_string(),
-            PathBuf::new(),
-        )));
-
-        // It only gets checked if we're `Syncing`.
-        process.lock().unwrap().state = ProcessState::Syncing;
-        PubP2poolApi::update_from_output(
-            &mut public.lock().unwrap(),
-            &output_parse,
-            &output_pub,
-            elapsed,
-            &mut process.lock().unwrap(),
-        );
-        println!("{:#?}", process);
-        assert!(process.lock().unwrap().state == ProcessState::Alive);
-    }
-
-    #[test]
     fn p2pool_synchronized_false_positive() {
         use crate::helper::PubP2poolApi;
         use std::sync::{Arc, Mutex};
@@ -222,43 +191,6 @@ Uptime         = 0h 2m 4s
     }
 
     #[test]
-    fn p2pool_synchronized_double_synchronized() {
-        use crate::helper::PubP2poolApi;
-        use std::sync::{Arc, Mutex};
-        let public = Arc::new(Mutex::new(PubP2poolApi::new()));
-
-        // The 1st SideChain that is "SYNCHRONIZED" in this output is
-        // the sidechain started on height 1, but there is another one
-        // which means the real main/mini is probably synced,
-        // so this _should_ trigger alive state.
-        let output_parse = Arc::new(Mutex::new(String::from(
-            r#"2024-11-02 17:39:02.6241 SideChain SYNCHRONIZED
-            2024-11-02 17:39:02.6242 StratumServer SHARE FOUND: mainchain height 3272685, sidechain height 0, diff 100000, client 127.0.0.1:40874, effort 100.001%
-            2024-11-02 17:39:02.6559 StratumServer SHARE FOUND: mainchain height 3272685, sidechain height 0, diff 100000, client 127.0.0.1:40874, effort 200.002%
-            2024-11-02 17:40:06.8562 SideChain SYNCHRONIZED"#,
-        )));
-        let output_pub = Arc::new(Mutex::new(String::new()));
-        let elapsed = std::time::Duration::from_secs(60);
-        let process = Arc::new(Mutex::new(Process::new(
-            ProcessName::P2pool,
-            "".to_string(),
-            PathBuf::new(),
-        )));
-
-        // It only gets checked if we're `Syncing`.
-        process.lock().unwrap().state = ProcessState::Syncing;
-        PubP2poolApi::update_from_output(
-            &mut public.lock().unwrap(),
-            &output_parse,
-            &output_pub,
-            elapsed,
-            &mut process.lock().unwrap(),
-        );
-        println!("{:#?}", process);
-        assert!(process.lock().unwrap().state == ProcessState::Alive);
-    }
-
-    #[test]
     fn update_pub_p2pool_from_local_network_pool() {
         use crate::helper::PubP2poolApi;
         use crate::helper::p2pool::PoolStatistics;
@@ -287,6 +219,7 @@ Uptime         = 0h 2m 4s
             pool_statistics: PoolStatistics {
                 hashRate: 1_000_000, // 1 MH/s
                 miners: 1_000,
+                sidechainHeight: 10_000_000,
             },
         };
         // Update Local
@@ -430,7 +363,8 @@ Uptime         = 0h 2m 4s
 					"totalHashes": 487463929193948,
 					"lastBlockFoundTime": 1670453228,
 					"lastBlockFound": 2756570,
-					"totalBlocksFound": 4
+					"totalBlocksFound": 4,
+					"sidechainHeight": 9000000
 				}
 			}"#;
         let priv_api = crate::helper::p2pool::PrivP2poolPoolApi::from_str(data).unwrap();
@@ -439,7 +373,8 @@ Uptime         = 0h 2m 4s
         let data_after_ser = r#"{
   "pool_statistics": {
     "hashRate": 10225772,
-    "miners": 713
+    "miners": 713,
+    "sidechainHeight": 9000000
   }
 }"#;
         assert_eq!(data_after_ser, json)
