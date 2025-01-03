@@ -131,19 +131,8 @@ Uptime         = 0h 2m 4s
         )));
         let output_pub = Arc::new(Mutex::new(String::new()));
         let elapsed = std::time::Duration::from_secs(60);
-        let process = Arc::new(Mutex::new(Process::new(
-            ProcessName::P2pool,
-            "".to_string(),
-            PathBuf::new(),
-        )));
         let mut public = public.lock().unwrap();
-        PubP2poolApi::update_from_output(
-            &mut public,
-            &output_parse,
-            &output_pub,
-            elapsed,
-            &mut process.lock().unwrap(),
-        );
+        PubP2poolApi::update_from_output(&mut public, &output_parse, &output_pub, elapsed);
         println!("{:#?}", public);
         assert_eq!(public.payouts, 3);
         assert_eq!(public.payouts_hour, 180.0);
@@ -184,7 +173,6 @@ Uptime         = 0h 2m 4s
             &output_parse,
             &output_pub,
             elapsed,
-            &mut process.lock().unwrap(),
         );
         println!("{:#?}", process);
         assert!(process.lock().unwrap().state == ProcessState::Syncing); // still syncing
