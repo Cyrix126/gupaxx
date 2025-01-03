@@ -228,6 +228,9 @@ impl Helper {
         let mut api_ip = String::with_capacity(15);
         let mut api_port = String::with_capacity(5);
         if state.simple {
+            api_ip = "127.0.0.1".to_string();
+            api_port = "18088".to_string();
+
             *helper.lock().unwrap().img_xmrig.lock().unwrap() = ImgXmrig {
                 threads: state.current_threads.to_string(),
                 url: "127.0.0.1:3333 (Local P2Pool)".to_string(),
