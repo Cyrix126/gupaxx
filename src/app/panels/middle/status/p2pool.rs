@@ -366,11 +366,6 @@ impl Status {
                         });
                     });
                 });
-                // Tick bar
-                ui.vertical_centered(|ui| {
-                    ui.label(api.calculate_tick_bar())
-                        .on_hover_text(STATUS_SUBMENU_PROGRESS_BAR);
-                });
                 drop(api);
             });
         });

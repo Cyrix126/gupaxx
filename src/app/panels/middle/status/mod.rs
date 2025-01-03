@@ -19,7 +19,7 @@ use crate::{
     app::{Benchmark, eframe_impl::ProcessStatesGui},
     disk::{gupax_p2pool_api::GupaxP2poolApi, state::Status, status::*},
     helper::{
-        ProcessName, Sys,
+        ProcessName, ProcessState, Sys,
         node::PubNodeApi,
         p2pool::{ImgP2pool, PubP2poolApi},
         xrig::{
@@ -75,7 +75,7 @@ impl Status {
             self.p2pool(
                 ui,
                 gupax_p2pool_api,
-                states.is_alive(ProcessName::P2pool),
+                states.find(ProcessName::P2pool).state == ProcessState::Alive,
                 p2pool_api,
             );
         //---------------------------------------------------------------------------------------------------- [Benchmarks]

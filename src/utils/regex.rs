@@ -90,8 +90,6 @@ pub struct P2poolRegex {
     pub block: Regex,
     pub block_int: Regex,
     pub block_comma: Regex,
-    pub synchronized: Regex,
-    pub next_height_1: Regex,
 }
 
 impl P2poolRegex {
@@ -105,8 +103,6 @@ impl P2poolRegex {
             block: Regex::new("block [0-9]{7}").unwrap(), // Monero blocks will be 7 digits for... the next 10,379 years
             block_int: Regex::new("[0-9]{7}").unwrap(),
             block_comma: Regex::new("[0-9],[0-9]{3},[0-9]{3}").unwrap(),
-            synchronized: Regex::new("SYNCHRONIZED").unwrap(),
-            next_height_1: Regex::new("sidechain height 0").unwrap(),
         }
     }
 }
@@ -286,11 +282,6 @@ pub fn contains_zmq_failure(l: &str) -> bool {
     });
     LINE_SHARE.is_match(l)
 }
-/// a way to detect that p2pool is alive
-pub fn contains_newchain_tip(l: &str) -> bool {
-    static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"new chain tip").unwrap());
-    LINE_SHARE.is_match(l)
-}
 
 //---------------------------------------------------------------------------------------------------- TEST
 #[cfg(test)]
@@ -329,7 +320,6 @@ mod test {
         let r = P2poolRegex::new();
         let text = "NOTICE  2022-11-11 11:11:11.1111 P2Pool You received a payout of 0.111111111111 XMR in block 1111111";
         let text2 = "2022-11-11 11:11:11.1111 | 0.111111111111 XMR | Block 1,111,111";
-        let text3 = "NOTICE  2020-12-11 12:35:41.3150 SideChain SYNCHRONIZED";
         assert_eq!(
             r.payout.find(text).unwrap().as_str(),
             "payout of 0.111111111111 XMR"
@@ -345,7 +335,6 @@ mod test {
         assert_eq!(r.block.find(text).unwrap().as_str(), "block 1111111");
         assert_eq!(r.block_int.find(text).unwrap().as_str(), "1111111");
         assert_eq!(r.block_comma.find(text2).unwrap().as_str(), "1,111,111");
-        assert_eq!(r.synchronized.find(text3).unwrap().as_str(), "SYNCHRONIZED");
     }
 
     #[test]
