@@ -510,6 +510,7 @@ pub struct PubXmrigProxyApi {
     pub hashrate_1h: f32,
     pub hashrate_12h: f32,
     pub hashrate_24h: f32,
+    pub miners: u16,
     pub node: String,
 }
 
@@ -531,6 +532,7 @@ impl PubXmrigProxyApi {
             hashrate_1h: 0.0,
             hashrate_12h: 0.0,
             hashrate_24h: 0.0,
+            miners: 0,
             node: UNKNOWN_DATA.to_string(),
         }
     }
@@ -604,6 +606,7 @@ impl PubXmrigProxyApi {
             hashrate_1h: private.hashrate.total[2],
             hashrate_12h: private.hashrate.total[3],
             hashrate_24h: private.hashrate.total[4],
+            miners: private.miners.now,
             ..std::mem::take(&mut *public)
         }
     }

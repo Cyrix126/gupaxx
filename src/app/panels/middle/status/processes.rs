@@ -267,6 +267,10 @@ fn xmrig_proxy(
             "[Accepted: {}]\n[Rejected: {}]",
             api.accepted, api.rejected
         ));
+        ui.label(RichText::new("Miners Connected").underline().color(BONE))
+            .on_hover_text(STATUS_PROXY_CONNECTIONS);
+        ui.label(api.miners.to_string());
+
         ui.label(RichText::new("Pool").underline().color(BONE))
             .on_hover_text(STATUS_XMRIG_PROXY_POOL);
         ui.label(api.node.to_string());
