@@ -531,7 +531,7 @@ impl Helper {
         drop(lock);
 
         let sysinfo_cpu = sysinfo::CpuRefreshKind::everything();
-        let sysinfo_processes = sysinfo::ProcessRefreshKind::new().with_cpu();
+        let sysinfo_processes = sysinfo::ProcessRefreshKind::nothing().with_cpu();
 
         thread::spawn(move || {
             info!(
