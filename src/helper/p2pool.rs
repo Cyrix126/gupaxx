@@ -659,12 +659,21 @@ impl Helper {
                 debug!("P2Pool Watchdog | Starting [update_from_output()]");
                 let mut process_lock = process.lock().unwrap();
                 let mut pub_api_lock = pub_api.lock().unwrap();
+
+                // if zmq fails were detected, we should increment the timer
+                if let Some(timer) = &mut pub_api_lock.fails_zmq_since {
+                    *timer += 1;
+                }
+                // after 5 seconds without being reset to 0, set to none.
+                if pub_api_lock.fails_zmq_since.is_some_and(|t| t == 5) {
+                    info!("P2Pool Watchdog | 5 seconds since a ZMQ failure was seen");
+                    pub_api_lock.fails_zmq_since = None;
+                }
                 PubP2poolApi::update_from_output(
                     &mut pub_api_lock,
                     &output_parse,
                     &output_pub,
                     start.elapsed(),
-                    &mut process_lock,
                 );
 
                 // Read [local] API
@@ -874,6 +883,7 @@ pub struct PubP2poolApi {
     pub sidechain_shares: u32,
     pub sidechain_ehr: f32,
     pub sidechain_height: u32,
+    pub fails_zmq_since: Option<u32>,
     // from local/p2p
     pub p2p_connected: u32,
     pub node_connected: bool,
@@ -933,6 +943,7 @@ impl PubP2poolApi {
             p2p_connected: 0,
             node_connected: false,
             prefer_local_node: true,
+            fails_zmq_since: None,
         }
     }
 
@@ -984,7 +995,6 @@ impl PubP2poolApi {
         output_parse: &Arc<Mutex<String>>,
         output_pub: &Arc<Mutex<String>>,
         elapsed: std::time::Duration,
-        process: &mut Process,
     ) {
         // 1. Take the process's current output buffer and combine it with Pub (if not empty)
         let mut output_pub = output_pub.lock().unwrap();
@@ -997,8 +1007,10 @@ impl PubP2poolApi {
         let mut output_parse = output_parse.lock().unwrap();
         let (payouts_new, xmr_new) = Self::calc_payouts_and_xmr(&output_parse);
         // if the node is offline, p2pool can not function properly. Requires at least p2pool log level 1
-        if process.state == ProcessState::Alive && contains_zmq_failure(&output_parse) {
-            process.state = ProcessState::Syncing;
+        // if log level 0, it will take 2 minutes to detect that the node is offline.
+        if contains_zmq_failure(&output_parse) {
+            warn!("P2Pool Watchdog | a ZMQ failure was seen, check connection to Node");
+            public.fails_zmq_since = Some(0);
         }
 
         // 3. Throw away [output_parse]
@@ -1166,11 +1178,15 @@ impl PubP2poolApi {
             && self.node_connected
             && self.p2p_connected > 1
             && self.sidechain_height > 1000
+            && self.fails_zmq_since.is_none()
         {
             process.state = ProcessState::Alive;
         }
         if process.state == ProcessState::Alive
-            && (self.sidechain_height < 1000 || !self.node_connected || self.p2p_connected == 0)
+            && (self.sidechain_height < 1000
+                || !self.node_connected
+                || self.p2p_connected == 0
+                || self.fails_zmq_since.is_some())
         {
             process.state = ProcessState::Syncing;
         }

@@ -387,7 +387,7 @@ pub const P2POOL_MAIN: &str = "Use the P2Pool main-chain. This P2Pool finds bloc
 pub const P2POOL_MINI: &str = "Use the P2Pool mini-chain. This P2Pool finds blocks slower, but has a lower difficulty. Suitable for miners with less than 50kH/s";
 pub const P2POOL_OUT: &str = "How many out-bound peers to connect to? (you connecting to others)";
 pub const P2POOL_IN: &str = "How many in-bound peers to allow? (others connecting to you)";
-pub const P2POOL_LOG: &str = "Verbosity of the console log";
+pub const P2POOL_LOG: &str = "Verbosity of the console log.\nA verbosity level more than 0 is recommended to let the P2Pool process detect more rapidly errors with the Monero Node.\nIf the level is at 0, it can take up to 2 minutes to detect an error.";
 pub const P2POOL_AUTO_NODE: &str = "Automatically ping the remote Monero nodes at Gupaxx startup";
 pub const P2POOL_AUTO_SELECT: &str =
     "Automatically select the fastest remote Monero node after pinging";
