@@ -1082,8 +1082,10 @@ impl PubP2poolApi {
     pub(super) fn update_from_p2p(public: &mut Self, p2p: PrivP2PoolP2PApi) {
         *public = Self {
             p2p_connected: p2p.connections,
-            // 10 seconds before concluding the monero node connection is lost
-            node_connected: p2p.zmq_last_active.is_some_and(|x| x < 10),
+            // above 120s, the node is disconnected.
+            // It will take two minutes to detect that the node is dead.
+            // If the timeframe is reduced, it can have false positive.
+            node_connected: p2p.zmq_last_active.is_some_and(|x| x < 120),
             ..std::mem::take(&mut *public)
         };
     }
