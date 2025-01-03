@@ -249,6 +249,7 @@ pub const STATUS_XMRIG_DIFFICULTY: &str = "The current difficulty of the job XMR
 pub const STATUS_XMRIG_SHARES: &str = "The amount of accepted and rejected shares";
 pub const STATUS_XMRIG_POOL: &str = "The pool XMRig is currently mining to";
 pub const STATUS_XMRIG_THREADS: &str = "The amount of threads XMRig is currently using";
+pub const STATUS_PROXY_CONNECTIONS: &str = "The total amount of miner connections on this Proxy";
 //--
 pub const STATUS_XVB_TIME_REMAIN: &str = "Minutes left before end of round";
 pub const STATUS_XVB_ROUND_TYPE: &str = "The current round type";
