@@ -1,4 +1,4 @@
-use egui::{Label, ScrollArea, Ui};
+use egui::{Label, ScrollArea, Ui, Vec2};
 use std::sync::{Arc, Mutex};
 
 use crate::app::eframe_impl::ProcessStatesGui;
@@ -31,81 +31,78 @@ impl Status {
     ) {
         let width_column = ui.text_style_height(&TextStyle::Body) * 16.0;
         let height_column = width_column * 2.7;
+        let size_column = Vec2::new(width_column, height_column);
         ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
-        // let width = ((ui.available_width() / 5.0) - (SPACE * 1.7500)).max(0.0);
-        ScrollArea::vertical().show(ui, |ui| {
-            ui.horizontal(|ui| {
-                ScrollArea::horizontal().show(ui, |ui| {
-                    ui.vertical(|ui| {
-                        ui.group(|ui| {
-                            ui.set_width(width_column);
-                            ui.set_height(height_column);
-                            ui.vertical_centered(|ui| {
-                                gupax(ui, sys);
-                            });
+        ScrollArea::vertical()
+            .id_salt("vertical_processes")
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ScrollArea::horizontal().show(ui, |ui| {
+                        column_process(ui, size_column, self.show_system, |ui| {
+                            gupax(ui, sys);
                         });
-                    });
-                    ui.vertical(|ui| {
-                        ui.group(|ui| {
-                            ui.set_width(width_column);
-                            ui.set_height(height_column);
-                            ui.vertical_centered(|ui| {
-                                node(ui, states.is_alive(ProcessName::Node), node_api);
-                            });
+                        column_process(ui, size_column, self.show_node, |ui| {
+                            node(ui, states.is_alive(ProcessName::Node), node_api);
                         });
-                    });
-                    ui.vertical(|ui| {
-                        ui.group(|ui| {
-                            ui.set_width(width_column);
-                            ui.set_height(height_column);
-                            ui.vertical_centered(|ui| {
-                                p2pool(
-                                    ui,
-                                    states.is_alive(ProcessName::P2pool),
-                                    p2pool_api,
-                                    p2pool_img,
-                                );
-                            });
+                        column_process(ui, size_column, self.show_p2pool, |ui| {
+                            p2pool(
+                                ui,
+                                states.is_alive(ProcessName::P2pool),
+                                p2pool_api,
+                                p2pool_img,
+                            );
                         });
-                    });
-                    ui.vertical(|ui| {
-                        ui.group(|ui| {
-                            ui.set_width(width_column);
-                            ui.set_height(height_column);
-                            ui.vertical_centered(|ui| {
-                                xmrig(
-                                    ui,
-                                    states.is_alive(ProcessName::Xmrig),
-                                    xmrig_api,
-                                    xmrig_img,
-                                    max_threads,
-                                );
-                            });
+                        column_process(ui, size_column, self.show_xmrig, |ui| {
+                            xmrig(
+                                ui,
+                                states.is_alive(ProcessName::Xmrig),
+                                xmrig_api,
+                                xmrig_img,
+                                max_threads,
+                            );
                         });
-                    });
-                    ui.vertical(|ui| {
-                        ui.group(|ui| {
-                            ui.set_width(width_column);
-                            ui.set_height(height_column);
-                            ui.vertical_centered(|ui| {
-                                xmrig_proxy(
-                                    ui,
-                                    states.is_alive(ProcessName::XmrigProxy),
-                                    xmrig_proxy_api,
-                                );
-                            });
+                        column_process(ui, size_column, self.show_proxy, |ui| {
+                            xmrig_proxy(
+                                ui,
+                                states.is_alive(ProcessName::XmrigProxy),
+                                xmrig_proxy_api,
+                            );
                         });
-                    });
-                    ui.vertical(|ui| {
-                        ui.group(|ui| {
-                            ui.set_width(width_column);
-                            ui.set_height(height_column);
-                            ui.vertical_centered(|ui| {
-                                xvb(ui, states.is_alive(ProcessName::Xvb), xvb_api);
-                            });
+                        column_process(ui, size_column, self.show_xvb, |ui| {
+                            xvb(ui, states.is_alive(ProcessName::Xvb), xvb_api);
                         });
                     });
                 });
+            });
+        // buttons to hide
+
+        ScrollArea::horizontal().show(ui, |ui| {
+            ui.label("Visible columns:");
+            ui.add_space(SPACE);
+            ui.horizontal(|ui| {
+                ui.checkbox(&mut self.show_system, "System");
+                ui.checkbox(&mut self.show_node, "Node");
+                ui.checkbox(&mut self.show_p2pool, "P2Pool");
+                ui.checkbox(&mut self.show_xmrig, "XMRig");
+                ui.checkbox(&mut self.show_proxy, "XMRig-Proxy");
+                ui.checkbox(&mut self.show_xvb, "XvB");
+            });
+        });
+    }
+}
+
+pub fn column_process<R>(
+    ui: &mut Ui,
+    size_column: Vec2,
+    visible: bool,
+    add_contents: impl FnOnce(&mut Ui) -> R,
+) {
+    if visible {
+        ui.vertical(|ui| {
+            ui.group(|ui| {
+                ui.set_width(size_column.x);
+                ui.set_height(size_column.y);
+                ui.vertical_centered(|ui| add_contents(ui))
             });
         });
     }
