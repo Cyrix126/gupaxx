@@ -18,6 +18,7 @@
 #[cfg(test)]
 mod test {
 
+    use crate::disk::state::StartOptionsMode;
     use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
     use crate::helper::xvb::algorithm::Algorithm;
     use crate::helper::{
@@ -556,6 +557,7 @@ Uptime         = 0h 2m 4s
         assert_eq!(data_after_ser, json)
     }
 
+    use std::path::Path;
     use std::{
         path::PathBuf,
         sync::{Arc, Mutex},
@@ -822,5 +824,30 @@ Uptime         = 0h 2m 4s
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 20000.0);
+    }
+
+    #[test]
+    fn custom_args_p2pool() {
+        // check that custom args are parsed correctly.
+        let arguments = "--wallet 4A5Dwt2qKwKEQrZfo4aBkSNtvDDAzSFbAJcyFkdW5RwDh9U4WgeZrgKT4hUoE2gv8h6NmsNMTyjsEL8eSLMbABds5rYFWnw --host node2.monerodevs.org --rpc-port 18089 --zmq-port 18084 --data-api /home/lm/Téléchargements/gupaxx-v1.5.4-rc3-linux-x64-bundle/p2pool --local-api --no-color --mini --light-mode".to_string();
+        let state = P2pool {
+            simple: false,
+            arguments: arguments.clone(),
+            ..Default::default()
+        };
+        let args = Helper::build_p2pool_args(
+            &state,
+            Path::new(""),
+            &None,
+            false,
+            StartOptionsMode::Custom,
+        );
+        assert_eq!(
+            arguments
+                .split(" ")
+                .map(|s| s.to_string())
+                .collect::<Vec<String>>(),
+            args
+        );
     }
 }

@@ -73,9 +73,6 @@ impl XmrigProxy {
                 }
             });
             if !self.simple {
-                if !self.arguments.is_empty() {
-                    ui.disable();
-                }
                 //---------------------------------------------------------------------------------------------------- Arguments
                 debug!("XMRig-Proxy Tab | Rendering [Arguments]");
                 let default_args_simple = self.start_options(StartOptionsMode::Simple);

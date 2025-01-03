@@ -490,7 +490,10 @@ impl Helper {
             }
             StartOptionsMode::Custom => {
                 // Overriding command arguments
-                args.push(state.arguments.split_whitespace().collect());
+                for arg in state.arguments.split_whitespace() {
+                    let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
+                    args.push(arg.to_string());
+                }
             }
             _ => (),
         }

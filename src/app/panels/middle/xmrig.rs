@@ -30,7 +30,6 @@ use crate::regex::REGEXES;
 use egui::{Checkbox, Ui, vec2};
 use log::*;
 
-use std::path::Path;
 use std::sync::{Arc, Mutex};
 
 use super::common::list_poolnode::PoolNode;
@@ -47,7 +46,6 @@ impl Xmrig {
         buffer: &mut String,
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
-        path: &Path,
     ) {
         header_tab(
             ui,
@@ -74,8 +72,8 @@ impl Xmrig {
             });
             if !self.simple {
                 debug!("XMRig Tab | Rendering [Arguments]");
-                let default_args_simple = self.start_options(path, StartOptionsMode::Simple);
-                let default_args_advanced = self.start_options(path, StartOptionsMode::Advanced);
+                let default_args_simple = self.start_options(StartOptionsMode::Simple);
+                let default_args_advanced = self.start_options(StartOptionsMode::Advanced);
                 start_options_field(
                     ui,
                     &mut self.arguments,

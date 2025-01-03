@@ -126,7 +126,6 @@ impl crate::app::App {
                         &mut self.xmrig_stdin,
                         ctx,
                         ui,
-                        &self.state.gupax.absolute_xmrig_path,
                     );
                 }
                 Tab::XmrigProxy => {
