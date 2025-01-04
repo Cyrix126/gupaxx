@@ -12,7 +12,7 @@ The code, issues and PR could be synchronized with Github.
 ### Integrate a P2Pool compatible Nodes crawler
 To get rid of integrating nodes list, we can include a crawler like monero.fail inside Gupaxx.
 ### Integrate a Monero Node
-[Done](https://github.com/Cyrix126/releases/tag/v1.5.0)
+[Done](https://github.com/Cyrix126/releases/tag/v1.5.0)  
 If we want Gupaxx to help user mine in the most decentralized way, we should offer them to run a monero node.
 This would be optional and would check if the requirement are fulfilled before enabling the button to do so.
 
@@ -37,26 +37,31 @@ At first start, a guide could ask the user what it intends to do with Gupaxx (cr
 ### Very noob mode
 At first start, a mode is suggested for very noob users. It would only shows the seed phrase of the wallet generated and configure all options for the user.
 ### Use remote node while syncing local node
+[Done](https://github.com/Cyrix126/gupaxx/commit/075beddea19b3f09e1e7b2327e235814fe588520)  
 To reduce the time to get the first shares. No need to wait for the monero node to be synced.
 
 ### Better UI
-#### Set fixed font size, do not resize with size of window
-Setting a fixed font size will allow to use the space fully and having a UI more adapted to screens. Option to set the size of the font will be included.
 #### Do not re-ask password if not needed
 On Linux, Do not re-ask for sudo to start XMRig when the user can use sudo without a password. It can happen if visudo has been configured to do so or if there is a delay specified in /etc/sudoers with "timestamp_timeout".
-#### Allow resize of consoles
-So users can view more or less output as they need.
 #### Scrolling arrows
 To notify the user that content is present in the bottom, an arrow pointing downside will appear.
-#### Friendlier custom args
-For custom command arguments, some args are required. To help the user not make any errors, theses args must be prefilled. The user will need to enable a checkbox to apply the custom command arguments. A button reset will replace the text fields by only the required fields.
-#### Allow to hide status column
-Status columns can take together lots of space and user can use only a number of them. Allows to hide/restore them with button on the bottom on the columns for each one.
 ### Warning about new update available
 If the user disabled auto updates, show a message when a new update is available with the changelog. Allows user to dismiss the update.
 ### Better defaults
-[Done](https://github.com/Cyrix126/gupaxx/commit/6cb767a342bec2df3358b10826a1ec1dee57fc76) and [Done](https://github.com/Cyrix126/gupaxx/commit/a102bdbee2e4c0bc8785f9e638d3e54958d79489)
+[Done](https://github.com/Cyrix126/gupaxx/commit/6cb767a342bec2df3358b10826a1ec1dee57fc76) and [Done](https://github.com/Cyrix126/gupaxx/commit/a102bdbee2e4c0bc8785f9e638d3e54958d79489)  
 Reduce in/out peers, remote nodes by default
+#### Set fixed font size, do not resize with size of window
+[Done](https://github.com/Cyrix126/gupaxx/releases/tag/v1.6.0)  
+Setting a fixed font size will allow to use the space fully and having a UI more adapted to screens. Option to set the size of the font will be included.
+#### Allow resize of consoles
+[Done](https://github.com/Cyrix126/gupaxx/releases/tag/v1.7.0)  
+So users can view more or less output as they need.
+#### Friendlier custom args
+[Done](https://github.com/Cyrix126/gupaxx/releases/tag/v1.7.0)  
+For custom command arguments, some args are required. To help the user not make any errors, theses args must be prefilled. The user will need to enable a checkbox to apply the custom command arguments. A button reset will replace the text fields by only the required fields.
+#### Allow to hide status column
+[Done](https://github.com/Cyrix126/gupaxx/releases/tag/v1.7.0)  
+Status columns can take together lots of space and user can use only a number of them. Allows to hide/restore them with button on the bottom on the columns for each one.
 
 ## Making Gupaxx Support more environments
 ### Packaging
@@ -70,13 +75,14 @@ Add Support [*BSD](https://www.freebsd.org/) systems.
 Add a table with the minimum hardware/software requirements to the README.
 ### Add more target
 Gupaxx could add support for Linux ARM64 since both P2Pool and XMRig can compile on this target.
-### Refactor size of text
-Gupaxx currently resize texts/widgets based on the window size. Instead, the text/widget size should be decided by the OS/config, scroll bar should be used when there is not enough space. It will allow to use Gupaxx on different ratio of screen.
 ### CLI for Algorithm
 A simple script or a small binary could be made to reproduce the algorithm who would take args for every other needed programs.
 This script would need arguments to know how to control XMRig/XMRig-Proxy and where to watch P2Pool data plus the XvB token and XMR address.
 ### Web UI
 To be able to control and watch Gupaxx from another device, a daemon mode could be built with a web UI front-end.
+### Refactor size of text
+[Done](https://github.com/Cyrix126/gupaxx/releases/tag/v1.6.0)  
+Gupaxx currently resize texts/widgets based on the window size. Instead, the text/widget size should be decided by the OS/config, scroll bar should be used when there is not enough space. It will allow to use Gupaxx on different ratio of screen.
 
 ## More Powerful
 ### Optimization for XMRig
@@ -84,12 +90,6 @@ To be able to control and watch Gupaxx from another device, a daemon mode could 
 On Linux, we can activate 1GB pages after detecting CPU flags. We can also add cpu affinity option.
 #### Manual optimizations
 On the XMRig tab, inform users about manual optimizations that Gupaxx can't control. For example, disabling hyper-threading in BIOS is recommended.
-### Watch Stratum Data instead of estimate.
-Right now, the algorithm estimate the eHR with the estimation made by the P2Pool instance which is calculating from passed shares.
-The algorithm could instead watch the stats from the stratum server, which is more precise but would take into account only miners which are pointed to it.
-The algorithm would still check the estimation made by the P2Pool instance of Gupaxx and warn the user if it seems there is too much difference between the data of the stratum server and the one of P2Pool. It could prevent the user to forget to configure a miner to the stratum P2Pool.
-Could also be an option in advanced tab of XvB warning the user that he should point all his miners to the P2Pool instance of Gupaxx to take them into account.
-It can be a checkbox into advanced option of XvB to use the stratum data.
 ### Automatic sending of funds
 A way to automatically send funds of mining to a wallet address or multiple wallet addresses by setting a minimum amount and % with time frequency or setting a fixed amount and priority.
 ### Wait for sync to start of XMRig
@@ -107,15 +107,22 @@ To have the latest benchmark from XMRig, but still including one by default. Als
 ### Auto restart after updates
 Updates can be applied only when Gupaxx is restarted. Make a button to auto-restart after updates.
 ### Manually set HR for XvB algo
-Done by [Sina](https://github.com/mostafaei2002) [PR](https://github.com/Cyrix126/gupaxx/pull/11)
+Done by [Sina](https://github.com/mostafaei2002) [PR](https://github.com/Cyrix126/gupaxx/pull/11)  
 An advanced tab on XvB tab with multiple tools to set the HR manually.
 The user can sometime better know the right decision from his HR than the algo that will take more time to get everything right, specially if resources are changing.
 ### Integrate XMRig-Proxy
-[Done](https://github.com/Cyrix126/gupaxx/releases/tag/v1.2.0)
+[Done](https://github.com/Cyrix126/gupaxx/releases/tag/v1.2.0)  
 The algorithm of distribution of HR can't control HR outside of his instance.
 It must estimate external HR, which can be approximative.
 If a user control multiples miners, it could connect all of them to a XMRig-Proxy instance.
 Gupaxx could offer this XMRig-instance and control it like it was a normal XMRig instance.
+### Watch Stratum Data instead of estimate.
+[Done](https://github.com/Cyrix126/gupaxx/releases/tag/v1.7.0)  
+Right now, the algorithm estimate the eHR with the estimation made by the P2Pool instance which is calculating from passed shares.
+The algorithm could instead watch the stats from the stratum server, which is more precise but would take into account only miners which are pointed to it.
+The algorithm would still check the estimation made by the P2Pool instance of Gupaxx and warn the user if it seems there is too much difference between the data of the stratum server and the one of P2Pool. It could prevent the user to forget to configure a miner to the stratum P2Pool.
+Could also be an option in advanced tab of XvB warning the user that he should point all his miners to the P2Pool instance of Gupaxx to take them into account.
+It can be a checkbox into advanced option of XvB to use the stratum data.
 
 ## Trust-less Builds
 ### Reproducible builds
