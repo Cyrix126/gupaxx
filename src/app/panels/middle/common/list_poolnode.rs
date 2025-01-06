@@ -188,7 +188,7 @@ fn add_save_node(
     // [Add/Save]
     let mut exists = false;
     let mut save_diff = true;
-    let mut existing_index = 0;
+    let mut existing_index = 0usize;
     for (name, node) in node_vec.iter() {
         if *name == *current.0 {
             exists = true;
@@ -220,7 +220,7 @@ fn add_save_node(
                 let rpc = current.2.clone();
                 // zmq can be rig in case of Pool
                 let zmq = current.3.clone();
-                let poolnode = &mut node_vec[existing_index].1;
+                let poolnode = &mut node_vec[selected.index].1;
                 poolnode.set_ip(ip);
                 poolnode.set_port(rpc);
                 poolnode.set_custom(zmq);
@@ -251,7 +251,7 @@ fn add_save_node(
                 let rpc = current.2.clone();
                 // zmq can be rig in case of Pool
                 let zmq = current.3.clone();
-                let poolnode = match node_vec[existing_index].1 {
+                let poolnode = match node_vec[selected.index].1 {
                     PoolNode::Node(_) => PoolNode::Node(Node { ip, rpc, zmq }),
                     PoolNode::Pool(_) => PoolNode::Pool(Pool {
                         rig: zmq,

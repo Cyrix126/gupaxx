@@ -106,6 +106,12 @@ The user could see how the HR was given on P2Pool and XvB.
 To have the latest benchmark from XMRig, but still including one by default. Also automates the inclusion on release.
 ### Auto restart after updates
 Updates can be applied only when Gupaxx is restarted. Make a button to auto-restart after updates.
+### Ban spy node list recommended by MRL
+https://github.com/monero-project/meta/issues/1124
+Enabled by default, button to disable.
+### New suit of tests, including testing interaction of widgets
+A lot of tests since the fork makes less sense and a lot of new situation needs to be tested. Time should be taken to add new tests and make Gupaxx more robust.
+egui_kittest library can be used to test the interaction of the UI directly. 
 ### Manually set HR for XvB algo
 Done by [Sina](https://github.com/mostafaei2002) [PR](https://github.com/Cyrix126/gupaxx/pull/11)  
 An advanced tab on XvB tab with multiple tools to set the HR manually.
@@ -124,6 +130,18 @@ The algorithm would still check the estimation made by the P2Pool instance of Gu
 Could also be an option in advanced tab of XvB warning the user that he should point all his miners to the P2Pool instance of Gupaxx to take them into account.
 It can be a checkbox into advanced option of XvB to use the stratum data.
 
+## Privacy
+### Button enabling Tor
+Allow to torify every processes. For mining, it can add a big disadvantage because of the latency. More research on the impact on missed rewards are needed to be able to warn the user of how much gaines he could miss.
+### Description of data given to servers
+Describing what data can be saved/collected/published and the privacy impact while interacting with:
+- updates
+- xmrig benchmarks
+- remote nodes
+- monero network
+- p2pool network
+- XvB Raffle
+
 ## Trust-less Builds
 ### Reproducible builds
 To remove (un)necessary trust, binaries released should have the same checksum if recompiled without code change.
@@ -136,6 +154,8 @@ let the build in updater of Gupaxx check the signature of the release to confirm
 ## Donation
 ### Donation transparency
 So that user can see how much is given to this project and make their own opinion of it if enough donations have been given or not, the history of donation should be made visible with the viewkey available.
+#### Kuno page
+A page describing the time required for each release, keeping track of funds per releases. Informing donators of the ROADMAP and what they can expect from donating.  
 
 ## XvB
 keeping track of participation history in rounds and automatically showing results in the XvB tab.
