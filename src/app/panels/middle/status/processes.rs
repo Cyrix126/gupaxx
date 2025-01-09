@@ -340,7 +340,8 @@ fn xmrig(
 fn xvb(ui: &mut Ui, xvb_alive: bool, xvb_api: &Arc<Mutex<PubXvbApi>>) {
     //
     let api = &xvb_api.lock().unwrap().stats_pub;
-    let enabled = xvb_alive;
+    // if block height is at 0, the API has not been retrieved correctly.
+    let enabled = xvb_alive && api.block_height != 0;
     debug!("Status Tab | Rendering [XvB]");
     ui.add_enabled_ui(enabled, |ui| {
         // for now there is no API ping or /health, so we verify if the field reward_yearly is empty or not.

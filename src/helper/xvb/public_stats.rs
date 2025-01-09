@@ -98,23 +98,21 @@ impl XvbPubStats {
                 );
                 // output the error to console
                 // if error already present, no need to print it multiple times.
-                if process.lock().unwrap().state != ProcessState::Failed {
-                    output_console(
-                        &mut gui_api.lock().unwrap().output,
-                        &format!(
-                            "Failure to retrieve public stats from {}\nWill retry shortly...",
-                            XVB_URL_PUBLIC_API
-                        ),
-                        ProcessName::Xvb,
-                    );
-                }
+                output_console(
+                    &mut gui_api.lock().unwrap().output,
+                    &format!(
+                        "Failure to retrieve public stats from {}\nWill retry shortly...",
+                        XVB_URL_PUBLIC_API
+                    ),
+                    ProcessName::Xvb,
+                );
                 // we stop the algo (will be stopped by the check status on next loop) because we can't make the rest work without public stats. (winner in xvb private stats).
                 output_console(
                     &mut gui_api.lock().unwrap().output,
-                    "request to get public API failed",
+                    "request to get public API failed.\nYou won't have any public stats available but the algorithm can continue.",
                     ProcessName::Xvb,
                 );
-                process.lock().unwrap().state = ProcessState::Failed;
+                pub_api.lock().unwrap().stats_pub = XvbPubStats::default();
             }
         }
     }
