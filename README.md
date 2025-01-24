@@ -110,5 +110,5 @@ In case Github repository is down, you can still find the source code at [librej
 If you'd like to thank me for the development of Gupaxx and/or motivate me to improve it you're welcome to send any amount of XMR to the following address:
 
 ```
-8BtwGfQUJu1LahXK8fo6nNH8Bmy4pXd4UBdUEntVkk5zRfS4ax1uKR4TmAxJe3wim2HRXR22hZT6jQWgPiN7J8Nx5yGUBiX
+4AGJScWSv45E28pmwck9YRP21KuwGx6fuMYV9kTxXFnWEij5FVEUyccBs7ExDy419DJXRPw3u57TH5BaGbsHTdnf6SvY5p5
 ```
