@@ -153,8 +153,10 @@ let the build in updater of Gupaxx check the signature of the release to confirm
 
 ## Donation
 ### Donation transparency
+[Done](https://kuno.anne.media/fundraiser/dsrr)
 So that user can see how much is given to this project and make their own opinion of it if enough donations have been given or not, the history of donation should be made visible with the viewkey available.
 #### Kuno page
+[Done](https://kuno.anne.media/fundraiser/dsrr)
 A page describing the time required for each release, keeping track of funds per releases. Informing donators of the ROADMAP and what they can expect from donating.  
 
 ## XvB

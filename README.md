@@ -109,6 +109,19 @@ In case Github repository is down, you can still find the source code at [librej
 ## Donations
 If you'd like to thank me for the development of Gupaxx and/or motivate me to improve it you're welcome to send any amount of XMR to the following address:
 
+![QR CODE DONATION ADDRESS](assets/donation_qr.png)
 ```
 4AGJScWSv45E28pmwck9YRP21KuwGx6fuMYV9kTxXFnWEij5FVEUyccBs7ExDy419DJXRPw3u57TH5BaGbsHTdnf6SvY5p5
+```
+
+Every donations will be converted to hours of work !
+
+### Donation transparancy
+
+A Kuno page exist so you can easly keep track of the amount funded in this project.  
+[Gupaxx Kuno](https://kuno.anne.media/fundraiser/dsrr/)  
+In case you don't want to rely on the kuno website, the secret view key is:  
+
+```
+6c6f841e1eda3fba95f2261baa4614e3ec614af2a97176bbae2c0be5281d1d0f
 ```
