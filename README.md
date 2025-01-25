@@ -116,7 +116,7 @@ If you'd like to thank me for the development of Gupaxx and/or motivate me to im
 
 Every donations will be converted to hours of work !
 
-### Donation transparancy
+### Donation transparency
 
 A Kuno page exist so you can easly keep track of the amount funded in this project.  
 [Gupaxx Kuno](https://kuno.anne.media/fundraiser/dsrr/)  
