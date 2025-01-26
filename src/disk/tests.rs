@@ -50,6 +50,7 @@ mod test {
 			tab = "About"
 			ratio = "Width"
 			bundled = false
+            show_processes = ["Node", "P2pool", "Xmrig", "XmrigProxy", "Xvb"]
 
 			[gupax.auto]
             update = false
@@ -65,12 +66,6 @@ mod test {
 			manual_hash = false
 			hashrate = 1241.23
 			hash_metric = "Hash"
-			show_system = true
-			show_node = true
-			show_p2pool = true
-			show_xmrig = true
-			show_proxy = true
-			show_xvb = true
 			
 
 			[p2pool]

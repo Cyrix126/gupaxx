@@ -62,17 +62,27 @@ impl crate::app::App {
                             self.os_show(ui);
                             // width of each status
                             let width_status = if !tiny_width {
-                                ((ui.available_width() / 3.0 / states.iter().count() as f32)
+                                ((ui.available_width()
+                                    / 3.0
+                                    / states
+                                        .iter()
+                                        .filter(|s| {
+                                            self.state.gupax.show_processes.contains(&s.name)
+                                        })
+                                        .count() as f32)
                                     - spacing(ui))
                                 .max(0.0)
                             } else {
                                 0.0
                             };
-                            states.iter().for_each(|p| {
-                                ui.add(Separator::default().grow(extra_separator));
-                                // width must be minimum if less than 16px is available.
-                                Self::status_process(p, ui, width_status);
-                            });
+                            states
+                                .iter()
+                                .filter(|s| self.state.gupax.show_processes.contains(&s.name))
+                                .for_each(|p| {
+                                    ui.add(Separator::default().grow(extra_separator));
+                                    // width must be minimum if less than 16px is available.
+                                    Self::status_process(p, ui, width_status);
+                                });
                         });
 
                         if let Some(name) = self.tab.linked_process() {
