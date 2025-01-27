@@ -56,6 +56,7 @@ impl crate::app::App {
                     debug!("App | Entering [Status] Tab");
                     crate::disk::state::Status::show(
                         &mut self.state.status,
+                        &self.state.gupax.show_processes,
                         &self.pub_sys,
                         &self.node_api,
                         &self.p2pool_api,

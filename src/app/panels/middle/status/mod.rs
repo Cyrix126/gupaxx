@@ -40,6 +40,7 @@ impl Status {
     #[allow(clippy::too_many_arguments)]
     pub fn show(
         &mut self,
+        show_process: &[ProcessName],
         sys: &Arc<Mutex<Sys>>,
         node_api: &Arc<Mutex<PubNodeApi>>,
         p2pool_api: &Arc<Mutex<PubP2poolApi>>,
@@ -58,6 +59,7 @@ impl Status {
         //---------------------------------------------------------------------------------------------------- [Processes]
         if self.submenu == Submenu::Processes {
             self.processes(
+                show_process,
                 sys,
                 ui,
                 node_api,

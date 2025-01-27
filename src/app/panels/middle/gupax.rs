@@ -93,6 +93,22 @@ impl Gupax {
             ui.group(|ui| {
                 ui.vertical_centered(|ui| {
                     ui.add(Label::new(
+                        RichText::new("Visible Processes")
+                            .underline()
+                            .color(LIGHT_GRAY),
+                    ))
+                });
+                ui.separator();
+                self.horizontal_flex_show_processes(ui, ProcessName::having_tab());
+            })
+            .response
+            .on_hover_text(
+                "Show(checked) elements (Tab/Status column/bottom status) related to a process",
+            );
+            // debug!("Gupaxx Tab | Rendering bool buttons");
+            ui.group(|ui| {
+                ui.vertical_centered(|ui| {
+                    ui.add(Label::new(
                         RichText::new("Default Behaviour")
                             .underline()
                             .color(LIGHT_GRAY),
@@ -358,6 +374,52 @@ impl Gupax {
                 }
             });
         });
+    }
+    /// widget: AutoStart variant and selectable label (true) or checkbox (false)
+    pub fn horizontal_flex_show_processes(&mut self, ui: &mut Ui, processes: Vec<ProcessName>) {
+        let text_style = TextStyle::Button;
+        ui.style_mut().override_text_style = Some(text_style);
+        let spacing = 2.0;
+        ScrollArea::horizontal()
+            .id_salt("show_processes")
+            .show(ui, |ui| {
+                ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
+                    let width = (((ui.available_width()) / processes.len() as f32)
+                        - ((ui.style().spacing.item_spacing.x * 2.0) + spacing))
+                        .max(0.0);
+                    // TODO: calculate minimum width needed, if ui.available width is less, show items on two lines, then on 3 etc..
+                    // checkbox padding + item spacing + text + separator
+
+                    let size = [width, 0.0];
+                    let len = processes.iter().len();
+                    for (count, process) in processes.iter().enumerate() {
+                        ui.horizontal(|ui| {
+                            ui.vertical(|ui| {
+                                ui.horizontal(|ui| {
+                                    let mut is_checked = self.show_processes.contains(process);
+                                    let widget =
+                                        Checkbox::new(&mut is_checked, process.to_string());
+
+                                    if ui.add_sized(size, widget).clicked() {
+                                        if is_checked {
+                                            self.show_processes.push(*process);
+                                            // reorganize in case the order was changed
+                                            self.show_processes.sort_unstable();
+                                        } else {
+                                            self.show_processes.retain(|p| p != process);
+                                        }
+                                    }
+                                });
+                                // add a space to prevent selectable button to be at the same line as the end of the top bar. Make it the same spacing as separators.
+                                ui.add_space(spacing * 4.0);
+                            });
+                            if count + 1 != len {
+                                ui.add(Separator::default().spacing(spacing).vertical());
+                            }
+                        });
+                    }
+                });
+            });
     }
 }
 fn path_binary(

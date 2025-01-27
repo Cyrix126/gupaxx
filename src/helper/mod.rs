@@ -253,7 +253,19 @@ impl Default for ProcessSignal {
 }
 
 #[derive(
-    Copy, Clone, Eq, PartialEq, Debug, Display, EnumIter, EnumCount, Serialize, Deserialize, Default,
+    Copy,
+    Clone,
+    Eq,
+    PartialEq,
+    Debug,
+    Display,
+    EnumIter,
+    EnumCount,
+    Serialize,
+    Deserialize,
+    Default,
+    PartialOrd,
+    Ord,
 )]
 pub enum ProcessName {
     Node,
