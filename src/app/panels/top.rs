@@ -24,8 +24,6 @@ impl crate::app::App {
     pub fn top_panel(&mut self, ctx: &egui::Context) {
         debug!("App | Rendering TOP tabs");
         let tabs = Tab::from_show_processes(&self.state.gupax.show_processes);
-        dbg!(&tabs);
-
         TopBottomPanel::top("top").show(ctx, |ui| {
             // low spacing to shrink and be able to show all tabs on one line on 640x480
             ui.style_mut().spacing.item_spacing.x = 4.0;
