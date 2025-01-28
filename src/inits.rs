@@ -230,7 +230,7 @@ pub fn init_auto(app: &mut App) {
             warn!(
                 "Gupaxx | Xmrig instance is already running outside of Gupaxx ! Skipping auto-node..."
             );
-        } else if cfg!(windows) {
+        } else if cfg!(windows) || !Helper::password_needed() {
             Helper::start_xmrig(
                 &app.helper,
                 &app.state.xmrig,
