@@ -117,18 +117,27 @@ impl Helper {
             .stdin(Stdio::piped())
             .spawn()
             .unwrap();
-
-        // Write the [sudo] password to STDIN.
-        let mut stdin = child.stdin.take().unwrap();
-        use std::io::Write;
-        if let Err(e) = writeln!(stdin, "{}\n", sudo.lock().unwrap().pass) {
-            error!("Sudo Kill | STDIN error: {}", e);
+        if Self::password_needed() {
+            // Write the [sudo] password to STDIN.
+            let mut stdin = child.stdin.take().unwrap();
+            use std::io::Write;
+            if let Err(e) = writeln!(stdin, "{}\n", sudo.lock().unwrap().pass) {
+                error!("Sudo Kill | STDIN error: {}", e);
+            }
         }
 
         // Return exit code of [sudo/kill].
         child.wait().unwrap().success()
     }
 
+    #[cold]
+    #[inline(never)]
+    pub fn password_needed() -> bool {
+        let cmd = std::process::Command::new("sudo")
+            .args(["-n", "true"])
+            .spawn();
+        cmd.is_err()
+    }
     #[cold]
     #[inline(never)]
     // Just sets some signals for the watchdog thread to pick up on.
@@ -455,11 +464,8 @@ impl Helper {
         let mut stdin = pair.master.take_writer().unwrap();
 
         // 2. Input [sudo] pass, wipe, then drop.
-        if cfg!(unix) {
+        if cfg!(unix) && Self::password_needed() {
             debug!("XMRig | Inputting [sudo] and wiping...");
-            // a) Sleep to wait for [sudo]'s non-echo prompt (on Unix).
-            // this prevents users pass from showing up in the STDOUT.
-            sleep!(3000);
             if let Err(e) = writeln!(stdin, "{}", sudo.lock().unwrap().pass) {
                 error!("XMRig | Sudo STDIN error: {}", e);
             };

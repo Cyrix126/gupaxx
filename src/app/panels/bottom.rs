@@ -258,7 +258,7 @@ impl crate::app::App {
                             );
                         }
                         ProcessName::Xmrig => {
-                            if cfg!(windows) {
+                            if cfg!(windows) || !Helper::password_needed() {
                                 Helper::restart_xmrig(
                                     &self.helper,
                                     &self.state.xmrig,
@@ -329,14 +329,14 @@ impl crate::app::App {
                             ),
 
                             ProcessName::Xmrig => {
-                                if cfg!(windows) {
+                                if cfg!(windows) || !Helper::password_needed() {
                                     Helper::start_xmrig(
                                         &self.helper,
                                         &self.state.xmrig,
                                         &self.state.gupax.absolute_xmrig_path,
                                         Arc::clone(&self.sudo),
                                     );
-                                } else if cfg!(unix) {
+                                } else {
                                     self.sudo.lock().unwrap().signal = ProcessSignal::Start;
                                     self.error_state.ask_sudo(&self.sudo);
                                 }
