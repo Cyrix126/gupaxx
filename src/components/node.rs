@@ -19,7 +19,7 @@ use crate::components::update::get_user_agent;
 use crate::{constants::*, macros::*};
 use egui::Color32;
 use log::*;
-use rand::{Rng, thread_rng};
+use rand::{Rng, rng};
 use reqwest::{Client, RequestBuilder};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
@@ -103,18 +103,18 @@ impl RemoteNode {
 
     // Return a random node (that isn't the one already selected).
     pub fn get_random(current_ip: &str) -> String {
-        let mut rng = thread_rng().gen_range(0..REMOTE_NODE_LENGTH);
-        let mut node = REMOTE_NODES[rng].0;
+        let mut random_rng = rng().random_range(0..REMOTE_NODE_LENGTH);
+        let mut node = REMOTE_NODES[random_rng].0;
         while current_ip == node {
-            rng = thread_rng().gen_range(0..REMOTE_NODE_LENGTH);
-            node = REMOTE_NODES[rng].0;
+            random_rng = rng().random_range(0..REMOTE_NODE_LENGTH);
+            node = REMOTE_NODES[random_rng].0;
         }
         node.to_string()
     }
 
     // Return a random valid node (no input str).
     pub fn get_random_same_ok() -> Self {
-        let rng = thread_rng().gen_range(0..REMOTE_NODE_LENGTH);
+        let rng = rng().random_range(0..REMOTE_NODE_LENGTH);
         Self::from_index(rng)
     }
 

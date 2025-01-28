@@ -1,5 +1,5 @@
 use anyhow::Result;
-use rand::{Rng, distributions::Alphanumeric, thread_rng};
+use rand::{Rng, distr::Alphanumeric, rng};
 use strum::{EnumCount, EnumIter};
 
 use super::*;
@@ -444,7 +444,7 @@ impl Default for XmrigProxy {
         XmrigProxy {
             simple: true,
             arguments: Default::default(),
-            token: thread_rng()
+            token: rng()
                 .sample_iter(Alphanumeric)
                 .take(16)
                 .map(char::from)
@@ -685,7 +685,7 @@ impl Default for Xmrig {
                 rpc: "18081".to_string(),
                 zmq_rig: "18083".to_string(),
             },
-            token: thread_rng()
+            token: rng()
                 .sample_iter(Alphanumeric)
                 .take(16)
                 .map(char::from)
