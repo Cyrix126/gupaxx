@@ -19,11 +19,11 @@ use crate::app::Tab;
 use egui::TextStyle;
 use egui::{ScrollArea, SelectableLabel, Separator, TopBottomPanel, Ui};
 use log::debug;
-use strum::{EnumCount, IntoEnumIterator};
 
 impl crate::app::App {
     pub fn top_panel(&mut self, ctx: &egui::Context) {
         debug!("App | Rendering TOP tabs");
+        let tabs = Tab::from_show_processes(&self.state.gupax.show_processes);
         TopBottomPanel::top("top").show(ctx, |ui| {
             // low spacing to shrink and be able to show all tabs on one line on 640x480
             ui.style_mut().spacing.item_spacing.x = 4.0;
@@ -39,20 +39,21 @@ impl crate::app::App {
                     .size
                     * 2.75;
                 // width = (width - / number of tab) - (space between widget * 2.0 + space of separator / 2.0)
-                let width = (((self.size.x) / Tab::COUNT as f32)
+                let width = (((self.size.x) / tabs.len() as f32)
                     - ((ui.style().spacing.item_spacing.x * 2.0) + (spacing_separator / 2.0)))
                     .max(0.0);
                 // height of tab menu relative to size of text. coeff 2.75 is arbitrary but good enough to be easily clickable.
-                self.tabs(ui, [width, height], spacing_separator);
+                self.tabs(ui, [width, height], spacing_separator, tabs);
             });
         });
     }
 
-    fn tabs(&mut self, ui: &mut Ui, size: [f32; 2], spacing_separator: f32) {
+    fn tabs(&mut self, ui: &mut Ui, size: [f32; 2], spacing_separator: f32, tabs: Vec<Tab>) {
         ScrollArea::horizontal()
             .scroll_bar_visibility(egui::scroll_area::ScrollBarVisibility::AlwaysHidden)
             .show(ui, |ui| {
-                for (count, tab) in Tab::iter().enumerate() {
+                let nb_tabs = tabs.len();
+                for (count, tab) in tabs.into_iter().enumerate() {
                     ui.horizontal(|ui| {
                         ui.vertical(|ui| {
                             // we don't want y item spacing to influence the added space
@@ -72,7 +73,7 @@ impl crate::app::App {
                             // add a space to prevent selectable button to be at the same line as the end of the top bar. Make it the same spacing as separators.
                             ui.add_space(spacing_separator);
                         });
-                        if count + 1 != Tab::COUNT {
+                        if count + 1 != nb_tabs {
                             ui.add(Separator::default().spacing(spacing_separator).vertical());
                         }
                     });

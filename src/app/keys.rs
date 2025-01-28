@@ -139,27 +139,29 @@ impl App {
             }
         // Change Tabs LEFT
         } else if key.is_z() && !wants_input {
-            match self.tab {
-                Tab::About => self.tab = Tab::Xvb,
-                Tab::Status => self.tab = Tab::About,
-                Tab::Gupax => self.tab = Tab::Status,
-                Tab::Node => self.tab = Tab::Gupax,
-                Tab::P2pool => self.tab = Tab::Node,
-                Tab::Xmrig => self.tab = Tab::P2pool,
-                Tab::XmrigProxy => self.tab = Tab::Xmrig,
-                Tab::Xvb => self.tab = Tab::XmrigProxy,
+            let tabs = Tab::from_show_processes(&self.state.gupax.show_processes);
+            let index = tabs
+                .iter()
+                .position(|t| *t == self.tab)
+                .expect("can't be on a hidden tab");
+            self.tab = if (index as i32 - 1) < 0 {
+                tabs.last()
+                    .expect("there is always 3 tabs that can not be hidden")
+                    .to_owned()
+            } else {
+                tabs[index - 1]
             };
         // Change Tabs RIGHT
         } else if key.is_x() && !wants_input {
-            match self.tab {
-                Tab::About => self.tab = Tab::Status,
-                Tab::Status => self.tab = Tab::Gupax,
-                Tab::Gupax => self.tab = Tab::Node,
-                Tab::Node => self.tab = Tab::P2pool,
-                Tab::P2pool => self.tab = Tab::Xmrig,
-                Tab::Xmrig => self.tab = Tab::XmrigProxy,
-                Tab::XmrigProxy => self.tab = Tab::Xvb,
-                Tab::Xvb => self.tab = Tab::About,
+            let tabs = Tab::from_show_processes(&self.state.gupax.show_processes);
+            let index = tabs
+                .iter()
+                .position(|t| *t == self.tab)
+                .expect("can't be on a hidden tab");
+            self.tab = if (index + 1) == tabs.len() {
+                tabs[0]
+            } else {
+                tabs[index + 1]
             };
         // Change Submenu LEFT
         } else if key.is_c() && !wants_input {

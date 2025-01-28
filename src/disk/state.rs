@@ -179,12 +179,6 @@ pub struct Status {
     pub manual_hash: bool,
     pub hashrate: f64,
     pub hash_metric: Hash,
-    pub show_system: bool,
-    pub show_node: bool,
-    pub show_p2pool: bool,
-    pub show_xmrig: bool,
-    pub show_proxy: bool,
-    pub show_xvb: bool,
 }
 
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
@@ -204,6 +198,7 @@ pub struct Gupax {
     pub selected_scale: f32,
     pub tab: Tab,
     pub ratio: Ratio,
+    pub show_processes: Vec<ProcessName>,
 }
 
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
@@ -586,12 +581,6 @@ impl Default for Status {
             manual_hash: false,
             hashrate: 1.0,
             hash_metric: Hash::default(),
-            show_system: true,
-            show_node: true,
-            show_p2pool: true,
-            show_xmrig: true,
-            show_proxy: true,
-            show_xvb: true,
         }
     }
 }
@@ -614,6 +603,7 @@ impl Default for Gupax {
             selected_scale: APP_DEFAULT_SCALE,
             ratio: Ratio::Width,
             tab: Tab::Xvb,
+            show_processes: ProcessName::having_tab(),
         }
     }
 }
@@ -771,4 +761,16 @@ pub enum StartOptionsMode {
     Simple,
     Advanced,
     Custom,
+}
+
+impl ProcessName {
+    pub fn having_tab() -> Vec<ProcessName> {
+        vec![
+            ProcessName::Node,
+            ProcessName::P2pool,
+            ProcessName::Xmrig,
+            ProcessName::XmrigProxy,
+            ProcessName::Xvb,
+        ]
+    }
 }

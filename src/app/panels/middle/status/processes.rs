@@ -17,6 +17,7 @@ impl Status {
     #[allow(clippy::too_many_arguments)]
     pub(super) fn processes(
         &mut self,
+        show_processes: &[ProcessName],
         sys: &Arc<Mutex<Sys>>,
         ui: &mut egui::Ui,
         node_api: &Arc<Mutex<PubNodeApi>>,
@@ -38,56 +39,67 @@ impl Status {
             .show(ui, |ui| {
                 ui.horizontal(|ui| {
                     ScrollArea::horizontal().show(ui, |ui| {
-                        column_process(ui, size_column, self.show_system, |ui| {
+                        column_process(ui, size_column, true, |ui| {
                             gupax(ui, sys);
                         });
-                        column_process(ui, size_column, self.show_node, |ui| {
-                            node(ui, states.is_alive(ProcessName::Node), node_api);
-                        });
-                        column_process(ui, size_column, self.show_p2pool, |ui| {
-                            p2pool(
-                                ui,
-                                states.is_alive(ProcessName::P2pool),
-                                p2pool_api,
-                                p2pool_img,
-                            );
-                        });
-                        column_process(ui, size_column, self.show_xmrig, |ui| {
-                            xmrig(
-                                ui,
-                                states.is_alive(ProcessName::Xmrig),
-                                xmrig_api,
-                                xmrig_img,
-                                max_threads,
-                            );
-                        });
-                        column_process(ui, size_column, self.show_proxy, |ui| {
-                            xmrig_proxy(
-                                ui,
-                                states.is_alive(ProcessName::XmrigProxy),
-                                xmrig_proxy_api,
-                            );
-                        });
-                        column_process(ui, size_column, self.show_xvb, |ui| {
-                            xvb(ui, states.is_alive(ProcessName::Xvb), xvb_api);
-                        });
+                        column_process(
+                            ui,
+                            size_column,
+                            show_processes.contains(&ProcessName::Node),
+                            |ui| {
+                                node(ui, states.is_alive(ProcessName::Node), node_api);
+                            },
+                        );
+                        column_process(
+                            ui,
+                            size_column,
+                            show_processes.contains(&ProcessName::P2pool),
+                            |ui| {
+                                p2pool(
+                                    ui,
+                                    states.is_alive(ProcessName::P2pool),
+                                    p2pool_api,
+                                    p2pool_img,
+                                );
+                            },
+                        );
+                        column_process(
+                            ui,
+                            size_column,
+                            show_processes.contains(&ProcessName::Xmrig),
+                            |ui| {
+                                xmrig(
+                                    ui,
+                                    states.is_alive(ProcessName::Xmrig),
+                                    xmrig_api,
+                                    xmrig_img,
+                                    max_threads,
+                                );
+                            },
+                        );
+                        column_process(
+                            ui,
+                            size_column,
+                            show_processes.contains(&ProcessName::XmrigProxy),
+                            |ui| {
+                                xmrig_proxy(
+                                    ui,
+                                    states.is_alive(ProcessName::XmrigProxy),
+                                    xmrig_proxy_api,
+                                );
+                            },
+                        );
+                        column_process(
+                            ui,
+                            size_column,
+                            show_processes.contains(&ProcessName::Xvb),
+                            |ui| {
+                                xvb(ui, states.is_alive(ProcessName::Xvb), xvb_api);
+                            },
+                        );
                     });
                 });
             });
-        // buttons to hide
-
-        ScrollArea::horizontal().show(ui, |ui| {
-            ui.label("Visible columns:");
-            ui.add_space(SPACE);
-            ui.horizontal(|ui| {
-                ui.checkbox(&mut self.show_system, "System");
-                ui.checkbox(&mut self.show_node, "Node");
-                ui.checkbox(&mut self.show_p2pool, "P2Pool");
-                ui.checkbox(&mut self.show_xmrig, "XMRig");
-                ui.checkbox(&mut self.show_proxy, "XMRig-Proxy");
-                ui.checkbox(&mut self.show_xvb, "XvB");
-            });
-        });
     }
 }
 

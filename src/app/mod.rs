@@ -619,9 +619,12 @@ impl App {
         og.version.lock().unwrap().gupax = GUPAX_VERSION.to_string();
         app.state.version.lock().unwrap().gupax = GUPAX_VERSION.to_string();
 
-        // Set saved [Tab]
+        // Set saved [Tab], only if it is not hidden
         info!("App Init | Setting saved [Tab]...");
-        app.tab = app.state.gupax.tab;
+        if Tab::from_show_processes(&app.state.gupax.show_processes).contains(&app.state.gupax.tab)
+        {
+            app.tab = app.state.gupax.tab
+        }
 
         // Set saved prefer local node to runtime
         app.p2pool_api.lock().unwrap().prefer_local_node = app.state.p2pool.prefer_local_node;
@@ -791,6 +794,23 @@ impl Tab {
             Tab::XmrigProxy => GUPAX_TAB_XMRIG_PROXY,
             Tab::Xvb => GUPAX_TAB_XVB,
         }
+    }
+    pub fn from_process_name(process: &ProcessName) -> Self {
+        match process {
+            ProcessName::Node => Tab::Node,
+            ProcessName::P2pool => Tab::P2pool,
+            ProcessName::Xmrig => Tab::Xmrig,
+            ProcessName::XmrigProxy => Tab::XmrigProxy,
+            ProcessName::Xvb => Tab::Xvb,
+        }
+    }
+    pub fn from_show_processes(processes: &[ProcessName]) -> Vec<Self> {
+        // tabs that can not be hidden
+        let mut tabs = vec![Self::About, Self::Status, Self::Gupax];
+        processes
+            .iter()
+            .for_each(|p| tabs.push(Tab::from_process_name(p)));
+        tabs
     }
 }
 //---------------------------------------------------------------------------------------------------- [Restart] Enum
