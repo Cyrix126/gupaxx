@@ -35,8 +35,8 @@ use crate::{
 };
 use anyhow::{Error, anyhow};
 use log::*;
-use rand::distributions::Alphanumeric;
-use rand::{Rng, thread_rng};
+use rand::distr::Alphanumeric;
+use rand::{Rng, rng};
 use reqwest::header::{LOCATION, USER_AGENT};
 use reqwest::{Client, RequestBuilder};
 use serde::{Deserialize, Serialize};
@@ -204,7 +204,7 @@ impl Update {
     // using [std::fs::rename()] on tmpfs -> disk (Invalid cross-device link (os error 18)).
     // So, uses the [Gupax] binary directory as a base, something like [/home/hinto/gupax/gupax_update_SG4xsDdVmr]
     pub fn get_tmp_dir() -> Result<String, anyhow::Error> {
-        let rand_string: String = thread_rng()
+        let rand_string: String = rng()
             .sample_iter(&Alphanumeric)
             .take(10)
             .map(char::from)
@@ -622,7 +622,7 @@ impl Update {
 pub fn get_user_agent() -> &'static str {
     let index = FAKE_USER_AGENT.len() - 1;
 
-    let rand = thread_rng().gen_range(0..index);
+    let rand = rng().random_range(0..index);
     let user_agent = FAKE_USER_AGENT[rand];
     info!("Randomly selected User-Agent ({rand}/{index}) ... {user_agent}");
     user_agent
