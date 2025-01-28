@@ -34,6 +34,7 @@ use crate::{
     XMRIG_TLS,
 };
 
+use super::XMRIG_API_TOKEN;
 use super::common::list_poolnode::PoolNode;
 use super::common::state_edit_field::StateTextEdit;
 
@@ -155,6 +156,7 @@ impl XmrigProxy {
                                     // HTTP API
                                     self.api_ip_field(ui);
                                     self.api_port_field(ui);
+                                    self.api_token_field(ui);
                                 });
 
                                 ui.separator();
@@ -188,7 +190,7 @@ impl XmrigProxy {
     }
     fn name_field(&mut self, ui: &mut Ui) -> bool {
         StateTextEdit::new(ui)
-            .description("   Name     ")
+            .description(" Name      ")
             .max_ch(30)
             .help_msg(XMRIG_NAME)
             .validations(&[|x| REGEXES.name.is_match(x)])
@@ -196,7 +198,7 @@ impl XmrigProxy {
     }
     fn rpc_port_field(&mut self, ui: &mut Ui) -> bool {
         StateTextEdit::new(ui)
-            .description("   RPC PORT ")
+            .description(" RPC PORT  ")
             .max_ch(5)
             .help_msg(XMRIG_PORT)
             .validations(&[|x| REGEXES.port.is_match(x)])
@@ -204,7 +206,7 @@ impl XmrigProxy {
     }
     fn ip_field(&mut self, ui: &mut Ui) -> bool {
         StateTextEdit::new(ui)
-            .description("   IP       ")
+            .description(" IP        ")
             .max_ch(255)
             .help_msg(XMRIG_IP)
             .validations(&[|x| REGEXES.ipv4.is_match(x) || REGEXES.domain.is_match(x)])
@@ -212,14 +214,14 @@ impl XmrigProxy {
     }
     fn rig_field(&mut self, ui: &mut Ui) -> bool {
         StateTextEdit::new(ui)
-            .description(" RIG ID   ")
+            .description(" RIG ID    ")
             .max_ch(30)
             .help_msg(XMRIG_RIG)
             .build(ui, &mut self.rig)
     }
     fn api_ip_field(&mut self, ui: &mut Ui) -> bool {
         StateTextEdit::new(ui)
-            .description(" API IP   ")
+            .description(" API IP    ")
             .max_ch(255)
             .help_msg(XMRIG_API_IP)
             .validations(&[|x| REGEXES.ipv4.is_match(x) || REGEXES.domain.is_match(x)])
@@ -227,10 +229,17 @@ impl XmrigProxy {
     }
     fn api_port_field(&mut self, ui: &mut Ui) -> bool {
         StateTextEdit::new(ui)
-            .description(" API PORT ")
+            .description(" API PORT  ")
             .max_ch(5)
             .help_msg(XMRIG_API_PORT)
             .validations(&[|x| REGEXES.port.is_match(x)])
             .build(ui, &mut self.api_port)
+    }
+    fn api_token_field(&mut self, ui: &mut Ui) -> bool {
+        StateTextEdit::new(ui)
+            .description(" API TOKEN ")
+            .max_ch(255)
+            .help_msg(XMRIG_API_TOKEN)
+            .build(ui, &mut self.token)
     }
 }
