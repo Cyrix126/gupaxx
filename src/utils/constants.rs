@@ -508,6 +508,7 @@ pub const XMRIG_API_IP: &str =
     "Specify which IP to bind to for XMRig's HTTP API; If empty: [localhost/127.0.0.1]";
 pub const XMRIG_API_PORT: &str =
     "Specify which port to bind to for XMRig's HTTP API; If empty: [18088]";
+pub const XMRIG_API_TOKEN: &str = "Specify the token to authenticate on the HTTP API";
 pub const XMRIG_TLS: &str = "Enable SSL/TLS connections (needs pool support)";
 pub const XMRIG_KEEPALIVE: &str = "Send keepalive packets to prevent timeout (needs pool support)";
 pub const XMRIG_THREADS: &str = "Number of CPU threads to use for mining";
