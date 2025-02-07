@@ -7,7 +7,9 @@ use crate::{
     app::panels::middle::common::list_poolnode::PoolNode,
     components::node::RemoteNode,
     disk::status::*,
-    helper::{Helper, ProcessName},
+    helper::{
+        Helper, Process, ProcessName, node::ImgNode, p2pool::ImgP2pool, xrig::xmrig_proxy::ImgProxy,
+    },
 };
 //---------------------------------------------------------------------------------------------------- [State] Impl
 impl Default for State {
@@ -305,6 +307,7 @@ pub struct P2pool {
     pub ip: String,
     pub rpc: String,
     pub zmq: String,
+    pub stratum_port: u16,
     pub selected_node: SelectedPoolNode,
     pub prefer_local_node: bool,
     pub console_height: u32,
@@ -627,6 +630,7 @@ impl Default for P2pool {
             ip: "localhost".to_string(),
             rpc: "18081".to_string(),
             zmq: "18083".to_string(),
+            stratum_port: P2POOL_PORT_DEFAULT,
             selected_node: SelectedPoolNode {
                 index: 0,
                 name: "Local Monero Node".to_string(),
@@ -663,7 +667,7 @@ impl Default for Xmrig {
             ip: "localhost".to_string(),
             port: "3333".to_string(),
             api_ip: "localhost".to_string(),
-            api_port: "18088".to_string(),
+            api_port: XMRIG_API_PORT_DEFAULT.to_string(),
             tls: false,
             keepalive: false,
             current_threads: 1,
@@ -721,6 +725,55 @@ impl Node {
     pub fn start_options(&self, mode: StartOptionsMode) -> String {
         Helper::build_node_args(self, mode).join(" ")
     }
+    /// Return rpc port, zmq port from state
+    pub fn ports(&self) -> (u16, u16) {
+        let mut zmq_port = NODE_ZMQ_PORT_DEFAULT;
+        let mut rpc_port = NODE_RPC_PORT_DEFAULT;
+        if self.simple {
+            zmq_port = NODE_ZMQ_PORT_DEFAULT;
+            rpc_port = NODE_RPC_PORT_DEFAULT;
+        } else if !self.arguments.is_empty() {
+            // This parses the input and attempts to fill out
+            // the [ImgXmrig]... This is pretty bad code...
+            let mut last = "";
+            for arg in self.arguments.split_whitespace() {
+                match last {
+                    "--zmq-pub" => {
+                        zmq_port = last
+                            .split(":")
+                            .last()
+                            .unwrap_or(&NODE_ZMQ_PORT_DEFAULT.to_string())
+                            .parse()
+                            .unwrap_or(NODE_ZMQ_PORT_DEFAULT);
+                    }
+                    "--rpc-bind-port" => zmq_port = last.parse().unwrap_or(NODE_RPC_PORT_DEFAULT),
+                    _ => (),
+                }
+                last = arg;
+            }
+        } else {
+            zmq_port = if self.api_port.is_empty() {
+                NODE_ZMQ_PORT_DEFAULT
+            } else {
+                self.zmq_port.parse().unwrap_or(NODE_ZMQ_PORT_DEFAULT)
+            };
+            rpc_port = if self.api_port.is_empty() {
+                NODE_RPC_PORT_DEFAULT
+            } else {
+                self.api_port.parse().unwrap_or(NODE_RPC_PORT_DEFAULT)
+            };
+        }
+        (rpc_port, zmq_port)
+    }
+    /// get the ports that the node process is currently using or that it will use if started with current settings
+    pub fn current_ports(&self, node_process: &Process, img_node: &ImgNode) -> (u16, u16) {
+        let node_is_alive = node_process.is_alive();
+        if node_is_alive {
+            (img_node.zmq_port, img_node.rpc_port)
+        } else {
+            self.ports()
+        }
+    }
 }
 impl P2pool {
     pub const fn process_name() -> ProcessName {
@@ -731,24 +784,116 @@ impl P2pool {
         path: &Path,
         backup_nodes: &Option<Vec<PoolNode>>,
         mode: StartOptionsMode,
+        local_node_zmq_port: u16,
+        local_node_rpc_port: u16,
     ) -> String {
-        Helper::build_p2pool_args(self, path, backup_nodes, false, mode).join(" ")
+        Helper::build_p2pool_args(
+            self,
+            path,
+            backup_nodes,
+            false,
+            local_node_rpc_port,
+            local_node_zmq_port,
+            mode,
+        )
+        .join(" ")
+    }
+    /// get the port that the p2pool process would use for stratum if it were using the current settings
+    pub fn stratum_port(&self) -> u16 {
+        if self.simple {
+            P2POOL_PORT_DEFAULT
+        } else if !self.arguments.is_empty() {
+            let mut last = "";
+            for arg in self.arguments.split_whitespace() {
+                if last == "--stratum" {
+                    return last
+                        .split(":")
+                        .last()
+                        .unwrap_or(&P2POOL_PORT_DEFAULT.to_string())
+                        .parse()
+                        .unwrap_or(P2POOL_PORT_DEFAULT);
+                }
+                last = arg;
+            }
+            return P2POOL_PORT_DEFAULT;
+        } else {
+            return self.stratum_port;
+        }
+    }
+
+    /// get the ports that the node process is currently using or that it will use if started with current settings
+    pub fn current_port(&self, p2pool_process: &Process, img_p2pool: &ImgP2pool) -> u16 {
+        let p2pool_is_alive = p2pool_process.is_alive();
+        if p2pool_is_alive {
+            img_p2pool.stratum_port
+        } else {
+            self.stratum_port()
+        }
     }
 }
 impl Xmrig {
     pub const fn process_name() -> ProcessName {
         ProcessName::Xmrig
     }
-    pub fn start_options(&self, mode: StartOptionsMode) -> String {
-        Helper::build_xmrig_args(self, mode).join(" ")
+    pub fn start_options(&self, mode: StartOptionsMode, p2pool_stratum_port: u16) -> String {
+        Helper::build_xmrig_args(self, mode, p2pool_stratum_port).join(" ")
     }
 }
 impl XmrigProxy {
     pub const fn process_name() -> ProcessName {
         ProcessName::XmrigProxy
     }
-    pub fn start_options(&self, mode: StartOptionsMode) -> String {
-        Helper::build_xp_args(self, mode).join(" ")
+    pub fn start_options(&self, mode: StartOptionsMode, p2pool_stratum_port: u16) -> String {
+        Helper::build_xp_args(self, mode, p2pool_stratum_port).join(" ")
+    }
+    /// get the API port that would be used if xmrig was started with the current settings
+    pub fn api_port(&self) -> u16 {
+        if self.simple {
+            PROXY_API_PORT_DEFAULT
+        } else if !self.arguments.is_empty() {
+            let mut last = "";
+            for arg in self.arguments.split_whitespace() {
+                if last == "--http-host" {
+                    return last.parse().unwrap_or(PROXY_API_PORT_DEFAULT);
+                }
+                last = arg;
+            }
+            return PROXY_API_PORT_DEFAULT;
+        } else {
+            return self.api_port.parse().unwrap_or(PROXY_API_PORT_DEFAULT);
+        }
+    }
+    /// get the port that would be used if xmrig was started with the current settings
+    pub fn bind_port(&self) -> u16 {
+        if self.simple {
+            PROXY_PORT_DEFAULT
+        } else if !self.arguments.is_empty() {
+            let mut last = "";
+            for arg in self.arguments.split_whitespace() {
+                if last == "--bind" || last == "-b" {
+                    return last
+                        .split(":")
+                        .last()
+                        .unwrap_or_default()
+                        .parse()
+                        .unwrap_or(PROXY_PORT_DEFAULT);
+                }
+                last = arg;
+            }
+            return PROXY_PORT_DEFAULT;
+        } else {
+            return self.port.parse().unwrap_or(PROXY_PORT_DEFAULT);
+        }
+    }
+    /// get the port that proxy process is currently using or that it will use if started with current settings
+    /// return (bind port, api port)
+    pub fn current_ports(&self, proxy_process: &Process, img_proxy: &ImgProxy) -> (u16, u16) {
+        let proxy_is_alive = proxy_process.is_alive();
+        if proxy_is_alive {
+            (img_proxy.port, img_proxy.api_port)
+        } else {
+            (self.bind_port(), self.api_port())
+        }
     }
 }
 // impl Xvb {

@@ -324,6 +324,8 @@ impl crate::app::App {
                                         self.sudo.clone(),
                                         &self.helper.clone(),
                                         &self.state.xmrig,
+                                        &self.state.p2pool,
+                                        &self.state.xmrig_proxy,
                                         &self.state.gupax.absolute_xmrig_path,
                                     );
                                 }

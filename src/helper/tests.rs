@@ -18,8 +18,10 @@
 #[cfg(test)]
 mod test {
 
-    use crate::disk::state::StartOptionsMode;
-    use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
+    use crate::disk::state::{StartOptionsMode, XmrigProxy};
+    use crate::helper::p2pool::ImgP2pool;
+    use crate::helper::xrig::xmrig::ImgXmrig;
+    use crate::helper::xrig::xmrig_proxy::{ImgProxy, PubXmrigProxyApi};
     use crate::helper::xvb::algorithm::Algorithm;
     use crate::helper::{
         Helper, Process, ProcessName, ProcessState,
@@ -266,6 +268,20 @@ Uptime         = 0h 2m 4s
             "".to_string(),
             PathBuf::new(),
         )));
+        let process_p2pool = Arc::new(Mutex::new(Process::new(
+            ProcessName::P2pool,
+            "".to_string(),
+            PathBuf::new(),
+        )));
+        let process_xp = Arc::new(Mutex::new(Process::new(
+            ProcessName::XmrigProxy,
+            "".to_string(),
+            PathBuf::new(),
+        )));
+        let img_p2pool = Arc::new(Mutex::new(ImgP2pool::new()));
+        let img_proxy = Arc::new(Mutex::new(ImgProxy::new()));
+        let proxy_state = XmrigProxy::default();
+        let p2pool_state = P2pool::default();
 
         process.lock().unwrap().state = ProcessState::Alive;
         PubXmrigApi::update_from_output(
@@ -274,6 +290,12 @@ Uptime         = 0h 2m 4s
             &output_pub,
             elapsed,
             &mut process.lock().unwrap(),
+            &process_p2pool.lock().unwrap(),
+            &process_xp.lock().unwrap(),
+            &img_proxy,
+            &img_p2pool,
+            &proxy_state,
+            &p2pool_state,
         );
         println!("{:#?}", process);
         assert!(process.lock().unwrap().state == ProcessState::NotMining);
@@ -287,6 +309,12 @@ Uptime         = 0h 2m 4s
             &output_pub,
             elapsed,
             &mut process.lock().unwrap(),
+            &process_p2pool.lock().unwrap(),
+            &process_xp.lock().unwrap(),
+            &img_proxy,
+            &img_p2pool,
+            &proxy_state,
+            &p2pool_state,
         );
         assert!(process.lock().unwrap().state == ProcessState::Alive);
     }
@@ -516,6 +544,14 @@ Uptime         = 0h 2m 4s
         let gui_api_p2pool = Arc::new(Mutex::new(PubP2poolApi::new()));
         let token_xmrig = "12345678";
         let state_p2pool = P2pool::default();
+        let proxy_img = Arc::new(Mutex::new(ImgProxy::new()));
+        let p2pool_img = Arc::new(Mutex::new(ImgP2pool::new()));
+        let xmrig_img = Arc::new(Mutex::new(ImgXmrig::new()));
+        let p2pool_process = Arc::new(Mutex::new(Process::new(
+            ProcessName::P2pool,
+            String::new(),
+            PathBuf::new(),
+        )));
         let time_donated = Arc::new(Mutex::new(u32::default()));
         let rig = "test_rig";
         let xp_alive = false;
@@ -540,6 +576,10 @@ Uptime         = 0h 2m 4s
             rig,
             xp_alive,
             p2pool_buffer,
+            &proxy_img,
+            &xmrig_img,
+            &p2pool_img,
+            &p2pool_process,
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 1000.0);
@@ -560,6 +600,14 @@ Uptime         = 0h 2m 4s
         let xp_alive = false;
         let share = 1;
         let p2pool_buffer = 5;
+        let proxy_img = Arc::new(Mutex::new(ImgProxy::new()));
+        let p2pool_img = Arc::new(Mutex::new(ImgP2pool::new()));
+        let xmrig_img = Arc::new(Mutex::new(ImgXmrig::new()));
+        let p2pool_process = Arc::new(Mutex::new(Process::new(
+            ProcessName::P2pool,
+            String::new(),
+            PathBuf::new(),
+        )));
 
         gui_api_xmrig.lock().unwrap().hashrate_raw_15m = 10000.0;
         gui_api_xvb.lock().unwrap().stats_priv.runtime_mode = RuntimeMode::ManualP2pool;
@@ -579,6 +627,10 @@ Uptime         = 0h 2m 4s
             rig,
             xp_alive,
             p2pool_buffer,
+            &proxy_img,
+            &xmrig_img,
+            &p2pool_img,
+            &p2pool_process,
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 9000.0);
@@ -599,6 +651,14 @@ Uptime         = 0h 2m 4s
         let xp_alive = false;
         let share = 1;
         let p2pool_buffer = 5;
+        let proxy_img = Arc::new(Mutex::new(ImgProxy::new()));
+        let p2pool_img = Arc::new(Mutex::new(ImgP2pool::new()));
+        let xmrig_img = Arc::new(Mutex::new(ImgXmrig::new()));
+        let p2pool_process = Arc::new(Mutex::new(Process::new(
+            ProcessName::P2pool,
+            String::new(),
+            PathBuf::new(),
+        )));
 
         gui_api_xmrig.lock().unwrap().hashrate_raw_15m = 10000.0;
         gui_api_xvb.lock().unwrap().stats_priv.runtime_mode = RuntimeMode::ManualDonationLevel;
@@ -623,6 +683,10 @@ Uptime         = 0h 2m 4s
             rig,
             xp_alive,
             p2pool_buffer,
+            &proxy_img,
+            &xmrig_img,
+            &p2pool_img,
+            &p2pool_process,
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 1000.0);
@@ -643,6 +707,14 @@ Uptime         = 0h 2m 4s
         let xp_alive = false;
         let share = 1;
         let p2pool_buffer = 5;
+        let proxy_img = Arc::new(Mutex::new(ImgProxy::new()));
+        let p2pool_img = Arc::new(Mutex::new(ImgP2pool::new()));
+        let xmrig_img = Arc::new(Mutex::new(ImgXmrig::new()));
+        let p2pool_process = Arc::new(Mutex::new(Process::new(
+            ProcessName::P2pool,
+            String::new(),
+            PathBuf::new(),
+        )));
 
         gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64 = 9_000_000;
         gui_api_xmrig.lock().unwrap().hashrate_raw_15m = 20000.0;
@@ -662,6 +734,10 @@ Uptime         = 0h 2m 4s
             rig,
             xp_alive,
             p2pool_buffer,
+            &proxy_img,
+            &xmrig_img,
+            &p2pool_img,
+            &p2pool_process,
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 10000.0);
@@ -684,6 +760,10 @@ Uptime         = 0h 2m 4s
             rig,
             xp_alive,
             p2pool_buffer,
+            &proxy_img,
+            &xmrig_img,
+            &p2pool_img,
+            &p2pool_process,
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 1000.0);
@@ -704,6 +784,14 @@ Uptime         = 0h 2m 4s
         let xp_alive = false;
         let share = 1;
         let p2pool_buffer = 5;
+        let proxy_img = Arc::new(Mutex::new(ImgProxy::new()));
+        let p2pool_img = Arc::new(Mutex::new(ImgP2pool::new()));
+        let xmrig_img = Arc::new(Mutex::new(ImgXmrig::new()));
+        let p2pool_process = Arc::new(Mutex::new(Process::new(
+            ProcessName::P2pool,
+            String::new(),
+            PathBuf::new(),
+        )));
 
         gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64 = 95_000_000;
         gui_api_xmrig.lock().unwrap().hashrate_raw_15m = 20000.0;
@@ -724,6 +812,10 @@ Uptime         = 0h 2m 4s
             rig,
             xp_alive,
             p2pool_buffer,
+            &proxy_img,
+            &xmrig_img,
+            &p2pool_img,
+            &p2pool_process,
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 15382.1);
@@ -744,6 +836,10 @@ Uptime         = 0h 2m 4s
             rig,
             xp_alive,
             p2pool_buffer,
+            &proxy_img,
+            &xmrig_img,
+            &p2pool_img,
+            &p2pool_process,
         );
 
         assert_eq!(algo.stats.target_donation_hashrate, 20000.0);
@@ -763,6 +859,8 @@ Uptime         = 0h 2m 4s
             Path::new(""),
             &None,
             false,
+            18083,
+            18081,
             StartOptionsMode::Custom,
         );
         assert_eq!(

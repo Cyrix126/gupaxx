@@ -7,6 +7,7 @@ use crate::helper::node::PubNodeApi;
 use crate::helper::p2pool::{ImgP2pool, PubP2poolApi};
 use crate::helper::xrig::xmrig::{ImgXmrig, PubXmrigApi};
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
+use crate::helper::xvb::nodes::Pool;
 use crate::helper::xvb::{PubXvbApi, rounds::XvbRound};
 use crate::helper::{ProcessName, Sys};
 
@@ -285,7 +286,7 @@ fn xmrig_proxy(
 
         ui.label(RichText::new("Pool").underline().color(BONE))
             .on_hover_text(STATUS_XMRIG_PROXY_POOL);
-        ui.label(api.node.to_string());
+        ui.label(api.pool.as_ref().unwrap_or(&Pool::Unknown).to_string());
         drop(api);
     });
 }
@@ -337,7 +338,7 @@ fn xmrig(
         ));
         ui.label(RichText::new("Pool").underline().color(BONE))
             .on_hover_text(STATUS_XMRIG_POOL);
-        ui.label(api.node.to_string());
+        ui.label(api.pool.as_ref().unwrap_or(&Pool::Unknown).to_string());
         ui.label(RichText::new("Threads").underline().color(BONE))
             .on_hover_text(STATUS_XMRIG_THREADS);
         ui.label(format!(

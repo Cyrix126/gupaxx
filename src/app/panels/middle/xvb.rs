@@ -271,7 +271,7 @@ impl crate::disk::state::Xvb {
             ui.add_enabled_ui(is_alive, |ui| {
                 let api = &api.lock().unwrap();
                 let priv_stats = &api.stats_priv;
-                let current_node = &api.current_node;
+                let current_node = &api.current_pool;
                 let style_height = ui.text_style_height(&TextStyle::Body);
 
         let width_column = ui.text_style_height(&TextStyle::Body) * 12.0;
@@ -327,7 +327,7 @@ if priv_stats.win_current {
                                             .map_or("No where".to_string(), |n| n.to_string()),
                                     )
                                     .on_hover_text_at_pointer(&priv_stats.msg_indicator);
-                                    ui.label(Uptime::from(priv_stats.time_switch_node).to_string())
+                                    ui.label(Uptime::from(priv_stats.time_switch_pool).to_string())
                                         .on_hover_text_at_pointer(&priv_stats.msg_indicator)
                                 })
                             });

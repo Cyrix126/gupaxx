@@ -49,6 +49,9 @@ impl P2pool {
                             if !self.zmq_port_field(ui) {
                                 incorrect_input = false;
                             }
+                            if !self.stratum_port_field(ui) {
+                                incorrect_input = false;
+                            }
                         });
                         list_poolnode(
                             ui,
@@ -165,5 +168,20 @@ impl P2pool {
             .help_msg(P2POOL_NODE_IP)
             .validations(&[|x| REGEXES.ipv4.is_match(x), |x| REGEXES.domain.is_match(x)])
             .build(ui, &mut self.ip)
+    }
+
+    /// TODO: find a better solution to handle settings that are not String ?
+    fn stratum_port_field(&mut self, ui: &mut Ui) -> bool {
+        let mut port = self.stratum_port.to_string();
+        let valid = StateTextEdit::new(ui)
+            .description("STRATUM PORT")
+            .max_ch(5)
+            .help_msg(HELP_STRATUM_PORT)
+            .validations(&[|x| REGEXES.port.is_match(x)])
+            .build(ui, &mut port);
+        if let Ok(port) = port.parse() {
+            self.stratum_port = port;
+        }
+        valid
     }
 }

@@ -87,6 +87,7 @@ mod test {
 			zmq = "18083"
             prefer_local_node = true
             console_height = 360
+            stratum_port = 3333
 
             [p2pool.selected_node]
             index = 0

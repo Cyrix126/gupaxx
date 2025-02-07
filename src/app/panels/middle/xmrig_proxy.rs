@@ -34,9 +34,9 @@ use crate::{
     XMRIG_TLS,
 };
 
-use super::XMRIG_API_TOKEN;
 use super::common::list_poolnode::PoolNode;
 use super::common::state_edit_field::StateTextEdit;
+use super::{HELP_STRATUM_IP, HELP_STRATUM_PORT, XMRIG_API_TOKEN};
 
 impl XmrigProxy {
     #[inline(always)] // called once
@@ -47,6 +47,7 @@ impl XmrigProxy {
         api: &Arc<Mutex<PubXmrigProxyApi>>,
         buffer: &mut String,
         ui: &mut egui::Ui,
+        stratum_port: u16,
     ) {
         header_tab(
             ui,
@@ -76,8 +77,10 @@ impl XmrigProxy {
             if !self.simple {
                 //---------------------------------------------------------------------------------------------------- Arguments
                 debug!("XMRig-Proxy Tab | Rendering [Arguments]");
-                let default_args_simple = self.start_options(StartOptionsMode::Simple);
-                let default_args_advanced = self.start_options(StartOptionsMode::Advanced);
+                let default_args_simple =
+                    self.start_options(StartOptionsMode::Simple, stratum_port);
+                let default_args_advanced =
+                    self.start_options(StartOptionsMode::Advanced, stratum_port);
                 start_options_field(
                     ui,
                     &mut self.arguments,
@@ -135,8 +138,8 @@ impl XmrigProxy {
                                         ui,
                                         &mut (
                                             &mut self.name,
-                                            &mut self.ip,
-                                            &mut self.port,
+                                            &mut self.p2pool_ip,
+                                            &mut self.p2pool_port,
                                             &mut self.rig,
                                         ),
                                         &mut self.selected_pool,
@@ -148,7 +151,7 @@ impl XmrigProxy {
                         });
                         ui.add_space(5.0);
 
-                        debug!("XMRig-Proxy Tab | Rendering [API] TextEdits");
+                        debug!("XMRig-Proxy Tab | Rendering [API/BIND] TextEdits");
                         // [HTTP API IP/Port]
                         ui.group(|ui| {
                             ui.horizontal(|ui| {
@@ -157,6 +160,8 @@ impl XmrigProxy {
                                     self.api_ip_field(ui);
                                     self.api_port_field(ui);
                                     self.api_token_field(ui);
+                                    self.stratum_ip_field(ui);
+                                    self.stratum_port_field(ui);
                                 });
 
                                 ui.separator();
@@ -198,11 +203,11 @@ impl XmrigProxy {
     }
     fn rpc_port_field(&mut self, ui: &mut Ui) -> bool {
         StateTextEdit::new(ui)
-            .description(" RPC PORT  ")
+            .description(" PORT      ")
             .max_ch(5)
             .help_msg(XMRIG_PORT)
             .validations(&[|x| REGEXES.port.is_match(x)])
-            .build(ui, &mut self.port)
+            .build(ui, &mut self.p2pool_port)
     }
     fn ip_field(&mut self, ui: &mut Ui) -> bool {
         StateTextEdit::new(ui)
@@ -210,7 +215,7 @@ impl XmrigProxy {
             .max_ch(255)
             .help_msg(XMRIG_IP)
             .validations(&[|x| REGEXES.ipv4.is_match(x) || REGEXES.domain.is_match(x)])
-            .build(ui, &mut self.ip)
+            .build(ui, &mut self.p2pool_ip)
     }
     fn rig_field(&mut self, ui: &mut Ui) -> bool {
         StateTextEdit::new(ui)
@@ -241,5 +246,22 @@ impl XmrigProxy {
             .max_ch(255)
             .help_msg(XMRIG_API_TOKEN)
             .build(ui, &mut self.token)
+    }
+    fn stratum_ip_field(&mut self, ui: &mut Ui) -> bool {
+        StateTextEdit::new(ui)
+            .description(" BIND IP   ")
+            .max_ch(255)
+            .help_msg(HELP_STRATUM_IP)
+            .validations(&[|x| REGEXES.ipv4.is_match(x) || REGEXES.domain.is_match(x)])
+            .build(ui, &mut self.ip)
+    }
+    fn stratum_port_field(&mut self, ui: &mut Ui) -> bool {
+        let valid = StateTextEdit::new(ui)
+            .description(" BIND PORT ")
+            .max_ch(5)
+            .help_msg(HELP_STRATUM_PORT)
+            .validations(&[|x| REGEXES.port.is_match(x)])
+            .build(ui, &mut self.port);
+        valid
     }
 }

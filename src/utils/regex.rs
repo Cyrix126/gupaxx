@@ -17,11 +17,10 @@
 
 // Some regexes used throughout Gupax.
 
+use crate::helper::xvb::nodes::Pool;
 use log::{error, warn};
 use once_cell::sync::Lazy;
 use regex::Regex;
-
-use crate::helper::xvb::nodes::XvbNode;
 
 //---------------------------------------------------------------------------------------------------- Lazy
 pub static REGEXES: Lazy<Regexes> = Lazy::new(Regexes::new);
@@ -157,49 +156,42 @@ pub fn nb_current_shares(s: &str) -> Option<u32> {
     }
     None
 }
-pub fn detect_new_node_xmrig(s: &str) -> Option<XvbNode> {
-    static CURRENT_SHARE: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"use pool (?P<pool>.*?) ").unwrap());
+pub fn detect_pool_xmrig(s: &str, proxy_port: u16, p2pool_port: u16) -> Option<Pool> {
+    static CURRENT_SHARE: Lazy<Regex> = Lazy::new(|| {
+        Regex::new(
+            r"(use pool|new job from) (?P<pool>(?:[0-9]{1,3}\.){3}[0-9]{1,3}:\d{1,5})(| diff)",
+        )
+        .unwrap()
+    });
     if let Some(c) = CURRENT_SHARE.captures(s) {
         if let Some(m) = c.name("pool") {
             match m.as_str() {
                 // if user change address of local p2pool, it could create issue
-                "127.0.0.1:3333" => {
-                    return Some(XvbNode::P2pool);
-                }
-                "127.0.0.1:3355" => {
-                    return Some(XvbNode::XmrigProxy);
+                x if x.contains("127.0.0.1") => {
+                    let port = x.split_once(":").unwrap_or_default().1.parse::<u16>();
+                    if let Ok(port) = port {
+                        if port == proxy_port {
+                            return Some(Pool::XmrigProxy(port));
+                        }
+                        if port == p2pool_port {
+                            return Some(Pool::P2pool(port));
+                        }
+                        return Some(Pool::Custom("127.0.0.1".to_string(), port));
+                    }
                 }
                 "eu.xmrvsbeast.com:4247" => {
-                    return Some(XvbNode::Europe);
+                    return Some(Pool::XvBEurope);
                 }
                 "na.xmrvsbeast.com:4247" => {
-                    return Some(XvbNode::NorthAmerica);
+                    return Some(Pool::XvBNorthAmerica);
                 }
-                _ => {}
+                x => {
+                    let (ip, port) = x.split_once(":").unwrap_or_default();
+                    if let Ok(port) = port.parse() {
+                        return Some(Pool::Custom(ip.to_string(), port));
+                    }
+                }
             }
-        }
-    }
-    warn!(
-        "a line on xmrig console was detected as using a new pool but the syntax was not recognized or it was not a pool useable for the algorithm."
-    );
-    None
-}
-// this detection removes the need to update pub_api.node everytime xmrig/proxy are updated to mine to another p2pool node.
-pub fn detect_node_xmrig(s: &str) -> Option<String> {
-    static CURRENT_SHARE: Lazy<Regex> =
-        Lazy::new(|| Regex::new(r"new job from (?P<pool>.*?) diff").unwrap());
-    if let Some(c) = CURRENT_SHARE.captures(s) {
-        if let Some(m) = c.name("pool") {
-            // let's make nicer name appear on status tab
-            let name = match m.as_str() {
-                "127.0.0.1:3333" => XvbNode::P2pool.to_string(),
-                "127.0.0.1:3355" => XvbNode::XmrigProxy.to_string(),
-                "eu.xmrvsbeast.com:4247" => XvbNode::Europe.to_string(),
-                "na.xmrvsbeast.com:4247" => XvbNode::NorthAmerica.to_string(),
-                x => x.to_string(),
-            };
-            return Some(name);
         }
     }
     warn!(

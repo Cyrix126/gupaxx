@@ -32,11 +32,13 @@ use crate::helper::Helper;
 use crate::helper::Process;
 use crate::helper::ProcessName;
 use crate::helper::Sys;
+use crate::helper::node::ImgNode;
 use crate::helper::node::PubNodeApi;
 use crate::helper::p2pool::ImgP2pool;
 use crate::helper::p2pool::PubP2poolApi;
 use crate::helper::xrig::xmrig::ImgXmrig;
 use crate::helper::xrig::xmrig::PubXmrigApi;
+use crate::helper::xrig::xmrig_proxy::ImgProxy;
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
 use crate::helper::xvb::PubXvbApi;
 use crate::helper::xvb::priv_stats::RuntimeMode;
@@ -143,20 +145,21 @@ pub struct App {
     // actual stats, and all the functions needed to mutate them.
     pub gupax_p2pool_api: Arc<Mutex<GupaxP2poolApi>>,
     // Static stuff
-    pub benchmarks: Vec<Benchmark>,     // XMRig CPU benchmarks
-    pub pid: sysinfo::Pid,              // Gupax's PID
-    pub max_threads: u16,               // Max amount of detected system threads
-    pub now: Instant,                   // Internal timer
-    pub exe: String,                    // Path for [Gupax] binary
-    pub dir: String,                    // Directory [Gupax] binary is in
-    pub resolution: Vec2,               // Frame resolution
-    pub os: &'static str,               // OS
-    pub admin: bool,                    // Are we admin? (for Windows)
-    pub os_data_path: PathBuf,          // OS data path (e.g: ~/.local/share/gupax/)
+    pub benchmarks: Vec<Benchmark>,          // XMRig CPU benchmarks
+    pub pid: sysinfo::Pid,                   // Gupax's PID
+    pub max_threads: u16,                    // Max amount of detected system threads
+    pub now: Instant,                        // Internal timer
+    pub exe: String,                         // Path for [Gupax] binary
+    pub dir: String,                         // Directory [Gupax] binary is in
+    pub resolution: Vec2,                    // Frame resolution
+    pub os: &'static str,                    // OS
+    pub admin: bool,                         // Are we admin? (for Windows)
+    pub os_data_path: PathBuf,               // OS data path (e.g: ~/.local/share/gupax/)
     pub gupax_p2pool_api_path: PathBuf, // Gupax-P2Pool API path (e.g: ~/.local/share/gupax/p2pool/)
     pub state_path: PathBuf,            // State file path
     pub node_path: PathBuf,             // Node file path
     pub pool_path: PathBuf,             // Pool file path
+    pub backup_hosts: Option<Vec<PoolNode>>, // P2Pool backup nodes
     pub version: &'static str,          // Gupax version
     pub name_version: String,           // [Gupax vX.X.X]
     #[cfg(target_os = "windows")]
@@ -224,8 +227,10 @@ impl App {
         let xmrig_proxy_api = arc_mut!(PubXmrigProxyApi::new());
         let xvb_api = arc_mut!(PubXvbApi::new());
         let node_api = arc_mut!(PubNodeApi::new());
+        let node_img = arc_mut!(ImgNode::default());
         let p2pool_img = arc_mut!(ImgP2pool::new());
         let xmrig_img = arc_mut!(ImgXmrig::new());
+        let proxy_img = arc_mut!(ImgProxy::new());
 
         info!("App Init | Sysinfo...");
         // We give this to the [Helper] thread.
@@ -292,8 +297,10 @@ impl App {
                 xvb_api.clone(),
                 xmrig_proxy_api.clone(),
                 node_api.clone(),
+                node_img.clone(),
                 p2pool_img.clone(),
                 xmrig_img.clone(),
+                proxy_img.clone(),
                 arc_mut!(GupaxP2poolApi::new())
             )),
             node,
@@ -332,6 +339,7 @@ impl App {
             state_path: PathBuf::new(),
             node_path: PathBuf::new(),
             pool_path: PathBuf::new(),
+            backup_hosts: None,
             version: GUPAX_VERSION,
             name_version: format!("Gupaxx {}", GUPAX_VERSION),
             #[cfg(target_os = "windows")]
@@ -679,6 +687,9 @@ impl App {
         }
 
         info!("App ... OK");
+
+        // Backup hosts needs to be available to print the custom args correctly for p2pool
+        app.backup_hosts = app.gather_backup_hosts();
         app
     }
 

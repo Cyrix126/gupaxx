@@ -21,9 +21,10 @@
 
 use crate::{
     constants::*,
-    disk::state::Xmrig,
+    disk::state::{P2pool, Xmrig, XmrigProxy},
     helper::{Helper, ProcessSignal},
 };
+use enclose::enc;
 use log::*;
 use std::{
     io::Write,
@@ -116,12 +117,12 @@ impl SudoState {
         state: Arc<Mutex<Self>>,
         helper: &Arc<Mutex<Helper>>,
         xmrig: &Xmrig,
+        p2pool: &P2pool,
+        proxy: &XmrigProxy,
         path: &Path,
     ) {
-        let helper = Arc::clone(helper);
-        let xmrig = xmrig.clone();
         let path = path.to_path_buf();
-        thread::spawn(move || {
+        thread::spawn(enc!((helper, xmrig, p2pool, proxy)  move || {
             // Set to testing
             state.lock().unwrap().testing = true;
 
@@ -192,6 +193,8 @@ impl SudoState {
                     ProcessSignal::Restart => crate::helper::Helper::restart_xmrig(
                         &helper,
                         &xmrig,
+                        &p2pool,
+                        &proxy,
                         &path,
                         Arc::clone(&state),
                     ),
@@ -199,6 +202,8 @@ impl SudoState {
                     _ => crate::helper::Helper::start_xmrig(
                         &helper,
                         &xmrig,
+                        &p2pool,
+                        &proxy,
                         &path,
                         Arc::clone(&state),
                     ),
@@ -209,6 +214,6 @@ impl SudoState {
             }
             state.lock().unwrap().signal = ProcessSignal::None;
             state.lock().unwrap().testing = false;
-        });
+        }));
     }
 }

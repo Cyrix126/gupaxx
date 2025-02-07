@@ -44,6 +44,8 @@ impl P2pool {
         ui: &mut egui::Ui,
         backup_nodes: Option<Vec<PoolNode>>,
         path: &Path,
+        local_node_zmq_port: u16,
+        local_node_rpc_port: u16,
     ) {
         //---------------------------------------------------------------------------------------------------- [Simple] Console
         // debug!("P2Pool Tab | Rendering [Console]");
@@ -72,10 +74,20 @@ impl P2pool {
                 }
             });
             if !self.simple {
-                let default_args_simple =
-                    self.start_options(path, &backup_nodes, StartOptionsMode::Simple);
-                let default_args_advanced =
-                    self.start_options(path, &backup_nodes, StartOptionsMode::Advanced);
+                let default_args_simple = self.start_options(
+                    path,
+                    &backup_nodes,
+                    StartOptionsMode::Simple,
+                    local_node_zmq_port,
+                    local_node_rpc_port,
+                );
+                let default_args_advanced = self.start_options(
+                    path,
+                    &backup_nodes,
+                    StartOptionsMode::Advanced,
+                    local_node_zmq_port,
+                    local_node_rpc_port,
+                );
                 start_options_field(
                     ui,
                     &mut self.arguments,

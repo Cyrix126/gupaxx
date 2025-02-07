@@ -15,7 +15,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::helper::XvbNode;
+use crate::XMRIG_API_CONFIG_ENDPOINT;
+use crate::XMRIG_API_SUMMARY_ENDPOINT;
+use crate::helper::Pool;
 use anyhow::Result;
 use anyhow::anyhow;
 use log::info;
@@ -24,6 +26,8 @@ use reqwest_middleware::ClientWithMiddleware as Client;
 use serde::Deserialize;
 use serde::Serialize;
 use serde_json::Value;
+use xmrig::ImgXmrig;
+use xmrig_proxy::ImgProxy;
 
 pub mod xmrig;
 pub mod xmrig_proxy;
@@ -33,7 +37,7 @@ pub async fn update_xmrig_config(
     client: &Client,
     api_uri: &str,
     token: &str,
-    node: &XvbNode,
+    node: &Pool,
     address: &str,
     rig: &str,
 ) -> Result<()> {
@@ -80,4 +84,30 @@ pub async fn update_xmrig_config(
 #[derive(Debug, Serialize, Deserialize, Clone, Copy)]
 struct Hashrate {
     total: [Option<f32>; 3],
+}
+
+/// Take the runtime port. Even if settings were changed, the port will be the current one.
+/// to get config url, true. False for summary
+/// provide either xmrig_img or proxy_img
+pub fn current_api_url_xrig(
+    config: bool,
+    xmrig_img: Option<&ImgXmrig>,
+    proxy_img: Option<&ImgProxy>,
+) -> String {
+    let (port, endpoint) = if let Some(xmrig) = xmrig_img {
+        if config {
+            (xmrig.api_port, XMRIG_API_CONFIG_ENDPOINT)
+        } else {
+            (xmrig.api_port, XMRIG_API_SUMMARY_ENDPOINT)
+        }
+    } else if let Some(proxy) = proxy_img {
+        if config {
+            (proxy.api_port, XMRIG_API_CONFIG_ENDPOINT)
+        } else {
+            (proxy.api_port, XMRIG_API_SUMMARY_ENDPOINT)
+        }
+    } else {
+        panic!("neither xmrig_img or proxy_img is some");
+    };
+    format!("http://127.0.0.1:{port}/{endpoint}")
 }
