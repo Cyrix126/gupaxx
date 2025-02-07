@@ -2042,7 +2042,7 @@ dependencies = [
 
 [[package]]
 name = "gupaxx"
-version = "1.8.0"
+version = "1.8.0-rc1"
 dependencies = [
  "anyhow",
  "benri",

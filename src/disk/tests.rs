@@ -179,6 +179,7 @@ mod test {
             dns_blocklist = true
             disable_dns_checkpoint = true
             path_db = ""
+            full_memory = false
             console_height = 360
 
 			[version]
