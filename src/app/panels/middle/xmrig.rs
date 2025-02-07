@@ -46,6 +46,7 @@ impl Xmrig {
         buffer: &mut String,
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
+        p2pool_stratum_port: u16,
     ) {
         header_tab(
             ui,
@@ -72,8 +73,10 @@ impl Xmrig {
             });
             if !self.simple {
                 debug!("XMRig Tab | Rendering [Arguments]");
-                let default_args_simple = self.start_options(StartOptionsMode::Simple);
-                let default_args_advanced = self.start_options(StartOptionsMode::Advanced);
+                let default_args_simple =
+                    self.start_options(StartOptionsMode::Simple, p2pool_stratum_port);
+                let default_args_advanced =
+                    self.start_options(StartOptionsMode::Advanced, p2pool_stratum_port);
                 start_options_field(
                     ui,
                     &mut self.arguments,

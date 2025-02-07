@@ -28,108 +28,139 @@ use tokio::spawn;
 use crate::{
     GUPAX_VERSION_UNDERSCORE, XVB_NODE_EU, XVB_NODE_NA, XVB_NODE_PORT, XVB_NODE_RPC,
     components::node::{GetInfo, TIMEOUT_NODE_PING},
-    helper::{Process, ProcessName, ProcessState, xvb::output_console},
+    disk::state::P2pool,
+    helper::{Process, ProcessName, ProcessState, p2pool::ImgP2pool, xvb::output_console},
 };
 
 use super::PubXvbApi;
-#[derive(Copy, Clone, Debug, Default, PartialEq, Display)]
-pub enum XvbNode {
-    #[display("XvB North America Node")]
-    NorthAmerica,
+#[derive(Clone, Debug, Default, PartialEq, Display)]
+pub enum Pool {
+    #[display("XvB North America Pool")]
+    XvBNorthAmerica,
     #[default]
-    #[display("XvB European Node")]
-    Europe,
+    #[display("XvB European Pool")]
+    XvBEurope,
     #[display("Local P2pool")]
-    P2pool,
+    P2pool(u16),
     #[display("Xmrig Proxy")]
-    XmrigProxy,
+    XmrigProxy(u16),
+    #[display("Custom Pool")]
+    Custom(String, u16),
+    #[display("Not connected to any pool")]
+    Unknown,
 }
-impl XvbNode {
+impl Pool {
     pub fn url(&self) -> String {
         match self {
-            Self::NorthAmerica => String::from(XVB_NODE_NA),
-            Self::Europe => String::from(XVB_NODE_EU),
-            Self::P2pool => String::from("127.0.0.1"),
-            Self::XmrigProxy => String::from("127.0.0.1"),
+            Self::XvBNorthAmerica => String::from(XVB_NODE_NA),
+            Self::XvBEurope => String::from(XVB_NODE_EU),
+            Self::P2pool(_) => String::from("127.0.0.1"),
+            Self::XmrigProxy(_) => String::from("127.0.0.1"),
+            Self::Custom(url, _) => url.clone(),
+            _ => "???".to_string(),
         }
     }
     pub fn port(&self) -> String {
         match self {
-            Self::NorthAmerica | Self::Europe => String::from(XVB_NODE_PORT),
-            Self::P2pool => String::from("3333"),
-            Self::XmrigProxy => String::from("3355"),
+            Self::XvBNorthAmerica | Self::XvBEurope => String::from(XVB_NODE_PORT),
+            Self::P2pool(port) => port.to_string(),
+            Self::XmrigProxy(port) => port.to_string(),
+            Self::Custom(_, port) => port.to_string(),
+            _ => "???".to_string(),
         }
     }
     pub fn user(&self, address: &str) -> String {
         match self {
-            Self::NorthAmerica => address.chars().take(8).collect(),
-            Self::Europe => address.chars().take(8).collect(),
-            Self::P2pool => GUPAX_VERSION_UNDERSCORE.to_string(),
-            Self::XmrigProxy => GUPAX_VERSION_UNDERSCORE.to_string(),
+            Self::XvBNorthAmerica => address.chars().take(8).collect(),
+            Self::XvBEurope => address.chars().take(8).collect(),
+            _ => GUPAX_VERSION_UNDERSCORE.to_string(),
         }
     }
     pub fn tls(&self) -> bool {
         match self {
-            Self::NorthAmerica => true,
-            Self::Europe => true,
-            Self::P2pool => false,
-            Self::XmrigProxy => false,
+            Self::XvBNorthAmerica => true,
+            Self::XvBEurope => true,
+            Self::P2pool(_) => false,
+            Self::XmrigProxy(_) => false,
+            Self::Custom(_, _) => false,
+            _ => false,
         }
     }
     pub fn keepalive(&self) -> bool {
         match self {
-            Self::NorthAmerica => true,
-            Self::Europe => true,
-            Self::P2pool => false,
-            Self::XmrigProxy => false,
+            Self::XvBNorthAmerica => true,
+            Self::XvBEurope => true,
+            Self::P2pool(_) => false,
+            Self::XmrigProxy(_) => false,
+            Self::Custom(_, _) => false,
+            _ => false,
         }
     }
 
-    pub async fn update_fastest_node(
+    pub async fn update_fastest_pool(
         client: &Client,
         pub_api_xvb: &Arc<Mutex<PubXvbApi>>,
         gui_api_xvb: &Arc<Mutex<PubXvbApi>>,
         process_xvb: &Arc<Mutex<Process>>,
+        process_p2pool: &Arc<Mutex<Process>>,
+        p2pool_img: &Arc<Mutex<ImgP2pool>>,
+        p2pool_state: &P2pool,
     ) {
         let client_eu = client.clone();
         let client_na = client.clone();
         // two spawn to ping the two nodes in parallel and not one after the other.
         let ms_eu = spawn(async move {
-            info!("Node | ping European XvB Node");
-            XvbNode::ping(&XvbNode::Europe.url(), &client_eu).await
+            info!("Node | ping XvBEuropean XvB Node");
+            Pool::ping(&Pool::XvBEurope.url(), &client_eu).await
         });
         let ms_na = spawn(async move {
             info!("Node | ping North America Node");
-            XvbNode::ping(&XvbNode::NorthAmerica.url(), &client_na).await
+            Pool::ping(&Pool::XvBNorthAmerica.url(), &client_na).await
         });
-        let node = if let Ok(ms_eu) = ms_eu.await {
+        let pool = if let Ok(ms_eu) = ms_eu.await {
             if let Ok(ms_na) = ms_na.await {
                 // if two nodes are up, compare ping latency and return fastest.
                 if ms_na != TIMEOUT_NODE_PING && ms_eu != TIMEOUT_NODE_PING {
                     if ms_na < ms_eu {
-                        XvbNode::NorthAmerica
+                        Pool::XvBNorthAmerica
                     } else {
-                        XvbNode::Europe
+                        Pool::XvBEurope
                     }
                 } else if ms_na != TIMEOUT_NODE_PING && ms_eu == TIMEOUT_NODE_PING {
                     // if only na is online, return it.
-                    XvbNode::NorthAmerica
+                    Pool::XvBNorthAmerica
                 } else if ms_na == TIMEOUT_NODE_PING && ms_eu != TIMEOUT_NODE_PING {
                     // if only eu is online, return it.
-                    XvbNode::Europe
+                    Pool::XvBEurope
                 } else {
                     // if P2pool is returned, it means none of the two nodes are available.
-                    XvbNode::P2pool
+                    Pool::P2pool(
+                        p2pool_state.current_port(
+                            &process_p2pool.lock().unwrap(),
+                            &p2pool_img.lock().unwrap(),
+                        ),
+                    )
                 }
             } else {
                 error!("ping has failed !");
-                XvbNode::P2pool
+                Pool::P2pool(
+                    p2pool_state
+                        .current_port(&process_p2pool.lock().unwrap(), &p2pool_img.lock().unwrap()),
+                )
             }
         } else {
             error!("ping has failed !");
-            XvbNode::P2pool
+            Pool::P2pool(
+                p2pool_state
+                    .current_port(&process_p2pool.lock().unwrap(), &p2pool_img.lock().unwrap()),
+            )
         };
-        if node == XvbNode::P2pool {
+        if pool
+            == Pool::P2pool(
+                p2pool_state
+                    .current_port(&process_p2pool.lock().unwrap(), &p2pool_img.lock().unwrap()),
+            )
+        {
             // if both nodes are dead, then the state of the process must be NodesOffline
             info!("XvB node ping, all offline or ping failed, switching back to local p2pool",);
             output_console(
@@ -137,13 +168,13 @@ impl XvbNode {
                 "XvB node ping, all offline or ping failed, switching back to local p2pool",
                 ProcessName::Xvb,
             );
-            process_xvb.lock().unwrap().state = ProcessState::OfflineNodesAll;
+            process_xvb.lock().unwrap().state = ProcessState::OfflinePoolsAll;
         } else {
             // if node is up and because update_fastest is used only if token/address is valid, it means XvB process is Alive.
-            info!("XvB node ping, both online and best is {}", node.url());
+            info!("XvB node ping, both online and best is {}", pool.url());
             output_console(
                 &mut gui_api_xvb.lock().unwrap().output,
-                &format!("XvB node ping, {} is selected as the fastest.", node),
+                &format!("XvB Pool ping, {} is selected as the fastest.", pool),
                 ProcessName::Xvb,
             );
             info!("ProcessState to Syncing after finding joinable node");
@@ -154,7 +185,7 @@ impl XvbNode {
                 process_xvb.lock().unwrap().state = ProcessState::Syncing;
             }
         }
-        pub_api_xvb.lock().unwrap().stats_priv.node = node;
+        pub_api_xvb.lock().unwrap().stats_priv.pool = pool;
     }
     async fn ping(ip: &str, client: &Client) -> u128 {
         let request = client

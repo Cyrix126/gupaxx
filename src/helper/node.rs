@@ -187,6 +187,8 @@ impl Helper {
         } else {
             StartOptionsMode::Advanced
         };
+        let (rpc_port, zmq_port) = state.ports();
+        *helper.lock().unwrap().img_node.lock().unwrap() = ImgNode { rpc_port, zmq_port };
         let args = Self::build_node_args(state, mode);
 
         // Print arguments & user settings to console
@@ -457,5 +459,19 @@ impl PrivNodeApi {
             }
         }
         Ok(private)
+    }
+}
+#[derive(Debug, Clone)]
+pub struct ImgNode {
+    pub rpc_port: u16,
+    pub zmq_port: u16,
+}
+
+impl Default for ImgNode {
+    fn default() -> Self {
+        Self {
+            rpc_port: 18081,
+            zmq_port: 18083,
+        }
     }
 }

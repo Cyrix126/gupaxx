@@ -15,13 +15,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::helper::xrig::update_xmrig_config;
+use crate::helper::xrig::{current_api_url_xrig, update_xmrig_config};
 use crate::helper::xvb::algorithm::algorithm;
 use crate::helper::xvb::priv_stats::XvbPrivStats;
 use crate::helper::xvb::public_stats::XvbPubStats;
 use crate::helper::{ProcessName, sleep_end_loop};
 use crate::miscs::{client, output_console};
-use crate::{XMRIG_CONFIG_URL, XMRIG_PROXY_CONFIG_URL, XMRIG_PROXY_SUMMARY_URL, XMRIG_SUMMARY_URL};
 use bounded_vec_deque::BoundedVecDeque;
 use enclose::enc;
 use log::{debug, info, warn};
@@ -44,11 +43,11 @@ use crate::{
     utils::macros::sleep,
 };
 
-use self::nodes::XvbNode;
+use self::nodes::Pool;
 
-use super::p2pool::PubP2poolApi;
-use super::xrig::xmrig::PubXmrigApi;
-use super::xrig::xmrig_proxy::PubXmrigProxyApi;
+use super::p2pool::{ImgP2pool, PubP2poolApi};
+use super::xrig::xmrig::{ImgXmrig, PubXmrigApi};
+use super::xrig::xmrig_proxy::{ImgProxy, PubXmrigProxyApi};
 use super::{Helper, Process};
 
 pub mod algorithm;
@@ -116,6 +115,11 @@ impl Helper {
         // ex: read hashrate values from gui, update node to pub.
         let gui_api_xmrig = Arc::clone(&helper.lock().unwrap().gui_api_xmrig);
         let gui_api_xp = Arc::clone(&helper.lock().unwrap().gui_api_xp);
+        // get the value with which xmrig and proxy started.
+        let img_xmrig = Arc::clone(&helper.lock().unwrap().img_xmrig);
+        let img_proxy = Arc::clone(&helper.lock().unwrap().img_proxy);
+        let img_p2pool = Arc::clone(&helper.lock().unwrap().img_p2pool);
+
         // Reset before printing to output.
         // Need to reset because values of stats would stay otherwise which could bring confusion even if panel is with a disabled theme.
         // at the start of a process, values must be default.
@@ -140,7 +144,7 @@ impl Helper {
 
         info!("XvB | spawn watchdog");
         thread::spawn(
-            enc!((state_xvb, state_p2pool, state_xmrig, state_xmrig,state_xp) move || {
+            enc!((state_xvb, state_p2pool, state_xmrig, state_xmrig,state_xp, img_xmrig, img_proxy, img_p2pool) move || {
                 // thread priority, else there are issue on windows but it is also good for other OS
                     Self::spawn_xvb_watchdog(
                     &gui_api,
@@ -156,6 +160,10 @@ impl Helper {
                     &process_xmrig,
                     &gui_api_xp,
                     &process_xp,
+                    &img_xmrig,
+                    &img_proxy,
+                    &img_p2pool,
+
                 );
             }),
         );
@@ -177,6 +185,11 @@ impl Helper {
         process_xmrig: &Arc<Mutex<Process>>,
         gui_api_xp: &Arc<Mutex<PubXmrigProxyApi>>,
         process_xp: &Arc<Mutex<Process>>,
+        // get the current http port of xmrig
+        // This port could be changed by the user without restarting xvb
+        xmrig_img: &Arc<Mutex<ImgXmrig>>,
+        proxy_img: &Arc<Mutex<ImgProxy>>,
+        p2pool_img: &Arc<Mutex<ImgP2pool>>,
     ) {
         // create uniq client that is going to be used for during the life of the thread.
         let client = client();
@@ -248,6 +261,9 @@ impl Helper {
                     state_xmrig,
                     state_xp,
                     xp_alive,
+                    xmrig_img,
+                    proxy_img,
+                    p2pool_img,
                 )
                 .await
                 {
@@ -258,6 +274,7 @@ impl Helper {
                 if signal_interrupt(
                     process,
                     if xp_alive { process_xp } else { process_xmrig },
+                    process_p2pool,
                     start.into(),
                     &client,
                     pub_api,
@@ -266,6 +283,9 @@ impl Helper {
                     state_xmrig,
                     state_xp,
                     xp_alive,
+                    xmrig_img,
+                    proxy_img,
+                    p2pool_img,
                 ) {
                     info!("XvB Watchdog | Signal has stopped the loop");
                     break;
@@ -305,7 +325,7 @@ impl Helper {
                     // first_loop is false here but could be changed to true under some conditions.
                     // will send a stop signal if public stats failed or update data with new one.
                     *handle_request.lock().unwrap() = Some(spawn(
-                        enc!((client, pub_api, gui_api, gui_api_p2pool, gui_api_xmrig, gui_api_xp,  state_xvb, state_p2pool, state_xmrig, state_xp, process, last_algorithm, retry, handle_algo, time_donated, last_request) async move {
+                        enc!((client, pub_api, gui_api, gui_api_p2pool, gui_api_xmrig, gui_api_xp,  state_xvb, state_p2pool, state_xmrig,  process, last_algorithm, retry, handle_algo, time_donated, last_request, proxy_img, xmrig_img, process_p2pool, p2pool_img) async move {
                                 // needs to wait here for public stats to get private stats.
                                 if last_request_expired || first_loop || should_refresh_before_next_algo {
                                 XvbPubStats::update_stats(&client, &gui_api, &pub_api, &process).await;
@@ -348,12 +368,7 @@ impl Helper {
                                         *retry.lock().unwrap() = false;
                                         // reset instant because algo will start.
                                         *last_algorithm.lock().unwrap() = Instant::now();
-                                        *handle_algo.lock().unwrap() = Some(spawn(enc!((client, gui_api,  gui_api_xmrig, gui_api_xp, state_xmrig, state_xp, time_donated, state_xvb) async move {
-                        let token_xmrig = if xp_alive {
-                            &state_xp.token
-                        } else {
-                            &state_xmrig.token
-                        };
+                                        *handle_algo.lock().unwrap() = Some(spawn(enc!((client, gui_api,  gui_api_xmrig, gui_api_xp, state_xmrig,  time_donated, state_xvb, proxy_img, xmrig_img, p2pool_img, process_p2pool) async move {
                         let rig = if xp_alive {
                             ""
                         } else {
@@ -366,13 +381,16 @@ impl Helper {
                                                 &gui_api_xmrig,
                                                 &gui_api_xp,
                                                 &gui_api_p2pool,
-                                                token_xmrig,
                                                 &state_p2pool,
                                                 share,
                                                 &time_donated,
                                                 rig,
                                                 xp_alive,
-                                                state_xvb.p2pool_buffer
+                                                state_xvb.p2pool_buffer,
+                                                &proxy_img,
+                                                &xmrig_img,
+                                                &p2pool_img,
+                                                &process_p2pool
                                             ).await;
                                         })));
                                     } else {
@@ -440,7 +458,7 @@ pub struct PubXvbApi {
     // where xmrig is mining right now (or trying to).
     // will be updated by output of xmrig.
     // could also be retrieved by fetching current config.
-    pub current_node: Option<XvbNode>,
+    pub current_pool: Option<Pool>,
     // Instead of watching stratum data that will account for HR sent only on this p2pool node,
     // Take the value of estimated HR that will account for external miners mininf on the same address.
     pub use_p2pool_sidechain_hr: bool,
@@ -523,7 +541,7 @@ async fn check_conditions_for_start(
         );
         ProcessState::NotMining
     } else if process_p2pool.lock().unwrap().state != ProcessState::Alive {
-        info!("XvB | verify p2pool node");
+        info!("XvB | verify p2pool pool");
         // send to console: p2pool process is not running
         warn!("Xvb | Start ... Partially failed because P2pool instance is not ready.");
         let msg = if process_p2pool.lock().unwrap().state == ProcessState::Syncing {
@@ -549,7 +567,7 @@ async fn check_conditions_for_start(
         ProcessState::Syncing
     } else {
         // all test passed, so it can be Alive
-        // stay at middle, updateNodes will finish by syncing or offlinenodes and check_status in loop will change state accordingly.
+        // stay at middle, updatePools will finish by syncing or offlinenodes and check_status in loop will change state accordingly.
         ProcessState::Middle
     };
     if state != ProcessState::Middle {
@@ -561,8 +579,8 @@ async fn check_conditions_for_start(
             ProcessName::Xvb,
         );
     }
-    // will update the preferred node for the first loop, even if partially started.
-    process_xvb.lock().unwrap().signal = ProcessSignal::UpdateNodes(XvbNode::default());
+    // will update the preferred pool for the first loop, even if partially started.
+    process_xvb.lock().unwrap().signal = ProcessSignal::UpdatePools(Pool::default());
     process_xvb.lock().unwrap().state = state;
 }
 /// return a bool to continue to next loop if needed.
@@ -581,6 +599,9 @@ async fn check_state_outcauses_xvb(
     state_xmrig: &crate::disk::state::Xmrig,
     state_xp: &crate::disk::state::XmrigProxy,
     xp_start_alive: bool,
+    xmrig_img: &Arc<Mutex<ImgXmrig>>,
+    proxy_img: &Arc<Mutex<ImgProxy>>,
+    p2pool_img: &Arc<Mutex<ImgP2pool>>,
 ) -> bool {
     // will check if the state can stay as it is.
     // p2pool and xmrig are alive if ready and running (syncing is not alive).
@@ -609,7 +630,11 @@ async fn check_state_outcauses_xvb(
                 ProcessName::Xvb,
             );
             // only update xmrig if it is alive and wasn't on p2pool already.
-            if gui_api.lock().unwrap().current_node != Some(XvbNode::P2pool)
+            if gui_api.lock().unwrap().current_pool
+                != Some(Pool::P2pool(state_p2pool.current_port(
+                    &process_p2pool.lock().unwrap(),
+                    &p2pool_img.lock().unwrap(),
+                )))
                 && (process_xmrig.lock().unwrap().state == ProcessState::Alive || xp_is_alive)
             {
                 let token_xmrig = if xp_is_alive {
@@ -623,37 +648,52 @@ async fn check_state_outcauses_xvb(
                 } else {
                     state_xmrig.rig.clone()
                 };
-                spawn(enc!((client,  gui_api) async move {
-                let url_api = api_url_xmrig(xp_is_alive, true);
-                let node = XvbNode::P2pool;
-                if let Err(err) = update_xmrig_config(
-                    &client,
-                    &url_api,
-                    &token_xmrig,
-                    &node,
-                    &address,
-                    &rig
-                )
-                .await
-                        {
-                            // show to console error about updating xmrig config
-                            output_console(
-                                &mut gui_api.lock().unwrap().output,
-                                &format!(
-                                    "Failure to update {msg_xmrig_or_proxy} config with HTTP API.\nError: {}",
-                                    err
-                                ),
-                                ProcessName::Xvb
-                            );
-                        } else {
-                            output_console(
-                                &mut gui_api.lock().unwrap().output,
-                                &format!("XvB process can not completely continue, falling back to {}", XvbNode::P2pool),
-                                ProcessName::Xvb
-                            );
-                        }
+                spawn(
+                    enc!((client,  gui_api, xmrig_img, proxy_img, process_p2pool, p2pool_img, state_p2pool) async move {
 
-                }));
+                                    let url_api = if xp_is_alive {
+                                        current_api_url_xrig(true, None, Some(&proxy_img.lock().unwrap()) )
+                                    } else {
+                                        current_api_url_xrig(true, Some(&xmrig_img.lock().unwrap()), None)
+                                    };
+                                    let pool = Pool::P2pool(state_p2pool.current_port(
+                                        &process_p2pool.lock().unwrap(),
+                                        &p2pool_img.lock().unwrap(),
+                                    ));
+                                    if let Err(err) = update_xmrig_config(
+                                        &client,
+                                        &url_api,
+                                        &token_xmrig,
+                                        &pool,
+                                        &address,
+                                        &rig
+                                    )
+                                    .await
+                                            {
+                                                // show to console error about updating xmrig config
+                                                output_console(
+                                                    &mut gui_api.lock().unwrap().output,
+                                                    &format!(
+                                                        "Failure to update {msg_xmrig_or_proxy} config with HTTP API.\nError: {}",
+                                                        err
+                                                    ),
+                                                    ProcessName::Xvb
+                                                );
+                                            } else {
+                                                let pool =
+                    Pool::P2pool(state_p2pool.current_port(
+                                        &process_p2pool.lock().unwrap(),
+                                        &p2pool_img.lock().unwrap(),
+                                    ));
+                                                output_console(
+                                                    &mut gui_api.lock().unwrap().output,
+                                                    &format!("XvB process can not completely continue, falling back to {}", pool),
+                                                    ProcessName::Xvb
+                                                );
+                                            }
+
+                                    }),
+                );
             }
         }
     }
@@ -672,7 +712,7 @@ async fn check_state_outcauses_xvb(
         ProcessState::Alive if !p2pool_xmrig_alive => {
             // they are not both alives, so state will be at syncing and data reset, state of loop also.
             warn!(
-                "XvB | stopped partially because P2pool node or xmrig/xmrig-proxy are not reachable."
+                "XvB | stopped partially because P2pool pool or xmrig/xmrig-proxy are not reachable."
             );
             // stats must be empty put to default so the UI reflect that XvB private is not running.
             reset_data_xvb(pub_api, gui_api);
@@ -680,7 +720,7 @@ async fn check_state_outcauses_xvb(
             *first_loop = true;
             output_console(
                 &mut gui_api.lock().unwrap().output,
-                "XvB is now partially stopped because p2pool node or XMRig/XMRig-Proxy came offline.\nCheck P2pool and Xmrig/Xmrig-Proxy Tabs",
+                "XvB is now partially stopped because p2pool pool or XMRig/XMRig-Proxy came offline.\nCheck P2pool and Xmrig/Xmrig-Proxy Tabs",
                 ProcessName::Xvb,
             );
             output_console(
@@ -692,7 +732,7 @@ async fn check_state_outcauses_xvb(
         }
         ProcessState::Syncing if p2pool_xmrig_alive => {
             info!("XvB | started this time with p2pool and xmrig");
-            // will put state on middle and update nodes
+            // will put state on middle and update pools
             process.lock().unwrap().state = ProcessState::Alive;
             reset_data_xvb(pub_api, gui_api);
             *first_loop = true;
@@ -716,6 +756,7 @@ async fn check_state_outcauses_xvb(
 fn signal_interrupt(
     process: &Arc<Mutex<Process>>,
     process_xrig: &Arc<Mutex<Process>>,
+    process_p2pool: &Arc<Mutex<Process>>,
     start: Instant,
     client: &Client,
     pub_api: &Arc<Mutex<PubXvbApi>>,
@@ -724,12 +765,15 @@ fn signal_interrupt(
     state_xmrig: &crate::disk::state::Xmrig,
     state_xp: &crate::disk::state::XmrigProxy,
     xp_alive: bool,
+    xmrig_img: &Arc<Mutex<ImgXmrig>>,
+    proxy_img: &Arc<Mutex<ImgProxy>>,
+    p2pool_img: &Arc<Mutex<ImgP2pool>>,
 ) -> bool {
     // Check SIGNAL
     // check if STOP or RESTART Signal is given.
     // if STOP, will put Signal to None, if Restart to Wait
     // in either case, will break from loop.
-    let signal = process.lock().unwrap().signal;
+    let signal = process.lock().unwrap().signal.clone();
     match signal {
         ProcessSignal::Stop => {
             debug!("P2Pool Watchdog | Stop SIGNAL caught");
@@ -763,9 +807,9 @@ fn signal_interrupt(
             reset_data_xvb(pub_api, gui_api);
             return true;
         }
-        ProcessSignal::UpdateNodes(node) => {
+        ProcessSignal::UpdatePools(pool) => {
             if process.lock().unwrap().state != ProcessState::Waiting {
-                warn!("received the UpdateNode signal");
+                warn!("received the UpdatePool signal");
                 let token_xmrig = if xp_alive {
                     state_xp.token.clone()
                 } else {
@@ -777,54 +821,61 @@ fn signal_interrupt(
                     state_xmrig.rig.clone()
                 };
                 let address = state_p2pool.address.clone();
-                // check if state is alive. If it is and it is receiving such a signal, it means something a node (XvB or P2Pool) has failed.
-                // if XvB, xmrig needs to be switch to the other node (both will be checked though to be sure).
-                // if both XvB nodes fail after checking, process will be partially stopped and a new spawn will verify if nodes are again online and so will continue the process completely if that's the case.
+                // check if state is alive. If it is and it is receiving such a signal, it means something a pool (XvB or P2Pool) has failed.
+                // if XvB, xmrig needs to be switch to the other pool (both will be checked though to be sure).
+                // if both XvB pools fail after checking, process will be partially stopped and a new spawn will verify if pools are again online and so will continue the process completely if that's the case.
                 // if P2pool, the process has to stop the algo and continue partially. The process will continue completely if the confitions are met again.
-                // if XvB was not alive, then if it is for XvB nodes, it will check and update preferred node and set XMRig to P2pool if that's not the case.
+                // if XvB was not alive, then if it is for XvB pools, it will check and update preferred pool and set XMRig to P2pool if that's not the case.
                 let was_alive = process.lock().unwrap().state == ProcessState::Alive;
-                // so it won't execute another signal of update nodes if it is already doing it.
+                // so it won't execute another signal of update pools if it is already doing it.
                 process.lock().unwrap().state = ProcessState::Waiting;
                 process.lock().unwrap().signal = ProcessSignal::None;
                 spawn(
-                    enc!((node, process, client, gui_api, pub_api, was_alive, address, token_xmrig, process_xrig) async move {
-                    match node {
-                        XvbNode::NorthAmerica|XvbNode::Europe if was_alive => {
-                            // a node is failing. We need to first verify if a node is available
-                        XvbNode::update_fastest_node(&client, &gui_api, &pub_api, &process).await;
-                            if process.lock().unwrap().state == ProcessState::OfflineNodesAll {
-                                // No available nodes, so launch a process to verify periodically.
+                    enc!((pool, process, client, gui_api, pub_api, was_alive, address, token_xmrig, process_xrig, xmrig_img, proxy_img, process_p2pool, state_p2pool, p2pool_img) async move {
+                    match pool {
+                        Pool::XvBNorthAmerica|Pool::XvBEurope if was_alive => {
+                            // a pool is failing. We need to first verify if a pool is available
+                        Pool::update_fastest_pool(&client, &gui_api, &pub_api, &process, &process_p2pool, &p2pool_img, &state_p2pool).await;
+                            if process.lock().unwrap().state == ProcessState::OfflinePoolsAll {
+                                // No available pools, so launch a process to verify periodically.
                     sleep(Duration::from_secs(10)).await;
-                    warn!("node fail, set spawn that will retry nodes and update state.");
-                    while process.lock().unwrap().state == ProcessState::OfflineNodesAll {
-                        // this spawn will stay alive until nodes are joignable or XvB process is stopped or failed.
-                        XvbNode::update_fastest_node(&client, &pub_api, &gui_api, &process).await;
+                    warn!("pool fail, set spawn that will retry pools and update state.");
+                    while process.lock().unwrap().state == ProcessState::OfflinePoolsAll {
+                        // this spawn will stay alive until pools are joignable or XvB process is stopped or failed.
+                        Pool::update_fastest_pool(&client, &pub_api, &gui_api, &process, &process_p2pool, &p2pool_img, &state_p2pool).await;
                         sleep(Duration::from_secs(10)).await;
                     }
                                 
                             }
-                                // a good node is found, so the next check of the loop should be good and the algo will update XMRig with the good one.
+                                // a good pool is found, so the next check of the loop should be good and the algo will update XMRig with the good one.
 
                             
                         },
-                        XvbNode::NorthAmerica|XvbNode::Europe if !was_alive => {
+                        Pool::XvBNorthAmerica|Pool::XvBEurope if !was_alive => {
                         process.lock().unwrap().state = ProcessState::Syncing;
-                        // Probably a start. We don't consider XMRig using XvB nodes without algo.
+                        // Probably a start. We don't consider XMRig using XvB pools without algo.
                         // can update xmrig and check status of state in the same time.
-                        // update prefred node
-                        XvbNode::update_fastest_node(&client, &gui_api, &pub_api, &process).await;
+                        // update prefred pool
+                        Pool::update_fastest_pool(&client, &pub_api, &gui_api, &process, &process_p2pool, &p2pool_img, &state_p2pool).await;
                         // Need to set XMRig to P2Pool if it wasn't. XMRig should have populated this value at his start.
                         // but if xmrig didn't start, don't update it.
                 
-                if process_xrig.lock().unwrap().state == ProcessState::Alive && gui_api.lock().unwrap().current_node != Some(XvbNode::P2pool) {
-                            spawn(enc!((client, token_xmrig, address,  gui_api) async move{
-                let url_api = api_url_xmrig(xp_alive, true);
-                    let node = XvbNode::P2pool;
+                    let p2pool_pool  = Pool::P2pool(state_p2pool.current_port(
+                                        &process_p2pool.lock().unwrap(),
+                                        &p2pool_img.lock().unwrap(),
+                                    ));
+                if process_xrig.lock().unwrap().state == ProcessState::Alive && gui_api.lock().unwrap().current_pool != Some(p2pool_pool.clone()) {
+                            spawn(enc!((client, token_xmrig, address,  xmrig_img, proxy_img, gui_api) async move{
+                let url_api = if xp_alive {
+                    current_api_url_xrig(true, None, Some(&proxy_img.lock().unwrap()) )
+                } else {
+                    current_api_url_xrig(true, Some(&xmrig_img.lock().unwrap()), None)
+                };
                 if let Err(err) = update_xmrig_config(
                     &client,
                     &url_api,
                     &token_xmrig,
-                    &node,
+                    &p2pool_pool,
                     &address,
                     &rig
                 )
@@ -856,7 +907,7 @@ fn signal_interrupt(
     false
 }
 fn reset_data_xvb(pub_api: &Arc<Mutex<PubXvbApi>>, gui_api: &Arc<Mutex<PubXvbApi>>) {
-    let current_node = mem::take(&mut pub_api.lock().unwrap().current_node.clone());
+    let current_pool = mem::take(&mut pub_api.lock().unwrap().current_pool.clone());
     // even if it is a restart, we want to keep set values by the user without the need from him to click on save button.
     let runtime_mode = mem::take(&mut gui_api.lock().unwrap().stats_priv.runtime_mode);
     let runtime_manual_amount =
@@ -866,7 +917,7 @@ fn reset_data_xvb(pub_api: &Arc<Mutex<PubXvbApi>>, gui_api: &Arc<Mutex<PubXvbApi
     *pub_api.lock().unwrap() = PubXvbApi::new();
     *gui_api.lock().unwrap() = PubXvbApi::new();
     // to keep the value modified by xmrig even if xvb is dead.
-    pub_api.lock().unwrap().current_node = current_node;
+    pub_api.lock().unwrap().current_pool = current_pool;
     // to not loose the information of runtime hero mode between restart
     gui_api.lock().unwrap().stats_priv.runtime_mode = runtime_mode;
     gui_api.lock().unwrap().stats_priv.runtime_manual_amount = runtime_manual_amount;
@@ -888,13 +939,13 @@ fn update_indicator_algo(
         && !is_algo_finished
         && process.lock().unwrap().state == ProcessState::Alive
     {
-        let node = pub_api.lock().unwrap().current_node;
-        let msg_indicator = match node {
-            Some(XvbNode::P2pool) if time_donated > 0 && time_donated != XVB_TIME_ALGO => {
+        let pool = pub_api.lock().unwrap().current_pool.clone();
+        let msg_indicator = match pool {
+            Some(Pool::P2pool(_)) if time_donated > 0 && time_donated != XVB_TIME_ALGO => {
                 // algo is mining on p2pool but will switch to XvB after
                 // show time remaining on p2pool
 
-                pub_api.lock().unwrap().stats_priv.time_switch_node = XVB_TIME_ALGO
+                pub_api.lock().unwrap().stats_priv.time_switch_pool = XVB_TIME_ALGO
                     .checked_sub(last_algorithm.lock().unwrap().elapsed().as_secs() as u32)
                     .unwrap_or_default()
                     .checked_sub(time_donated)
@@ -905,7 +956,7 @@ fn update_indicator_algo(
                 // algo is mining on XvB or complelty mining on p2pool.
                 // show remaining time before next decision of algo
                 // because time of last algorithm could depass a little bit XVB_TIME_ALGO before next run, check the sub.
-                pub_api.lock().unwrap().stats_priv.time_switch_node = XVB_TIME_ALGO
+                pub_api.lock().unwrap().stats_priv.time_switch_pool = XVB_TIME_ALGO
                     .checked_sub(last_algorithm.lock().unwrap().elapsed().as_secs() as u32)
                     .unwrap_or_default();
                 "time until next decision of algorithm".to_string()
@@ -914,27 +965,11 @@ fn update_indicator_algo(
         pub_api.lock().unwrap().stats_priv.msg_indicator = msg_indicator;
     } else {
         // if algo is not running or process not alive
-        pub_api.lock().unwrap().stats_priv.time_switch_node = 0;
+        pub_api.lock().unwrap().stats_priv.time_switch_pool = 0;
         pub_api.lock().unwrap().stats_priv.msg_indicator = "Algorithm is not running".to_string();
     }
 }
 
-// quick temporary function before refactor, but better than repeating this code
-// if xp is alive, put true
-// to get config url, true. False for summary
-pub fn api_url_xmrig(xp: bool, config: bool) -> String {
-    if xp {
-        if config {
-            XMRIG_PROXY_CONFIG_URL.to_string()
-        } else {
-            XMRIG_PROXY_SUMMARY_URL.to_string()
-        }
-    } else if config {
-        XMRIG_CONFIG_URL.to_string()
-    } else {
-        XMRIG_SUMMARY_URL.to_string()
-    }
-}
 // get the current HR of xmrig or xmrig-proxy
 // will get a longer average HR since it will be more accurate. Shorter timeframe can induce volatility.
 fn current_controllable_hr(

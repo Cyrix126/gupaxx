@@ -44,7 +44,7 @@ use crate::helper::{
 use crate::{constants::*, disk::gupax_p2pool_api::GupaxP2poolApi, human::*, macros::*};
 use derive_more::derive::Display;
 use log::*;
-use node::PubNodeApi;
+use node::{ImgNode, PubNodeApi};
 use portable_pty::Child;
 use readable::up::Uptime;
 use serde::{Deserialize, Serialize};
@@ -57,8 +57,9 @@ use std::{
     time::*,
 };
 use strum::{EnumCount, EnumIter};
+use xrig::xmrig_proxy::ImgProxy;
 
-use self::xvb::{PubXvbApi, nodes::XvbNode};
+use self::xvb::{PubXvbApi, nodes::Pool};
 pub mod node;
 pub mod p2pool;
 pub mod tests;
@@ -92,8 +93,10 @@ pub struct Helper {
     pub gui_api_xp: Arc<Mutex<PubXmrigProxyApi>>, // XMRig-Proxy API state (for GUI thread)
     pub gui_api_xvb: Arc<Mutex<PubXvbApi>>, // XMRig API state (for GUI thread)
     pub gui_api_node: Arc<Mutex<PubNodeApi>>, // Node API state (for GUI thread)
+    pub img_node: Arc<Mutex<ImgNode>>, // A static "image" of the data XMRig started with
     pub img_p2pool: Arc<Mutex<ImgP2pool>>, // A static "image" of the data P2Pool started with
     pub img_xmrig: Arc<Mutex<ImgXmrig>>, // A static "image" of the data XMRig started with
+    pub img_proxy: Arc<Mutex<ImgProxy>>, // A static "image" of the data XMRig started with
     pub_api_p2pool: Arc<Mutex<PubP2poolApi>>, // P2Pool API state (for Helper/P2Pool thread)
     pub_api_xmrig: Arc<Mutex<PubXmrigApi>>, // XMRig API state (for Helper/XMRig thread)
     pub_api_xp: Arc<Mutex<PubXmrigProxyApi>>, // XMRig-Proxy API state (for Helper/XMRig-Proxy thread)
@@ -202,7 +205,7 @@ impl Process {
             || self.state == ProcessState::Middle
             || self.state == ProcessState::Syncing
             || self.state == ProcessState::NotMining
-            || self.state == ProcessState::OfflineNodesAll
+            || self.state == ProcessState::OfflinePoolsAll
     }
 
     #[inline]
@@ -227,8 +230,8 @@ pub enum ProcessState {
     // Only for XMRig and XvB, ORANGE.
     // XvB: token or address are invalid even if syntax correct
     NotMining,
-    // XvB: if node of XvB become unusable (ex: offline).
-    OfflineNodesAll,
+    // XvB: if pool of XvB become unusable (ex: offline).
+    OfflinePoolsAll,
 }
 
 impl Default for ProcessState {
@@ -237,13 +240,13 @@ impl Default for ProcessState {
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug)]
 pub enum ProcessSignal {
     None,
     Start,
     Stop,
     Restart,
-    UpdateNodes(XvbNode),
+    UpdatePools(Pool),
 }
 
 impl Default for ProcessSignal {
@@ -388,8 +391,10 @@ impl Helper {
         gui_api_xvb: Arc<Mutex<PubXvbApi>>,
         gui_api_xp: Arc<Mutex<PubXmrigProxyApi>>,
         gui_api_node: Arc<Mutex<PubNodeApi>>,
+        img_node: Arc<Mutex<ImgNode>>,
         img_p2pool: Arc<Mutex<ImgP2pool>>,
         img_xmrig: Arc<Mutex<ImgXmrig>>,
+        img_proxy: Arc<Mutex<ImgProxy>>,
         gupax_p2pool_api: Arc<Mutex<GupaxP2poolApi>>,
     ) -> Self {
         Self {
@@ -412,8 +417,10 @@ impl Helper {
             gui_api_xvb,
             gui_api_xp,
             gui_api_node,
+            img_node,
             img_p2pool,
             img_xmrig,
+            img_proxy,
             gupax_p2pool_api,
         }
     }

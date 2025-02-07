@@ -1,15 +1,16 @@
 use crate::constants::*;
-use crate::disk::state::StartOptionsMode;
+use crate::disk::state::{P2pool, StartOptionsMode, XmrigProxy};
+use crate::helper::p2pool::ImgP2pool;
 use crate::helper::xrig::update_xmrig_config;
 use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
+use crate::helper::{Pool, PubXvbApi};
 use crate::helper::{Process, arc_mut, check_died, check_user_input, sleep, sleep_end_loop};
-use crate::helper::{PubXvbApi, XvbNode};
 use crate::human::HumanTime;
 use crate::miscs::{client, output_console};
-use crate::regex::{XMRIG_REGEX, contains_error, contains_usepool, detect_new_node_xmrig};
+use crate::regex::{XMRIG_REGEX, contains_error, contains_usepool, detect_pool_xmrig};
 use crate::utils::human::HumanNumber;
 use crate::utils::sudo::SudoState;
-use enclose::enclose;
+use enclose::{enc, enclose};
 use log::*;
 use portable_pty::Child;
 use readable::num::Unsigned;
@@ -29,17 +30,24 @@ use std::{
 use tokio::spawn;
 
 use super::Hashrate;
+use super::xmrig_proxy::ImgProxy;
 
 impl Helper {
     #[cold]
     #[inline(never)]
+    #[allow(clippy::too_many_arguments)]
     pub async fn read_pty_xmrig(
         output_parse: Arc<Mutex<String>>,
         output_pub: Arc<Mutex<String>>,
         reader: Box<dyn std::io::Read + Send>,
         process_xvb: Arc<Mutex<Process>>,
         process_xp: Arc<Mutex<Process>>,
+        process_p2pool: Arc<Mutex<Process>>,
         pub_api_xvb: &Arc<Mutex<PubXvbApi>>,
+        p2pool_state: &P2pool,
+        p2pool_img: &Arc<Mutex<ImgP2pool>>,
+        proxy_img: &Arc<Mutex<ImgProxy>>,
+        proxy_state: &XmrigProxy,
     ) {
         use std::io::BufRead;
         let mut stdout = std::io::BufReader::new(reader).lines();
@@ -54,7 +62,7 @@ impl Helper {
             if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
                 error!("XMRig PTY Pub | Output error: {}", e);
             }
-            if i > 13 {
+            if i > 7 {
                 break;
             } else {
                 i += 1;
@@ -62,37 +70,51 @@ impl Helper {
         }
 
         while let Some(Ok(line)) = stdout.next() {
-            // need to verify if node still working
+            // need to verify if pool still working
             // for that need to catch "connect error"
             // only check if xvb process is used and xmrig-proxy is not.
             if process_xvb.lock().unwrap().is_alive() && !process_xp.lock().unwrap().is_alive() {
                 if contains_error(&line) {
-                    let current_node = pub_api_xvb.lock().unwrap().current_node;
-                    if let Some(current_node) = current_node {
-                        // updating current node to None, will stop sending signal of FailedNode until new node is set
-                        // send signal to update node.
-                        warn!("XMRig PTY Parse | node is offline, sending signal to update nodes.");
-                        // update nodes only if we were not mining on p2pool.
+                    let current_pool = pub_api_xvb.lock().unwrap().current_pool.clone();
+                    if let Some(current_pool) = current_pool {
+                        // updating current pool to None, will stop sending signal of FailedPool until new pool is set
+                        // send signal to update pool.
+                        warn!("XMRig PTY Parse | pool is offline, sending signal to update pools.");
+                        // update pools only if we were not mining on p2pool.
                         // if xmrig stop, xvb will react in any case.
-                        if current_node != XvbNode::P2pool {
+                        if current_pool
+                            != Pool::P2pool(p2pool_state.current_port(
+                                &process_p2pool.lock().unwrap(),
+                                &p2pool_img.lock().unwrap(),
+                            ))
+                        {
                             process_xvb.lock().unwrap().signal =
-                                ProcessSignal::UpdateNodes(current_node);
+                                ProcessSignal::UpdatePools(current_pool);
                         }
-                        pub_api_xvb.lock().unwrap().current_node = None;
+                        pub_api_xvb.lock().unwrap().current_pool = None;
                     }
                 }
                 if contains_usepool(&line) {
                     info!("XMRig PTY Parse | new pool detected");
-                    // need to update current node because it was updated.
-                    // if custom node made by user, it is not supported because algo is deciding which node to use.
-                    let node = detect_new_node_xmrig(&line);
-                    if node.is_none() {
-                        error!("XMRig PTY Parse | node is not understood, switching to backup.");
+                    // need to update current pool because it was updated.
+                    // if custom pool made by user, it is not supported because algo is deciding which pool to use.
+                    let pool = detect_pool_xmrig(
+                        &line,
+                        proxy_state
+                            .current_ports(&process_xp.lock().unwrap(), &proxy_img.lock().unwrap())
+                            .0,
+                        p2pool_state.current_port(
+                            &process_p2pool.lock().unwrap(),
+                            &p2pool_img.lock().unwrap(),
+                        ),
+                    );
+                    if pool.is_none() {
+                        error!("XMRig PTY Parse | pool is not understood, switching to backup.");
                         // update with default will choose which XvB to prefer. Will update XvB to use p2pool.
                         process_xvb.lock().unwrap().signal =
-                            ProcessSignal::UpdateNodes(XvbNode::default());
+                            ProcessSignal::UpdatePools(Pool::default());
                     }
-                    pub_api_xvb.lock().unwrap().current_node = node;
+                    pub_api_xvb.lock().unwrap().current_pool = pool;
                 }
             }
             //			println!("{}", line); // For debugging.
@@ -158,6 +180,8 @@ impl Helper {
     pub fn restart_xmrig(
         helper: &Arc<Mutex<Self>>,
         state: &crate::disk::state::Xmrig,
+        state_p2pool: &P2pool,
+        state_proxy: &XmrigProxy,
         path: &Path,
         sudo: Arc<Mutex<SudoState>>,
     ) {
@@ -165,19 +189,17 @@ impl Helper {
         helper.lock().unwrap().xmrig.lock().unwrap().signal = ProcessSignal::Restart;
         helper.lock().unwrap().xmrig.lock().unwrap().state = ProcessState::Middle;
 
-        let helper = Arc::clone(helper);
-        let state = state.clone();
         let path = path.to_path_buf();
         // This thread lives to wait, start xmrig then die.
-        thread::spawn(move || {
+        thread::spawn(enc!((helper, state, state_p2pool, state_proxy)move || {
             while helper.lock().unwrap().xmrig.lock().unwrap().state != ProcessState::Waiting {
                 warn!("XMRig | Want to restart but process is still alive, waiting...");
                 sleep!(1000);
             }
             // Ok, process is not alive, start the new one!
             info!("XMRig | Old process seems dead, starting new one!");
-            Self::start_xmrig(&helper, &state, &path, sudo);
-        });
+            Self::start_xmrig(&helper, &state, &state_p2pool, &state_proxy, &path, sudo);
+        }));
         info!("XMRig | Restart ... OK");
     }
 
@@ -186,11 +208,20 @@ impl Helper {
     pub fn start_xmrig(
         helper: &Arc<Mutex<Self>>,
         state: &crate::disk::state::Xmrig,
+        p2pool_state: &P2pool,
+        proxy_state: &XmrigProxy,
         path: &Path,
         sudo: Arc<Mutex<SudoState>>,
     ) {
+        // get the stratum port of p2pool
+        //
+        let process_p2pool = Arc::clone(&helper.lock().unwrap().p2pool);
+        let p2pool_img = Arc::clone(&helper.lock().unwrap().img_p2pool);
+
+        let p2pool_stratum_port =
+            p2pool_state.current_port(&process_p2pool.lock().unwrap(), &p2pool_img.lock().unwrap());
         helper.lock().unwrap().xmrig.lock().unwrap().state = ProcessState::Middle;
-        let api_ip_port = Self::mutate_img_xmrig(helper, state);
+        let api_ip_port = Self::mutate_img_xmrig(helper, state, p2pool_stratum_port);
         let mode = if state.simple {
             StartOptionsMode::Simple
         } else if !state.arguments.is_empty() {
@@ -198,7 +229,7 @@ impl Helper {
         } else {
             StartOptionsMode::Advanced
         };
-        let args = Self::build_xmrig_args(state, mode);
+        let args = Self::build_xmrig_args(state, mode, p2pool_stratum_port);
         // Print arguments & user settings to console
         crate::disk::print_dash(&format!("XMRig | Launch arguments: {:#?}", args));
         info!("XMRig | Using path: [{}]", path.display());
@@ -212,6 +243,10 @@ impl Helper {
         let process_p2pool = Arc::clone(&helper.lock().unwrap().p2pool);
         let path = path.to_path_buf();
         let token = state.token.clone();
+        let p2pool_state = p2pool_state.clone();
+        let p2pool_img = Arc::clone(&helper.lock().unwrap().img_p2pool);
+        let proxy_state = proxy_state.clone();
+        let proxy_img = Arc::clone(&helper.lock().unwrap().img_proxy);
         let pub_api_xvb = Arc::clone(&helper.lock().unwrap().pub_api_xvb);
         thread::spawn(move || {
             Self::spawn_xmrig_watchdog(
@@ -227,12 +262,17 @@ impl Helper {
                 process_xp,
                 process_p2pool,
                 &pub_api_xvb,
+                &p2pool_state,
+                &p2pool_img,
+                &proxy_state,
+                &proxy_img,
             );
         });
     }
     pub fn mutate_img_xmrig(
         helper: &Arc<Mutex<Self>>,
         state: &crate::disk::state::Xmrig,
+        stratum_port: u16,
     ) -> String {
         let mut api_ip = String::with_capacity(15);
         let mut api_port = String::with_capacity(5);
@@ -242,7 +282,9 @@ impl Helper {
 
             *helper.lock().unwrap().img_xmrig.lock().unwrap() = ImgXmrig {
                 threads: state.current_threads.to_string(),
-                url: "127.0.0.1:3333 (Local P2Pool)".to_string(),
+                url: format!("127.0.0.1:{stratum_port} (Local P2Pool)"),
+                api_port: XMRIG_API_PORT_DEFAULT,
+                token: state.token.clone(),
             };
         } else if !state.arguments.is_empty() {
             // This parses the input and attempts to fill out
@@ -261,7 +303,13 @@ impl Helper {
                             arg.to_string()
                         }
                     }
-                    "--http-port" => api_port = arg.to_string(),
+                    "--http-port" => {
+                        api_port = arg.to_string();
+                        xmrig_image.api_port = arg.parse().unwrap_or(XMRIG_API_PORT_DEFAULT)
+                    }
+                    l if l.contains("--http-access-token=") => {
+                        xmrig_image.token = l.split_once("=").unwrap().1.to_string();
+                    }
                     _ => (),
                 }
                 last = arg;
@@ -278,7 +326,7 @@ impl Helper {
                 state.api_ip.to_string()
             };
             api_port = if state.api_port.is_empty() {
-                "18088".to_string()
+                XMRIG_API_PORT_DEFAULT.to_string()
             } else {
                 state.api_port.to_string()
             };
@@ -286,6 +334,8 @@ impl Helper {
             *helper.lock().unwrap().img_xmrig.lock().unwrap() = ImgXmrig {
                 url: url.clone(),
                 threads: state.current_threads.to_string(),
+                api_port: state.api_port.parse().unwrap_or(XMRIG_API_PORT_DEFAULT),
+                token: state.token.clone(),
             };
         }
 
@@ -300,6 +350,7 @@ impl Helper {
         state: &crate::disk::state::Xmrig,
         // Allows to provide a different mode without mutating the state
         mode: StartOptionsMode,
+        p2pool_stratum_port: u16,
     ) -> Vec<String> {
         let mut args = Vec::with_capacity(500);
         // some args needs to be added to both simple/advanced
@@ -326,7 +377,7 @@ impl Helper {
                     state.simple_rig.clone()
                 }; // Rig name
                 args.push("--url".to_string());
-                args.push("127.0.0.1:3333".to_string()); // Local P2Pool (the default)
+                args.push(format!("127.0.0.1:{p2pool_stratum_port}")); // Local P2Pool (the default)
                 args.push("--user".to_string());
                 args.push(rig); // Rig name
                 args.push("--http-host".to_string());
@@ -421,6 +472,10 @@ impl Helper {
         process_xp: Arc<Mutex<Process>>,
         process_p2pool: Arc<Mutex<Process>>,
         pub_api_xvb: &Arc<Mutex<PubXvbApi>>,
+        p2pool_state: &P2pool,
+        p2pool_img: &Arc<Mutex<ImgP2pool>>,
+        proxy_state: &XmrigProxy,
+        proxy_img: &Arc<Mutex<ImgProxy>>,
     ) {
         // The actual binary we're executing is [sudo], technically
         // the XMRig path is just an argument to sudo, so add it.
@@ -447,9 +502,11 @@ impl Helper {
         let reader = pair.master.try_clone_reader().unwrap(); // Get STDOUT/STDERR before moving the PTY
         let output_parse = Arc::clone(&process.lock().unwrap().output_parse);
         let output_pub = Arc::clone(&process.lock().unwrap().output_pub);
-        spawn(enclose!((pub_api_xvb, process_xp) async move {
-            Self::read_pty_xmrig(output_parse, output_pub, reader, process_xvb, process_xp, &pub_api_xvb).await;
-        }));
+        spawn(
+            enclose!((pub_api_xvb, process_xp, p2pool_state, p2pool_img, process_p2pool, proxy_img, proxy_state) async move {
+                Self::read_pty_xmrig(output_parse, output_pub, reader, process_xvb, process_xp, process_p2pool, &pub_api_xvb, &p2pool_state, &p2pool_img, &proxy_img, &proxy_state).await;
+            }),
+        );
         // 1b. Create command
         debug!("XMRig | Creating command...");
         #[cfg(target_os = "windows")]
@@ -496,19 +553,25 @@ impl Helper {
 
         let client = client();
         let start = process.lock().unwrap().start;
-        let api_uri = {
+        let api_uri_config = {
             if !api_ip_port.ends_with('/') {
                 api_ip_port.push('/');
             }
-            "http://".to_owned() + &api_ip_port + XMRIG_API_SUMMARY_URI
+            "http://".to_owned() + &api_ip_port + XMRIG_API_CONFIG_ENDPOINT
         };
-        info!("XMRig | Final API URI: {}", api_uri);
+        let api_uri_summary = {
+            if !api_ip_port.ends_with('/') {
+                api_ip_port.push('/');
+            }
+            "http://".to_owned() + &api_ip_port + XMRIG_API_SUMMARY_ENDPOINT
+        };
+        info!("XMRig | Final API URI: {}", api_uri_config);
 
         // Reset stats before loop
         *pub_api.lock().unwrap() = PubXmrigApi::new();
         *gui_api.lock().unwrap() = PubXmrigApi::new();
-        // node used for process Status tab
-        pub_api.lock().unwrap().node = NO_POOL.to_string();
+        // pool used for process Status tab
+        pub_api.lock().unwrap().pool = None;
         // 5. Loop as watchdog
         info!("XMRig | Entering watchdog mode... woof!");
         // needs xmrig to be in belownormal priority or else Gupaxx will be in trouble if it does not have enough cpu time.
@@ -571,12 +634,18 @@ impl Helper {
                 &output_parse,
                 start.elapsed(),
                 &mut process_lock,
+                &process_p2pool.lock().unwrap(),
+                &process_xp.lock().unwrap(),
+                proxy_img,
+                p2pool_img,
+                proxy_state,
+                p2pool_state,
             );
             drop(pub_api_lock);
             drop(process_lock);
             // Send an HTTP API request
             debug!("XMRig Watchdog | Attempting HTTP API request...");
-            match PrivXmrigApi::request_xmrig_api(&client, &api_uri, token).await {
+            match PrivXmrigApi::request_xmrig_api(&client, &api_uri_summary, token).await {
                 Ok(priv_api) => {
                     debug!("XMRig Watchdog | HTTP API request OK, attempting [update_from_priv()]");
                     PubXmrigApi::update_from_priv(&pub_api, priv_api);
@@ -584,25 +653,33 @@ impl Helper {
                 Err(err) => {
                     warn!(
                         "XMRig Watchdog | Could not send HTTP API request to: {}\n{}",
-                        api_uri, err
+                        api_uri_summary, err
                     );
                 }
             }
             // if mining on proxy and proxy is not alive, switch back to p2pool node
-            if (pub_api.lock().unwrap().node == XvbNode::XmrigProxy.to_string()
-                || pub_api.lock().unwrap().node == NO_POOL)
+            if (pub_api.lock().unwrap().pool
+                == Some(Pool::XmrigProxy(
+                    proxy_state
+                        .current_ports(&process_xp.lock().unwrap(), &proxy_img.lock().unwrap())
+                        .0,
+                ))
+                || pub_api.lock().unwrap().pool.is_none())
                 && !process_xp.lock().unwrap().is_alive()
                 && process_p2pool.lock().unwrap().is_alive()
             {
                 info!(
-                    "XMRig Process |  redirect xmrig to p2pool since XMRig-Proxy is not alive anymore"
+                    "XMRig Process |  redirect xmrig to p2pool since XMRig-Proxy is not alive and p2pool is alive"
                 );
-                let node = XvbNode::P2pool;
+                let pool = Pool::P2pool(
+                    p2pool_state
+                        .current_port(&process_p2pool.lock().unwrap(), &p2pool_img.lock().unwrap()),
+                );
                 if let Err(err) = update_xmrig_config(
                     &client,
-                    XMRIG_CONFIG_URL,
+                    &api_uri_config,
                     token,
-                    &node,
+                    &pool,
                     "",
                     GUPAX_VERSION_UNDERSCORE,
                 )
@@ -636,8 +713,8 @@ impl Helper {
         gui_api_output_raw: &mut String,
         sudo: &Arc<Mutex<SudoState>>,
     ) -> bool {
-        let signal = process.signal;
-        if signal == ProcessSignal::Stop || signal == ProcessSignal::Restart {
+        let signal = &process.signal;
+        if *signal == ProcessSignal::Stop || *signal == ProcessSignal::Restart {
             debug!("XMRig Watchdog | Stop/Restart SIGNAL caught");
             // macOS requires [sudo] again to kill [XMRig]
             if cfg!(target_os = "macos") {
@@ -647,7 +724,7 @@ impl Helper {
                 Self::sudo_kill(child_pty.lock().unwrap().process_id().unwrap(), sudo);
                 // And... wipe it again (only if we're stopping full).
                 // If we're restarting, the next start will wipe it for us.
-                if signal != ProcessSignal::Restart {
+                if *signal != ProcessSignal::Restart {
                     SudoState::wipe(sudo);
                 }
             } else if let Err(e) = child_pty.lock().unwrap().kill() {
@@ -700,11 +777,14 @@ impl Helper {
         false
     }
 }
+
 //---------------------------------------------------------------------------------------------------- [ImgXmrig]
 #[derive(Debug, Clone)]
 pub struct ImgXmrig {
     pub threads: String,
     pub url: String,
+    pub api_port: u16,
+    pub token: String,
 }
 
 impl Default for ImgXmrig {
@@ -718,6 +798,8 @@ impl ImgXmrig {
         Self {
             threads: "???".to_string(),
             url: "???".to_string(),
+            api_port: XMRIG_API_PORT_DEFAULT,
+            token: String::new(),
         }
     }
 }
@@ -737,7 +819,7 @@ pub struct PubXmrigApi {
     pub hashrate_raw: f32,
     pub hashrate_raw_1m: f32,
     pub hashrate_raw_15m: f32,
-    pub node: String,
+    pub pool: Option<Pool>,
 }
 
 impl Default for PubXmrigApi {
@@ -760,7 +842,7 @@ impl PubXmrigApi {
             hashrate_raw: 0.0,
             hashrate_raw_1m: 0.0,
             hashrate_raw_15m: 0.0,
-            node: UNKNOWN_DATA.to_string(),
+            pool: None,
         }
     }
 
@@ -779,12 +861,19 @@ impl PubXmrigApi {
 
     // This combines the buffer from the PTY thread [output_pub]
     // with the actual [PubApiXmrig] output field.
+    #[allow(clippy::too_many_arguments)]
     pub fn update_from_output(
         public: &mut Self,
         output_parse: &Arc<Mutex<String>>,
         output_pub: &Arc<Mutex<String>>,
         elapsed: std::time::Duration,
         process: &mut Process,
+        process_p2pool: &Process,
+        process_proxy: &Process,
+        proxy_img: &Arc<Mutex<ImgProxy>>,
+        p2pool_img: &Arc<Mutex<ImgP2pool>>,
+        proxy_state: &XmrigProxy,
+        p2pool_state: &P2pool,
     ) {
         // 1. Take the process's current output buffer and combine it with Pub (if not empty)
         let mut output_pub = output_pub.lock().unwrap();
@@ -803,12 +892,18 @@ impl PubXmrigApi {
         if XMRIG_REGEX.new_job.is_match(&output_parse) {
             process.state = ProcessState::Alive;
             // get the pool we mine on to put it on stats
-            if let Some(name_pool) = crate::regex::detect_node_xmrig(&output_parse) {
-                public.node = name_pool;
+            if let Some(name_pool) = crate::regex::detect_pool_xmrig(
+                &output_parse,
+                proxy_state
+                    .current_ports(process_proxy, &proxy_img.lock().unwrap())
+                    .0,
+                p2pool_state.current_port(process_p2pool, &p2pool_img.lock().unwrap()),
+            ) {
+                public.pool = Some(name_pool);
             }
         } else if XMRIG_REGEX.not_mining.is_match(&output_parse) {
             process.state = ProcessState::NotMining;
-            public.node = NO_POOL.to_string();
+            public.pool = None;
         }
 
         // 3. Throw away [output_parse]
@@ -896,3 +991,24 @@ struct Connection {
     accepted: u128,
     rejected: u128,
 }
+
+//  get the API port that would be used if xmrig was started with the current settings
+// pub fn get_xmrig_api_port(xmrig_state: &Xmrig) -> u16 {
+//     if xmrig_state.simple {
+//         XMRIG_API_PORT_DEFAULT
+//     } else if !xmrig_state.arguments.is_empty() {
+//         let mut last = "";
+//         for arg in xmrig_state.arguments.split_whitespace() {
+//             if last == "--http-host" {
+//                 return last.parse().unwrap_or(XMRIG_API_PORT_DEFAULT);
+//             }
+//             last = arg;
+//         }
+//         return XMRIG_API_PORT_DEFAULT;
+//     } else {
+//         return xmrig_state
+//             .api_port
+//             .parse()
+//             .unwrap_or(XMRIG_API_PORT_DEFAULT);
+//     }
+// }

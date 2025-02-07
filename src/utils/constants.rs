@@ -92,14 +92,8 @@ pub const P2POOL_API_PATH_NETWORK: &str = "network/stats";
 pub const P2POOL_API_PATH_POOL: &str = "pool/stats";
 #[cfg(target_family = "unix")]
 pub const P2POOL_API_PATH_P2P: &str = "local/p2p";
-pub const XMRIG_API_SUMMARY_URI: &str = "1/summary"; // The default relative URI of XMRig's API summary
-// pub const XMRIG_API_CONFIG_URI: &str = "1/config"; // The default relative URI of XMRig's API config
-// todo allow user to change the port of the http api for xmrig and xmrig-proxy
-pub const XMRIG_CONFIG_URL: &str = "http://127.0.0.1:18088/1/config"; // The default relative URI of XMRig's API config
-pub const XMRIG_PROXY_CONFIG_URL: &str = "http://127.0.0.1:18089/1/config"; // The default relative URI of XMRig Proxy's API config
-pub const XMRIG_SUMMARY_URL: &str = "http://127.0.0.1:18088/1/summary"; // The default relative URI of XMRig's API config
-pub const XMRIG_PROXY_SUMMARY_URL: &str = "http://127.0.0.1:18089/1/summary"; // The default relative URI of XMRig Proxy's API config
-pub const NO_POOL: &str = "Not connected to any pool"; // status tab xrig if no pool is used
+pub const XMRIG_API_SUMMARY_ENDPOINT: &str = "1/summary"; // The default relative URI of XMRig's API summary
+pub const XMRIG_API_CONFIG_ENDPOINT: &str = "1/config"; // The default relative URI of XMRig's API config
 
 // Process state tooltips (online, offline, etc)
 pub const P2POOL_ALIVE: &str = "P2Pool is online and fully synchronized";
@@ -148,9 +142,9 @@ pub const STATUS_XMRIG_PROXY_POOL: &str = "The pool XMRig-Proxy is currently min
 pub const STATUS_XMRIG_PROXY_HASHRATE: &str = "The average hashrate of XMRig-Proxy";
 
 pub const XVB_ALIVE: &str =
-    "XvB process is configured and distributing hashrate, XvB node is online";
+    "XvB process is configured and distributing hashrate, XvB pool is online";
 pub const XVB_DEAD: &str = "XvB process is offline";
-pub const XVB_FAILED: &str = "XvB process is misconfigured or the XvB node is offline";
+pub const XVB_FAILED: &str = "XvB process is misconfigured or the XvB pool is offline";
 pub const XVB_MIDDLE: &str = "XvB is in the middle of (re)starting/stopping";
 pub const XVB_NOT_CONFIGURED: &str = "You need to insert an existent token before starting XvB";
 pub const XVB_PUBLIC_ONLY: &str = "XvB process is started only to get public stats.";
@@ -383,6 +377,7 @@ pub const GUPAX_PATH_XMRIG: &str = "The location of the XMRig binary: Both absol
 pub const GUPAX_PATH_XMRIG_PROXY: &str = "The location of the XMRig-Proxy binary: Both absolute and relative paths are accepted; A red [X] will appear if there is no file found at the given path";
 
 // P2Pool
+pub const P2POOL_PORT_DEFAULT: u16 = 3333;
 pub const P2POOL_MAIN: &str = "Use the P2Pool main-chain. This P2Pool finds blocks faster, but has a higher difficulty. Suitable for miners with more than 50kH/s";
 pub const P2POOL_MINI: &str = "Use the P2Pool mini-chain. This P2Pool finds blocks slower, but has a lower difficulty. Suitable for miners with less than 50kH/s";
 pub const P2POOL_OUT: &str = "How many out-bound peers to connect to? (you connecting to others)";
@@ -444,6 +439,8 @@ pub const LIST_SAVE: &str = "Save the current values to the already existing ent
 pub const LIST_DELETE: &str = "Delete the currently selected entry";
 pub const LIST_CLEAR: &str = "Clear all current values";
 // Node
+pub const NODE_RPC_PORT_DEFAULT: u16 = 18081;
+pub const NODE_ZMQ_PORT_DEFAULT: u16 = 18083;
 pub const NODE_INPUT: &str = "Send a command to Node";
 pub const NODE_PRUNNING: &str = "Reduce the database size to a third. Does not have any security/privacy impact.If you have enough storage, a full node is preferable to make the network even more decentralized.";
 #[cfg(not(windows))]
@@ -480,6 +477,7 @@ pub const NODE_API_PORT: &str = "RPC API listen port";
 pub const NODE_ZMQ_BIND: &str = "bind address of ZMQ API";
 pub const NODE_ZMQ_PORT: &str = "ZMQ API listen port";
 // XMRig
+pub const XMRIG_API_PORT_DEFAULT: u16 = 18088;
 pub const XMRIG_SIMPLE: &str = r#"Use simple XMRig settings:
   - Mine to local P2Pool (localhost:3333)
   - CPU thread slider
@@ -517,6 +515,8 @@ pub const XMRIG_PATH_NOT_VALID: &str = "XMRig binary at the given PATH in the Gu
 pub const XMRIG_PATH_OK: &str = "XMRig was found at the given PATH";
 pub const XMRIG_PATH_EMPTY: &str = "XMRig PATH is empty! To fix: goto the [GupaxxAdvanced] tab, select [Open] and specify where XMRig is located.";
 pub const XMRIG_PROXY_URL: &str = "https://github.com/xmrig/xmrig-proxy";
+pub const PROXY_API_PORT_DEFAULT: u16 = 18089;
+pub const PROXY_PORT_DEFAULT: u16 = 3355;
 
 // XvB
 pub const XVB_HELP: &str = "You need to register an account by clicking on the link above to get your token with the same p2pool XMR address you use for payment.";
@@ -559,6 +559,9 @@ pub const XVB_ROUND_DONOR_VIP_MIN_HR: u32 = 10000;
 pub const XVB_ROUND_DONOR_WHALE_MIN_HR: u32 = 100000;
 pub const XVB_ROUND_DONOR_MEGA_MIN_HR: u32 = 1000000;
 
+// Common help
+pub const HELP_STRATUM_PORT: &str = "Specify the stratum port to bind to";
+pub const HELP_STRATUM_IP: &str = "Specify the stratum ip to bind to";
 // Manual Mode
 pub const XVB_MODE_MANUAL_XVB_HELP: &str = "Manually set the amount to donate to XmrVsBeast, If value is more than xmrig hashrate it might be changed";
 pub const XVB_MODE_MANUAL_P2POOL_HELP: &str = "Manually set the amount to keep on P2pool, If value is more than xmrig hashrate it might be changed";

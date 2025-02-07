@@ -36,7 +36,7 @@ use crate::{
     helper::{Process, ProcessName, ProcessState, xvb::output_console},
 };
 
-use super::{PubXvbApi, nodes::XvbNode, rounds::XvbRound};
+use super::{PubXvbApi, nodes::Pool, rounds::XvbRound};
 
 #[derive(Debug, Clone, Deserialize, PartialEq, Eq, Default)]
 pub enum RuntimeMode {
@@ -78,11 +78,11 @@ pub struct XvbPrivStats {
     #[serde(skip)]
     pub round_participate: Option<XvbRound>,
     #[serde(skip)]
-    pub node: XvbNode,
+    pub pool: Pool,
     #[serde(skip)]
     // it is the time remaining before switching from P2pool to XvB or XvB to P2ool.
     // it is not the time remaining of the algo, even if it could be the same if never mining on XvB.
-    pub time_switch_node: u32,
+    pub time_switch_pool: u32,
     #[serde(skip)]
     pub msg_indicator: String,
     #[serde(skip)]

@@ -19,6 +19,7 @@ use super::Helper;
 use super::Process;
 use crate::app::panels::middle::common::list_poolnode::PoolNode;
 use crate::components::node::RemoteNode;
+use crate::disk::state::Node;
 use crate::disk::state::P2pool;
 use crate::disk::state::StartOptionsMode;
 use crate::helper::ProcessName;
@@ -193,6 +194,7 @@ impl Helper {
     pub fn restart_p2pool(
         helper: &Arc<Mutex<Self>>,
         state: &P2pool,
+        state_node: &Node,
         path: &Path,
         backup_hosts: Option<Vec<PoolNode>>,
         override_to_local_node: bool,
@@ -203,6 +205,7 @@ impl Helper {
 
         let helper = Arc::clone(helper);
         let state = state.clone();
+        let state_node = state_node.clone();
         let path = path.to_path_buf();
         // This thread lives to wait, start p2pool then die.
         thread::spawn(move || {
@@ -212,7 +215,14 @@ impl Helper {
             }
             // Ok, process is not alive, start the new one!
             info!("P2Pool | Old process seems dead, starting new one!");
-            Self::start_p2pool(&helper, &state, &path, backup_hosts, override_to_local_node);
+            Self::start_p2pool(
+                &helper,
+                &state,
+                &state_node,
+                &path,
+                backup_hosts,
+                override_to_local_node,
+            );
         });
         info!("P2Pool | Restart ... OK");
     }
@@ -223,6 +233,7 @@ impl Helper {
     pub fn start_p2pool(
         helper: &Arc<Mutex<Self>>,
         state: &P2pool,
+        state_node: &Node,
         path: &Path,
         backup_hosts: Option<Vec<PoolNode>>,
         override_to_local_node: bool,
@@ -237,8 +248,22 @@ impl Helper {
         } else {
             StartOptionsMode::Advanced
         };
-        let args =
-            Self::build_p2pool_args(state, path, &backup_hosts, override_to_local_node, mode);
+        // get the rpc and zmq port used when starting the node if it is alive, else use current settings of the Node.
+        // If the Node is started with different ports that the one used in settings when P2Pool was started,
+        // the user will need to restart p2pool
+        let node_process = Arc::clone(&helper.lock().unwrap().node);
+        let img_node = Arc::clone(&helper.lock().unwrap().img_node);
+        let (local_node_zmq, local_node_rpc) =
+            state_node.current_ports(&node_process.lock().unwrap(), &img_node.lock().unwrap());
+        let args = Self::build_p2pool_args(
+            state,
+            path,
+            &backup_hosts,
+            override_to_local_node,
+            local_node_zmq,
+            local_node_rpc,
+            mode,
+        );
 
         // Print arguments & user settings to console
         crate::disk::print_dash(&format!(
@@ -256,14 +281,17 @@ impl Helper {
         // starting the thread even if the option is disabled allows to apply the change immediately in case it is enabled again without asking the user to restart p2pool.
         // Start this thread only if we don't already override to local node
         if !override_to_local_node {
-            thread::spawn(enc!((helper, state, path, backup_hosts) move || {
-                Self::watch_switch_p2pool_to_local_node(
-                    &helper,
-                    &state,
-                    &path,
-                    backup_hosts,
-                );
-            }));
+            thread::spawn(
+                enc!((helper, state, state_node, path, backup_hosts) move || {
+                    Self::watch_switch_p2pool_to_local_node(
+                        &helper,
+                        &state,
+                        &state_node,
+                        &path,
+                        backup_hosts,
+                    );
+                }),
+            );
         }
 
         thread::spawn(move || {
@@ -309,6 +337,7 @@ impl Helper {
                 zmq: zmq.to_string(),
                 out_peers: "10".to_string(),
                 in_peers: "10".to_string(),
+                stratum_port: P2POOL_PORT_DEFAULT,
             };
         } else if !state.arguments.is_empty() {
             // This parses the input and attempts to fill out
@@ -330,6 +359,14 @@ impl Helper {
                     "--out-peers" => p2pool_image.out_peers = arg.to_string(),
                     "--in-peers" => p2pool_image.in_peers = arg.to_string(),
                     "--data-api" => api_path = PathBuf::from(arg),
+                    "--stratum" => {
+                        p2pool_image.stratum_port = last
+                            .split(":")
+                            .last()
+                            .unwrap_or(&P2POOL_PORT_DEFAULT.to_string())
+                            .parse()
+                            .unwrap_or(P2POOL_PORT_DEFAULT)
+                    }
                     _ => (),
                 }
                 if !mini {
@@ -349,6 +386,7 @@ impl Helper {
                 host: state.selected_node.ip.to_string(),
                 rpc: state.selected_node.rpc.to_string(),
                 zmq: state.selected_node.zmq_rig.to_string(),
+                stratum_port: state.stratum_port,
                 out_peers: state.out_peers.to_string(),
                 in_peers: state.in_peers.to_string(),
             };
@@ -378,6 +416,8 @@ impl Helper {
         path: &Path,
         backup_hosts: &Option<Vec<PoolNode>>,
         override_to_local_node: bool,
+        local_node_zmq_port: u16,
+        local_node_rpc_port: u16,
         // Allows to provide a different mode without mutating the state
         mode: StartOptionsMode,
     ) -> Vec<String> {
@@ -423,14 +463,17 @@ impl Helper {
             StartOptionsMode::Simple if state.local_node || override_to_local_node => {
                 // use the local node
                 // Build the p2pool argument
+                // dbg!("Simple mode/local node");
+                // dbg!(local_node_rpc);
+                // dbg!(local_node_zmq);
                 args.push("--wallet".to_string());
                 args.push(state.address.clone()); // Wallet address
                 args.push("--host".to_string());
                 args.push("127.0.0.1".to_string()); // IP Address
                 args.push("--rpc-port".to_string());
-                args.push("18081".to_string()); // RPC Port
+                args.push(local_node_rpc_port.to_string()); // RPC Port
                 args.push("--zmq-port".to_string());
-                args.push("18083".to_string()); // ZMQ Port
+                args.push(local_node_zmq_port.to_string()); // ZMQ Port
                 args.push("--data-api".to_string());
                 args.push(api_path.display().to_string()); // API Path
                 args.push("--local-api".to_string()); // Enable API
@@ -754,6 +797,7 @@ impl Helper {
     async fn watch_switch_p2pool_to_local_node(
         helper: &Arc<Mutex<Helper>>,
         state: &P2pool,
+        state_node: &Node,
         path_p2pool: &Path,
         backup_hosts: Option<Vec<PoolNode>>,
     ) {
@@ -776,7 +820,7 @@ impl Helper {
                 drop(process);
                 drop(node_process);
                 drop(helper_lock);
-                Helper::restart_p2pool(helper, state, path_p2pool, backup_hosts, true);
+                Helper::restart_p2pool(helper, state, state_node, path_p2pool, backup_hosts, true);
                 break;
             }
             drop(gui_api);
@@ -801,6 +845,7 @@ pub struct ImgP2pool {
     pub zmq: String,     // What is the ZMQ port?
     pub out_peers: String, // How many out-peers?
     pub in_peers: String, // How many in-peers?
+    pub stratum_port: u16, // on which port p2pool is listening for stratum connections
 }
 
 impl Default for ImgP2pool {
@@ -819,6 +864,7 @@ impl ImgP2pool {
             zmq: String::from("???"),
             out_peers: String::from("???"),
             in_peers: String::from("???"),
+            stratum_port: P2POOL_PORT_DEFAULT,
         }
     }
 }

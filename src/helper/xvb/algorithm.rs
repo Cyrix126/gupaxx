@@ -16,8 +16,12 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::XVB_MIN_TIME_SEND;
+use crate::helper::Process;
+use crate::helper::p2pool::ImgP2pool;
+use crate::helper::xrig::current_api_url_xrig;
+use crate::helper::xrig::xmrig::ImgXmrig;
+use crate::helper::xrig::xmrig_proxy::ImgProxy;
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
-use crate::helper::xvb::api_url_xmrig;
 use crate::helper::xvb::current_controllable_hr;
 use crate::miscs::output_console;
 use crate::miscs::output_console_without_time;
@@ -38,7 +42,7 @@ use crate::{
     helper::{
         p2pool::PubP2poolApi,
         xrig::{update_xmrig_config, xmrig::PubXmrigApi},
-        xvb::{nodes::XvbNode, priv_stats::RuntimeMode},
+        xvb::{nodes::Pool, priv_stats::RuntimeMode},
     },
 };
 
@@ -52,14 +56,22 @@ pub(crate) async fn algorithm(
     gui_api_xmrig: &Arc<Mutex<PubXmrigApi>>,
     gui_api_xp: &Arc<Mutex<PubXmrigProxyApi>>,
     gui_api_p2pool: &Arc<Mutex<PubP2poolApi>>,
-    token_xmrig: &str,
     state_p2pool: &crate::disk::state::P2pool,
     share: u32,
     time_donated: &Arc<Mutex<u32>>,
     rig: &str,
     xp_alive: bool,
     p2pool_buffer: i8,
+    proxy_img: &Arc<Mutex<ImgProxy>>,
+    xmrig_img: &Arc<Mutex<ImgXmrig>>,
+    p2pool_img: &Arc<Mutex<ImgP2pool>>,
+    p2pool_process: &Arc<Mutex<Process>>,
 ) {
+    let token_xmrig = if xp_alive {
+        proxy_img.lock().unwrap().token.clone()
+    } else {
+        xmrig_img.lock().unwrap().token.clone()
+    };
     let mut algorithm = Algorithm::new(
         client,
         pub_api,
@@ -67,13 +79,17 @@ pub(crate) async fn algorithm(
         gui_api_xmrig,
         gui_api_xp,
         gui_api_p2pool,
-        token_xmrig,
+        &token_xmrig,
         state_p2pool,
         share,
         time_donated,
         rig,
         xp_alive,
         p2pool_buffer,
+        proxy_img,
+        xmrig_img,
+        p2pool_img,
+        p2pool_process,
     );
     algorithm.run().await;
 }
@@ -92,6 +108,8 @@ pub struct Algorithm<'a> {
     rig: &'a str,
     xp_alive: bool,
     pub stats: Stats,
+    p2pool_img: &'a Arc<Mutex<ImgP2pool>>,
+    p2pool_process: &'a Arc<Mutex<Process>>,
 }
 
 #[derive(Debug)]
@@ -134,6 +152,10 @@ impl<'a> Algorithm<'a> {
         rig: &'a str,
         xp_alive: bool,
         p2pool_buffer: i8,
+        proxy_img: &Arc<Mutex<ImgProxy>>,
+        xmrig_img: &Arc<Mutex<ImgXmrig>>,
+        p2pool_img: &'a Arc<Mutex<ImgP2pool>>,
+        p2pool_process: &'a Arc<Mutex<Process>>,
     ) -> Self {
         let use_sidechain_hr = gui_api_xvb.lock().unwrap().use_p2pool_sidechain_hr;
         let hashrate_xmrig = current_controllable_hr(xp_alive, gui_api_xp, gui_api_xmrig);
@@ -175,7 +197,11 @@ impl<'a> Algorithm<'a> {
 
         let spareable_hashrate = hashrate_xmrig - share_min_hashrate;
 
-        let api_url = api_url_xmrig(xp_alive, true);
+        let api_url = if xp_alive {
+            current_api_url_xrig(true, None, Some(&proxy_img.lock().unwrap()))
+        } else {
+            current_api_url_xrig(true, Some(&xmrig_img.lock().unwrap()), None)
+        };
 
         let msg_xmrig_or_xp = (if xp_alive { "XMRig-Proxy" } else { "XMRig" }).to_string();
         info!("xp alive: {:?}", xp_alive);
@@ -224,6 +250,8 @@ impl<'a> Algorithm<'a> {
             rig,
             xp_alive,
             stats,
+            p2pool_img,
+            p2pool_process,
         };
         // external XvB HR is taken into account with get_target_donation_hashrate so the needed time is calculating how much time is needed from local sparable HR only
         new_instance.stats.target_donation_hashrate =
@@ -267,12 +295,15 @@ impl<'a> Algorithm<'a> {
     }
 
     async fn target_p2pool_node(&self) {
-        if self.gui_api_xvb.lock().unwrap().current_node != Some(XvbNode::P2pool) {
+        let node = Pool::P2pool(self.state_p2pool.current_port(
+            &self.p2pool_process.lock().unwrap(),
+            &self.p2pool_img.lock().unwrap(),
+        ));
+        if self.gui_api_xvb.lock().unwrap().current_pool != Some(node.clone()) {
             info!(
                 "Algorithm | request {} to mine on p2pool",
                 self.stats.msg_xmrig_or_xp
             );
-            let node = XvbNode::P2pool;
             if let Err(err) = update_xmrig_config(
                 self.client,
                 &self.stats.api_url,
@@ -305,27 +336,32 @@ impl<'a> Algorithm<'a> {
     }
 
     async fn target_xvb_node(&self) {
-        let node = self.gui_api_xvb.lock().unwrap().stats_priv.node;
+        let pool = self.gui_api_xvb.lock().unwrap().stats_priv.pool.clone();
 
         info!(
             "Algorithm | request {} to mine on XvB",
             self.stats.msg_xmrig_or_xp
         );
 
-        if self.gui_api_xvb.lock().unwrap().current_node.is_none()
+        if self.gui_api_xvb.lock().unwrap().current_pool.is_none()
             || self
                 .gui_api_xvb
                 .lock()
                 .unwrap()
-                .current_node
+                .current_pool
                 .as_ref()
-                .is_some_and(|n| n == &XvbNode::P2pool)
+                .is_some_and(|n| {
+                    n == &Pool::P2pool(self.state_p2pool.current_port(
+                        &self.p2pool_process.lock().unwrap(),
+                        &self.p2pool_img.lock().unwrap(),
+                    ))
+                })
         {
             if let Err(err) = update_xmrig_config(
                 self.client,
                 &self.stats.api_url,
                 self.token_xmrig,
-                &node,
+                &pool,
                 &self.stats.address,
                 "",
             )

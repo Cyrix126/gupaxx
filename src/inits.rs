@@ -1,4 +1,6 @@
-use crate::components::update::{Update, check_binary_path};
+#[cfg(not(feature = "distro"))]
+use crate::components::update::Update;
+use crate::components::update::check_binary_path;
 use crate::errors::process_running;
 use crate::helper::{Helper, ProcessName, ProcessSignal};
 use crate::utils::constants::{
@@ -202,12 +204,12 @@ pub fn init_auto(app: &mut App) {
                 "Gupaxx | P2pool instance is already running outside of Gupaxx ! Skipping auto-node..."
             );
         } else {
-            let backup_hosts = app.gather_backup_hosts();
             Helper::start_p2pool(
                 &app.helper,
                 &app.state.p2pool,
+                &app.state.node,
                 &app.state.gupax.absolute_p2pool_path,
-                backup_hosts,
+                app.backup_hosts.clone(),
                 false,
             );
         }
@@ -234,6 +236,8 @@ pub fn init_auto(app: &mut App) {
             Helper::start_xmrig(
                 &app.helper,
                 &app.state.xmrig,
+                &app.state.p2pool,
+                &app.state.xmrig_proxy,
                 &app.state.gupax.absolute_xmrig_path,
                 Arc::clone(&app.sudo),
             );
@@ -263,7 +267,7 @@ pub fn init_auto(app: &mut App) {
             Helper::start_xp(
                 &app.helper,
                 &app.state.xmrig_proxy,
-                &app.state.xmrig,
+                &app.state.p2pool,
                 &app.state.gupax.absolute_xp_path,
             );
         }

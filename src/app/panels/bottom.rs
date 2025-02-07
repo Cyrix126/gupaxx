@@ -169,7 +169,7 @@ impl crate::app::App {
                     ProcessName::Xvb => XVB_FAILED,
                 }
             }
-            Syncing | NotMining | OfflineNodesAll => {
+            Syncing | NotMining | OfflinePoolsAll => {
                 color = ORANGE;
                 match process.name {
                     ProcessName::Node => NODE_SYNCING,
@@ -262,8 +262,9 @@ impl crate::app::App {
                             Helper::restart_p2pool(
                                 &self.helper,
                                 &self.state.p2pool,
+                                &self.state.node,
                                 &self.state.gupax.absolute_p2pool_path,
-                                self.gather_backup_hosts(),
+                                self.backup_hosts.clone(),
                                 false,
                             );
                         }
@@ -272,6 +273,8 @@ impl crate::app::App {
                                 Helper::restart_xmrig(
                                     &self.helper,
                                     &self.state.xmrig,
+                                    &self.state.p2pool,
+                                    &self.state.xmrig_proxy,
                                     &self.state.gupax.absolute_xmrig_path,
                                     Arc::clone(&self.sudo),
                                 );
@@ -284,7 +287,7 @@ impl crate::app::App {
                             Helper::restart_xp(
                                 &self.helper,
                                 &self.state.xmrig_proxy,
-                                &self.state.xmrig,
+                                &self.state.p2pool,
                                 &self.state.gupax.absolute_xp_path,
                             );
                         }
@@ -333,8 +336,9 @@ impl crate::app::App {
                             ProcessName::P2pool => Helper::start_p2pool(
                                 &self.helper,
                                 &self.state.p2pool,
+                                &self.state.node,
                                 &self.state.gupax.absolute_p2pool_path,
-                                self.gather_backup_hosts(),
+                                self.backup_hosts.clone(),
                                 false,
                             ),
 
@@ -343,6 +347,8 @@ impl crate::app::App {
                                     Helper::start_xmrig(
                                         &self.helper,
                                         &self.state.xmrig,
+                                        &self.state.p2pool,
+                                        &self.state.xmrig_proxy,
                                         &self.state.gupax.absolute_xmrig_path,
                                         Arc::clone(&self.sudo),
                                     );
@@ -355,7 +361,7 @@ impl crate::app::App {
                             ProcessName::XmrigProxy => Helper::start_xp(
                                 &self.helper,
                                 &self.state.xmrig_proxy,
-                                &self.state.xmrig,
+                                &self.state.p2pool,
                                 &self.state.gupax.absolute_xp_path,
                             ),
                             ProcessName::Xvb => Helper::start_xvb(
