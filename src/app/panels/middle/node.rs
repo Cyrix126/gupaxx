@@ -20,7 +20,7 @@ use crate::app::panels::middle::common::header_tab::header_tab;
 use crate::app::panels::middle::common::state_edit_field::{path_db_field, slider_state_field};
 use crate::app::panels::middle::{rpc_bind_field, rpc_port_field, zmq_bind_field, zmq_port_field};
 use crate::{
-    NODE_DNS_BLOCKLIST, NODE_DNS_CHECKPOINT, NODE_INPUT, NODE_PRUNNING, NODE_URL,
+    NODE_DNS_BLOCKLIST, NODE_DNS_CHECKPOINT, NODE_FULL_MEM, NODE_INPUT, NODE_PRUNNING, NODE_URL,
     START_OPTIONS_HOVER,
 };
 use egui::TextStyle;
@@ -99,6 +99,9 @@ impl Node {
                         ui.separator();
                         ui.checkbox(&mut self.disable_dns_checkpoint, "DNS checkpoint")
                             .on_hover_text(NODE_DNS_CHECKPOINT);
+                        ui.separator();
+                        ui.checkbox(&mut self.full_memory, "Fast Mode")
+                            .on_hover_text(NODE_FULL_MEM);
                     });
                 });
 

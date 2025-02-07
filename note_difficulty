@@ -1,0 +1,33 @@
+The algo needs a precise estimation of hashrate to make a good decision.
+If the proxy HR estimation deviate too much from the real HR, it could for example change the round target.
+
+Proxy will by default only calculate HR with share accepted from the pool, not sent to miners.
+Add --custom-diff-stats to take into account shares accepted from miners.
+
+to have a more precise value of hashrate from the proxy, it should send a lower difficulty or watch a longer timeframe.
+The downside of looking at a longer timeframe is that it will not be able to react swiftly to variation in hashrate if any.
+A too short timeframe could also make a wrong decision.
+
+Algo watch the timeframe the closer to the time of a decision. 10mn for proxy, 15mn for xmrig, 15mn for p2pool.
+
+Current auto difficulty is set to have a share every 30 seconds.
+Proxy can apply difficulty for miners. P2Pool will set the difficulty sent from miners (-u x+diff) 
+
+
+
+
+The downside of reducing difficulty is that more trafic is necessary between miners and proxy, which lower HR (how much ?)
+Reducing the difficulty to get a share every 10 seconds instead of 30 seems to make much more accurate stats. The HR should not be impacted.
+ 
+
+
+Also:
+If a miner switch pool, it will loose the work that it was doing for a share not completed ? The more the difficulty, the longer the time lost ?
+In this case, a lower diff will make 
+
+
+The shorter the timeframe, the more the algo can adapt quicly to a change in hashrate. 
+
+Solution:
+change code source of proxy to set auto diff to lower value
+watch HR and reproduce auto diff with lower value
