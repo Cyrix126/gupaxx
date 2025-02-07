@@ -28,6 +28,7 @@ use std::{
     thread,
     time::{Duration, Instant},
 };
+use sysinfo::MemoryRefreshKind;
 use tokio::spawn;
 
 use crate::{
@@ -239,6 +240,16 @@ impl Helper {
         debug!("Node | Creating command...");
         let mut cmd = portable_pty::cmdbuilder::CommandBuilder::new(path.clone());
         cmd.args(args);
+        // if in simple state and enough free memory, enable full memory env
+        if state.simple {
+            let mut sys = sysinfo::System::new();
+            sys.refresh_memory_specifics(MemoryRefreshKind::nothing().with_ram());
+            if sys.available_memory() > 4_000_000_000 {
+                cmd.env("MONERO_RANDOMX_FULL_MEM", "1");
+            }
+        } else if state.full_memory {
+            cmd.env("MONERO_RANDOMX_FULL_MEM", "1");
+        }
         cmd.cwd(path.as_path().parent().unwrap());
         // 1c. Create child
         debug!("Node | Creating child...");

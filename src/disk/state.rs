@@ -338,6 +338,7 @@ pub struct Node {
     pub dns_blocklist: bool,
     pub disable_dns_checkpoint: bool,
     pub path_db: String,
+    pub full_memory: bool,
     pub console_height: u32,
 }
 
@@ -357,6 +358,7 @@ impl Default for Node {
             dns_blocklist: true,
             disable_dns_checkpoint: true,
             path_db: String::new(),
+            full_memory: false,
             console_height: APP_DEFAULT_CONSOLE_HEIGHT,
         }
     }
