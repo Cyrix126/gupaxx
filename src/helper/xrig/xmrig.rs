@@ -56,6 +56,11 @@ impl Helper {
         let mut i = 0;
         while let Some(Ok(line)) = stdout.next() {
             let line = strip_ansi_escapes::strip_str(line);
+            // skip until the first line of xmrig is appearing, hiding input for sudo
+            #[cfg(target_family = "unix")]
+            if i == 0 && !line.contains("ABOUT") {
+                continue;
+            }
             if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
                 error!("XMRig PTY Parse | Output error: {}", e);
             }
@@ -139,6 +144,7 @@ impl Helper {
             .stdin(Stdio::piped())
             .spawn()
             .unwrap();
+        // only insert the password if the user is required to
         if Self::password_needed() {
             // Write the [sudo] password to STDIN.
             let mut stdin = child.stdin.take().unwrap();
@@ -154,11 +160,26 @@ impl Helper {
 
     #[cold]
     #[inline(never)]
+    /// if the user has his visudo configured to not ask a password using sudo, this will return false
     pub fn password_needed() -> bool {
+        // Make sure sudo timestamp is reset
+        let reset = std::process::Command::new("sudo")
+            .arg("--reset-timestamp")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .stdin(Stdio::piped())
+            .status();
+        match reset {
+            Ok(_) => {}
+            Err(_) => return true,
+        };
         let cmd = std::process::Command::new("sudo")
             .args(["-n", "true"])
-            .spawn();
-        cmd.is_err()
+            .status();
+        if cmd.is_ok_and(|s| s.success()) {
+            return false;
+        }
+        true
     }
     #[cold]
     #[inline(never)]
@@ -483,8 +504,12 @@ impl Helper {
         // to emptiness so that it doesn't show up in the output.
         if cfg!(unix) {
             args.splice(..0, vec![path.display().to_string()]);
-            args.splice(..0, vec![r#"--"#.to_string()]);
-            args.splice(..0, vec![r#"--prompt="#.to_string()]);
+            // do not use prompt when sudo is not needed
+            // success is still to false if sudo has not been used to start xmrig
+            if sudo.lock().unwrap().success {
+                args.splice(..0, vec![r#"--"#.to_string()]);
+                args.splice(..0, vec![r#"--prompt="#.to_string()]);
+            }
         }
         // 1a. Create PTY
         debug!("XMRig | Creating PTY...");
@@ -519,19 +544,20 @@ impl Helper {
         drop(pair.slave);
 
         let mut stdin = pair.master.take_writer().unwrap();
-
         // 2. Input [sudo] pass, wipe, then drop.
-        if cfg!(unix) && Self::password_needed() {
+        if cfg!(unix) && sudo.lock().unwrap().success {
             debug!("XMRig | Inputting [sudo] and wiping...");
             if let Err(e) = writeln!(stdin, "{}", sudo.lock().unwrap().pass) {
                 error!("XMRig | Sudo STDIN error: {}", e);
             };
             SudoState::wipe(&sudo);
+            SudoState::reset(&sudo);
 
-            // b) Reset GUI STDOUT just in case.
-            debug!("XMRig | Clearing GUI output...");
-            gui_api.lock().unwrap().output.clear();
+            info!("sudo wipe and output cleared");
         }
+        // b) Reset GUI STDOUT just in case.
+        debug!("XMRig | Clearing GUI output...");
+        gui_api.lock().unwrap().output.clear();
 
         // 3. Set process state
         debug!("XMRig | Setting process state...");
@@ -541,13 +567,6 @@ impl Helper {
         lock.start = Instant::now();
         drop(lock);
 
-        // // 4. Spawn PTY read thread
-        // debug!("XMRig | Spawning PTY read thread...");
-        // let output_parse = Arc::clone(&process.lock().unwrap().output_parse);
-        // let output_pub = Arc::clone(&process.lock().unwrap().output_pub);
-        // spawn(enclose!((pub_api_xvb) async move {
-        //     Self::read_pty_xmrig(output_parse, output_pub, reader, process_xvb, &pub_api_xvb).await;
-        // }));
         let output_parse = Arc::clone(&process.lock().unwrap().output_parse);
         let output_pub = Arc::clone(&process.lock().unwrap().output_pub);
 

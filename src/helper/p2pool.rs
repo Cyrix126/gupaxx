@@ -463,9 +463,6 @@ impl Helper {
             StartOptionsMode::Simple if state.local_node || override_to_local_node => {
                 // use the local node
                 // Build the p2pool argument
-                // dbg!("Simple mode/local node");
-                // dbg!(local_node_rpc);
-                // dbg!(local_node_zmq);
                 args.push("--wallet".to_string());
                 args.push(state.address.clone()); // Wallet address
                 args.push("--host".to_string());
