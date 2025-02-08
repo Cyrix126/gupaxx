@@ -157,12 +157,8 @@ pub fn nb_current_shares(s: &str) -> Option<u32> {
     None
 }
 pub fn detect_pool_xmrig(s: &str, proxy_port: u16, p2pool_port: u16) -> Option<Pool> {
-    static CURRENT_SHARE: Lazy<Regex> = Lazy::new(|| {
-        Regex::new(
-            r"(use pool|new job from) (?P<pool>(?:[0-9]{1,3}\.){3}[0-9]{1,3}:\d{1,5})(| diff)",
-        )
-        .unwrap()
-    });
+    static CURRENT_SHARE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"(use pool|new job from) (?P<pool>.*:\d{1,5})(| diff)").unwrap());
     if let Some(c) = CURRENT_SHARE.captures(s) {
         if let Some(m) = c.name("pool") {
             match m.as_str() {
