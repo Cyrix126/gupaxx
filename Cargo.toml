@@ -115,7 +115,7 @@ egui = {version="0.30", features=["callstack"]}
 # glow start on windows but not wgpu
 # need the same version that eframe is using with egui_wgpu
 # feature angle to enable support for old cpu on Windows
-wgpu = {version = "23.0.1", features=["angle"]}
+wgpu = {version = "23.0.1", features=["dx12"]}
 zip = "2.2.2"
 is_elevated = "0.1.2"
 
