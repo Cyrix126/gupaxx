@@ -89,7 +89,7 @@ impl Helper {
                         // if xmrig stop, xvb will react in any case.
                         if current_pool
                             != Pool::P2pool(p2pool_state.current_port(
-                                &process_p2pool.lock().unwrap(),
+                                process_p2pool.lock().unwrap().is_alive(),
                                 &p2pool_img.lock().unwrap(),
                             ))
                         {
@@ -106,10 +106,13 @@ impl Helper {
                     let pool = detect_pool_xmrig(
                         &line,
                         proxy_state
-                            .current_ports(&process_xp.lock().unwrap(), &proxy_img.lock().unwrap())
+                            .current_ports(
+                                process_xp.lock().unwrap().is_alive(),
+                                &proxy_img.lock().unwrap(),
+                            )
                             .0,
                         p2pool_state.current_port(
-                            &process_p2pool.lock().unwrap(),
+                            process_p2pool.lock().unwrap().is_alive(),
                             &p2pool_img.lock().unwrap(),
                         ),
                     );
@@ -239,8 +242,10 @@ impl Helper {
         let process_p2pool = Arc::clone(&helper.lock().unwrap().p2pool);
         let p2pool_img = Arc::clone(&helper.lock().unwrap().img_p2pool);
 
-        let p2pool_stratum_port =
-            p2pool_state.current_port(&process_p2pool.lock().unwrap(), &p2pool_img.lock().unwrap());
+        let p2pool_stratum_port = p2pool_state.current_port(
+            process_p2pool.lock().unwrap().is_alive(),
+            &p2pool_img.lock().unwrap(),
+        );
         helper.lock().unwrap().xmrig.lock().unwrap().state = ProcessState::Middle;
         let api_ip_port = Self::mutate_img_xmrig(helper, state, p2pool_stratum_port);
         let mode = if state.simple {
@@ -681,24 +686,24 @@ impl Helper {
             // if mining on proxy and proxy is not alive, switch back to p2pool node
             debug!("update from priv ok");
             // unlock first process_xp and then pub_api
-            let process_p2pool_lock = &process_p2pool.lock().unwrap();
-            let process_xp_lock = &process_xp.lock().unwrap();
-            let pub_api_lock = pub_api.lock().unwrap();
-            if (pub_api_lock.pool
+            let p2pool_alive = process_p2pool.lock().unwrap().is_alive().to_owned();
+            let xp_alive = process_xp.lock().unwrap().is_alive().to_owned();
+            let xmrig_pool = pub_api.lock().unwrap().pool.to_owned();
+            if (xmrig_pool
                 == Some(Pool::XmrigProxy(
                     proxy_state
-                        .current_ports(process_xp_lock, &proxy_img.lock().unwrap())
+                        .current_ports(xp_alive, &proxy_img.lock().unwrap())
                         .0,
                 ))
-                || pub_api_lock.pool.is_none())
-                && !process_xp_lock.is_alive()
-                && process_p2pool_lock.is_alive()
+                || xmrig_pool.is_none())
+                && !xp_alive
+                && p2pool_alive
             {
                 info!(
                     "XMRig Process |  redirect xmrig to p2pool since XMRig-Proxy is not alive and p2pool is alive"
                 );
                 let pool = Pool::P2pool(
-                    p2pool_state.current_port(process_p2pool_lock, &p2pool_img.lock().unwrap()),
+                    p2pool_state.current_port(p2pool_alive, &p2pool_img.lock().unwrap()),
                 );
                 if let Err(err) = update_xmrig_config(
                     &client,
@@ -920,9 +925,9 @@ impl PubXmrigApi {
             if let Some(name_pool) = crate::regex::detect_pool_xmrig(
                 &output_parse,
                 proxy_state
-                    .current_ports(process_proxy, &proxy_img.lock().unwrap())
+                    .current_ports(process_proxy.is_alive(), &proxy_img.lock().unwrap())
                     .0,
-                p2pool_state.current_port(process_p2pool, &p2pool_img.lock().unwrap()),
+                p2pool_state.current_port(process_p2pool.is_alive(), &p2pool_img.lock().unwrap()),
             ) {
                 public.pool = Some(name_pool);
             }

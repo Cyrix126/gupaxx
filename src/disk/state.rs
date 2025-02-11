@@ -7,9 +7,7 @@ use crate::{
     app::panels::middle::common::list_poolnode::PoolNode,
     components::node::RemoteNode,
     disk::status::*,
-    helper::{
-        Helper, Process, ProcessName, node::ImgNode, p2pool::ImgP2pool, xrig::xmrig_proxy::ImgProxy,
-    },
+    helper::{Helper, ProcessName, node::ImgNode, p2pool::ImgP2pool, xrig::xmrig_proxy::ImgProxy},
 };
 //---------------------------------------------------------------------------------------------------- [State] Impl
 impl Default for State {
@@ -768,9 +766,8 @@ impl Node {
         (rpc_port, zmq_port)
     }
     /// get the ports that the node process is currently using or that it will use if started with current settings
-    pub fn current_ports(&self, node_process: &Process, img_node: &ImgNode) -> (u16, u16) {
-        let node_is_alive = node_process.is_alive();
-        if node_is_alive {
+    pub fn current_ports(&self, alive: bool, img_node: &ImgNode) -> (u16, u16) {
+        if alive {
             (img_node.zmq_port, img_node.rpc_port)
         } else {
             self.ports()
@@ -824,9 +821,8 @@ impl P2pool {
     }
 
     /// get the ports that the node process is currently using or that it will use if started with current settings
-    pub fn current_port(&self, p2pool_process: &Process, img_p2pool: &ImgP2pool) -> u16 {
-        let p2pool_is_alive = p2pool_process.is_alive();
-        if p2pool_is_alive {
+    pub fn current_port(&self, alive: bool, img_p2pool: &ImgP2pool) -> u16 {
+        if alive {
             img_p2pool.stratum_port
         } else {
             self.stratum_port()
@@ -889,9 +885,8 @@ impl XmrigProxy {
     }
     /// get the port that proxy process is currently using or that it will use if started with current settings
     /// return (bind port, api port)
-    pub fn current_ports(&self, proxy_process: &Process, img_proxy: &ImgProxy) -> (u16, u16) {
-        let proxy_is_alive = proxy_process.is_alive();
-        if proxy_is_alive {
+    pub fn current_ports(&self, alive: bool, img_proxy: &ImgProxy) -> (u16, u16) {
+        if alive {
             (img_proxy.port, img_proxy.api_port)
         } else {
             (self.bind_port(), self.api_port())

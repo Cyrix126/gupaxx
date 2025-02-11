@@ -102,7 +102,7 @@ impl Helper {
                         );
                         if current_node
                             != Pool::P2pool(p2pool_state.current_port(
-                                &process_p2pool.lock().unwrap(),
+                                process_p2pool.lock().unwrap().is_alive(),
                                 &p2pool_img.lock().unwrap(),
                             ))
                         {
@@ -121,7 +121,7 @@ impl Helper {
                         &line,
                         proxy_state.bind_port(),
                         p2pool_state.current_port(
-                            &process_p2pool.lock().unwrap(),
+                            process_p2pool.lock().unwrap().is_alive(),
                             &p2pool_img.lock().unwrap(),
                         ),
                     );
@@ -340,8 +340,10 @@ impl Helper {
         // get the stratum port of p2pool
         let process_p2pool = Arc::clone(&helper.lock().unwrap().p2pool);
         let p2pool_img = Arc::clone(&helper.lock().unwrap().img_p2pool);
-        let p2pool_stratum_port =
-            state_p2pool.current_port(&process_p2pool.lock().unwrap(), &p2pool_img.lock().unwrap());
+        let p2pool_stratum_port = state_p2pool.current_port(
+            process_p2pool.lock().unwrap().is_alive(),
+            &p2pool_img.lock().unwrap(),
+        );
         // store the data used for startup to make it available to the other processes.
         Helper::mutate_img_proxy(helper, state_proxy);
         let args = Self::build_xp_args(state_proxy, mode, p2pool_stratum_port);
@@ -682,7 +684,7 @@ impl PubXmrigProxyApi {
             if let Some(name_pool) = detect_pool_xmrig(
                 &output_parse,
                 state.bind_port(),
-                p2pool_state.current_port(process_p2pool, &p2pool_img.lock().unwrap()),
+                p2pool_state.current_port(process_p2pool.is_alive(), &p2pool_img.lock().unwrap()),
             ) {
                 public.pool = Some(name_pool);
             }

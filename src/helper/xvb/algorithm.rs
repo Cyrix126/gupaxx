@@ -296,7 +296,7 @@ impl<'a> Algorithm<'a> {
 
     async fn target_p2pool_node(&self) {
         let node = Pool::P2pool(self.state_p2pool.current_port(
-            &self.p2pool_process.lock().unwrap(),
+            self.p2pool_process.lock().unwrap().is_alive(),
             &self.p2pool_img.lock().unwrap(),
         ));
         if self.gui_api_xvb.lock().unwrap().current_pool != Some(node.clone()) {
@@ -352,7 +352,7 @@ impl<'a> Algorithm<'a> {
                 .as_ref()
                 .is_some_and(|n| {
                     n == &Pool::P2pool(self.state_p2pool.current_port(
-                        &self.p2pool_process.lock().unwrap(),
+                        self.p2pool_process.lock().unwrap().is_alive(),
                         &self.p2pool_img.lock().unwrap(),
                     ))
                 })

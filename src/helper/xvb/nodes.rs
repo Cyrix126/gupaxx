@@ -134,32 +134,30 @@ impl Pool {
                     Pool::XvBEurope
                 } else {
                     // if P2pool is returned, it means none of the two nodes are available.
-                    Pool::P2pool(
-                        p2pool_state.current_port(
-                            &process_p2pool.lock().unwrap(),
-                            &p2pool_img.lock().unwrap(),
-                        ),
-                    )
+                    Pool::P2pool(p2pool_state.current_port(
+                        process_p2pool.lock().unwrap().is_alive(),
+                        &p2pool_img.lock().unwrap(),
+                    ))
                 }
             } else {
                 error!("ping has failed !");
-                Pool::P2pool(
-                    p2pool_state
-                        .current_port(&process_p2pool.lock().unwrap(), &p2pool_img.lock().unwrap()),
-                )
+                Pool::P2pool(p2pool_state.current_port(
+                    process_p2pool.lock().unwrap().is_alive(),
+                    &p2pool_img.lock().unwrap(),
+                ))
             }
         } else {
             error!("ping has failed !");
-            Pool::P2pool(
-                p2pool_state
-                    .current_port(&process_p2pool.lock().unwrap(), &p2pool_img.lock().unwrap()),
-            )
+            Pool::P2pool(p2pool_state.current_port(
+                process_p2pool.lock().unwrap().is_alive(),
+                &p2pool_img.lock().unwrap(),
+            ))
         };
         if pool
-            == Pool::P2pool(
-                p2pool_state
-                    .current_port(&process_p2pool.lock().unwrap(), &p2pool_img.lock().unwrap()),
-            )
+            == Pool::P2pool(p2pool_state.current_port(
+                process_p2pool.lock().unwrap().is_alive(),
+                &p2pool_img.lock().unwrap(),
+            ))
         {
             // if both nodes are dead, then the state of the process must be NodesOffline
             info!("XvB node ping, all offline or ping failed, switching back to local p2pool",);

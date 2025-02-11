@@ -632,7 +632,7 @@ async fn check_state_outcauses_xvb(
             // only update xmrig if it is alive and wasn't on p2pool already.
             if gui_api.lock().unwrap().current_pool
                 != Some(Pool::P2pool(state_p2pool.current_port(
-                    &process_p2pool.lock().unwrap(),
+                    process_p2pool.lock().unwrap().is_alive(),
                     &p2pool_img.lock().unwrap(),
                 )))
                 && (process_xmrig.lock().unwrap().state == ProcessState::Alive || xp_is_alive)
@@ -657,7 +657,7 @@ async fn check_state_outcauses_xvb(
                                         current_api_url_xrig(true, Some(&xmrig_img.lock().unwrap()), None)
                                     };
                                     let pool = Pool::P2pool(state_p2pool.current_port(
-                                        &process_p2pool.lock().unwrap(),
+                                        process_p2pool.lock().unwrap().is_alive(),
                                         &p2pool_img.lock().unwrap(),
                                     ));
                                     if let Err(err) = update_xmrig_config(
@@ -682,7 +682,7 @@ async fn check_state_outcauses_xvb(
                                             } else {
                                                 let pool =
                     Pool::P2pool(state_p2pool.current_port(
-                                        &process_p2pool.lock().unwrap(),
+                                        process_p2pool.lock().unwrap().is_alive(),
                                         &p2pool_img.lock().unwrap(),
                                     ));
                                                 output_console(
@@ -861,7 +861,7 @@ fn signal_interrupt(
                         // but if xmrig didn't start, don't update it.
                 
                     let p2pool_pool  = Pool::P2pool(state_p2pool.current_port(
-                                        &process_p2pool.lock().unwrap(),
+                                        process_p2pool.lock().unwrap().is_alive(),
                                         &p2pool_img.lock().unwrap(),
                                     ));
                 if process_xrig.lock().unwrap().state == ProcessState::Alive && gui_api.lock().unwrap().current_pool != Some(p2pool_pool.clone()) {

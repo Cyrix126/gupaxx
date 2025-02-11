@@ -253,8 +253,10 @@ impl Helper {
         // the user will need to restart p2pool
         let node_process = Arc::clone(&helper.lock().unwrap().node);
         let img_node = Arc::clone(&helper.lock().unwrap().img_node);
-        let (local_node_zmq, local_node_rpc) =
-            state_node.current_ports(&node_process.lock().unwrap(), &img_node.lock().unwrap());
+        let (local_node_zmq, local_node_rpc) = state_node.current_ports(
+            node_process.lock().unwrap().is_alive(),
+            &img_node.lock().unwrap(),
+        );
         let args = Self::build_p2pool_args(
             state,
             path,
