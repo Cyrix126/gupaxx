@@ -502,6 +502,7 @@ impl Helper {
                 // Always update from output
                 // todo: check difference with xmrig
                 debug!("XMRig-Proxy Watchdog | Starting [update_from_output()]");
+                let process_p2pool_lock = process_p2pool.lock().unwrap();
                 let mut process_lock = process.lock().unwrap();
                 let mut pub_api_lock = pub_api.lock().unwrap();
                 PubXmrigProxyApi::update_from_output(
@@ -510,7 +511,7 @@ impl Helper {
                     &output_parse,
                     start.elapsed(),
                     &mut process_lock,
-                    &process_p2pool.lock().unwrap(),
+                    &process_p2pool_lock,
                     p2pool_img,
                     p2pool_state,
                     state,

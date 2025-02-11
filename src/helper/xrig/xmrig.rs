@@ -645,23 +645,25 @@ impl Helper {
             }
             // Always update from output
             debug!("XMRig Watchdog | Starting [update_from_output()]");
-            let mut process_lock = process.lock().unwrap();
-            let mut pub_api_lock = pub_api.lock().unwrap();
-            PubXmrigApi::update_from_output(
-                &mut pub_api_lock,
-                &output_pub,
-                &output_parse,
-                start.elapsed(),
-                &mut process_lock,
-                &process_p2pool.lock().unwrap(),
-                &process_xp.lock().unwrap(),
-                proxy_img,
-                p2pool_img,
-                proxy_state,
-                p2pool_state,
-            );
-            drop(pub_api_lock);
-            drop(process_lock);
+            {
+                let process_p2pool_lock = &process_p2pool.lock().unwrap();
+                let mut process_lock = process.lock().unwrap();
+                let process_xp_lock = &process_xp.lock().unwrap();
+                let mut pub_api_lock = pub_api.lock().unwrap();
+                PubXmrigApi::update_from_output(
+                    &mut pub_api_lock,
+                    &output_pub,
+                    &output_parse,
+                    start.elapsed(),
+                    &mut process_lock,
+                    process_p2pool_lock,
+                    process_xp_lock,
+                    proxy_img,
+                    p2pool_img,
+                    proxy_state,
+                    p2pool_state,
+                );
+            }
             // Send an HTTP API request
             debug!("XMRig Watchdog | Attempting HTTP API request...");
             match PrivXmrigApi::request_xmrig_api(&client, &api_uri_summary, token).await {
@@ -677,22 +679,26 @@ impl Helper {
                 }
             }
             // if mining on proxy and proxy is not alive, switch back to p2pool node
-            if (pub_api.lock().unwrap().pool
+            debug!("update from priv ok");
+            // unlock first process_xp and then pub_api
+            let process_p2pool_lock = &process_p2pool.lock().unwrap();
+            let process_xp_lock = &process_xp.lock().unwrap();
+            let pub_api_lock = pub_api.lock().unwrap();
+            if (pub_api_lock.pool
                 == Some(Pool::XmrigProxy(
                     proxy_state
-                        .current_ports(&process_xp.lock().unwrap(), &proxy_img.lock().unwrap())
+                        .current_ports(process_xp_lock, &proxy_img.lock().unwrap())
                         .0,
                 ))
-                || pub_api.lock().unwrap().pool.is_none())
-                && !process_xp.lock().unwrap().is_alive()
-                && process_p2pool.lock().unwrap().is_alive()
+                || pub_api_lock.pool.is_none())
+                && !process_xp_lock.is_alive()
+                && process_p2pool_lock.is_alive()
             {
                 info!(
                     "XMRig Process |  redirect xmrig to p2pool since XMRig-Proxy is not alive and p2pool is alive"
                 );
                 let pool = Pool::P2pool(
-                    p2pool_state
-                        .current_port(&process_p2pool.lock().unwrap(), &p2pool_img.lock().unwrap()),
+                    p2pool_state.current_port(process_p2pool_lock, &p2pool_img.lock().unwrap()),
                 );
                 if let Err(err) = update_xmrig_config(
                     &client,
