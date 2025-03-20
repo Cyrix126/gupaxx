@@ -97,7 +97,7 @@ impl Status {
                 });
                 // ui.separator();
                 // Actual logs
-                egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
+                egui::Frame::new().fill(DARK_GRAY).show(ui, |ui| {
                     egui::ScrollArea::vertical()
                         .stick_to_bottom(self.payout_view == PayoutView::Oldest)
                         .max_width(ui.available_width())

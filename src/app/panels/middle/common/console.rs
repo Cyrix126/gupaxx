@@ -33,7 +33,7 @@ pub fn console(ui: &mut Ui, text: &str, console_height: &mut u32, process_name: 
         .min_width(ui.available_width())
         .max_width(ui.available_width())
         .show(ui, |ui| {
-            egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
+            egui::Frame::new().fill(DARK_GRAY).show(ui, |ui| {
                 ui.style_mut().wrap_mode = Some(TextWrapMode::Wrap);
                 ui.style_mut().override_text_style = Some(TextStyle::Small);
                 egui::ScrollArea::vertical()

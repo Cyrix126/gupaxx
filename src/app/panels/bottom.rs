@@ -47,10 +47,10 @@ impl crate::app::App {
                     ui.style_mut().spacing.item_spacing.x = if !tiny_width {
                         ui.available_width() / 200.0
                     } else {
-                        ui.style_mut().spacing.window_margin.left = 0.0;
-                        ui.style_mut().spacing.window_margin.right = 0.0;
-                        ui.style_mut().spacing.window_margin.top = 0.0;
-                        ui.style_mut().spacing.window_margin.bottom = 0.0;
+                        ui.style_mut().spacing.window_margin.left = 0;
+                        ui.style_mut().spacing.window_margin.right = 0;
+                        ui.style_mut().spacing.window_margin.top = 0;
+                        ui.style_mut().spacing.window_margin.bottom = 0;
                         // let a minimum space between widget
                         3.0
                     };

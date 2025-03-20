@@ -133,7 +133,7 @@ impl crate::app::App {
                         )
                     }
                     Debug => {
-                        egui::Frame::none().fill(DARK_GRAY).show(ui, |ui| {
+                        egui::Frame::NONE.fill(DARK_GRAY).show(ui, |ui| {
                             let width = ui.available_width();
                             let height = ui.available_height();
                             egui::ScrollArea::vertical()

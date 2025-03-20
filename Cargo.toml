@@ -27,14 +27,14 @@ log=[]
 
 [dependencies]
 clap = {version="4.5", features=["cargo", "derive"]}
-anyhow = "1.0.95"
+anyhow = "1.0.97"
 benri = "0.1.12"
-bytes = "1.10.0"
+bytes = "1.10.1"
 dirs = "6.0.0"
 #--------------------------------------------------------------------------------
-egui = "0.30"
+egui = "0.31"
 # egui = {git="https://github.com/emilk/egui"}
-egui_extras = {version="0.30", features = ["image"] }
+egui_extras = {version="0.31", features = ["image"] }
 # egui_extras = {git="https://github.com/emilk/egui", features = ["image"] }
 
 ## 2023-12-28: https://github.com/hinto-janai/gupax/issues/68
@@ -48,47 +48,47 @@ egui_extras = {version="0.30", features = ["image"] }
 ## Using [wgpu] actually crashes macOS (fixed in 0.20.x though).
 
 #--------------------------------------------------------------------------------
-env_logger = "0.11.6"
+env_logger = "0.11.7"
 figment = { version = "0.10.19", features = ["toml"] }
-reqwest = {version = "0.12.12", default-features=false, features=["json", "rustls-tls"]}
+reqwest = {version = "0.12.15", default-features=false, features=["json", "rustls-tls"]}
 reqwest-middleware = "0.4"
 reqwest-retry = "0.7"
 image = { version = "0.25.5", features = ["png"] }
-log = "0.4.25"
+log = "0.4.26"
 num-format = { version = "0.4.4", default-features = false }
-once_cell = "1.20.3"
-portable-pty = "0.8.1"
+once_cell = "1.21.1"
+portable-pty = "0.9.0"
 rand = "0.9.0"
 regex = { version = "1.11.1", default-features = false, features = ["perf"] }
-rfd = "0.15.2"
-serde = { version = "1.0.217", features = ["rc", "derive"] }
-serde_json = "1.0.138"
+rfd = "0.15.3"
+serde = { version = "1.0.219", features = ["rc", "derive"] }
+serde_json = "1.0.140"
 sysinfo = { version = "0.33.1", default-features = false, features=["system"] }
 # tls-api = "0.9.0"
-tokio = { version = "1.43.0", features = ["rt", "time", "macros", "process", "rt-multi-thread"] }
+tokio = { version = "1.44.1", features = ["rt", "time", "macros", "process", "rt-multi-thread"] }
 toml = { version = "0.8.20", features = ["preserve_order"] }
 walkdir = "2.5.0"
 zeroize = "1.8.1"
 strsim = "0.11.1"
 strip-ansi-escapes = "0.2.1"
-derive_more = {version="1.0.0", default-features=false, features=["display", "deref", "deref_mut"]}
+derive_more = {version="2.0.1", default-features=false, features=["display", "deref", "deref_mut"]}
 serde-this-or-that = "0.5.0"
 readable = "0.16"
-chrono = {version="0.4.39", default-features=false, features=["clock", "std"]}
+chrono = {version="0.4.40", default-features=false, features=["clock", "std"]}
 enclose = "1.2.0"
 bounded-vec-deque = {version="0.1.1", default-features=false}
 cfg-if = "1.0"
 flexi_logger = "0.29"
-eframe = {version="0.30", features=["wgpu"]}
+eframe = {version="0.31", features=["wgpu"]}
 # eframe = {git="https://github.com/emilk/egui", features=["wgpu"]}
-strum = {version="0.26", features=["derive"]}
+strum = {version="0.27", features=["derive"]}
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
-tar = "0.4.43"
-flate2 = "1.0"
+tar = "0.4.44"
+flate2 = "1.1"
 sudo = "0.6.0"
 # https://github.com/emilk/egui/releases/tag/0.30.0 see breaking change
-eframe = {version="0.30", features=["x11", "wayland"]}
+eframe = {version="0.31", features=["x11", "wayland"]}
 # macOS
 [target.'cfg(target_os = "macos")'.dependencies]
 # On apple-darwin targets there is an issue with the native and rustls
@@ -104,7 +104,7 @@ eframe = {version="0.30", features=["x11", "wayland"]}
 # linked as well which causes problems, so statically link it.
 lzma-sys = { version = "0.1", features = ["static"] }
 [dev-dependencies]
-egui = {version="0.30", features=["callstack"]}
+egui = {version="0.31", features=["callstack"]}
 # egui = {git="https://github.com/emilk/egui", features=["callstack"]}
 
 # [target.'cfg(not(target_os = "macos"))'.dependencies]
@@ -115,8 +115,8 @@ egui = {version="0.30", features=["callstack"]}
 # glow start on windows but not wgpu
 # need the same version that eframe is using with egui_wgpu
 # feature angle to enable support for old cpu on Windows
-wgpu = {version = "23.0.1", features=["angle"]}
-zip = "2.2.2"
+wgpu = {version = "24.0.3", features=["angle"]}
+zip = "2.4.2"
 is_elevated = "0.1.2"
 
 # For Windows build (icon)
