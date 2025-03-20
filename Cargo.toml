@@ -82,6 +82,8 @@ flexi_logger = "0.29"
 eframe = {version="0.31", features=["wgpu"]}
 # eframe = {git="https://github.com/emilk/egui", features=["wgpu"]}
 strum = {version="0.27", features=["derive"]}
+## force version of ring to prevent https://rustsec.org/advisories/RUSTSEC-2025-0009
+ring = "0.17.14"
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
 tar = "0.4.44"
