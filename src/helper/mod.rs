@@ -43,12 +43,15 @@ use crate::helper::{
 };
 use crate::{constants::*, disk::gupax_p2pool_api::GupaxP2poolApi, human::*, macros::*};
 use derive_more::derive::Display;
+use enclose::enc;
 use log::*;
 use node::{ImgNode, PubNodeApi};
+use port_check::is_port_reachable_with_timeout;
 use portable_pty::Child;
 use readable::up::Uptime;
 use serde::{Deserialize, Serialize};
 use std::fmt::Write;
+use std::net::{IpAddr, Ipv4Addr};
 use std::path::Path;
 use std::{
     path::PathBuf,
@@ -103,6 +106,9 @@ pub struct Helper {
     pub_api_node: Arc<Mutex<PubNodeApi>>,     // Node API state (for Helper/Node thread)
     pub_api_xvb: Arc<Mutex<PubXvbApi>>,       // XvB API state (for Helper/XvB thread)
     pub gupax_p2pool_api: Arc<Mutex<GupaxP2poolApi>>, //
+    pub ip_public: Arc<Mutex<Option<Ipv4Addr>>>,
+    pub ip_local: Arc<Mutex<Option<IpAddr>>>,
+    pub proxy_port_reachable: Arc<Mutex<bool>>,
 }
 
 // The communication between the data here and the GUI thread goes as follows:
@@ -396,6 +402,9 @@ impl Helper {
         img_xmrig: Arc<Mutex<ImgXmrig>>,
         img_proxy: Arc<Mutex<ImgProxy>>,
         gupax_p2pool_api: Arc<Mutex<GupaxP2poolApi>>,
+        ip_local: Arc<Mutex<Option<IpAddr>>>,
+        ip_public: Arc<Mutex<Option<Ipv4Addr>>>,
+        proxy_port_reachable: Arc<Mutex<bool>>,
     ) -> Self {
         Self {
             instant,
@@ -422,6 +431,9 @@ impl Helper {
             img_xmrig,
             img_proxy,
             gupax_p2pool_api,
+            ip_local,
+            ip_public,
+            proxy_port_reachable,
         }
     }
 
@@ -711,6 +723,32 @@ impl Helper {
                 // 5. End loop
             }
         });
+    }
+    pub fn spawn_ip_fetch(helper: &Arc<Mutex<Self>>) {
+        thread::spawn(enc!((helper) move || {
+            Self::ip_fetch(&helper);
+        }));
+    }
+    #[tokio::main]
+    async fn ip_fetch(helper: &Arc<Mutex<Self>>) {
+        *helper.lock().unwrap().ip_public.lock().unwrap() = public_ip::addr_v4().await;
+        *helper.lock().unwrap().ip_local.lock().unwrap() = local_ip_address::local_ip().ok();
+    }
+    pub fn spawn_proxy_port_reachable(helper: &Arc<Mutex<Self>>, port: u16) {
+        thread::spawn(enc!((helper) move || {
+            Self::proxy_port_reachable(&helper, port);
+        }));
+    }
+    #[tokio::main]
+    async fn proxy_port_reachable(helper: &Arc<Mutex<Self>>, port: u16) {
+        let ip = helper.lock().unwrap().ip_public.lock().unwrap().to_owned();
+        if let Some(ip) = ip {
+            *helper.lock().unwrap().proxy_port_reachable.lock().unwrap() =
+                is_port_reachable_with_timeout((ip, port), Duration::from_millis(500));
+            return;
+        } else {
+            *helper.lock().unwrap().ip_public.lock().unwrap() = public_ip::addr_v4().await;
+        }
     }
 }
 

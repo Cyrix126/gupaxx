@@ -142,6 +142,10 @@ impl crate::app::App {
                         &mut self.xmrig_proxy_stdin,
                         ui,
                         self.state.p2pool.stratum_port(),
+                        &self.ip_local,
+                        &self.ip_public,
+                        &self.proxy_port_reachable,
+                        &self.helper,
                     );
                 }
                 Tab::Xvb => {

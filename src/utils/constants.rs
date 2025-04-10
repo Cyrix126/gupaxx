@@ -182,6 +182,9 @@ pub const LIGHT_GRAY: egui::Color32 = egui::Color32::LIGHT_GRAY;
 pub const BLACK: egui::Color32 = egui::Color32::BLACK;
 pub const DARK_GRAY: egui::Color32 = egui::Color32::from_gray(13);
 
+// IP fetching
+pub const IP_NOT_FOUND: &str = "No ip found, try refreshing by clicking on the button above";
+
 // [Duration] constants
 pub const SECOND: std::time::Duration = std::time::Duration::from_secs(1);
 

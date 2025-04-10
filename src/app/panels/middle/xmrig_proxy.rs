@@ -16,6 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use egui::{Checkbox, TextStyle, Ui, vec2};
+use std::net::{IpAddr, Ipv4Addr};
 use std::sync::{Arc, Mutex};
 
 use log::debug;
@@ -25,9 +26,10 @@ use crate::app::panels::middle::common::header_tab::header_tab;
 use crate::app::panels::middle::common::list_poolnode::list_poolnode;
 use crate::disk::state::{StartOptionsMode, XmrigProxy};
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
-use crate::helper::{Process, ProcessName};
+use crate::helper::{Helper, Process, ProcessName};
 use crate::miscs::height_txt_before_button;
 use crate::regex::REGEXES;
+use crate::utils::constants::IP_NOT_FOUND;
 use crate::{
     SPACE, START_OPTIONS_HOVER, XMRIG_API_IP, XMRIG_API_PORT, XMRIG_IP, XMRIG_KEEPALIVE,
     XMRIG_NAME, XMRIG_PORT, XMRIG_PROXY_INPUT, XMRIG_PROXY_REDIRECT, XMRIG_PROXY_URL, XMRIG_RIG,
@@ -40,6 +42,7 @@ use super::{HELP_STRATUM_IP, HELP_STRATUM_PORT, XMRIG_API_TOKEN};
 
 impl XmrigProxy {
     #[inline(always)] // called once
+    #[allow(clippy::too_many_arguments)]
     pub fn show(
         &mut self,
         process: &Arc<Mutex<Process>>,
@@ -48,6 +51,10 @@ impl XmrigProxy {
         buffer: &mut String,
         ui: &mut egui::Ui,
         stratum_port: u16,
+        local_ip: &Arc<Mutex<Option<IpAddr>>>,
+        public_ip: &Arc<Mutex<Option<Ipv4Addr>>>,
+        port_reachable: &Arc<Mutex<bool>>,
+        helper: &Arc<Mutex<Helper>>,
     ) {
         header_tab(
             ui,
@@ -192,7 +199,54 @@ impl XmrigProxy {
                     });
             }
         });
+        // show instructions to connect miners to the proxy
+        ui.add_space(SPACE);
+        ui.label("Instructions:");
+        ui.label("To connect a miner to this proxy, start xmrig with the option '-o IP:PORT':");
+        ui.label("If the miner is on the same local network as the proxy, use the local IP.\nIf not, use the public IP");
+        ui.add_space(SPACE);
+        // local ip and port
+        // public ip (way to hide)
+        // example of startup options for xmrig
+
+        // button to refresh public ip address lookup
+        // Do not fetch public ip automatically since it could take some time depending on the connection and the user might not want to fetch the dns server.
+        if ui.button("refresh ip").clicked() {
+            // fetch ip
+            Helper::spawn_ip_fetch(helper);
+        }
+        ui.label("Local IP: ");
+        if let Some(ip) = *local_ip.lock().unwrap() {
+            ui.label(ip.to_string());
+        } else {
+            ui.label(IP_NOT_FOUND);
+        }
+        ui.label("Public IP: ");
+        if let Some(ip) = *public_ip.lock().unwrap() {
+            ui.label(ip.to_string());
+        } else {
+            ui.label(IP_NOT_FOUND);
+        }
+        ui.label(format!("PORT of xmrig-proxy: {}", self.bind_port()));
+
+        ui.add_enabled_ui(process.lock().unwrap().is_alive(), |ui| {
+            if ui
+                .button("check if XMRig-Proxy is accessible outside of the local network")
+                .clicked()
+            {
+                // check port
+                Helper::spawn_proxy_port_reachable(helper, self.bind_port());
+            }
+        })
+        .response
+        .on_disabled_hover_text("Start the proxy to enable this button");
+        if *port_reachable.lock().unwrap() {
+            ui.label("Proxy port is reacheable from outside the local network");
+        } else {
+            ui.label("Proxy port is not reacheable from outside the local network");
+        }
     }
+
     fn name_field(&mut self, ui: &mut Ui) -> bool {
         StateTextEdit::new(ui)
             .description(" Name      ")

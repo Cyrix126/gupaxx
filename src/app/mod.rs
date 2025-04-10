@@ -60,6 +60,8 @@ use log::warn;
 use panels::middle::common::list_poolnode::PoolNode;
 use serde::Deserialize;
 use serde::Serialize;
+use std::net::IpAddr;
+use std::net::Ipv4Addr;
 use std::path::PathBuf;
 use std::process::exit;
 use std::sync::Arc;
@@ -129,6 +131,9 @@ pub struct App {
     pub xvb_api: Arc<Mutex<PubXvbApi>>,                // Public XvB API
     pub p2pool_img: Arc<Mutex<ImgP2pool>>, // A one-time snapshot of what data P2Pool started with
     pub xmrig_img: Arc<Mutex<ImgXmrig>>,   // A one-time snapshot of what data XMRig started with
+    pub ip_local: Arc<Mutex<Option<IpAddr>>>,
+    pub ip_public: Arc<Mutex<Option<Ipv4Addr>>>,
+    pub proxy_port_reachable: Arc<Mutex<bool>>, // is the proxy port reachable from public ip ?
     // STDIN Buffer
     pub node_stdin: String, // The buffer between the node console and the [Helper]
     pub p2pool_stdin: String, // The buffer between the p2pool console and the [Helper]
@@ -231,6 +236,9 @@ impl App {
         let p2pool_img = arc_mut!(ImgP2pool::new());
         let xmrig_img = arc_mut!(ImgXmrig::new());
         let proxy_img = arc_mut!(ImgProxy::new());
+        let ip_local = arc_mut!(None);
+        let ip_public = arc_mut!(None);
+        let proxy_port_reachable = arc_mut!(false);
 
         info!("App Init | Sysinfo...");
         // We give this to the [Helper] thread.
@@ -301,7 +309,10 @@ impl App {
                 p2pool_img.clone(),
                 xmrig_img.clone(),
                 proxy_img.clone(),
-                arc_mut!(GupaxP2poolApi::new())
+                arc_mut!(GupaxP2poolApi::new()),
+                ip_local.clone(),
+                ip_public.clone(),
+                proxy_port_reachable.clone(),
             )),
             node,
             p2pool,
@@ -342,6 +353,9 @@ impl App {
             backup_hosts: None,
             version: GUPAX_VERSION,
             name_version: format!("Gupaxx {}", GUPAX_VERSION),
+            ip_local,
+            ip_public,
+            proxy_port_reachable,
             #[cfg(target_os = "windows")]
             xmrig_outside_warning_acknowledge: false,
         };
