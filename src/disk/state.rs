@@ -485,6 +485,9 @@ pub struct Xvb {
     pub p2pool_buffer: i8,
     pub use_p2pool_sidechain_hr: bool,
     pub console_height: u32,
+    // user can choose a pool manually
+    pub manual_pool_enabled: bool,
+    pub manual_pool_eu: bool,
 }
 
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Default, EnumCount, EnumIter)]
@@ -703,6 +706,8 @@ impl Default for Xvb {
             p2pool_buffer: 25,
             use_p2pool_sidechain_hr: false,
             console_height: APP_DEFAULT_CONSOLE_HEIGHT,
+            manual_pool_enabled: false,
+            manual_pool_eu: true,
         }
     }
 }

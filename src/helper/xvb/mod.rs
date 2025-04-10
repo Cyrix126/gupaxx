@@ -282,6 +282,7 @@ impl Helper {
                     state_p2pool,
                     state_xmrig,
                     state_xp,
+                    state_xvb,
                     xp_alive,
                     xmrig_img,
                     proxy_img,
@@ -581,6 +582,7 @@ async fn check_conditions_for_start(
     }
     // will update the preferred pool for the first loop, even if partially started.
     process_xvb.lock().unwrap().signal = ProcessSignal::UpdatePools(Pool::default());
+
     process_xvb.lock().unwrap().state = state;
 }
 /// return a bool to continue to next loop if needed.
@@ -764,6 +766,7 @@ fn signal_interrupt(
     state_p2pool: &crate::disk::state::P2pool,
     state_xmrig: &crate::disk::state::Xmrig,
     state_xp: &crate::disk::state::XmrigProxy,
+    state_xvb: &crate::disk::state::Xvb,
     xp_alive: bool,
     xmrig_img: &Arc<Mutex<ImgXmrig>>,
     proxy_img: &Arc<Mutex<ImgProxy>>,
@@ -831,18 +834,18 @@ fn signal_interrupt(
                 process.lock().unwrap().state = ProcessState::Waiting;
                 process.lock().unwrap().signal = ProcessSignal::None;
                 spawn(
-                    enc!((pool, process, client, gui_api, pub_api, was_alive, address, token_xmrig, process_xrig, xmrig_img, proxy_img, process_p2pool, state_p2pool, p2pool_img) async move {
+                    enc!((pool, process, client, gui_api, pub_api, was_alive, address, token_xmrig, process_xrig, xmrig_img, proxy_img, process_p2pool, state_p2pool, p2pool_img, state_xvb) async move {
                     match pool {
                         Pool::XvBNorthAmerica|Pool::XvBEurope if was_alive => {
                             // a pool is failing. We need to first verify if a pool is available
-                        Pool::update_fastest_pool(&client, &gui_api, &pub_api, &process, &process_p2pool, &p2pool_img, &state_p2pool).await;
+                        Pool::update_fastest_pool(&client, &gui_api, &pub_api, &process, &process_p2pool, &p2pool_img, &state_p2pool, &state_xvb).await;
                             if process.lock().unwrap().state == ProcessState::OfflinePoolsAll {
                                 // No available pools, so launch a process to verify periodically.
                     sleep(Duration::from_secs(10)).await;
                     warn!("pool fail, set spawn that will retry pools and update state.");
                     while process.lock().unwrap().state == ProcessState::OfflinePoolsAll {
                         // this spawn will stay alive until pools are joignable or XvB process is stopped or failed.
-                        Pool::update_fastest_pool(&client, &pub_api, &gui_api, &process, &process_p2pool, &p2pool_img, &state_p2pool).await;
+                        Pool::update_fastest_pool(&client, &pub_api, &gui_api, &process, &process_p2pool, &p2pool_img, &state_p2pool, &state_xvb).await;
                         sleep(Duration::from_secs(10)).await;
                     }
                                 
@@ -856,7 +859,7 @@ fn signal_interrupt(
                         // Probably a start. We don't consider XMRig using XvB pools without algo.
                         // can update xmrig and check status of state in the same time.
                         // update prefred pool
-                        Pool::update_fastest_pool(&client, &pub_api, &gui_api, &process, &process_p2pool, &p2pool_img, &state_p2pool).await;
+                        Pool::update_fastest_pool(&client, &pub_api, &gui_api, &process, &process_p2pool, &p2pool_img, &state_p2pool, &state_xvb).await;
                         // Need to set XMRig to P2Pool if it wasn't. XMRig should have populated this value at his start.
                         // but if xmrig didn't start, don't update it.
                 

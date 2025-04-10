@@ -164,6 +164,8 @@ mod test {
             p2pool_buffer = 5
             use_p2pool_sidechain_hr = false
             console_height = 360
+            manual_pool_enabled = false
+            manual_pool_eu = true
 
             [node]
             simple = false

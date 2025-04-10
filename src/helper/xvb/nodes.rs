@@ -23,17 +23,18 @@ use std::{
 use derive_more::Display;
 use log::{error, info, warn};
 use reqwest_middleware::ClientWithMiddleware as Client;
+use serde::Deserialize;
 use tokio::spawn;
 
 use crate::{
     GUPAX_VERSION_UNDERSCORE, XVB_NODE_EU, XVB_NODE_NA, XVB_NODE_PORT, XVB_NODE_RPC,
     components::node::{GetInfo, TIMEOUT_NODE_PING},
-    disk::state::P2pool,
+    disk::state::{P2pool, Xvb},
     helper::{Process, ProcessName, ProcessState, p2pool::ImgP2pool, xvb::output_console},
 };
 
 use super::PubXvbApi;
-#[derive(Clone, Debug, Default, PartialEq, Display)]
+#[derive(Clone, Debug, Default, PartialEq, Display, Deserialize)]
 pub enum Pool {
     #[display("XvB North America Pool")]
     XvBNorthAmerica,
@@ -97,6 +98,7 @@ impl Pool {
         }
     }
 
+    #[allow(clippy::too_many_arguments)]
     pub async fn update_fastest_pool(
         client: &Client,
         pub_api_xvb: &Arc<Mutex<PubXvbApi>>,
@@ -105,6 +107,7 @@ impl Pool {
         process_p2pool: &Arc<Mutex<Process>>,
         p2pool_img: &Arc<Mutex<ImgP2pool>>,
         p2pool_state: &P2pool,
+        xvb_state: &Xvb,
     ) {
         let client_eu = client.clone();
         let client_na = client.clone();
@@ -183,7 +186,22 @@ impl Pool {
                 process_xvb.lock().unwrap().state = ProcessState::Syncing;
             }
         }
-        pub_api_xvb.lock().unwrap().stats_priv.pool = pool;
+        if xvb_state.manual_pool_enabled {
+            let manual_pool = if xvb_state.manual_pool_eu {
+                Pool::XvBEurope
+            } else {
+                Pool::XvBNorthAmerica
+            };
+            info!("XvB node {} has been chosen manually", manual_pool.url());
+            output_console(
+                &mut gui_api_xvb.lock().unwrap().output,
+                &format!("XvB node {} has been chosen manually", manual_pool),
+                ProcessName::Xvb,
+            );
+            pub_api_xvb.lock().unwrap().stats_priv.pool = manual_pool;
+        } else {
+            pub_api_xvb.lock().unwrap().stats_priv.pool = pool;
+        }
     }
     async fn ping(ip: &str, client: &Client) -> u128 {
         let request = client

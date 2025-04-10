@@ -17,7 +17,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use egui::{Align, Image, RichText, ScrollArea, TextStyle, Ui};
+use egui::{Align, Image, Label, RichText, ScrollArea, TextStyle, Ui};
 use log::debug;
 use readable::num::Float;
 use readable::up::Uptime;
@@ -26,6 +26,7 @@ use strum::EnumCount;
 use crate::app::panels::middle::common::console::console;
 use crate::app::panels::middle::common::header_tab::header_tab;
 use crate::app::panels::middle::common::state_edit_field::StateTextEdit;
+use crate::app::panels::middle::common::toggle::toggle_ui_compact;
 use crate::disk::state::{ManualDonationLevel, ManualDonationMetric, XvbMode};
 use crate::helper::ProcessName;
 use crate::helper::xrig::xmrig::PubXmrigApi;
@@ -34,12 +35,7 @@ use crate::helper::xvb::PubXvbApi;
 use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::miscs::height_txt_before_button;
 use crate::utils::constants::{
-    ORANGE, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD, XVB_DONATION_LEVEL_DONOR_HELP,
-    XVB_DONATION_LEVEL_MEGA_DONOR_HELP, XVB_DONATION_LEVEL_VIP_DONOR_HELP,
-    XVB_DONATION_LEVEL_WHALE_DONOR_HELP, XVB_FAILURE_FIELD, XVB_HELP, XVB_HERO_SELECT,
-    XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP, XVB_MANUAL_SLIDER_MANUAL_XVB_HELP,
-    XVB_MODE_MANUAL_DONATION_LEVEL_HELP, XVB_MODE_MANUAL_P2POOL_HELP, XVB_MODE_MANUAL_XVB_HELP,
-    XVB_ROUND_TYPE_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES, XVB_WINNER_FIELD,
+    ORANGE, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD, XVB_DONATION_LEVEL_DONOR_HELP, XVB_DONATION_LEVEL_MEGA_DONOR_HELP, XVB_DONATION_LEVEL_VIP_DONOR_HELP, XVB_DONATION_LEVEL_WHALE_DONOR_HELP, XVB_FAILURE_FIELD, XVB_HELP, XVB_HERO_SELECT, XVB_MANUAL_POOL, XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP, XVB_MANUAL_SLIDER_MANUAL_XVB_HELP, XVB_MODE_MANUAL_DONATION_LEVEL_HELP, XVB_MODE_MANUAL_P2POOL_HELP, XVB_MODE_MANUAL_XVB_HELP, XVB_ROUND_TYPE_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES, XVB_WINNER_FIELD
 };
 use crate::utils::regex::Regexes;
 use crate::{XVB_MINING_ON_FIELD, XVB_P2POOL_BUFFER, XVB_SIDECHAIN};
@@ -261,6 +257,19 @@ impl crate::disk::state::Xvb {
                 api.lock().unwrap().use_p2pool_sidechain_hr = self.use_p2pool_sidechain_hr;
             }
          });
+        // Allow user to choose XvB pool manually
+        // checkbox to enable
+        ui.checkbox(&mut self.manual_pool_enabled, "Manual selection of the XvB pool").on_hover_text(XVB_MANUAL_POOL);
+        // slider for EU or NA
+            ui.horizontal(|ui|{
+        ui.add_enabled_ui(self.manual_pool_enabled, |ui|{
+                ui.style_mut().override_text_style = Some(TextStyle::Heading);
+                ui.add_sized([0.0, text_height], Label::new(" [ NA"));
+                toggle_ui_compact(&mut self.manual_pool_eu, ui);
+                ui.add_sized([0.0, text_height], Label::new("EU ]"));
+            });
+        });
+         
         }
 
         // need to warn the user if no address is set in p2pool tab
