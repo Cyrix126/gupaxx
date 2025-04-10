@@ -56,6 +56,7 @@ pub const BYTES_ICON: &[u8] = include_bytes!("../../assets/images/icons/icon@2x.
 #[cfg(not(target_os = "macos"))]
 pub const BYTES_ICON: &[u8] = include_bytes!("../../assets/images/icons/icon.png");
 pub const BYTES_XVB: &[u8] = include_bytes!("../../assets/images/xvb.png");
+pub const BYTES_XMRIG: &[u8] = include_bytes!("../../assets/images/xmrig.png");
 pub const BYTES_BANNER: &[u8] = include_bytes!("../../assets/images/banner.png");
 pub const HORIZONTAL: &str = "--------------------------------------------";
 pub const HORI_CONSOLE: &str = "---------------------------------------------------------------------------------------------------------------------------";

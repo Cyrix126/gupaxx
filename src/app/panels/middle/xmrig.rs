@@ -27,7 +27,7 @@ use crate::helper::xrig::xmrig::PubXmrigApi;
 use crate::helper::{Process, ProcessName};
 use crate::miscs::height_txt_before_button;
 use crate::regex::REGEXES;
-use egui::{Checkbox, Ui, vec2};
+use egui::{Checkbox, Image, Ui, vec2};
 use log::*;
 
 use std::sync::{Arc, Mutex};
@@ -48,9 +48,10 @@ impl Xmrig {
         ui: &mut egui::Ui,
         p2pool_stratum_port: u16,
     ) {
+        let logo = Some(Image::from_bytes("bytes:/xmrig.png", BYTES_XMRIG));
         header_tab(
             ui,
-            None,
+            logo,
             &[("XMRig", XMRIG_URL, "")],
             Some("High performant miner for RandomX"),
             true,
