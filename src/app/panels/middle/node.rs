@@ -100,7 +100,7 @@ impl Node {
                         ui.checkbox(&mut self.disable_dns_checkpoint, "DNS checkpoint")
                             .on_hover_text(NODE_DNS_CHECKPOINT);
                         ui.separator();
-                        ui.checkbox(&mut self.full_memory, "Fast Mode")
+                        ui.checkbox(&mut self.full_memory, "Full memory")
                             .on_hover_text(NODE_FULL_MEM);
                     });
                 });
