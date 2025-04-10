@@ -241,9 +241,9 @@ impl XmrigProxy {
         .response
         .on_disabled_hover_text("Start the proxy to enable this button");
         if *port_reachable.lock().unwrap() {
-            ui.label("Proxy port is reacheable from outside the local network");
+            ui.label("Proxy port is reachable from outside the local network");
         } else {
-            ui.label("Proxy port is not reacheable from outside the local network");
+            ui.label("Proxy port is not reachable from outside the local network");
         }
     }
 
