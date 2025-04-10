@@ -238,15 +238,20 @@ impl crate::disk::state::Xvb {
             api.lock().unwrap().stats_priv.runtime_mode = self.mode.clone().into();
             api.lock().unwrap().stats_priv.runtime_manual_amount = self.manual_amount_raw;
          ui.add_space(SPACE);
+        let p2pool_buffer_enabled = matches!(self.mode, XvbMode::Auto | XvbMode::Hero);
+
 
          ui.horizontal(|ui|{
             // allow user to modify the buffer for p2pool
             // button
-            ui.add_sized(
+            ui.add_enabled_ui(p2pool_buffer_enabled, |ui|{
+ ui.add_sized(
                 [0.0 , text_height],
                 egui::Slider::new(&mut self.p2pool_buffer, -100..=100)
                 .text("% P2Pool Buffer" )
-            ).on_hover_text(XVB_P2POOL_BUFFER);
+            ).on_hover_text(XVB_P2POOL_BUFFER);               
+
+            }).response.on_disabled_hover_text(XVB_P2POOL_BUFFER);  
 
          ui.add_space(SPACE);
          // p2pool sidechain HR or stratum data

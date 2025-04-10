@@ -155,7 +155,7 @@ The algorithm will watch the estimated HR given for your address on the P2Pool n
 If unchecked (default):\n
 The algorithm will watch the HR estimated by the stratum data of the p2pool node, which is more accurate but will only take into account the miners that are using your P2Pool node.
 ";
-pub const XVB_P2POOL_BUFFER: &str = "Set the % amount of additional HR to send to p2pool. Will reduce (if positive) or augment (if negative) the chances to miss the p2pool window";
+pub const XVB_P2POOL_BUFFER: &str = "Set the % amount of additional HR to send to p2pool. Will reduce (if positive) or augment (if negative) the chances to miss the p2pool window.\n\n- In Auto or Hero mode, the algorithm will keep enough HR on the p2pool side to conform to the buffer\n\n- In Manual modes, the algorithm will ignore the p2pool buffer";
 
 pub const START_OPTIONS_HOVER: &str = "Start the process with theses options.\nThe \"Reset to simple/advanced options\" are arguments constructed from the settings.\nYou can replace them with your own";
 pub const NODE_START_OPTIONS_HINT: &str = "--zmq-pub tcp://<ip>:port --out-peers 32 --in-peers 64 --add-priority-node <ip>:<port> --disable-dns-checkpoints --enable-dns-blocklist --sync-pruned-blocks --prune-blockchain";
