@@ -35,7 +35,12 @@ use crate::helper::xvb::PubXvbApi;
 use crate::helper::xvb::priv_stats::RuntimeMode;
 use crate::miscs::height_txt_before_button;
 use crate::utils::constants::{
-    ORANGE, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD, XVB_DONATION_LEVEL_DONOR_HELP, XVB_DONATION_LEVEL_MEGA_DONOR_HELP, XVB_DONATION_LEVEL_VIP_DONOR_HELP, XVB_DONATION_LEVEL_WHALE_DONOR_HELP, XVB_FAILURE_FIELD, XVB_HELP, XVB_HERO_SELECT, XVB_MANUAL_POOL, XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP, XVB_MANUAL_SLIDER_MANUAL_XVB_HELP, XVB_MODE_MANUAL_DONATION_LEVEL_HELP, XVB_MODE_MANUAL_P2POOL_HELP, XVB_MODE_MANUAL_XVB_HELP, XVB_ROUND_TYPE_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES, XVB_WINNER_FIELD
+    ORANGE, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD, XVB_DONATION_LEVEL_DONOR_HELP,
+    XVB_DONATION_LEVEL_MEGA_DONOR_HELP, XVB_DONATION_LEVEL_VIP_DONOR_HELP,
+    XVB_DONATION_LEVEL_WHALE_DONOR_HELP, XVB_FAILURE_FIELD, XVB_HELP, XVB_HERO_SELECT,
+    XVB_MANUAL_POOL, XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP, XVB_MANUAL_SLIDER_MANUAL_XVB_HELP,
+    XVB_MODE_MANUAL_DONATION_LEVEL_HELP, XVB_MODE_MANUAL_P2POOL_HELP, XVB_MODE_MANUAL_XVB_HELP,
+    XVB_ROUND_TYPE_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES, XVB_WINNER_FIELD,
 };
 use crate::utils::regex::Regexes;
 use crate::{XVB_MINING_ON_FIELD, XVB_P2POOL_BUFFER, XVB_SIDECHAIN};
@@ -245,9 +250,9 @@ impl crate::disk::state::Xvb {
                 [0.0 , text_height],
                 egui::Slider::new(&mut self.p2pool_buffer, -100..=100)
                 .text("% P2Pool Buffer" )
-            ).on_hover_text(XVB_P2POOL_BUFFER);               
+            ).on_hover_text(XVB_P2POOL_BUFFER);
 
-            }).response.on_disabled_hover_text(XVB_P2POOL_BUFFER);  
+            }).response.on_disabled_hover_text(XVB_P2POOL_BUFFER);
 
          ui.add_space(SPACE);
          // p2pool sidechain HR or stratum data
@@ -269,7 +274,7 @@ impl crate::disk::state::Xvb {
                 ui.add_sized([0.0, text_height], Label::new("EU ]"));
             });
         });
-         
+
         }
 
         // need to warn the user if no address is set in p2pool tab
