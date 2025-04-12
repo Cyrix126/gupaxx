@@ -198,7 +198,6 @@ impl XmrigProxy {
                         });
                     });
             }
-        });
         // show instructions to connect miners to the proxy
         ui.add_space(SPACE);
         ui.label("Instructions:");
@@ -245,6 +244,7 @@ impl XmrigProxy {
         } else {
             ui.label("Proxy port is not reachable from outside the local network");
         }
+        });
     }
 
     fn name_field(&mut self, ui: &mut Ui) -> bool {
