@@ -203,7 +203,7 @@ impl XmrigProxy {
         ui.add_space(SPACE);
         ui.label("Instructions:");
         ui.label("To connect a miner to this proxy, start xmrig with the option '-o IP:PORT':");
-        ui.label("If the miner is on the same local network as the proxy, use the local IP.\nIf not, use the public IP");
+        ui.label("If the miner is on the same local network as the proxy, use the local IP.\nIf not, use the public IP. You may have to open xmrig-proxy port in your firewall and or network router.");
         ui.add_space(SPACE);
         // local ip and port
         // public ip (way to hide)
