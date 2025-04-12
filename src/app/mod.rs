@@ -274,7 +274,7 @@ impl App {
             tab: Tab::default(),
             ping: arc_mut!(Ping::new()),
             size: vec2(APP_DEFAULT_WIDTH, APP_DEFAULT_HEIGHT),
-            must_resize: false,
+            must_resize: true,
             og: arc_mut!(State::new()),
             state: State::new(),
             update: arc_mut!(Update::new(
