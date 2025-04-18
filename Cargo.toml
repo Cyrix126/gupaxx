@@ -1,7 +1,7 @@
 cargo-features = ["profile-rustflags", "codegen-backend"]
 [package]
 name = "gupaxx"
-version = "1.9.0"
+version = "1.9.1"
 authors = ["cyrix126 <gupaxx@baermail.fr>"]
 description = "Fork of Gupax integrating the XMRvsBeast Raffle "
 documentation = "https://github.com/cyrix126/gupaxx"
@@ -57,7 +57,6 @@ image = { version = "0.25.6", features = ["png"] }
 log = "0.4.27"
 num-format = { version = "0.4.4", default-features = false }
 once_cell = "1.21.3"
-portable-pty = "0.9.0"
 rand = "0.9.0"
 regex = { version = "1.11.1", default-features = false, features = ["perf"] }
 rfd = "0.15.3"
@@ -98,6 +97,7 @@ flate2 = "1.1"
 sudo = "0.6.0"
 # https://github.com/emilk/egui/releases/tag/0.30.0 see breaking change
 eframe = {version="0.31", features=["x11", "wayland"]}
+portable-pty = "0.9.0"
 # macOS
 [target.'cfg(target_os = "macos")'.dependencies]
 # On apple-darwin targets there is an issue with the native and rustls
@@ -112,6 +112,7 @@ eframe = {version="0.31", features=["x11", "wayland"]}
 # We don't even use `xz` in `flate2` but this gets dynamically
 # linked as well which causes problems, so statically link it.
 lzma-sys = { version = "0.1", features = ["static"] }
+portable-pty = "0.9.0"
 [dev-dependencies]
 egui = {version="0.31", features=["callstack"]}
 # egui = {git="https://github.com/emilk/egui", features=["callstack"]}
@@ -127,6 +128,8 @@ egui = {version="0.31", features=["callstack"]}
 wgpu = {version = "24.0.3", features=["angle"]}
 zip = "2.6.1"
 is_elevated = "0.1.2"
+## portable-pty upgrade on 0.9 will break terminals on windows 
+portable-pty = "0.8.1"
 
 # For Windows build (icon)
 [target.'cfg(windows)'.build-dependencies]
