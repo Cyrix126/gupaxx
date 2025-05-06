@@ -46,7 +46,8 @@ use crate::inits::init_text_styles;
 use crate::miscs::cmp_f64;
 use crate::miscs::get_exe;
 use crate::miscs::get_exe_dir;
-use crate::utils::constants::VISUALS;
+use crate::utils::constants::VISUALS_DARK;
+use crate::utils::constants::VISUALS_LIGHT;
 use crate::utils::macros::arc_mut;
 use crate::utils::sudo::SudoState;
 use derive_more::derive::Display;
@@ -83,6 +84,7 @@ pub struct App {
     // Misc state
     pub tab: Tab,   // What tab are we on?
     pub size: Vec2, // Top-level width and Top-level height
+    pub dark_mode: bool, // to switch between dark/white
     // Alpha (transparency)
     // This value is used to incrementally increase/decrease
     // the transparency when resizing. Basically, it fades
@@ -179,10 +181,17 @@ impl App {
             &cc.egui_ctx,
             crate::miscs::clamp_scale(app.state.gupax.selected_scale),
         );
-        cc.egui_ctx.set_visuals(VISUALS.clone());
+
+        Self::set_theme(&app, cc);
         Self { resolution, ..app }
     }
-
+    pub fn set_theme(app: &Self, cc: &CreationContext<'_>) {
+        if app.dark_mode {
+            cc.egui_ctx.set_visuals(VISUALS_DARK.clone());
+        } else {
+            cc.egui_ctx.set_visuals(VISUALS_LIGHT.clone());
+        }
+    }
     #[cold]
     #[inline(never)]
     pub fn save_before_quit(&mut self) {
@@ -239,6 +248,7 @@ impl App {
         let ip_local = arc_mut!(None);
         let ip_public = arc_mut!(None);
         let proxy_port_reachable = arc_mut!(false);
+        let dark_mode = true; 
 
         info!("App Init | Sysinfo...");
         // We give this to the [Helper] thread.
@@ -314,6 +324,7 @@ impl App {
                 ip_public.clone(),
                 proxy_port_reachable.clone(),
             )),
+            dark_mode,
             node,
             p2pool,
             xmrig,

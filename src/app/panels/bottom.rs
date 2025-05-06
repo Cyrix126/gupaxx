@@ -60,6 +60,8 @@ impl crate::app::App {
                             self.version(ui, bar_height);
                             ui.add(Separator::default().grow(extra_separator));
                             self.os_show(ui);
+                            ui.add(Separator::default().grow(extra_separator));
+                            self.theme_show(ui);
                             // width of each status
                             let width_status = if !tiny_width {
                                 ((ui.available_width()
@@ -135,6 +137,15 @@ impl crate::app::App {
         }
         #[cfg(target_family = "unix")]
         ui.label(self.os);
+    }
+    fn theme_show(&mut self, ui: &mut Ui) {
+        let text = if self.dark_mode {"🌙" } else {"🌞"};
+        
+        if ui
+            .add(Button::new(text))
+            .clicked() {
+                self.dark_mode = !self.dark_mode;
+            }
     }
     fn status_process(process: &ProcessStateGui, ui: &mut Ui, width: f32) {
         let color;
