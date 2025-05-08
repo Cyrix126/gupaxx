@@ -139,13 +139,21 @@ impl crate::app::App {
         ui.label(self.os);
     }
     fn theme_show(&mut self, ui: &mut Ui) {
-        let text = if self.dark_mode {"🌙" } else {"🌞"};
-        
-        if ui
-            .add(Button::new(text))
-            .clicked() {
-                self.dark_mode = !self.dark_mode;
-            }
+        let icon = if self.dark_mode { "🌙" } else { "🌞" };
+        if ui.add(Button::new(icon)).clicked() {
+            self.toggle_theme();
+        }
+    }
+    fn toggle_theme(&mut self) {
+        self.dark_mode = !self.dark_mode;
+        if let Some(ctx) = &self.cc {
+            let visuals = if self.dark_mode {
+                VISUALS_DARK.clone()
+            } else {
+                VISUALS_LIGHT.clone()
+            };
+            ctx.set_visuals(visuals);
+        }
     }
     fn status_process(process: &ProcessStateGui, ui: &mut Ui, width: f32) {
         let color;

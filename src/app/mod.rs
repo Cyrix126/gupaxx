@@ -51,6 +51,7 @@ use crate::utils::constants::VISUALS_LIGHT;
 use crate::utils::macros::arc_mut;
 use crate::utils::sudo::SudoState;
 use derive_more::derive::Display;
+use egui::Context;
 use eframe::CreationContext;
 use egui::Vec2;
 use egui::vec2;
@@ -85,6 +86,7 @@ pub struct App {
     pub tab: Tab,   // What tab are we on?
     pub size: Vec2, // Top-level width and Top-level height
     pub dark_mode: bool, // to switch between dark/white
+    pub cc: Option<Context>,
     // Alpha (transparency)
     // This value is used to incrementally increase/decrease
     // the transparency when resizing. Basically, it fades
@@ -176,17 +178,19 @@ pub struct App {
 impl App {
     #[cold]
     #[inline(never)]
-    pub fn cc(cc: &CreationContext<'_>, resolution: Vec2, app: Self) -> Self {
+    pub fn cc(cc: &CreationContext<'_>, resolution: Vec2, mut app: Self) -> Self {
         init_text_styles(
             &cc.egui_ctx,
             crate::miscs::clamp_scale(app.state.gupax.selected_scale),
         );
 
+        app.cc = Some(cc.egui_ctx.clone()); // get the context to theme changing
         Self::set_theme(&app, cc);
         Self { resolution, ..app }
     }
     pub fn set_theme(app: &Self, cc: &CreationContext<'_>) {
-        if app.dark_mode {
+        if app.dark_mode { // this will set dark mode as default, due to dark_mode: bool = true by default. 
+                            // todo: save the settings and make a startup changing this var
             cc.egui_ctx.set_visuals(VISUALS_DARK.clone());
         } else {
             cc.egui_ctx.set_visuals(VISUALS_LIGHT.clone());
@@ -325,6 +329,7 @@ impl App {
                 proxy_port_reachable.clone(),
             )),
             dark_mode,
+            cc: None,
             node,
             p2pool,
             xmrig,
