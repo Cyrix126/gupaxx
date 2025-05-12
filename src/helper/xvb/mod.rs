@@ -947,7 +947,7 @@ fn update_indicator_algo(
             Some(Pool::P2pool(_)) if time_donated > 0 && time_donated != XVB_TIME_ALGO => {
                 // algo is mining on p2pool but will switch to XvB after
                 // show time remaining on p2pool
-
+                // todo: debug and fix brief 0s
                 pub_api.lock().unwrap().stats_priv.time_switch_pool = XVB_TIME_ALGO
                     .checked_sub(last_algorithm.lock().unwrap().elapsed().as_secs() as u32)
                     .unwrap_or_default()

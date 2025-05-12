@@ -236,7 +236,7 @@ fn p2pool(
         ));
         ui.label(RichText::new("Sidechain").underline().color(BONE))
             .on_hover_text(STATUS_P2POOL_POOL);
-        ui.label(&img.mini);
+        ui.label(&img.chain);
         ui.label(RichText::new("Address").underline().color(BONE))
             .on_hover_text(STATUS_P2POOL_ADDRESS);
         ui.label(&img.address);

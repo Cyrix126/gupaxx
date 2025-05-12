@@ -17,6 +17,7 @@
 
 use crate::app::panels::middle::common::list_poolnode::{PoolNode, list_poolnode};
 use crate::app::panels::middle::common::state_edit_field::{StateTextEdit, slider_state_field};
+use crate::disk::state::P2poolChain;
 use crate::miscs::height_txt_before_button;
 use crate::{disk::state::P2pool, utils::regex::REGEXES};
 
@@ -63,7 +64,7 @@ impl P2pool {
                     });
                 });
 
-                debug!("P2Pool Tab | Rendering [Main/Mini/Peers/Log] elements");
+                debug!("P2Pool Tab | Rendering [Main/Mini/Nano/Peers/Log] elements");
                 // [Main/Mini]
                 ui.horizontal(|ui| {
                     // let height = height / 4.0;
@@ -76,22 +77,41 @@ impl P2pool {
                                 if ui
                                     .add_sized(
                                         [width, height],
-                                        SelectableLabel::new(!self.mini, "P2Pool Main"),
+                                        SelectableLabel::new(
+                                            self.chain == P2poolChain::Main,
+                                            "P2Pool Main",
+                                        ),
                                     )
                                     .on_hover_text(P2POOL_MAIN)
                                     .clicked()
                                 {
-                                    self.mini = false;
+                                    self.chain = P2poolChain::Main;
                                 }
                                 if ui
                                     .add_sized(
                                         [width, height],
-                                        SelectableLabel::new(self.mini, "P2Pool Mini"),
+                                        SelectableLabel::new(
+                                            self.chain == P2poolChain::Mini,
+                                            "P2Pool Mini",
+                                        ),
                                     )
                                     .on_hover_text(P2POOL_MINI)
                                     .clicked()
                                 {
-                                    self.mini = true;
+                                    self.chain = P2poolChain::Mini;
+                                }
+                                if ui
+                                    .add_sized(
+                                        [width, height],
+                                        SelectableLabel::new(
+                                            self.chain == P2poolChain::Nano,
+                                            "P2Pool Nano",
+                                        ),
+                                    )
+                                    .on_hover_text(P2POOL_NANO)
+                                    .clicked()
+                                {
+                                    self.chain = P2poolChain::Nano;
                                 }
                             });
                             debug!("P2Pool Tab | Rendering Backup host button");

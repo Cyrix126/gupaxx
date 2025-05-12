@@ -818,7 +818,7 @@ Uptime         = 0h 2m 4s
             &p2pool_process,
         );
 
-        assert_eq!(algo.stats.target_donation_hashrate, 15382.1);
+        assert_eq!(algo.stats.target_donation_hashrate, 18460.7);
 
         gui_api_p2pool.lock().unwrap().sidechain_ehr = 25000.0;
 

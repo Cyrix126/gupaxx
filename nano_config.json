@@ -1,0 +1,8 @@
+{
+	"name": "nano",
+	"password": "",
+	"block_time": 30,
+	"min_diff": 100000,
+	"pplns_window": 2160,
+	"uncle_penalty": 10
+}
