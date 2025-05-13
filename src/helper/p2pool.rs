@@ -471,8 +471,6 @@ impl Helper {
                 args.push("nano_config.json".to_string());
                 args.push("--p2p".to_string());
                 args.push("0.0.0.0:37890".to_string());
-                args.push("--addpeers".to_string());
-                args.push("xmrvsbeast.com:37890".to_string());
 
                 // Push other nodes if `backup_host`.
                 if let Some(nodes) = backup_hosts {
@@ -508,8 +506,6 @@ impl Helper {
                 args.push("nano_config.json".to_string());
                 args.push("--p2p".to_string());
                 args.push("0.0.0.0:37890".to_string());
-                args.push("--addpeers".to_string());
-                args.push("xmrvsbeast.com:37890".to_string());
             }
             StartOptionsMode::Advanced => {
                 // build the argument
@@ -544,8 +540,6 @@ impl Helper {
                     args.push("nano_config.json".to_string());
                     args.push("--p2p".to_string());
                     args.push("0.0.0.0:37890".to_string());
-                    args.push("--addpeers".to_string());
-                    args.push("xmrvsbeast.com:37890".to_string());
                 }
 
                 // Push other nodes if `backup_host`.
