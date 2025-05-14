@@ -139,15 +139,15 @@ impl crate::app::App {
         ui.label(self.os);
     }
     fn theme_show(&mut self, ui: &mut Ui) {
-        let icon = if self.dark_mode { "🌙" } else { "🌞" };
+        let icon = if self.state.gupax.dark_mode { "🌙" } else { "🌞" };
         if ui.add(Button::new(icon)).clicked() {
             self.toggle_theme();
         }
     }
     fn toggle_theme(&mut self) {
-        self.dark_mode = !self.dark_mode;
+        self.state.gupax.dark_mode = !self.state.gupax.dark_mode;
         if let Some(ctx) = &self.cc {
-            let visuals = if self.dark_mode {
+            let visuals = if self.state.gupax.dark_mode {
                 VISUALS_DARK.clone()
             } else {
                 VISUALS_LIGHT.clone()

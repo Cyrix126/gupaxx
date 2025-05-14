@@ -85,7 +85,6 @@ pub struct App {
     // Misc state
     pub tab: Tab,   // What tab are we on?
     pub size: Vec2, // Top-level width and Top-level height
-    pub dark_mode: bool, // to switch between dark/white
     pub cc: Option<Context>,
     // Alpha (transparency)
     // This value is used to incrementally increase/decrease
@@ -184,12 +183,12 @@ impl App {
             crate::miscs::clamp_scale(app.state.gupax.selected_scale),
         );
 
-        app.cc = Some(cc.egui_ctx.clone()); // get the context to theme changing
+        app.cc = Some(cc.egui_ctx.clone()); 
         Self::set_theme(&app, cc);
         Self { resolution, ..app }
     }
     pub fn set_theme(app: &Self, cc: &CreationContext<'_>) {
-        if app.dark_mode { // this will set dark mode as default, due to dark_mode: bool = true by default. 
+        if app.state.gupax.dark_mode { // this will set dark mode as default, due to dark_mode: bool = true by default. 
                             // todo: save the settings and make a startup changing this var
             cc.egui_ctx.set_visuals(VISUALS_DARK.clone());
         } else {
@@ -252,7 +251,6 @@ impl App {
         let ip_local = arc_mut!(None);
         let ip_public = arc_mut!(None);
         let proxy_port_reachable = arc_mut!(false);
-        let dark_mode = true; 
 
         info!("App Init | Sysinfo...");
         // We give this to the [Helper] thread.
@@ -328,7 +326,6 @@ impl App {
                 ip_public.clone(),
                 proxy_port_reachable.clone(),
             )),
-            dark_mode,
             cc: None,
             node,
             p2pool,
