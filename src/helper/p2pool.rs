@@ -21,6 +21,7 @@ use crate::app::panels::middle::common::list_poolnode::PoolNode;
 use crate::components::node::RemoteNode;
 use crate::disk::state::Node;
 use crate::disk::state::P2pool;
+use crate::disk::state::P2poolChain;
 use crate::disk::state::StartOptionsMode;
 use crate::helper::ProcessName;
 use crate::helper::ProcessSignal;
@@ -248,6 +249,26 @@ impl Helper {
         } else {
             StartOptionsMode::Advanced
         };
+
+        // if nano chain is used, add a file to p2pool directory since it's not a standard chain yet.
+        if state.chain == P2poolChain::Nano {
+            let mut path_nano_config = path.to_path_buf();
+            path_nano_config.pop();
+            path_nano_config.push("nano_config.json");
+            if path_nano_config.try_exists().is_ok_and(|x| !x) {
+                if let Err(err) = std::fs::write(&path_nano_config, P2POOL_NANO_CONFIG) {
+                    error!("Could not write the p2pool nano chain config file: {err}");
+                }
+            }
+            // also replace the peers list
+            let mut path_peer_list = path.to_path_buf();
+            path_peer_list.pop();
+            path_peer_list.push("p2pool_peers.txt");
+            if let Err(err) = std::fs::write(&path_peer_list, P2POOL_NANO_PEER_LIST) {
+                error!("Could not write the p2pool peer list file for the nano chain: {err}");
+            }
+        }
+
         // get the rpc and zmq port used when starting the node if it is alive, else use current settings of the Node.
         // If the Node is started with different ports that the one used in settings when P2Pool was started,
         // the user will need to restart p2pool
@@ -332,7 +353,7 @@ impl Helper {
         if state.simple {
             let (ip, rpc, zmq) = RemoteNode::get_ip_rpc_zmq(&state.node); // Get: (IP, RPC, ZMQ)
             *helper.lock().unwrap().img_p2pool.lock().unwrap() = ImgP2pool {
-                mini: "P2Pool Mini".to_string(),
+                chain: state.chain.to_string(),
                 address: Self::head_tail_of_monero_address(&state.address),
                 host: ip.to_string(),
                 rpc: rpc.to_string(),
@@ -347,12 +368,17 @@ impl Helper {
             let mut last = "";
             let lock = helper.lock().unwrap();
             let mut p2pool_image = lock.img_p2pool.lock().unwrap();
-            let mut mini = false;
+            let mut chain = P2poolChain::Main;
             for arg in state.arguments.split_whitespace() {
                 match last {
                     "--mini" => {
-                        mini = true;
-                        p2pool_image.mini = "P2Pool Mini".to_string();
+                        chain = P2poolChain::Mini;
+                        p2pool_image.chain = chain.to_string();
+                    }
+                    // used for nano chain, Gupaxx will not recognize another custom chain
+                    "--sidechain-config" => {
+                        chain = P2poolChain::Nano;
+                        p2pool_image.chain = chain.to_string();
                     }
                     "--wallet" => p2pool_image.address = Self::head_tail_of_monero_address(arg),
                     "--host" => p2pool_image.host = arg.to_string(),
@@ -371,19 +397,13 @@ impl Helper {
                     }
                     _ => (),
                 }
-                if !mini {
-                    p2pool_image.mini = "P2Pool Main".to_string();
-                }
+                p2pool_image.chain = chain.to_string();
                 let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
                 last = arg;
             }
         } else {
             *helper.lock().unwrap().img_p2pool.lock().unwrap() = ImgP2pool {
-                mini: if state.mini {
-                    "P2Pool Mini".to_string()
-                } else {
-                    "P2Pool Main".to_string()
-                },
+                chain: state.chain.to_string(),
                 address: Self::head_tail_of_monero_address(&state.address),
                 host: state.selected_node.ip.to_string(),
                 rpc: state.selected_node.rpc.to_string(),
@@ -445,8 +465,12 @@ impl Helper {
                 args.push(api_path.display().to_string()); // API Path
                 args.push("--local-api".to_string()); // Enable API
                 args.push("--no-color".to_string()); // Remove color escape sequences, Gupax terminal can't parse it :(
-                args.push("--mini".to_string()); // P2Pool Mini
                 args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
+                // Nano as default
+                args.push("--sidechain-config".to_string());
+                args.push("nano_config.json".to_string());
+                args.push("--p2p".to_string());
+                args.push("0.0.0.0:37890".to_string());
 
                 // Push other nodes if `backup_host`.
                 if let Some(nodes) = backup_hosts {
@@ -477,8 +501,11 @@ impl Helper {
                 args.push(api_path.display().to_string()); // API Path
                 args.push("--local-api".to_string()); // Enable API
                 args.push("--no-color".to_string()); // Remove color escape sequences, Gupax terminal can't parse it :(
-                args.push("--mini".to_string()); // P2Pool Mini
                 args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
+                args.push("--sidechain-config".to_string());
+                args.push("nano_config.json".to_string());
+                args.push("--p2p".to_string());
+                args.push("0.0.0.0:37890".to_string());
             }
             StartOptionsMode::Advanced => {
                 // build the argument
@@ -506,9 +533,14 @@ impl Helper {
                 args.push("--local-api".to_string()); // Enable API
                 args.push("--no-color".to_string()); // Remove color escape sequences
                 args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
-                if state.mini {
+                if state.chain == P2poolChain::Mini {
                     args.push("--mini".to_string());
-                }; // Mini
+                } else if state.chain == P2poolChain::Nano {
+                    args.push("--sidechain-config".to_string());
+                    args.push("nano_config.json".to_string());
+                    args.push("--p2p".to_string());
+                    args.push("0.0.0.0:37890".to_string());
+                }
 
                 // Push other nodes if `backup_host`.
                 if let Some(nodes) = backup_hosts {
@@ -837,7 +869,7 @@ impl Helper {
 // No need for an [Arc<Mutex>] since the Helper thread doesn't need this information.
 #[derive(Debug, Clone)]
 pub struct ImgP2pool {
-    pub mini: String,      // Did the user start on the mini-chain?
+    pub chain: String,     // Did the user start on the mini-chain?
     pub address: String, // What address is the current p2pool paying out to? (This gets shortened to [4xxxxx...xxxxxx])
     pub host: String,    // What monerod are we using?
     pub rpc: String,     // What is the RPC port?
@@ -856,7 +888,7 @@ impl Default for ImgP2pool {
 impl ImgP2pool {
     pub fn new() -> Self {
         Self {
-            mini: String::from("???"),
+            chain: String::from("???"),
             address: String::from("???"),
             host: String::from("???"),
             rpc: String::from("???"),

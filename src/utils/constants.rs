@@ -16,7 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub const GUPAX_VERSION: &str = concat!("v", env!("CARGO_PKG_VERSION")); // e.g: v1.0.0
-pub const P2POOL_VERSION: &str = "v4.4";
+pub const P2POOL_VERSION: &str = "v4.5";
 pub const XMRIG_VERSION: &str = "v6.22.2";
 pub const XMRIG_PROXY_VERSION: &str = "v6.22.0";
 pub const NODE_VERSION: &str = "v18.4.0";
@@ -383,8 +383,11 @@ pub const GUPAX_PATH_XMRIG_PROXY: &str = "The location of the XMRig-Proxy binary
 
 // P2Pool
 pub const P2POOL_PORT_DEFAULT: u16 = 3333;
-pub const P2POOL_MAIN: &str = "Use the P2Pool main-chain. This P2Pool finds blocks faster, but has a higher difficulty. Suitable for miners with more than 50kH/s";
-pub const P2POOL_MINI: &str = "Use the P2Pool mini-chain. This P2Pool finds blocks slower, but has a lower difficulty. Suitable for miners with less than 50kH/s";
+pub const P2POOL_MAIN: &str = "Use the P2Pool main-chain. This P2Pool finds blocks faster, but has a higher difficulty. Suitable for miners with more than 100kH/s";
+pub const P2POOL_MINI: &str = "Use the P2Pool mini-chain. This P2Pool finds blocks slower, but has a lower difficulty. Suitable for miners with less than 100kH/s";
+pub const P2POOL_NANO: &str = "Use the P2Pool nano-chain. This P2Pool finds blocks slower, but has a lower difficulty. Suitable for miners with less than 50kH/s";
+pub const P2POOL_NANO_CONFIG: &str = include_str!("../../nano_config.json");
+pub const P2POOL_NANO_PEER_LIST: &str = include_str!("../../p2pool_nano_peers.txt");
 pub const P2POOL_OUT: &str = "How many out-bound peers to connect to? (you connecting to others)";
 pub const P2POOL_IN: &str = "How many in-bound peers to allow? (others connecting to you)";
 pub const P2POOL_LOG: &str = "Verbosity of the console log.\nA verbosity level more than 0 is recommended to let the P2Pool process detect more rapidly errors with the Monero Node.\nIf the level is at 0, it can take up to 2 minutes to detect an error.";
@@ -587,9 +590,12 @@ pub const XVB_DONATION_LEVEL_MEGA_DONOR_HELP: &str =
 pub const UNKNOWN_DATA: &str = "???";
 // Time PPLNS WINDOW in seconds
 // it is an estimation based on number of block in a pplns window and block time (10s). The difficulty of the network should adapt to get close to this value.
-pub const BLOCK_PPLNS_WINDOW_MINI: u64 = 2160;
 pub const BLOCK_PPLNS_WINDOW_MAIN: u64 = 363;
-pub const SECOND_PER_BLOCK_P2POOL: u64 = 10;
+pub const BLOCK_PPLNS_WINDOW_MINI: u64 = 2160;
+pub const BLOCK_PPLNS_WINDOW_NANO: u64 = 2160;
+pub const SECOND_PER_BLOCK_P2POOL_MAIN: u64 = 10;
+pub const SECOND_PER_BLOCK_P2POOL_MINI: u64 = 10;
+pub const SECOND_PER_BLOCK_P2POOL_NANO: u64 = 30;
 // pub const TIME_PPLNS_WINDOW_MINI: Duration = Duration::from_secs(BLOCK_PPLNS_WINDOW_MINI * SECOND_PER_BLOCK_P2POOL);
 // pub const TIME_PPLNS_WINDOW_MAIN: Duration = Duration::from_secs(BLOCK_PPLNS_WINDOW_MAIN * SECOND_PER_BLOCK_P2POOL);
 pub const PROCESS_OUTSIDE: &str =

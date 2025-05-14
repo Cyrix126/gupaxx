@@ -16,6 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::XVB_MIN_TIME_SEND;
+use crate::disk::state::P2poolChain;
 use crate::helper::Process;
 use crate::helper::p2pool::ImgP2pool;
 use crate::helper::xrig::current_api_url_xrig;
@@ -25,6 +26,10 @@ use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
 use crate::helper::xvb::current_controllable_hr;
 use crate::miscs::output_console;
 use crate::miscs::output_console_without_time;
+use crate::utils::constants::BLOCK_PPLNS_WINDOW_NANO;
+use crate::utils::constants::SECOND_PER_BLOCK_P2POOL_MAIN;
+use crate::utils::constants::SECOND_PER_BLOCK_P2POOL_MINI;
+use crate::utils::constants::SECOND_PER_BLOCK_P2POOL_NANO;
 use std::{
     sync::{Arc, Mutex},
     time::Duration,
@@ -36,9 +41,9 @@ use reqwest_middleware::ClientWithMiddleware as Client;
 use tokio::time::sleep;
 
 use crate::{
-    BLOCK_PPLNS_WINDOW_MAIN, BLOCK_PPLNS_WINDOW_MINI, SECOND_PER_BLOCK_P2POOL,
-    XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR, XVB_ROUND_DONOR_VIP_MIN_HR,
-    XVB_ROUND_DONOR_WHALE_MIN_HR, XVB_TIME_ALGO,
+    BLOCK_PPLNS_WINDOW_MAIN, BLOCK_PPLNS_WINDOW_MINI, XVB_ROUND_DONOR_MEGA_MIN_HR,
+    XVB_ROUND_DONOR_MIN_HR, XVB_ROUND_DONOR_VIP_MIN_HR, XVB_ROUND_DONOR_WHALE_MIN_HR,
+    XVB_TIME_ALGO,
     helper::{
         p2pool::PubP2poolApi,
         xrig::{update_xmrig_config, xmrig::PubXmrigApi},
@@ -190,7 +195,7 @@ impl<'a> Algorithm<'a> {
 
         let share_min_hashrate = Self::minimum_hashrate_share(
             gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64,
-            state_p2pool.mini,
+            state_p2pool.chain.clone(),
             p2pool_external_hashrate,
             p2pool_buffer,
         );
@@ -563,27 +568,32 @@ impl<'a> Algorithm<'a> {
 
     fn minimum_hashrate_share(
         difficulty: u64,
-        mini: bool,
+        chain: P2poolChain,
         p2pool_external_hashrate: f32,
         p2pool_buffer: i8,
     ) -> f32 {
-        let pws = if mini {
-            BLOCK_PPLNS_WINDOW_MINI
-        } else {
-            BLOCK_PPLNS_WINDOW_MAIN
+        let pws;
+        let second_per_block = match chain {
+            P2poolChain::Main => {
+                pws = BLOCK_PPLNS_WINDOW_MAIN;
+                SECOND_PER_BLOCK_P2POOL_MAIN
+            }
+            P2poolChain::Mini => {
+                pws = BLOCK_PPLNS_WINDOW_MINI;
+                SECOND_PER_BLOCK_P2POOL_MINI
+            }
+            P2poolChain::Nano => {
+                pws = BLOCK_PPLNS_WINDOW_NANO;
+                SECOND_PER_BLOCK_P2POOL_NANO
+            }
         };
-        let minimum_hr = ((difficulty / (pws * SECOND_PER_BLOCK_P2POOL)) as f32
+        let minimum_hr = ((difficulty / (pws * second_per_block)) as f32
             * (1.0 + (p2pool_buffer as f32 / 100.0)))
             - p2pool_external_hashrate;
 
         info!(
             "Algorithm | (difficulty({}) / (window pplns blocks({}) * seconds per p2pool block({})) * (BUFFER 1 + ({})) / 100) - outside HR({}H/s) = minimum HR({}H/s) to keep a share.",
-            difficulty,
-            pws,
-            SECOND_PER_BLOCK_P2POOL,
-            p2pool_buffer,
-            p2pool_external_hashrate,
-            minimum_hr
+            difficulty, pws, second_per_block, p2pool_buffer, p2pool_external_hashrate, minimum_hr
         );
 
         if minimum_hr.is_sign_negative() {

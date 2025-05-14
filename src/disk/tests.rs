@@ -71,7 +71,7 @@ mod test {
 			[p2pool]
 			simple = true
 			local_node = true
-			mini = true
+			chain = "Nano"
 			auto_ping = true
 			auto_select = true
 			backup_host = true

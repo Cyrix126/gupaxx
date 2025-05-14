@@ -1,4 +1,5 @@
 use anyhow::Result;
+use derive_more::Display;
 use rand::{Rng, distr::Alphanumeric, rng};
 use strum::{EnumCount, EnumIter};
 
@@ -291,7 +292,7 @@ impl AutoStart {
 pub struct P2pool {
     pub simple: bool,
     pub local_node: bool,
-    pub mini: bool,
+    pub chain: P2poolChain,
     pub auto_ping: bool,
     pub auto_select: bool,
     pub backup_host: bool,
@@ -619,7 +620,7 @@ impl Default for P2pool {
         Self {
             simple: true,
             local_node: false,
-            mini: true,
+            chain: P2poolChain::Nano,
             auto_ping: true,
             auto_select: true,
             backup_host: true,
@@ -645,6 +646,13 @@ impl Default for P2pool {
             console_height: APP_DEFAULT_CONSOLE_HEIGHT,
         }
     }
+}
+
+#[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize, Display)]
+pub enum P2poolChain {
+    Main,
+    Mini,
+    Nano,
 }
 
 impl Xmrig {

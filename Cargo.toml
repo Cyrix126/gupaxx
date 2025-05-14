@@ -1,7 +1,7 @@
 cargo-features = ["profile-rustflags", "codegen-backend"]
 [package]
 name = "gupaxx"
-version = "1.9.1"
+version = "1.10.0"
 authors = ["cyrix126 <gupaxx@baermail.fr>"]
 description = "Fork of Gupax integrating the XMRvsBeast Raffle "
 documentation = "https://github.com/cyrix126/gupaxx"
@@ -27,7 +27,7 @@ log=[]
 
 [dependencies]
 clap = {version="4.5", features=["cargo", "derive"]}
-anyhow = "1.0.97"
+anyhow = "1.0.98"
 benri = "0.1.12"
 bytes = "1.10.1"
 dirs = "6.0.0"
@@ -57,15 +57,15 @@ image = { version = "0.25.6", features = ["png"] }
 log = "0.4.27"
 num-format = { version = "0.4.4", default-features = false }
 once_cell = "1.21.3"
-rand = "0.9.0"
+rand = "0.9.1"
 regex = { version = "1.11.1", default-features = false, features = ["perf"] }
 rfd = "0.15.3"
 serde = { version = "1.0.219", features = ["rc", "derive"] }
 serde_json = "1.0.140"
-sysinfo = { version = "0.34.2", default-features = false, features=["system"] }
+sysinfo = { version = "0.35", default-features = false, features=["system"] }
 # tls-api = "0.9.0"
-tokio = { version = "1.44.2", features = ["rt", "time", "macros", "process", "rt-multi-thread"] }
-toml = { version = "0.8.20", features = ["preserve_order"] }
+tokio = { version = "1.45.0", features = ["rt", "time", "macros", "process", "rt-multi-thread"] }
+toml = { version = "0.8.22", features = ["preserve_order"] }
 walkdir = "2.5.0"
 zeroize = "1.8.1"
 strsim = "0.11.1"
@@ -73,8 +73,8 @@ strip-ansi-escapes = "0.2.1"
 derive_more = {version="2.0.1", default-features=false, features=["display", "deref", "deref_mut"]}
 serde-this-or-that = "0.5.0"
 readable = "0.16"
-chrono = {version="0.4.40", default-features=false, features=["clock", "std"]}
-enclose = "1.2.0"
+chrono = {version="0.4.41", default-features=false, features=["clock", "std"]}
+enclose = "1.2.1"
 bounded-vec-deque = {version="0.1.1", default-features=false}
 cfg-if = "1.0"
 flexi_logger = "0.30"
@@ -112,7 +112,6 @@ portable-pty = "0.9.0"
 # We don't even use `xz` in `flate2` but this gets dynamically
 # linked as well which causes problems, so statically link it.
 lzma-sys = { version = "0.1", features = ["static"] }
-portable-pty = "0.9.0"
 [dev-dependencies]
 egui = {version="0.31", features=["callstack"]}
 # egui = {git="https://github.com/emilk/egui", features=["callstack"]}
