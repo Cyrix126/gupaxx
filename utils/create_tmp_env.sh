@@ -17,82 +17,82 @@ cp CHANGELOG.md /tmp/${FOLDER}/skel/
 
 ## Download XMRig Binaries
 # download xmrig into directory linux
-wget https://github.com/xmrig/xmrig/releases/download/v6.22.2/xmrig-6.22.2-linux-static-x64.tar.gz
-tar -xf xmrig-6.22.2-linux-static-x64.tar.gz
-mv xmrig-6.22.2/xmrig /tmp/${FOLDER}/skel/linux_b/xmrig/xmrig
-rm -r xmrig-6.22.2
-rm xmrig-6.22.2-linux-static-x64.tar.gz 
+wget https://github.com/xmrig/xmrig/releases/download/v6.23.0/xmrig-6.23.0-linux-static-x64.tar.gz
+tar -xf xmrig-6.23.0-linux-static-x64.tar.gz
+mv xmrig-6.23.0/xmrig /tmp/${FOLDER}/skel/linux_b/xmrig/xmrig
+rm -r xmrig-6.23.0
+rm xmrig-6.23.0-linux-static-x64.tar.gz 
 # download xmrig into directory macos-arm64
-wget https://github.com/xmrig/xmrig/releases/download/v6.22.2/xmrig-6.22.2-macos-arm64.tar.gz
-tar -xf xmrig-6.22.2-macos-arm64.tar.gz
-mv xmrig-6.22.2/xmrig /tmp/${FOLDER}/skel/macos-arm64_b/Gupaxx.app/Contents/MacOS/xmrig/xmrig
-rm -r xmrig-6.22.2
-rm xmrig-6.22.2-macos-arm64.tar.gz
+wget https://github.com/xmrig/xmrig/releases/download/v6.23.0/xmrig-6.23.0-macos-arm64.tar.gz
+tar -xf xmrig-6.23.0-macos-arm64.tar.gz
+mv xmrig-6.23.0/xmrig /tmp/${FOLDER}/skel/macos-arm64_b/Gupaxx.app/Contents/MacOS/xmrig/xmrig
+rm -r xmrig-6.23.0
+rm xmrig-6.23.0-macos-arm64.tar.gz
 # download xmrig into directory macos-x64
-wget https://github.com/xmrig/xmrig/releases/download/v6.22.2/xmrig-6.22.2-macos-x64.tar.gz
-tar -xf xmrig-6.22.2-macos-x64.tar.gz
-mv xmrig-6.22.2/xmrig /tmp/${FOLDER}/skel/macos-x64_b/Gupaxx.app/Contents/MacOS/xmrig/xmrig
-rm -r xmrig-6.22.2
-rm xmrig-6.22.2-macos-x64.tar.gz
+wget https://github.com/xmrig/xmrig/releases/download/v6.23.0/xmrig-6.23.0-macos-x64.tar.gz
+tar -xf xmrig-6.23.0-macos-x64.tar.gz
+mv xmrig-6.23.0/xmrig /tmp/${FOLDER}/skel/macos-x64_b/Gupaxx.app/Contents/MacOS/xmrig/xmrig
+rm -r xmrig-6.23.0
+rm xmrig-6.23.0-macos-x64.tar.gz
 # download xmrig into directory windows
-wget https://github.com/xmrig/xmrig/releases/download/v6.22.2/xmrig-6.22.2-msvc-win64.zip
-unzip xmrig-6.22.2-msvc-win64.zip
-mv xmrig-6.22.2/xmrig.exe /tmp/${FOLDER}/skel/windows_b/XMRig/xmrig.exe
-mv xmrig-6.22.2/WinRing0x64.sys /tmp/${FOLDER}/skel/windows_b/XMRig/WinRing0x64.sys
-rm -r xmrig-6.22.2
-rm xmrig-6.22.2-msvc-win64.zip
+wget https://github.com/xmrig/xmrig/releases/download/v6.23.0/xmrig-6.23.0-msvc-win64.zip
+unzip xmrig-6.23.0-msvc-win64.zip
+mv xmrig-6.23.0/xmrig.exe /tmp/${FOLDER}/skel/windows_b/XMRig/xmrig.exe
+mv xmrig-6.23.0/WinRing0x64.sys /tmp/${FOLDER}/skel/windows_b/XMRig/WinRing0x64.sys
+rm -r xmrig-6.23.0
+rm xmrig-6.23.0-msvc-win64.zip
 
 ## Download XMRig-Proxy Binaries
-wget https://github.com/xmrig/xmrig-proxy/releases/download/v6.22.0/xmrig-proxy-6.22.0-jammy-x64.tar.gz
-tar -xf xmrig-proxy-6.22.0-jammy-x64.tar.gz
-mv xmrig-proxy-6.22.0/xmrig-proxy /tmp/${FOLDER}/skel/linux_b/xmrig-proxy/xmrig-proxy
-rm -r xmrig-proxy-6.22.0
-rm xmrig-proxy-6.22.0-jammy-x64.tar.gz 
+wget https://github.com/xmrig/xmrig-proxy/releases/download/v6.23.0/xmrig-proxy-6.23.0-jammy-x64.tar.gz
+tar -xf xmrig-proxy-6.23.0-jammy-x64.tar.gz
+mv xmrig-proxy-6.23.0/xmrig-proxy /tmp/${FOLDER}/skel/linux_b/xmrig-proxy/xmrig-proxy
+rm -r xmrig-proxy-6.23.0
+rm xmrig-proxy-6.23.0-jammy-x64.tar.gz 
 ## no release for arm64 mac-osx xmrig-proxy, todo make CI build it.
 # download xmrig into directory macos-arm64
-# wget https://github.com/xmrig/xmrig-proxy/releases/download/v6.22.0/xmrig-proxy-6.22.0-macos-arm64.tar.gz
-# tar -xf xmrig-proxy-6.22.0-macos-arm64.tar.gz
-# mv xmrig-proxy-6.22.0/xmrig-proxy /tmp/${FOLDER}/skel/macos-arm64_b/Gupaxx.app/Contents/MacOS/xmrig-proxy/xmrig-proxy
-# rm -r xmrig-proxy-6.22.0
-# rm xmrig-proxy-6.22.0-macos-arm64.tar.gz
+# wget https://github.com/xmrig/xmrig-proxy/releases/download/v6.23.0/xmrig-proxy-6.23.0-macos-arm64.tar.gz
+# tar -xf xmrig-proxy-6.23.0-macos-arm64.tar.gz
+# mv xmrig-proxy-6.23.0/xmrig-proxy /tmp/${FOLDER}/skel/macos-arm64_b/Gupaxx.app/Contents/MacOS/xmrig-proxy/xmrig-proxy
+# rm -r xmrig-proxy-6.23.0
+# rm xmrig-proxy-6.23.0-macos-arm64.tar.gz
 # download xmrig into directory macos-x64
-wget https://github.com/xmrig/xmrig-proxy/releases/download/v6.22.0/xmrig-proxy-6.22.0-macos-x64.tar.gz
-tar -xf xmrig-proxy-6.22.0-macos-x64.tar.gz
-mv xmrig-proxy-6.22.0/xmrig-proxy /tmp/${FOLDER}/skel/macos-x64_b/Gupaxx.app/Contents/MacOS/xmrig-proxy/xmrig-proxy
-rm -r xmrig-proxy-6.22.0
-rm xmrig-proxy-6.22.0-macos-x64.tar.gz
+wget https://github.com/xmrig/xmrig-proxy/releases/download/v6.23.0/xmrig-proxy-6.23.0-macos-x64.tar.gz
+tar -xf xmrig-proxy-6.23.0-macos-x64.tar.gz
+mv xmrig-proxy-6.23.0/xmrig-proxy /tmp/${FOLDER}/skel/macos-x64_b/Gupaxx.app/Contents/MacOS/xmrig-proxy/xmrig-proxy
+rm -r xmrig-proxy-6.23.0
+rm xmrig-proxy-6.23.0-macos-x64.tar.gz
 # download xmrig into directory windows
-wget https://github.com/xmrig/xmrig-proxy/releases/download/v6.22.0/xmrig-proxy-6.22.0-msvc-win64.zip
-unzip xmrig-proxy-6.22.0-msvc-win64.zip
-mv xmrig-proxy-6.22.0/xmrig-proxy.exe /tmp/${FOLDER}/skel/windows_b/XMRig-Proxy/xmrig-proxy.exe
-rm -r xmrig-proxy-6.22.0
-rm xmrig-proxy-6.22.0-msvc-win64.zip
+wget https://github.com/xmrig/xmrig-proxy/releases/download/v6.23.0/xmrig-proxy-6.23.0-msvc-win64.zip
+unzip xmrig-proxy-6.23.0-msvc-win64.zip
+mv xmrig-proxy-6.23.0/xmrig-proxy.exe /tmp/${FOLDER}/skel/windows_b/XMRig-Proxy/xmrig-proxy.exe
+rm -r xmrig-proxy-6.23.0
+rm xmrig-proxy-6.23.0-msvc-win64.zip
 
 ## Download P2Pool Binaries
 # download p2pool into directory linux
-wget https://github.com/SChernykh/p2pool/releases/download/v4.5/p2pool-v4.5-linux-x64.tar.gz
-tar -xf p2pool-v4.5-linux-x64.tar.gz
-mv p2pool-v4.5-linux-x64/p2pool /tmp/${FOLDER}/skel/linux_b/p2pool/p2pool
-rm -r p2pool-v4.5-linux-x64
-rm p2pool-v4.5-linux-x64.tar.gz
+wget https://github.com/SChernykh/p2pool/releases/download/v4.8/p2pool-v4.8-linux-x64.tar.gz
+tar -xf p2pool-v4.8-linux-x64.tar.gz
+mv p2pool-v4.8-linux-x64/p2pool /tmp/${FOLDER}/skel/linux_b/p2pool/p2pool
+rm -r p2pool-v4.8-linux-x64
+rm p2pool-v4.8-linux-x64.tar.gz
 # download p2pool into directory macos-arm64
-wget https://github.com/SChernykh/p2pool/releases/download/v4.5/p2pool-v4.5-macos-aarch64.tar.gz
-tar -xf p2pool-v4.5-macos-aarch64.tar.gz
-mv p2pool-v4.5-macos-aarch64/p2pool /tmp/${FOLDER}/skel/macos-arm64_b/Gupaxx.app/Contents/MacOS/p2pool/p2pool
-rm -r p2pool-v4.5-macos-aarch64
-rm p2pool-v4.5-macos-aarch64.tar.gz
+wget https://github.com/SChernykh/p2pool/releases/download/v4.8/p2pool-v4.8-macos-aarch64.tar.gz
+tar -xf p2pool-v4.8-macos-aarch64.tar.gz
+mv p2pool-v4.8-macos-aarch64/p2pool /tmp/${FOLDER}/skel/macos-arm64_b/Gupaxx.app/Contents/MacOS/p2pool/p2pool
+rm -r p2pool-v4.8-macos-aarch64
+rm p2pool-v4.8-macos-aarch64.tar.gz
 # download p2pool into directory macos-x64
-wget https://github.com/SChernykh/p2pool/releases/download/v4.5/p2pool-v4.5-macos-x64.tar.gz
-tar -xf p2pool-v4.5-macos-x64.tar.gz
-mv p2pool-v4.5-macos-x64/p2pool /tmp/${FOLDER}/skel/macos-x64_b/Gupaxx.app/Contents/MacOS/p2pool/p2pool
-rm -r p2pool-v4.5-macos-x64
-rm p2pool-v4.5-macos-x64.tar.gz
+wget https://github.com/SChernykh/p2pool/releases/download/v4.8/p2pool-v4.8-macos-x64.tar.gz
+tar -xf p2pool-v4.8-macos-x64.tar.gz
+mv p2pool-v4.8-macos-x64/p2pool /tmp/${FOLDER}/skel/macos-x64_b/Gupaxx.app/Contents/MacOS/p2pool/p2pool
+rm -r p2pool-v4.8-macos-x64
+rm p2pool-v4.8-macos-x64.tar.gz
 # download p2pool into directory windows
-wget https://github.com/SChernykh/p2pool/releases/download/v4.5/p2pool-v4.5-windows-x64.zip
-unzip p2pool-v4.5-windows-x64.zip
-mv p2pool-v4.5-windows-x64/p2pool.exe /tmp/${FOLDER}/skel/windows_b/P2Pool/p2pool.exe
-rm -r p2pool-v4.5-windows-x64
-rm p2pool-v4.5-windows-x64.zip
+wget https://github.com/SChernykh/p2pool/releases/download/v4.8/p2pool-v4.8-windows-x64.zip
+unzip p2pool-v4.8-windows-x64.zip
+mv p2pool-v4.8-windows-x64/p2pool.exe /tmp/${FOLDER}/skel/windows_b/P2Pool/p2pool.exe
+rm -r p2pool-v4.8-windows-x64
+rm p2pool-v4.8-windows-x64.zip
 
 ## Download Monero Binaries
 # download monero into directory linux
