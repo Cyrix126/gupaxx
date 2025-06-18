@@ -205,6 +205,7 @@ pub fn estimated_hr(s: &str) -> Option<f32> {
                 "K" => 1000,
                 "M" => 1000 * 1000,
                 "G" => 1000 * 1000 * 1000,
+                " " => 1,
                 _ => {
                     error!("unit of your p2pool sidechain HR is not recognized.");
                     1
