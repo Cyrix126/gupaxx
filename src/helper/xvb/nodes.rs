@@ -109,6 +109,24 @@ impl Pool {
         p2pool_state: &P2pool,
         xvb_state: &Xvb,
     ) {
+        if xvb_state.manual_pool_enabled {
+            let manual_pool = if xvb_state.manual_pool_eu {
+                Pool::XvBEurope
+            } else {
+                Pool::XvBNorthAmerica
+            };
+            info!("XvB node {} has been chosen manually", manual_pool.url());
+            output_console(
+                &mut gui_api_xvb.lock().unwrap().output,
+                &format!("XvB node {} has been chosen manually", manual_pool),
+                ProcessName::Xvb,
+            );
+            gui_api_xvb.lock().unwrap().stats_priv.pool = manual_pool;
+            if process_xvb.lock().unwrap().state != ProcessState::Syncing {
+                process_xvb.lock().unwrap().state = ProcessState::Syncing;
+            }
+            return;
+        }
         let client_eu = client.clone();
         let client_na = client.clone();
         // two spawn to ping the two nodes in parallel and not one after the other.
@@ -186,22 +204,7 @@ impl Pool {
                 process_xvb.lock().unwrap().state = ProcessState::Syncing;
             }
         }
-        if xvb_state.manual_pool_enabled {
-            let manual_pool = if xvb_state.manual_pool_eu {
-                Pool::XvBEurope
-            } else {
-                Pool::XvBNorthAmerica
-            };
-            info!("XvB node {} has been chosen manually", manual_pool.url());
-            output_console(
-                &mut gui_api_xvb.lock().unwrap().output,
-                &format!("XvB node {} has been chosen manually", manual_pool),
-                ProcessName::Xvb,
-            );
-            pub_api_xvb.lock().unwrap().stats_priv.pool = manual_pool;
-        } else {
-            pub_api_xvb.lock().unwrap().stats_priv.pool = pool;
-        }
+        pub_api_xvb.lock().unwrap().stats_priv.pool = pool;
     }
     async fn ping(ip: &str, client: &Client) -> u128 {
         let request = client

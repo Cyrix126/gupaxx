@@ -495,12 +495,14 @@ impl PubXvbApi {
         let runtime_manual_amount = std::mem::take(&mut gui_api.stats_priv.runtime_manual_amount);
         let runtime_manual_donation_level =
             std::mem::take(&mut gui_api.stats_priv.runtime_manual_donation_level);
+        let pool = std::mem::take(&mut gui_api.stats_priv.pool);
         *gui_api = Self {
             output,
             stats_priv: XvbPrivStats {
                 runtime_mode,
                 runtime_manual_amount,
                 runtime_manual_donation_level,
+                pool,
                 ..pub_api.stats_priv.clone()
             },
             p2pool_sent_last_hour_samples: std::mem::take(
@@ -855,7 +857,6 @@ fn signal_interrupt(
                             
                         },
                         Pool::XvBNorthAmerica|Pool::XvBEurope if !was_alive => {
-                        process.lock().unwrap().state = ProcessState::Syncing;
                         // Probably a start. We don't consider XMRig using XvB pools without algo.
                         // can update xmrig and check status of state in the same time.
                         // update prefred pool
@@ -916,11 +917,14 @@ fn reset_data_xvb(pub_api: &Arc<Mutex<PubXvbApi>>, gui_api: &Arc<Mutex<PubXvbApi
     let runtime_manual_amount =
         mem::take(&mut gui_api.lock().unwrap().stats_priv.runtime_manual_amount);
     let use_sidechain_hr = mem::take(&mut gui_api.lock().unwrap().use_p2pool_sidechain_hr);
+    let pool = mem::take(&mut gui_api.lock().unwrap().stats_priv.pool);
     // let output = mem::take(&mut gui_api.lock().unwrap().output);
     *pub_api.lock().unwrap() = PubXvbApi::new();
     *gui_api.lock().unwrap() = PubXvbApi::new();
     // to keep the value modified by xmrig even if xvb is dead.
     pub_api.lock().unwrap().current_pool = current_pool;
+    // to keep pinged or manually chosen XvB pool
+    gui_api.lock().unwrap().stats_priv.pool = pool;
     // to not loose the information of runtime hero mode between restart
     gui_api.lock().unwrap().stats_priv.runtime_mode = runtime_mode;
     gui_api.lock().unwrap().stats_priv.runtime_manual_amount = runtime_manual_amount;

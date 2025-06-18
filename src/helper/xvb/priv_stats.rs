@@ -141,7 +141,9 @@ impl XvbPrivStats {
         match XvbPrivStats::request_api(client, address, token).await {
             Ok(new_data) => {
                 debug!("XvB Watchdog | HTTP API request OK");
-                pub_api.lock().unwrap().stats_priv = new_data;
+                pub_api.lock().unwrap().stats_priv.fails = new_data.fails;
+                pub_api.lock().unwrap().stats_priv.donor_1hr_avg = new_data.donor_1hr_avg;
+                pub_api.lock().unwrap().stats_priv.donor_24hr_avg = new_data.donor_24hr_avg;
                 let previously_failed = process.lock().unwrap().state == ProcessState::Failed;
                 if previously_failed {
                     info!("XvB Watchdog | Public stats are working again");
