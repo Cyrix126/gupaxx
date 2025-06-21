@@ -185,6 +185,7 @@ pub struct Status {
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub struct Gupax {
     pub simple: bool,
+    pub dark_mode: bool,
     pub auto: AutoEnabled,
     pub p2pool_path: String,
     pub node_path: String,
@@ -596,6 +597,7 @@ impl Default for Gupax {
     fn default() -> Self {
         Self {
             simple: true,
+            dark_mode: true,
             auto: AutoEnabled::default(),
             p2pool_path: DEFAULT_P2POOL_PATH.to_string(),
             xmrig_path: DEFAULT_XMRIG_PATH.to_string(),
