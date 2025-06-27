@@ -125,3 +125,7 @@ In case you don't want to rely on the kuno website, the secret view key is:
 ```
 6c6f841e1eda3fba95f2261baa4614e3ec614af2a97176bbae2c0be5281d1d0f
 ```
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=Cyrix126/gupaxx&type=Date)](https://www.star-history.com/#Cyrix126/gupaxx&Date)
