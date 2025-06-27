@@ -22,7 +22,7 @@ Creating a website like [gupax.io](https://gupax.io) to have a more user friendl
 Having a website, we can detect the architecture and OS of the visitor and give them the right archive to download.
 ### XMRvsBeast explanation
 Currently in the [README](https://github.com/Cyrix126/gupaxx#what-is-gupaxxxmrvsbeast), there is no explanation on what XMRvsBeast is.
-The README explains what XMRvsBeast it does but not what it is.
+The README explains what XMRvsBeast does but not what it is.
 we could improve this with either creating another chapter or expanding the [current one](https://github.com/Cyrix126/gupaxx#what-is-gupaxxxmrvsbeast).
 ### Generated wallet
 If Gupaxx could create a wallet and put the primary address in P2Pool tab automatically, it would remove a manual step for the user.
@@ -70,9 +70,12 @@ Add support support for [Flatpak](https://docs.flatpak.org/en/latest/first-build
 Add support for [AppImage](https://appimage.org/).
 Add support for [Nix](https://nixos.wiki/wiki/Nixpkgs/Create_and_debug_packages).
 Add support for [Guix](https://guix.gnu.org/).
-Add Support [*BSD](https://www.freebsd.org/) systems.
+Add support [*BSD](https://www.freebsd.org/) systems.
+Add support for [Scoop](https://scoop.sh/).
+Add support for [Docker](https://docs.docker.com/).
+Add support for [DEB](https://wiki.debian.org/Packaging).
 ### Minimum requirement
-Add a table with the minimum hardware/software requirements to the README.
+Add a table with the minimum hardware and software requirements to the README.
 ### Add more target
 Gupaxx could add support for Linux ARM64 since both P2Pool and XMRig can compile on this target.
 ### CLI for Algorithm
@@ -133,6 +136,8 @@ It can be a checkbox into advanced option of XvB to use the stratum data.
 ## Privacy
 ### Button enabling Tor
 Allow to torify every processes. For mining, it can add a big disadvantage because of the latency. More research on the impact on missed rewards are needed to be able to warn the user of how much gaines he could miss.
+### Button enabling I2P
+Allow to I2P-ify every process. For mining, it can add a big disadvantage because of the latency. More research on the impact on missed rewards are needed to be able to warn the user of how much gaines he could miss.
 ### Description of data given to servers
 Describing what data can be saved/collected/published and the privacy impact while interacting with:
 - updates
@@ -146,6 +151,10 @@ Describing what data can be saved/collected/published and the privacy impact whi
 ### Reproducible builds
 To remove (un)necessary trust, binaries released should have the same checksum if recompiled without code change.
 See [This](https://reproducible-builds.org).
+### Bootstrapable Builds
+To remove (un)necessary trust, binaries released should have the same checksum if recompiled without code change.
+This ensures that the build process is transparent and verifiable, enhancing the security and integrity of the software.
+See [This](https://bootstrappable.org).
 ### Release changes notes preview
 Show the summuray of what will change between releases before updating to newer release.
 ### Check signature of updates with Gupaxx
