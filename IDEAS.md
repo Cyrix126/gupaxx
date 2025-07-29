@@ -70,7 +70,7 @@ Add support support for [Flatpak](https://docs.flatpak.org/en/latest/first-build
 Add support for [AppImage](https://appimage.org/).
 Add support for [Nix](https://nixos.wiki/wiki/Nixpkgs/Create_and_debug_packages).
 Add support for [Guix](https://guix.gnu.org/).
-Add support [*BSD](https://www.freebsd.org/) systems.
+Add support for [*BSD](https://www.freebsd.org/) systems.
 Add support for [Scoop](https://scoop.sh/).
 Add support for [Docker](https://docs.docker.com/).
 Add support for [DEB](https://wiki.debian.org/Packaging).
@@ -134,10 +134,8 @@ Could also be an option in advanced tab of XvB warning the user that he should p
 It can be a checkbox into advanced option of XvB to use the stratum data.
 
 ## Privacy
-### Button enabling Tor
+### Buttons enabling Tor/I2P
 Allow to torify every processes. For mining, it can add a big disadvantage because of the latency. More research on the impact on missed rewards are needed to be able to warn the user of how much gaines he could miss.
-### Button enabling I2P
-Allow to I2P-ify every process. For mining, it can add a big disadvantage because of the latency. More research on the impact on missed rewards are needed to be able to warn the user of how much gaines he could miss.
 ### Description of data given to servers
 Describing what data can be saved/collected/published and the privacy impact while interacting with:
 - updates
