@@ -149,10 +149,6 @@ Describing what data can be saved/collected/published and the privacy impact whi
 ### Reproducible builds
 To remove (un)necessary trust, binaries released should have the same checksum if recompiled without code change.
 See [This](https://reproducible-builds.org).
-### Bootstrapable Builds
-To remove (un)necessary trust, binaries released should have the same checksum if recompiled without code change.
-This ensures that the build process is transparent and verifiable, enhancing the security and integrity of the software.
-See [This](https://bootstrappable.org).
 ### Release changes notes preview
 Show the summuray of what will change between releases before updating to newer release.
 ### Check signature of updates with Gupaxx
