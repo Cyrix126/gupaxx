@@ -712,8 +712,16 @@ async fn check_state_outcauses_xvb(
     let is_xmrig_alive = process_xp.lock().unwrap().state == ProcessState::Alive
         || process_xmrig.lock().unwrap().state == ProcessState::Alive;
     // XvB should not restart until p2pool values are updated for the first time
-    let is_p2pool_alive = process_p2pool.lock().unwrap().state == ProcessState::Alive && gui_api_p2pool.lock().unwrap().connections.as_str().parse::<u32>().unwrap_or_default() > 0;
-    
+    let is_p2pool_alive = process_p2pool.lock().unwrap().state == ProcessState::Alive
+        && gui_api_p2pool
+            .lock()
+            .unwrap()
+            .connections
+            .as_str()
+            .parse::<u32>()
+            .unwrap_or_default()
+            > 0;
+
     let p2pool_xmrig_alive = is_xmrig_alive && is_p2pool_alive;
     // if state is middle because start is not finished yet, it will not do anything.
     match state {
@@ -901,7 +909,7 @@ fn signal_interrupt(
                             err
                         ), ProcessName::Xvb
                     );
-                        } 
+                        }
                         }
                             ));}
             },
