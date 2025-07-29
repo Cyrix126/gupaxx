@@ -485,13 +485,19 @@ impl Helper {
     ) {
         let gupax_uptime = helper.uptime.display(true);
         let cpu = &sysinfo.cpus()[0];
-        let gupax_cpu_usage = format!(
-            "{:.2}%",
-            sysinfo.process(*pid).unwrap().cpu_usage() / (max_threads as f32)
-        );
-        let gupax_memory_used_mb =
-            HumanNumber::from_u64(sysinfo.process(*pid).unwrap().memory() / 1_000_000);
-        let gupax_memory_used_mb = format!("{} megabytes", gupax_memory_used_mb);
+        let gupax_cpu_usage;
+        let gupax_memory_used_mb;
+
+        if let Some(process) = sysinfo.process(*pid) {
+            gupax_cpu_usage = format!("{:.2}%", process.cpu_usage() / (max_threads as f32));
+            gupax_memory_used_mb = format!(
+                "{} megabytes",
+                HumanNumber::from_u64(process.memory() / 1_000_000)
+            );
+        } else {
+            gupax_cpu_usage = "???".to_string();
+            gupax_memory_used_mb = "??? megabytes".to_string();
+        };
         let system_cpu_model = format!("{} ({}MHz)", cpu.brand(), cpu.frequency());
         let system_memory = {
             let used = (sysinfo.used_memory() as f64) / 1_000_000_000.0;
