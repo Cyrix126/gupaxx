@@ -251,6 +251,7 @@ impl Helper {
                     &client,
                     gui_api,
                     pub_api,
+                    gui_api_p2pool,
                     process,
                     process_xmrig,
                     process_xp,
@@ -593,6 +594,7 @@ async fn check_state_outcauses_xvb(
     client: &Client,
     gui_api: &Arc<Mutex<PubXvbApi>>,
     pub_api: &Arc<Mutex<PubXvbApi>>,
+    gui_api_p2pool: &Arc<Mutex<PubP2poolApi>>,
     process: &Arc<Mutex<Process>>,
     process_xmrig: &Arc<Mutex<Process>>,
     process_xp: &Arc<Mutex<Process>>,
@@ -709,7 +711,9 @@ async fn check_state_outcauses_xvb(
 
     let is_xmrig_alive = process_xp.lock().unwrap().state == ProcessState::Alive
         || process_xmrig.lock().unwrap().state == ProcessState::Alive;
-    let is_p2pool_alive = process_p2pool.lock().unwrap().state == ProcessState::Alive;
+    // XvB should not restart until p2pool values are updated for the first time
+    let is_p2pool_alive = process_p2pool.lock().unwrap().state == ProcessState::Alive && gui_api_p2pool.lock().unwrap().connections.as_str().parse::<u32>().unwrap_or_default() > 0;
+    
     let p2pool_xmrig_alive = is_xmrig_alive && is_p2pool_alive;
     // if state is middle because start is not finished yet, it will not do anything.
     match state {
@@ -740,6 +744,7 @@ async fn check_state_outcauses_xvb(
             process.lock().unwrap().state = ProcessState::Alive;
             reset_data_xvb(pub_api, gui_api);
             *first_loop = true;
+
             output_console(
                 &mut gui_api.lock().unwrap().output,
                 &[
