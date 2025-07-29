@@ -175,15 +175,15 @@ impl crate::disk::state::Xvb {
 
                             ui.horizontal(|ui| {
 
-                                if ui.add_sized([0.0, text_height],egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Hash, "Hash")).clicked() {
+                                if ui.add_sized([0.0, text_height],egui::Button::selectable(self.manual_donation_metric == ManualDonationMetric::Hash, "Hash")).clicked() {
                                     self.manual_donation_metric = ManualDonationMetric::Hash;
                                     self.manual_slider_amount = self.manual_amount_raw;
                                 }
-                                if ui.add_sized([0.0, text_height],egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Kilo, "Kilo")).clicked() {
+                                if ui.add_sized([0.0, text_height],egui::Button::selectable(self.manual_donation_metric == ManualDonationMetric::Kilo, "Kilo")).clicked() {
                                     self.manual_donation_metric = ManualDonationMetric::Kilo;
                                     self.manual_slider_amount = self.manual_amount_raw / 1000.0;
                                 };
-                                if ui.add_sized([0.0, text_height],egui::SelectableLabel::new(self.manual_donation_metric == ManualDonationMetric::Mega, "Mega")).clicked() {
+                                if ui.add_sized([0.0, text_height],egui::Button::selectable(self.manual_donation_metric == ManualDonationMetric::Mega, "Mega")).clicked() {
                                     self.manual_donation_metric = ManualDonationMetric::Mega;
                                     self.manual_slider_amount = self.manual_amount_raw / 1_000_000.0;
                                 };

@@ -15,7 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use egui::{Button, ComboBox, RichText, SelectableLabel, TextStyle, Ui};
+use egui::{Button, ComboBox, RichText, TextStyle, Ui};
 use log::{debug, info};
 
 use crate::{
@@ -158,7 +158,7 @@ fn menu_list_node(
                     node.custom()
                 ));
                 if ui
-                    .add(SelectableLabel::new(selected.name == **name, text))
+                    .add(Button::selectable(selected.name == **name, text))
                     .clicked()
                 {
                     selected.index = n;

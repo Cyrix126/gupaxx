@@ -16,8 +16,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::app::Tab;
-use egui::TextStyle;
-use egui::{ScrollArea, SelectableLabel, Separator, TopBottomPanel, Ui};
+use egui::{Button, TextStyle};
+use egui::{ScrollArea, Separator, TopBottomPanel, Ui};
 use log::debug;
 
 impl crate::app::App {
@@ -63,7 +63,7 @@ impl crate::app::App {
                                 if ui
                                     .add_sized(
                                         size,
-                                        SelectableLabel::new(self.tab == tab, tab.to_string()),
+                                        Button::selectable(self.tab == tab, tab.to_string()),
                                     )
                                     .clicked()
                                 {

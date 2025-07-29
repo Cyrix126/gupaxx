@@ -22,7 +22,7 @@ use crate::miscs::height_txt_before_button;
 use crate::{disk::state::P2pool, utils::regex::REGEXES};
 
 use crate::constants::*;
-use egui::{Checkbox, SelectableLabel, Ui};
+use egui::{Button, Checkbox, Ui};
 use log::*;
 
 impl P2pool {
@@ -77,7 +77,7 @@ impl P2pool {
                                 if ui
                                     .add_sized(
                                         [width, height],
-                                        SelectableLabel::new(
+                                        Button::selectable(
                                             self.chain == P2poolChain::Main,
                                             "P2Pool Main",
                                         ),
@@ -90,7 +90,7 @@ impl P2pool {
                                 if ui
                                     .add_sized(
                                         [width, height],
-                                        SelectableLabel::new(
+                                        Button::selectable(
                                             self.chain == P2poolChain::Mini,
                                             "P2Pool Mini",
                                         ),
@@ -103,7 +103,7 @@ impl P2pool {
                                 if ui
                                     .add_sized(
                                         [width, height],
-                                        SelectableLabel::new(
+                                        Button::selectable(
                                             self.chain == P2poolChain::Nano,
                                             "P2Pool Nano",
                                         ),

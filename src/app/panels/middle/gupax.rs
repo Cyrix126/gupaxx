@@ -190,7 +190,7 @@ impl Gupax {
                                 if ui
                                     .add_sized(
                                         [width, height_txt_before_button(ui, &TextStyle::Button)],
-                                        SelectableLabel::new(self.tab == tab, tab.to_string()),
+                                        Button::selectable(self.tab == tab, tab.to_string()),
                                     )
                                     .on_hover_text(tab.msg_default_tab())
                                     .clicked()

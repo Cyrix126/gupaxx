@@ -17,7 +17,7 @@
 
 use std::sync::{Arc, Mutex};
 
-use egui::{Label, RichText, ScrollArea, SelectableLabel, Separator, Slider, TextStyle};
+use egui::{Button, Label, RichText, ScrollArea, Separator, Slider, TextStyle};
 use readable::num::Unsigned;
 use strum::{EnumCount, IntoEnumIterator};
 
@@ -82,7 +82,7 @@ impl Status {
                             if ui
                                 .add_sized(
                                     [width_button, height],
-                                    SelectableLabel::new(self.payout_view == p, p.to_string()),
+                                    Button::selectable(self.payout_view == p, p.to_string()),
                                 )
                                 .on_hover_text(p.msg_help())
                                 .clicked()
@@ -133,7 +133,7 @@ impl Status {
                     if ui
                         .add_sized(
                             [width, height],
-                            SelectableLabel::new(!self.manual_hash, "Automatic"),
+                            Button::selectable(!self.manual_hash, "Automatic"),
                         )
                         .on_hover_text(STATUS_SUBMENU_AUTOMATIC)
                         .clicked()
@@ -144,7 +144,7 @@ impl Status {
                     if ui
                         .add_sized(
                             [width, height],
-                            SelectableLabel::new(self.manual_hash, "Manual"),
+                            Button::selectable(self.manual_hash, "Manual"),
                         )
                         .on_hover_text(STATUS_SUBMENU_MANUAL)
                         .clicked()

@@ -443,7 +443,7 @@ impl crate::app::App {
             if ui
                 .add_sized(
                     [width, ui.available_height()],
-                    SelectableLabel::new(
+                    Button::selectable(
                         self.state.status.submenu == Submenu::Processes,
                         "Processes",
                     ),
@@ -457,7 +457,7 @@ impl crate::app::App {
             if ui
                 .add_sized(
                     [width, ui.available_height()],
-                    SelectableLabel::new(self.state.status.submenu == Submenu::P2pool, "P2Pool"),
+                    Button::selectable(self.state.status.submenu == Submenu::P2pool, "P2Pool"),
                 )
                 .on_hover_text(STATUS_SUBMENU_P2POOL)
                 .clicked()
@@ -468,7 +468,7 @@ impl crate::app::App {
             if ui
                 .add_sized(
                     [width, ui.available_height()],
-                    SelectableLabel::new(
+                    Button::selectable(
                         self.state.status.submenu == Submenu::Benchmarks,
                         "Benchmarks",
                     ),
@@ -487,7 +487,7 @@ impl crate::app::App {
             if ui
                 .add_sized(
                     [width, ui.available_height()],
-                    SelectableLabel::new(*simple, "Simple"),
+                    Button::selectable(*simple, "Simple"),
                 )
                 // .selectable_label(*value, "Simple")
                 .on_hover_text(hover_text.0)
@@ -499,7 +499,7 @@ impl crate::app::App {
             if ui
                 .add_sized(
                     [width, ui.available_height()],
-                    SelectableLabel::new(!*simple, "Advanced"),
+                    Button::selectable(!*simple, "Advanced"),
                 )
                 // .selectable_label(*value, "Advanced")
                 .on_hover_text(hover_text.1)
