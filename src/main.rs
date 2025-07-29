@@ -47,6 +47,13 @@ mod inits;
 mod miscs;
 mod utils;
 
+#[cfg(not(target_env = "msvc"))]
+use tikv_jemallocator::Jemalloc;
+
+#[cfg(not(target_env = "msvc"))]
+#[global_allocator]
+static GLOBAL: Jemalloc = Jemalloc;
+
 // Sudo (dummy values for Windows)
 #[cfg(target_family = "unix")]
 extern crate sudo as sudo_check;
