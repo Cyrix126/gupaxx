@@ -16,10 +16,10 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub const GUPAX_VERSION: &str = concat!("v", env!("CARGO_PKG_VERSION")); // e.g: v1.0.0
-pub const P2POOL_VERSION: &str = "v4.8";
-pub const XMRIG_VERSION: &str = "v6.23.0";
-pub const XMRIG_PROXY_VERSION: &str = "v6.23.0";
-pub const NODE_VERSION: &str = "v18.4.0";
+pub const P2POOL_VERSION: &str = "v4.9";
+pub const XMRIG_VERSION: &str = "v6.24.0";
+pub const XMRIG_PROXY_VERSION: &str = "v6.24.0";
+pub const NODE_VERSION: &str = "v18.4.1";
 pub const COMMIT: &str = env!("COMMIT"); // set in build.rs
 // e.g: Gupax_v1_0_0
 // Would have been [Gupax_v1.0.0] but P2Pool truncates everything after [.]
