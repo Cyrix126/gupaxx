@@ -15,14 +15,14 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-use crate::components::update::get_user_agent;
+use crate::utils::epee::ping_epee;
 use crate::{constants::*, macros::*};
 use egui::Color32;
 use log::*;
 use rand::{Rng, rng};
-use reqwest::{Client, RequestBuilder};
+use std::net::{SocketAddr, ToSocketAddrs};
 use std::sync::{Arc, Mutex};
-use std::time::{Duration, Instant};
+use std::time::Instant;
 
 //---------------------------------------------------------------------------------------------------- Node list
 // Remote Monero Nodes with ZMQ enabled.
@@ -220,7 +220,7 @@ pub fn format_ip(ip: &str) -> String {
 pub const GREEN_NODE_PING: u128 = 100;
 // yellow is anything in-between green/red
 pub const RED_NODE_PING: u128 = 300;
-pub const TIMEOUT_NODE_PING: u128 = 1000;
+pub const TIMEOUT_P2POOL_NODE_PING: u128 = 1000;
 
 #[derive(Debug, Clone)]
 pub struct NodeData {
@@ -350,27 +350,39 @@ impl Ping {
         let percent = (100.0 / (REMOTE_NODE_LENGTH as f32)).floor();
 
         // Create HTTP client
-        let info = "Creating HTTP Client".to_string();
+        let info = "Creating EPEE Client".to_string();
         ping.lock().unwrap().msg = info;
-        let client = Client::new();
 
-        // Random User Agent
-        let rand_user_agent = get_user_agent();
         // Handle vector
         let mut handles = Vec::with_capacity(REMOTE_NODE_LENGTH);
         let node_vec = arc_mut!(Vec::with_capacity(REMOTE_NODE_LENGTH));
 
-        for (ip, _, rpc, _zmq) in REMOTE_NODES {
-            let client = client.clone();
+        for (ip, _, _, _zmq) in REMOTE_NODES {
             let ping = Arc::clone(&ping);
             let node_vec = Arc::clone(&node_vec);
-            let request = client
-                .post("http://".to_string() + ip + ":" + rpc + "/json_rpc")
-                .header("User-Agent", rand_user_agent)
-                .body(r#"{"jsonrpc":"2.0","id":"0","method":"get_info"}"#);
 
             let handle = tokio::task::spawn(async move {
-                Self::response(request, ip, ping, percent, node_vec).await;
+                let addr = format!("{ip}:{NODE_P2P_PORT_DEFAULT}")
+                    .to_socket_addrs()
+                    .expect("hardcored valued should always convert to SocketAddr")
+                    .collect::<Vec<SocketAddr>>()[0];
+                if let Ok(ms) = ping_epee(addr).await {
+                    let info = format!("{ms}ms ... {ip}");
+                    info!("Ping | {ms}ms ... {ip}");
+                    let color = if ms < GREEN_NODE_PING {
+                        GREEN
+                    } else if ms < RED_NODE_PING {
+                        YELLOW
+                    } else {
+                        RED
+                    };
+
+                    let mut ping = ping.lock().unwrap();
+                    ping.msg = info;
+                    ping.prog += percent;
+                    drop(ping);
+                    node_vec.lock().unwrap().push(NodeData { ip, ms, color });
+                }
             });
             handles.push(handle);
         }
@@ -392,82 +404,16 @@ impl Ping {
         drop(ping);
         Ok(fastest_info)
     }
-
-    #[cold]
-    #[inline(never)]
-    async fn response(
-        request: RequestBuilder,
-        ip: &'static str,
-        ping: Arc<Mutex<Self>>,
-        percent: f32,
-        node_vec: Arc<Mutex<Vec<NodeData>>>,
-    ) {
-        // test multiples request as first can apparently timeout.
-        let mut vec_ms = vec![];
-        for _ in 0..6 {
-            // clone request
-            let req = request
-                .try_clone()
-                .expect("should be able to clone a str body");
-            // begin timer
-            let now_req = Instant::now();
-            // get and store time of request
-            vec_ms.push(match tokio::time::timeout(Duration::from_millis(TIMEOUT_NODE_PING as u64), req.send()).await {
-                Ok(Ok(json_rpc)) => {
-                    // Attempt to convert to JSON-RPC.
-                    match json_rpc.bytes().await {
-                        Ok(b) => match serde_json::from_slice::<GetInfo<'_>>(&b) {
-                            Ok(rpc) => {
-                                if rpc.result.mainnet && rpc.result.synchronized {
-                                    now_req.elapsed().as_millis()
-                                } else {
-                                    warn!("Ping | {ip} responded with valid get_info but is not in sync, remove this node!");
-                                    TIMEOUT_NODE_PING
-                                }
-                            }
-                            _ => {
-                                warn!("Ping | {ip} responded but with invalid get_info, remove this node!");
-                                TIMEOUT_NODE_PING
-                            }
-                        },
-                        _ => TIMEOUT_NODE_PING,
-                    }
-                }
-                _ => TIMEOUT_NODE_PING,
-            });
-        }
-        let ms = *vec_ms
-            .iter()
-            .min()
-            .expect("at least the value of timeout should be present");
-
-        let info = format!("{ms}ms ... {ip}");
-        info!("Ping | {ms}ms ... {ip}");
-        info!("{:?}", vec_ms);
-
-        let color = if ms < GREEN_NODE_PING {
-            GREEN
-        } else if ms < RED_NODE_PING {
-            YELLOW
-        } else {
-            RED
-        };
-
-        let mut ping = ping.lock().unwrap();
-        ping.msg = info;
-        ping.prog += percent;
-        drop(ping);
-        node_vec.lock().unwrap().push(NodeData { ip, ms, color });
-    }
 }
 //---------------------------------------------------------------------------------------------------- NODE
 #[cfg(test)]
 mod test {
+    use std::net::{SocketAddr, ToSocketAddrs};
+
     use log::error;
-    use reqwest::Client;
 
     use crate::components::node::{REMOTE_NODE_LENGTH, REMOTE_NODES, format_ip};
-    use crate::components::update::get_user_agent;
+    use crate::utils::epee::ping_epee;
     // Iterate through all nodes, find the longest domain.
     pub const REMOTE_NODE_MAX_CHARS: usize = {
         let mut len = 0;
@@ -508,6 +454,7 @@ mod test {
     #[tokio::test]
     #[ignore]
     async fn full_ping() {
+        use crate::constants::*;
         use serde::{Deserialize, Serialize};
 
         #[derive(Deserialize, Serialize)]
@@ -516,12 +463,6 @@ mod test {
             jsonrpc: String,
         }
 
-        // Create HTTP client
-        let client = Client::new();
-
-        // Random User Agent
-        let rand_user_agent = get_user_agent();
-
         // Only fail this test if >50% of nodes fail.
         const HALF_REMOTE_NODES: usize = REMOTE_NODE_LENGTH / 2;
         // A string buffer to append the failed node data.
@@ -529,24 +470,22 @@ mod test {
         let mut failure_count = 0;
 
         let mut n = 1;
-        'outer: for (ip, _, rpc, zmq) in REMOTE_NODES {
-            println!("[{n}/{REMOTE_NODE_LENGTH}] {ip} | {rpc} | {zmq}");
-            let client = client.clone();
+        'outer: for (ip, _, _, zmq) in REMOTE_NODES {
+            println!("[{n}/{REMOTE_NODE_LENGTH}] {ip} |  | {zmq}");
             // Try 3 times before failure
             let mut i = 1;
-            let response = loop {
-                let request = client
-                    .post("http://".to_string() + ip + ":" + rpc + "/json_rpc")
-                    .header("User-Agent", rand_user_agent)
-                    .body(r#"{"jsonrpc":"2.0","id":"0","method":"get_info"}"#);
-
-                match request.send().await {
-                    Ok(response) => break response,
+            loop {
+                let addr = format!("{ip}:{NODE_P2P_PORT_DEFAULT}")
+                    .to_socket_addrs()
+                    .expect("hardcored valued should always convert to SocketAddr")
+                    .collect::<Vec<SocketAddr>>()[0];
+                match ping_epee(addr).await {
+                    Ok(_) => break,
                     Err(e) => {
                         println!("{:#?}", e);
                         if i >= 3 {
                             use std::fmt::Write;
-                            let _ = writeln!(failures, "Node failure: {ip}:{rpc}:{zmq}");
+                            let _ = writeln!(failures, "Node failure: {ip}: :{zmq}");
                             failure_count += 1;
                             continue 'outer;
                         }
@@ -554,10 +493,7 @@ mod test {
                         i += 1;
                     }
                 }
-            };
-            let getinfo = response.json::<GetInfo>().await.unwrap();
-            assert!(getinfo.id == "0");
-            assert!(getinfo.jsonrpc == "2.0");
+            }
             n += 1;
         }
 
@@ -575,3 +511,53 @@ mod test {
         }
     }
 }
+
+//     let xvb_eu = &Pool::XvBEurope;
+//     let addr = format!("{}:{}", xvb_eu.url(), NODE_P2P_PORT_DEFAULT)
+//         .to_socket_addrs()
+//         .expect("hardcored valued should always convert to SocketAddr")
+//         .collect::<Vec<SocketAddr>>()[0];
+//     ping_epee(addr).await
+// });
+// let ms_na = spawn(async move {
+//     info!("Node | ping North America Node");
+//     let xvb_na = &Pool::XvBNorthAmerica;
+//     let addr = format!("{}:{}", xvb_na.url(), NODE_P2P_PORT_DEFAULT)
+//         .to_socket_addrs()
+//         .expect("hardcored valued should always convert to SocketAddr")
+//         .collect::<Vec<SocketAddr>>()[0];
+//     ping_epee(addr).await
+// });
+// let pool = if let Ok(ms_eu) = ms_eu.await {
+//     if let Ok(ms_eu) = ms_eu {
+//         if let Ok(ms_na) = ms_na.await {
+//             if let Ok(ms_na) = ms_na {
+//                 // if two nodes are up, compare ping latency and return fastest.
+//                 if ms_na != TIMEOUT_NODE_PING && ms_eu != TIMEOUT_NODE_PING {
+//                     if ms_na < ms_eu {
+//                         Pool::XvBNorthAmerica
+//                     } else {
+//                         Pool::XvBEurope
+//                     }
+//                 } else if ms_na != TIMEOUT_NODE_PING && ms_eu == TIMEOUT_NODE_PING {
+//                     // if only na is online, return it.
+//                     Pool::XvBNorthAmerica
+//                 } else if ms_na == TIMEOUT_NODE_PING && ms_eu != TIMEOUT_NODE_PING {
+//                     // if only eu is online, return it.
+//                     Pool::XvBEurope
+//                 } else {
+//                     // if P2pool is returned, it means none of the two nodes are available.
+//                     Pool::P2pool(p2pool_state.current_port(
+//                         process_p2pool.lock().unwrap().is_alive(),
+//                         &p2pool_img.lock().unwrap(),
+//                     ))
+//                 }
+//             } else {
+//                 error!("ping has failed !");
+//                 Pool::P2pool(p2pool_state.current_port(
+//                     process_p2pool.lock().unwrap().is_alive(),
+//                     &p2pool_img.lock().unwrap(),
+//                 ))
+//             }
+//         } else {
+//             error!("ping has failed !");

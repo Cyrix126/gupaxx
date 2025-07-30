@@ -16,6 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub mod constants;
+pub mod epee;
 pub mod errors;
 pub mod ferris;
 pub mod human;

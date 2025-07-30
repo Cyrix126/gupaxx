@@ -28,10 +28,12 @@ use tokio::spawn;
 
 use crate::{
     GUPAX_VERSION_UNDERSCORE, XVB_NODE_EU, XVB_NODE_NA, XVB_NODE_PORT, XVB_NODE_RPC,
-    components::node::{GetInfo, TIMEOUT_NODE_PING},
+    components::node::GetInfo,
     disk::state::{P2pool, Xvb},
     helper::{Process, ProcessName, ProcessState, p2pool::ImgP2pool, xvb::output_console},
 };
+
+const TIMEOUT_XVB_P2POOL_NODE_PING: u128 = 5000;
 
 use super::PubXvbApi;
 #[derive(Clone, Debug, Default, PartialEq, Display, Deserialize)]
@@ -141,16 +143,20 @@ impl Pool {
         let pool = if let Ok(ms_eu) = ms_eu.await {
             if let Ok(ms_na) = ms_na.await {
                 // if two nodes are up, compare ping latency and return fastest.
-                if ms_na != TIMEOUT_NODE_PING && ms_eu != TIMEOUT_NODE_PING {
+                if ms_na != TIMEOUT_XVB_P2POOL_NODE_PING && ms_eu != TIMEOUT_XVB_P2POOL_NODE_PING {
                     if ms_na < ms_eu {
                         Pool::XvBNorthAmerica
                     } else {
                         Pool::XvBEurope
                     }
-                } else if ms_na != TIMEOUT_NODE_PING && ms_eu == TIMEOUT_NODE_PING {
+                } else if ms_na != TIMEOUT_XVB_P2POOL_NODE_PING
+                    && ms_eu == TIMEOUT_XVB_P2POOL_NODE_PING
+                {
                     // if only na is online, return it.
                     Pool::XvBNorthAmerica
-                } else if ms_na == TIMEOUT_NODE_PING && ms_eu != TIMEOUT_NODE_PING {
+                } else if ms_na == TIMEOUT_XVB_P2POOL_NODE_PING
+                    && ms_eu != TIMEOUT_XVB_P2POOL_NODE_PING
+                {
                     // if only eu is online, return it.
                     Pool::XvBEurope
                 } else {
@@ -219,7 +225,7 @@ impl Pool {
             // begin timer
             let now_req = Instant::now();
             // get and store time of request
-            vec_ms.push(match tokio::time::timeout(Duration::from_millis(TIMEOUT_NODE_PING as u64), req.send()).await {
+            vec_ms.push(match tokio::time::timeout(Duration::from_millis(TIMEOUT_XVB_P2POOL_NODE_PING as u64), req.send()).await {
             Ok(Ok(json_rpc)) => {
                 // Attempt to convert to JSON-RPC.
                 match json_rpc.bytes().await {
@@ -229,18 +235,18 @@ impl Pool {
                                 now_req.elapsed().as_millis()
                             } else {
                                 warn!("Ping | {ip} responded with valid get_info but is not in sync, remove this node!");
-                                TIMEOUT_NODE_PING
+                                TIMEOUT_XVB_P2POOL_NODE_PING
                             }
                         }
                         _ => {
                             warn!("Ping | {ip} responded but with invalid get_info, remove this node!");
-                            TIMEOUT_NODE_PING
+                            TIMEOUT_XVB_P2POOL_NODE_PING
                         }
                     },
-                    _ => TIMEOUT_NODE_PING,
+                    _ => TIMEOUT_XVB_P2POOL_NODE_PING,
                 }
             }
-            _ => TIMEOUT_NODE_PING,
+            _ => TIMEOUT_XVB_P2POOL_NODE_PING,
         });
         }
         let ms = *vec_ms

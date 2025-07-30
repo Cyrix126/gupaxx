@@ -26,6 +26,12 @@ distro = []
 log=[]
 
 [dependencies]
+## monero p2p stuff
+cuprate-wire = { git = "https://github.com/Cuprate/cuprate.git", branch = "expose-support-flags" }
+cuprate-p2p-core = { git = "https://github.com/Cuprate/cuprate.git", branch = "expose-support-flags" }
+tower = { git = "https://github.com/Cuprate/tower.git", rev = "6c7faf0", default-features = false }
+futures = "0.3"
+
 clap = {version="4.5", features=["cargo", "derive"]}
 anyhow = "1.0.98"
 benri = "0.1.12"

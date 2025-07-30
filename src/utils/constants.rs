@@ -383,6 +383,8 @@ pub const GUPAX_PATH_XMRIG_PROXY: &str = "The location of the XMRig-Proxy binary
 
 // P2Pool
 pub const P2POOL_PORT_DEFAULT: u16 = 3333;
+// will maybe be used later if we want to ping xvb p2pool node with epee
+pub const _P2POOL_P2P_PORT: u16 = 37889;
 pub const P2POOL_MAIN: &str = "Use the P2Pool main-chain. This P2Pool finds blocks faster, but has a higher difficulty. Suitable for miners with more than 100kH/s";
 pub const P2POOL_MINI: &str = "Use the P2Pool mini-chain. This P2Pool finds blocks slower, but has a lower difficulty. Suitable for miners with less than 100kH/s";
 pub const P2POOL_NANO: &str = "Use the P2Pool nano-chain. This P2Pool finds blocks slower, but has a lower difficulty. Suitable for miners with less than 50kH/s";
@@ -447,6 +449,7 @@ pub const LIST_SAVE: &str = "Save the current values to the already existing ent
 pub const LIST_DELETE: &str = "Delete the currently selected entry";
 pub const LIST_CLEAR: &str = "Clear all current values";
 // Node
+pub const NODE_P2P_PORT_DEFAULT: u16 = 18080;
 pub const NODE_RPC_PORT_DEFAULT: u16 = 18081;
 pub const NODE_ZMQ_PORT_DEFAULT: u16 = 18083;
 pub const NODE_INPUT: &str = "Send a command to Node";
