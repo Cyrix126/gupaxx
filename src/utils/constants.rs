@@ -548,7 +548,6 @@ pub const XVB_URL_PUBLIC_API: &str = "https://xmrvsbeast.com/p2pool/stats";
 pub const XVB_NODE_PORT: &str = "4247";
 pub const XVB_NODE_EU: &str = "eu.xmrvsbeast.com";
 pub const XVB_NODE_NA: &str = "na.xmrvsbeast.com";
-pub const XVB_NODE_RPC: &str = "18089";
 pub const XVB_URL_RULES: &str = "https://xmrvsbeast.com/p2pool/rules.html";
 // buffer in percentage of HR to have plus the requirement.
 pub const XVB_SIDE_MARGIN_1H: f32 = 1.20;
