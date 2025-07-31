@@ -16,21 +16,21 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use std::{
+    net::{SocketAddr, ToSocketAddrs},
     sync::{Arc, Mutex},
-    time::{Duration, Instant},
 };
 
 use derive_more::Display;
-use log::{error, info, warn};
-use reqwest_middleware::ClientWithMiddleware as Client;
+use log::{error, info};
 use serde::Deserialize;
 use tokio::spawn;
 
 use crate::{
-    GUPAX_VERSION_UNDERSCORE, XVB_NODE_EU, XVB_NODE_NA, XVB_NODE_PORT, XVB_NODE_RPC,
-    components::node::{GetInfo, TIMEOUT_NODE_PING},
+    GUPAX_VERSION_UNDERSCORE, XVB_NODE_EU, XVB_NODE_NA, XVB_NODE_PORT,
+    components::node::TIMEOUT_NODE_PING,
     disk::state::{P2pool, Xvb},
     helper::{Process, ProcessName, ProcessState, p2pool::ImgP2pool, xvb::output_console},
+    utils::node_latency::port_ping,
 };
 
 use super::PubXvbApi;
@@ -100,7 +100,6 @@ impl Pool {
 
     #[allow(clippy::too_many_arguments)]
     pub async fn update_fastest_pool(
-        client: &Client,
         pub_api_xvb: &Arc<Mutex<PubXvbApi>>,
         gui_api_xvb: &Arc<Mutex<PubXvbApi>>,
         process_xvb: &Arc<Mutex<Process>>,
@@ -127,19 +126,41 @@ impl Pool {
             }
             return;
         }
-        let client_eu = client.clone();
-        let client_na = client.clone();
         // two spawn to ping the two nodes in parallel and not one after the other.
-        let ms_eu = spawn(async move {
+        let ms_eu_handle = spawn(async move {
             info!("Node | ping XvBEuropean XvB Node");
-            Pool::ping(&Pool::XvBEurope.url(), &client_eu).await
+            let socket_address = format!("{}:{}", &Pool::XvBEurope.url(), &Pool::XvBEurope.port())
+                .to_socket_addrs()
+                .expect("hardcored valued should always convert to SocketAddr")
+                .collect::<Vec<SocketAddr>>()[0];
+
+            port_ping(socket_address, TIMEOUT_NODE_PING as u64).await
         });
-        let ms_na = spawn(async move {
+        let ms_na_handle = spawn(async move {
             info!("Node | ping North America Node");
-            Pool::ping(&Pool::XvBNorthAmerica.url(), &client_na).await
+            let socket_address = format!(
+                "{}:{}",
+                &Pool::XvBNorthAmerica.url(),
+                &Pool::XvBNorthAmerica.port()
+            )
+            .to_socket_addrs()
+            .expect("hardcored valued should always convert to SocketAddr")
+            .collect::<Vec<SocketAddr>>()[0];
+
+            port_ping(socket_address, TIMEOUT_NODE_PING as u64).await
         });
-        let pool = if let Ok(ms_eu) = ms_eu.await {
-            if let Ok(ms_na) = ms_na.await {
+        let ms_eu = ms_eu_handle
+            .await
+            .ok()
+            .unwrap_or_else(|| Err(anyhow::Error::msg("")))
+            .ok();
+        let ms_na = ms_na_handle
+            .await
+            .ok()
+            .unwrap_or_else(|| Err(anyhow::Error::msg("")))
+            .ok();
+        let pool = if let Some(ms_eu) = ms_eu {
+            if let Some(ms_na) = ms_na {
                 // if two nodes are up, compare ping latency and return fastest.
                 if ms_na != TIMEOUT_NODE_PING && ms_eu != TIMEOUT_NODE_PING {
                     if ms_na < ms_eu {
@@ -205,50 +226,5 @@ impl Pool {
             }
         }
         pub_api_xvb.lock().unwrap().stats_priv.pool = pool;
-    }
-    async fn ping(ip: &str, client: &Client) -> u128 {
-        let request = client
-            .post("http://".to_string() + ip + ":" + XVB_NODE_RPC + "/json_rpc")
-            .body(r#"{"jsonrpc":"2.0","id":"0","method":"get_info"}"#);
-        let mut vec_ms = vec![];
-        for _ in 0..6 {
-            // clone request
-            let req = request
-                .try_clone()
-                .expect("should be able to clone a str body");
-            // begin timer
-            let now_req = Instant::now();
-            // get and store time of request
-            vec_ms.push(match tokio::time::timeout(Duration::from_millis(TIMEOUT_NODE_PING as u64), req.send()).await {
-            Ok(Ok(json_rpc)) => {
-                // Attempt to convert to JSON-RPC.
-                match json_rpc.bytes().await {
-                    Ok(b) => match serde_json::from_slice::<GetInfo<'_>>(&b) {
-                        Ok(rpc) => {
-                            if rpc.result.mainnet && rpc.result.synchronized {
-                                now_req.elapsed().as_millis()
-                            } else {
-                                warn!("Ping | {ip} responded with valid get_info but is not in sync, remove this node!");
-                                TIMEOUT_NODE_PING
-                            }
-                        }
-                        _ => {
-                            warn!("Ping | {ip} responded but with invalid get_info, remove this node!");
-                            TIMEOUT_NODE_PING
-                        }
-                    },
-                    _ => TIMEOUT_NODE_PING,
-                }
-            }
-            _ => TIMEOUT_NODE_PING,
-        });
-        }
-        let ms = *vec_ms
-            .iter()
-            .min()
-            .expect("at least the value of timeout should be present");
-        info!("Ping | {ms}ms ... {ip}");
-        info!("{:?}", vec_ms);
-        ms
     }
 }

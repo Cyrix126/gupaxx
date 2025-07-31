@@ -20,6 +20,7 @@ pub mod errors;
 pub mod ferris;
 pub mod human;
 pub mod macros;
+pub mod node_latency;
 pub mod panic;
 pub mod regex;
 pub mod resets;

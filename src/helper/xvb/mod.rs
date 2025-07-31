@@ -853,14 +853,14 @@ fn signal_interrupt(
                     match pool {
                         Pool::XvBNorthAmerica|Pool::XvBEurope if was_alive => {
                             // a pool is failing. We need to first verify if a pool is available
-                        Pool::update_fastest_pool(&client, &gui_api, &pub_api, &process, &process_p2pool, &p2pool_img, &state_p2pool, &state_xvb).await;
+                        Pool::update_fastest_pool( &gui_api, &pub_api, &process, &process_p2pool, &p2pool_img, &state_p2pool, &state_xvb).await;
                             if process.lock().unwrap().state == ProcessState::OfflinePoolsAll {
                                 // No available pools, so launch a process to verify periodically.
                     sleep(Duration::from_secs(10)).await;
                     warn!("pool fail, set spawn that will retry pools and update state.");
                     while process.lock().unwrap().state == ProcessState::OfflinePoolsAll {
                         // this spawn will stay alive until pools are joignable or XvB process is stopped or failed.
-                        Pool::update_fastest_pool(&client, &pub_api, &gui_api, &process, &process_p2pool, &p2pool_img, &state_p2pool, &state_xvb).await;
+                        Pool::update_fastest_pool( &pub_api, &gui_api, &process, &process_p2pool, &p2pool_img, &state_p2pool, &state_xvb).await;
                         sleep(Duration::from_secs(10)).await;
                     }
                                 
@@ -873,7 +873,7 @@ fn signal_interrupt(
                         // Probably a start. We don't consider XMRig using XvB pools without algo.
                         // can update xmrig and check status of state in the same time.
                         // update prefred pool
-                        Pool::update_fastest_pool(&client, &pub_api, &gui_api, &process, &process_p2pool, &p2pool_img, &state_p2pool, &state_xvb).await;
+                        Pool::update_fastest_pool(&pub_api, &gui_api, &process, &process_p2pool, &p2pool_img, &state_p2pool, &state_xvb).await;
                         // Need to set XMRig to P2Pool if it wasn't. XMRig should have populated this value at his start.
                         // but if xmrig didn't start, don't update it.
                 
