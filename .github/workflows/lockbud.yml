@@ -15,7 +15,7 @@ jobs:
 
       - name: Generate code coverage
         run: |
-         git clone https://github.com/BurtonQin/lockbud.git
+         git clone https://github.com/Cyrix126/lockbud.git
          cd lockbud
          cargo install --path .
          cd ..
