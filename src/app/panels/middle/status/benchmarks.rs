@@ -47,7 +47,7 @@ impl Status {
                     ui.label(RichText::new("Your CPU").underline().color(BONE))
                         .on_hover_text(STATUS_SUBMENU_YOUR_CPU);
                     ui.label(cpu.cpu.as_str());
-                    ui.label(RichText::new("Total Banchmarks").underline().color(BONE))
+                    ui.label(RichText::new("Total Benchmarks").underline().color(BONE))
                         .on_hover_text(STATUS_SUBMENU_YOUR_BENCHMARKS);
                     ui.label(format!("{}", cpu.benchmarks));
                     // ui.add_sized([width, text], Label::new(format!("{}", cpu.benchmarks)));
