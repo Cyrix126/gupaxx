@@ -42,7 +42,7 @@ Next steps can be seen in this video tutorial:
 
 https://github.com/Cyrix126/gupaxx/assets/58007246/610cbfea-fd97-4150-95ed-9c8a7ef5ba94
 
-
+Or watch this video by Anti MoonBoy: https://www.youtube.com/watch?v=Kc4k1Cskajg
 
 4. Input your Monero address in the `P2Pool` tab
 5. Register the same address on [XMRvsBeast](https://xmrvsbeast.com)
