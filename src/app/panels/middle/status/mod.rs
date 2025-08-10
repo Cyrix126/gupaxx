@@ -19,9 +19,10 @@ use crate::{
     app::{Benchmark, eframe_impl::ProcessStatesGui},
     disk::{gupax_p2pool_api::GupaxP2poolApi, state::Status, status::*},
     helper::{
-        ProcessName, ProcessState, Sys,
+        ProcessName, ProcessState,
         node::PubNodeApi,
         p2pool::{ImgP2pool, PubP2poolApi},
+        sys_info::Sys,
         xrig::{
             xmrig::{ImgXmrig, PubXmrigApi},
             xmrig_proxy::PubXmrigProxyApi,

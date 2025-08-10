@@ -9,7 +9,7 @@ use crate::helper::xrig::xmrig::{ImgXmrig, PubXmrigApi};
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
 use crate::helper::xvb::nodes::Pool;
 use crate::helper::xvb::{PubXvbApi, rounds::XvbRound};
-use crate::helper::{ProcessName, Sys};
+use crate::helper::{ProcessName, sys_info::Sys};
 
 use crate::constants::*;
 use egui::{RichText, TextStyle};
