@@ -344,12 +344,12 @@ impl ProcessName {
 
 impl std::fmt::Display for ProcessState {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:#?}", self)
+        write!(f, "{self:#?}")
     }
 }
 impl std::fmt::Display for ProcessSignal {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        write!(f, "{:#?}", self)
+        write!(f, "{self:#?}")
     }
 }
 
@@ -415,22 +415,15 @@ impl Helper {
     fn check_reset_gui_output(output: &mut String, name: ProcessName) {
         let len = output.len();
         if len > GUI_OUTPUT_LEEWAY {
-            info!(
-                "{} Watchdog | Output is nearing {} bytes, resetting!",
-                name, MAX_GUI_OUTPUT_BYTES
-            );
+            info!("{name} Watchdog | Output is nearing {MAX_GUI_OUTPUT_BYTES} bytes, resetting!");
             let text = format!(
-                "{}\n{} GUI log is exceeding the maximum: {} bytes!\nI've reset the logs for you!\n{}\n\n\n\n",
-                HORI_CONSOLE, name, MAX_GUI_OUTPUT_BYTES, HORI_CONSOLE
+                "{HORI_CONSOLE}\n{name} GUI log is exceeding the maximum: {MAX_GUI_OUTPUT_BYTES} bytes!\nI've reset the logs for you!\n{HORI_CONSOLE}\n\n\n\n"
             );
             output.clear();
             output.push_str(&text);
-            debug!("{} Watchdog | Resetting GUI output ... OK", name);
+            debug!("{name} Watchdog | Resetting GUI output ... OK");
         } else {
-            debug!(
-                "{} Watchdog | GUI output reset not needed! Current byte length ... {}",
-                name, len
-            );
+            debug!("{name} Watchdog | GUI output reset not needed! Current byte length ... {len}");
         }
     }
 
@@ -648,7 +641,7 @@ impl Helper {
                     // Casting from u128 to u64 should be safe here, because [elapsed]
                     // is less than 1000, meaning it can fit into a u64 easy.
                     let sleep = (1000 - elapsed) as u64;
-                    debug!("Helper | END OF LOOP - Sleeping for [{}]ms...", sleep);
+                    debug!("Helper | END OF LOOP - Sleeping for [{sleep}]ms...");
                     sleep!(sleep);
                 } else {
                     debug!("Helper | END OF LOOP - Not sleeping!");
@@ -750,7 +743,7 @@ fn check_user_input(process: &Arc<Mutex<Process>>, stdin: &mut Box<dyn std::io::
                 error!("{} Watchdog | STDIN error: {}", lock.name, e);
             }
             #[cfg(target_family = "unix")]
-            if let Err(e) = writeln!(stdin, "{}", line) {
+            if let Err(e) = writeln!(stdin, "{line}") {
                 error!("{} Watchdog | STDIN error: {}", lock.name, e);
             }
             // Flush.
@@ -807,10 +800,7 @@ fn signal_end(
             exit_status,
             HORI_CONSOLE
         ) {
-            error!(
-                "{} Watchdog | GUI Uptime/Exit status write failed: {}",
-                name, e
-            );
+            error!("{name} Watchdog | GUI Uptime/Exit status write failed: {e}");
         }
         process.signal = ProcessSignal::None;
         debug!("{} Watchdog | Stop SIGNAL done, breaking", process.name,);
@@ -851,10 +841,7 @@ fn signal_end(
             exit_status,
             HORI_CONSOLE
         ) {
-            error!(
-                "{} Watchdog | GUI Uptime/Exit status write failed: {}",
-                name, e
-            );
+            error!("{name} Watchdog | GUI Uptime/Exit status write failed: {e}");
         }
         process.state = ProcessState::Waiting;
         debug!("{} Watchdog | Restart SIGNAL done, breaking", process.name,);
@@ -868,12 +855,9 @@ async fn sleep_end_loop(now: Instant, name: ProcessName) {
     // Since logic goes off if less than 1000, casting should be safe
     if elapsed < 1000 {
         let sleep = (1000 - elapsed) as u64;
-        debug!(
-            "{} Watchdog | END OF LOOP - Sleeping for [{}]ms...",
-            name, sleep
-        );
+        debug!("{name} Watchdog | END OF LOOP - Sleeping for [{sleep}]ms...");
         tokio::time::sleep(Duration::from_millis(sleep)).await;
     } else {
-        debug!("{} Watchdog | END OF LOOP - Not sleeping!", name);
+        debug!("{name} Watchdog | END OF LOOP - Not sleeping!");
     }
 }

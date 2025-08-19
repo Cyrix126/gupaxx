@@ -187,13 +187,13 @@ impl App {
     #[inline(never)]
     pub fn save_before_quit(&mut self) {
         if let Err(e) = State::save(&mut self.state, &self.state_path) {
-            error!("State file: {}", e);
+            error!("State file: {e}");
         }
         if let Err(e) = Node::save(&self.node_vec, &self.node_path) {
-            error!("Node list: {}", e);
+            error!("Node list: {e}");
         }
         if let Err(e) = Pool::save(&self.pool_vec, &self.pool_path) {
-            error!("Pool list: {}", e);
+            error!("Pool list: {e}");
         }
     }
 
@@ -252,7 +252,7 @@ impl App {
         let pid = match sysinfo::get_current_pid() {
             Ok(pid) => pid,
             Err(e) => {
-                error!("App Init | Failed to get sysinfo PID: {}", e);
+                error!("App Init | Failed to get sysinfo PID: {e}");
                 exit(1)
             }
         };
@@ -352,7 +352,7 @@ impl App {
             pool_path: PathBuf::new(),
             backup_hosts: None,
             version: GUPAX_VERSION,
-            name_version: format!("Gupaxx {}", GUPAX_VERSION),
+            name_version: format!("Gupaxx {GUPAX_VERSION}"),
             ip_local,
             ip_public,
             proxy_port_reachable,
@@ -366,7 +366,7 @@ impl App {
         app.exe = match get_exe() {
             Ok(exe) => exe,
             Err(e) => {
-                panic = format!("get_exe(): {}", e);
+                panic = format!("get_exe(): {e}");
                 app.error_state
                     .set(panic.clone(), ErrorFerris::Panic, ErrorButtons::Quit);
                 String::new()
@@ -376,7 +376,7 @@ impl App {
         app.dir = match get_exe_dir() {
             Ok(dir) => dir,
             Err(e) => {
-                panic = format!("get_exe_dir(): {}", e);
+                panic = format!("get_exe_dir(): {e}");
                 app.error_state
                     .set(panic.clone(), ErrorFerris::Panic, ErrorButtons::Quit);
                 String::new()
@@ -386,7 +386,7 @@ impl App {
         app.os_data_path = match get_gupax_data_path() {
             Ok(dir) => dir,
             Err(e) => {
-                panic = format!("get_os_data_path(): {}", e);
+                panic = format!("get_os_data_path(): {e}");
                 app.error_state
                     .set(panic.clone(), ErrorFerris::Panic, ErrorButtons::Quit);
                 PathBuf::new()
@@ -420,7 +420,7 @@ impl App {
         app.state = match State::get(&app.state_path) {
             Ok(toml) => toml,
             Err(err) => {
-                error!("State ... {}", err);
+                error!("State ... {err}");
                 let set = match err {
                     Io(e) => Some((e.to_string(), ErrorFerris::Panic, ErrorButtons::Quit)),
                     Path(e) => Some((e.to_string(), ErrorFerris::Panic, ErrorButtons::Quit)),
@@ -446,7 +446,7 @@ impl App {
         app.node_vec = match Node::get(&app.node_path) {
             Ok(toml) => toml,
             Err(err) => {
-                error!("Node ... {}", err);
+                error!("Node ... {err}");
                 let (e, ferris, button) = match err {
                     Io(e) => (e.to_string(), ErrorFerris::Panic, ErrorButtons::Quit),
                     Path(e) => (e.to_string(), ErrorFerris::Panic, ErrorButtons::Quit),
@@ -468,7 +468,7 @@ impl App {
         app.pool_vec = match Pool::get(&app.pool_path) {
             Ok(toml) => toml,
             Err(err) => {
-                error!("Pool ... {}", err);
+                error!("Pool ... {err}");
                 let (e, ferris, button) = match err {
                     Io(e) => (e.to_string(), ErrorFerris::Panic, ErrorButtons::Quit),
                     Path(e) => (e.to_string(), ErrorFerris::Panic, ErrorButtons::Quit),
@@ -492,7 +492,7 @@ impl App {
         match GupaxP2poolApi::create_all_files(&app.gupax_p2pool_api_path) {
             Ok(_) => info!("App Init | Creating Gupax-P2Pool API files ... OK"),
             Err(err) => {
-                error!("GupaxP2poolApi ... {}", err);
+                error!("GupaxP2poolApi ... {err}");
                 let (e, ferris, button) = match err {
                     Io(e) => (e.to_string(), ErrorFerris::Panic, ErrorButtons::Quit),
                     Path(e) => (e.to_string(), ErrorFerris::Panic, ErrorButtons::Quit),
@@ -514,7 +514,7 @@ impl App {
                 );
             }
             Err(err) => {
-                error!("GupaxP2poolApi ... {}", err);
+                error!("GupaxP2poolApi ... {err}");
                 let (e, ferris, button) = match err {
                     Io(e) => (e.to_string(), ErrorFerris::Panic, ErrorButtons::Quit),
                     Path(e) => (e.to_string(), ErrorFerris::Panic, ErrorButtons::Quit),
@@ -689,8 +689,8 @@ impl App {
         #[cfg(target_family = "unix")]
         if sudo_check::check() != sudo_check::RunningAs::User {
             let id = sudo_check::check();
-            error!("Unix | Regular user not detected: [{:?}]", id);
-            app.error_state.set(format!("Gupaxx was launched as: [{:?}]\nPlease launch Gupax with regular user permissions.", id), ErrorFerris::Panic, ErrorButtons::Quit);
+            error!("Unix | Regular user not detected: [{id:?}]");
+            app.error_state.set(format!("Gupaxx was launched as: [{id:?}]\nPlease launch Gupax with regular user permissions."), ErrorFerris::Panic, ErrorButtons::Quit);
         }
         // macOS re-locates "dangerous" applications into some read-only "/private" directory.
         // It _seems_ to be fixed by moving [Gupax.app] into "/Applications".

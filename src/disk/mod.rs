@@ -117,7 +117,7 @@ pub fn create_gupax_dir(path: &PathBuf) -> Result<(), TomlError> {
     match fs::create_dir_all(path) {
         Ok(_) => info!("OS | Create data path ... OK"),
         Err(e) => {
-            error!("OS | Create data path ... FAIL ... {}", e);
+            error!("OS | Create data path ... FAIL ... {e}");
             return Err(TomlError::Io(e));
         }
     }
@@ -152,11 +152,11 @@ pub fn create_gupax_p2pool_dir(path: &PathBuf) -> Result<(), TomlError> {
 pub fn read_to_string(file: File, path: &PathBuf) -> Result<String, TomlError> {
     match fs::read_to_string(path) {
         Ok(string) => {
-            info!("{:?} | Read ... OK", file);
+            info!("{file:?} | Read ... OK");
             Ok(string)
         }
         Err(err) => {
-            warn!("{:?} | Read ... FAIL", file);
+            warn!("{file:?} | Read ... FAIL");
             Err(TomlError::Io(err))
         }
     }
@@ -164,11 +164,11 @@ pub fn read_to_string(file: File, path: &PathBuf) -> Result<String, TomlError> {
 
 // Write str to console with [info!] surrounded by "---"
 pub fn print_dash(toml: &str) {
-    info!("{}", HORIZONTAL);
+    info!("{HORIZONTAL}");
     for i in toml.lines() {
-        info!("{}", i);
+        info!("{i}");
     }
-    info!("{}", HORIZONTAL);
+    info!("{HORIZONTAL}");
 }
 
 // Turn relative paths into absolute paths

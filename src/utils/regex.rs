@@ -140,52 +140,52 @@ pub fn num_lines(s: &str) -> usize {
 pub fn nb_current_shares(s: &str) -> Option<u32> {
     static CURRENT_SHARE: Lazy<Regex> =
         Lazy::new(|| Regex::new(r"Your shares               = (?P<nb>\d+) blocks").unwrap());
-    if let Some(c) = CURRENT_SHARE.captures(s) {
-        if let Some(m) = c.name("nb") {
-            return Some(m.as_str().parse::<u32>().unwrap_or_else(|_| {
-                panic!(
-                    "{}",
-                    [
-                        "the number of shares should have been a unit number but is :\n",
-                        m.as_str(),
-                    ]
-                    .concat()
-                )
-            }));
-        }
+    if let Some(c) = CURRENT_SHARE.captures(s)
+        && let Some(m) = c.name("nb")
+    {
+        return Some(m.as_str().parse::<u32>().unwrap_or_else(|_| {
+            panic!(
+                "{}",
+                [
+                    "the number of shares should have been a unit number but is :\n",
+                    m.as_str(),
+                ]
+                .concat()
+            )
+        }));
     }
     None
 }
 pub fn detect_pool_xmrig(s: &str, proxy_port: u16, p2pool_port: u16) -> Option<Pool> {
     static CURRENT_SHARE: Lazy<Regex> =
         Lazy::new(|| Regex::new(r"(use pool|new job from) (?P<pool>.*:\d{1,5})(| diff)").unwrap());
-    if let Some(c) = CURRENT_SHARE.captures(s) {
-        if let Some(m) = c.name("pool") {
-            match m.as_str() {
-                // if user change address of local p2pool, it could create issue
-                x if x.contains("127.0.0.1") => {
-                    let port = x.split_once(":").unwrap_or_default().1.parse::<u16>();
-                    if let Ok(port) = port {
-                        if port == proxy_port {
-                            return Some(Pool::XmrigProxy(port));
-                        }
-                        if port == p2pool_port {
-                            return Some(Pool::P2pool(port));
-                        }
-                        return Some(Pool::Custom("127.0.0.1".to_string(), port));
+    if let Some(c) = CURRENT_SHARE.captures(s)
+        && let Some(m) = c.name("pool")
+    {
+        match m.as_str() {
+            // if user change address of local p2pool, it could create issue
+            x if x.contains("127.0.0.1") => {
+                let port = x.split_once(":").unwrap_or_default().1.parse::<u16>();
+                if let Ok(port) = port {
+                    if port == proxy_port {
+                        return Some(Pool::XmrigProxy(port));
                     }
-                }
-                "eu.xmrvsbeast.com:4247" => {
-                    return Some(Pool::XvBEurope);
-                }
-                "na.xmrvsbeast.com:4247" => {
-                    return Some(Pool::XvBNorthAmerica);
-                }
-                x => {
-                    let (ip, port) = x.split_once(":").unwrap_or_default();
-                    if let Ok(port) = port.parse() {
-                        return Some(Pool::Custom(ip.to_string(), port));
+                    if port == p2pool_port {
+                        return Some(Pool::P2pool(port));
                     }
+                    return Some(Pool::Custom("127.0.0.1".to_string(), port));
+                }
+            }
+            "eu.xmrvsbeast.com:4247" => {
+                return Some(Pool::XvBEurope);
+            }
+            "na.xmrvsbeast.com:4247" => {
+                return Some(Pool::XvBNorthAmerica);
+            }
+            x => {
+                let (ip, port) = x.split_once(":").unwrap_or_default();
+                if let Ok(port) = port.parse() {
+                    return Some(Pool::Custom(ip.to_string(), port));
                 }
             }
         }

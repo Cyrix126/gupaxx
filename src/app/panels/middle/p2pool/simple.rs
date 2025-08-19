@@ -77,7 +77,7 @@ impl P2pool {
                     }
                     debug!("P2Pool Tab | Rendering [ComboBox] of Remote Nodes");
                     let ip_location = format_ip_location(&self.node, false);
-                    let text = RichText::new(format!(" ⏺ {}ms | {}", ms, ip_location)).color(color);
+                    let text = RichText::new(format!(" ⏺ {ms}ms | {ip_location}")).color(color);
                     ui.style_mut().override_text_style = Some(egui::TextStyle::Small);
                     ui.spacing_mut().item_spacing.y = 0.0;
                     ComboBox::from_id_salt("remote_nodes")
@@ -87,7 +87,7 @@ impl P2pool {
                             for data in ping.lock().unwrap().nodes.iter() {
                                 let ms = format_ms(data.ms);
                                 let ip_location = format_ip_location(data.ip, true);
-                                let text = RichText::new(format!(" ⏺ {} | {}", ms, ip_location))
+                                let text = RichText::new(format!(" ⏺ {ms} | {ip_location}"))
                                     .color(data.color);
                                 ui.selectable_value(&mut self.node, data.ip.to_string(), text);
                             }

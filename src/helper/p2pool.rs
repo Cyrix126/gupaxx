@@ -90,11 +90,11 @@ impl Helper {
                     continue;
                 }
             } else {
-                if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
-                    error!("P2Pool PTY Parse | Output error: {}", e);
+                if let Err(e) = writeln!(output_parse.lock().unwrap(), "{line}") {
+                    error!("P2Pool PTY Parse | Output error: {e}");
                 }
-                if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
-                    error!("P2Pool PTY Pub | Output error: {}", e);
+                if let Err(e) = writeln!(output_pub.lock().unwrap(), "{line}") {
+                    error!("P2Pool PTY Pub | Output error: {e}");
                 }
                 if i > 20 {
                     break;
@@ -114,8 +114,7 @@ impl Helper {
                 if contains_yourhashrate(&line) {
                     if let Some(ehr) = estimated_hr(&line) {
                         debug!(
-                            "P2pool | PTY getting current estimated HR data from status: {} KH/s",
-                            ehr
+                            "P2pool | PTY getting current estimated HR data from status: {ehr} KH/s"
                         );
                         // multiply by a thousand because value is given as kH/s instead H/s
                         gui_api.lock().unwrap().sidechain_ehr = ehr;
@@ -125,8 +124,7 @@ impl Helper {
                         );
                     } else {
                         error!(
-                            "P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {}",
-                            line
+                            "P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {line}"
                         );
                     }
                 }
@@ -134,14 +132,12 @@ impl Helper {
                     // update sidechain shares
                     if let Some(shares) = nb_current_shares(&line) {
                         debug!(
-                            "P2pool | PTY getting current shares data from status: {} share",
-                            shares
+                            "P2pool | PTY getting current shares data from status: {shares} share"
                         );
                         gui_api.lock().unwrap().sidechain_shares = shares;
                     } else {
                         error!(
-                            "P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {}",
-                            line
+                            "P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {line}"
                         );
                     }
                 }
@@ -153,7 +149,7 @@ impl Helper {
             }
             //			println!("{}", line); // For debugging.
             if P2POOL_REGEX.payout.is_match(&line) {
-                debug!("P2Pool PTY | Found payout, attempting write: {}", line);
+                debug!("P2Pool PTY | Found payout, attempting write: {line}");
                 let (date, atomic_unit, block) = PayoutOrd::parse_raw_payout_line(&line);
                 let formatted_log_line = GupaxP2poolApi::format_payout(&date, &atomic_unit, &block);
                 GupaxP2poolApi::add_payout(
@@ -167,14 +163,14 @@ impl Helper {
                     &gupax_p2pool_api.lock().unwrap(),
                     &formatted_log_line,
                 ) {
-                    error!("P2Pool PTY GupaxP2poolApi | Write error: {}", e);
+                    error!("P2Pool PTY GupaxP2poolApi | Write error: {e}");
                 }
             }
-            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
-                error!("P2Pool PTY Parse | Output error: {}", e);
+            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{line}") {
+                error!("P2Pool PTY Parse | Output error: {e}");
             }
-            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
-                error!("P2Pool PTY Pub | Output error: {}", e);
+            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{line}") {
+                error!("P2Pool PTY Pub | Output error: {e}");
             }
         }
     }
@@ -255,10 +251,10 @@ impl Helper {
             let mut path_nano_config = path.to_path_buf();
             path_nano_config.pop();
             path_nano_config.push("nano_config.json");
-            if path_nano_config.try_exists().is_ok_and(|x| !x) {
-                if let Err(err) = std::fs::write(&path_nano_config, P2POOL_NANO_CONFIG) {
-                    error!("Could not write the p2pool nano chain config file: {err}");
-                }
+            if path_nano_config.try_exists().is_ok_and(|x| !x)
+                && let Err(err) = std::fs::write(&path_nano_config, P2POOL_NANO_CONFIG)
+            {
+                error!("Could not write the p2pool nano chain config file: {err}");
             }
             // also replace the peers list
             let mut path_peer_list = path.to_path_buf();
@@ -290,8 +286,7 @@ impl Helper {
 
         // Print arguments & user settings to console
         crate::disk::print_dash(&format!(
-            "P2Pool | Launch arguments: {:#?} | Local API Path: {:#?} | Network API Path: {:#?} | Pool API Path: {:#?} | P2P API Path {:#?}",
-            args, api_path_local, api_path_network, api_path_pool, api_path_p2p
+            "P2Pool | Launch arguments: {args:#?} | Local API Path: {api_path_local:#?} | Network API Path: {api_path_network:#?} | Pool API Path: {api_path_pool:#?} | P2P API Path {api_path_p2p:#?}"
         ));
 
         // Spawn watchdog thread
@@ -646,10 +641,7 @@ impl Helper {
         // Attempt to remove stale API file
         match std::fs::remove_file(&api_path_local) {
             Ok(_) => info!("P2Pool | Attempting to remove stale API file ... OK"),
-            Err(e) => warn!(
-                "P2Pool | Attempting to remove stale API file ... FAIL ... {}",
-                e
-            ),
+            Err(e) => warn!("P2Pool | Attempting to remove stale API file ... FAIL ... {e}"),
         }
         // Attempt to create a default empty one.
         use std::io::Write;
@@ -657,30 +649,21 @@ impl Helper {
             let text = r#"{"hashrate_15m":0,"hashrate_1h":0,"hashrate_24h":0,"shares_found":0,"average_effort":0.0,"current_effort":0.0,"connections":0}"#;
             match std::fs::write(&api_path_local, text) {
                 Ok(_) => info!("P2Pool | Creating default empty API file ... OK"),
-                Err(e) => warn!(
-                    "P2Pool | Creating default empty API file ... FAIL ... {}",
-                    e
-                ),
+                Err(e) => warn!("P2Pool | Creating default empty API file ... FAIL ... {e}"),
             }
         }
         debug!("P2Pool | Cleaning old [p2p] API files...");
         // Attempt to remove stale API file
         match std::fs::remove_file(&api_path_p2p) {
             Ok(_) => info!("P2Pool | Attempting to remove stale API file ... OK"),
-            Err(e) => warn!(
-                "P2Pool | Attempting to remove stale API file ... FAIL ... {}",
-                e
-            ),
+            Err(e) => warn!("P2Pool | Attempting to remove stale API file ... FAIL ... {e}"),
         }
         // Attempt to create a default empty one.
         if std::fs::File::create(&api_path_p2p).is_ok() {
             let text = r#"{"connections":0,"incoming_connections":0,"peer_list_size":0,"peers":[],"uptime":0}"#;
             match std::fs::write(&api_path_p2p, text) {
                 Ok(_) => info!("P2Pool | Creating default empty API file ... OK"),
-                Err(e) => warn!(
-                    "P2Pool | Creating default empty API file ... FAIL ... {}",
-                    e
-                ),
+                Err(e) => warn!("P2Pool | Creating default empty API file ... FAIL ... {e}"),
             }
         }
         let start = process.lock().unwrap().start;
@@ -777,18 +760,16 @@ impl Helper {
                 if let (Ok(network_api), Ok(pool_api)) = (
                     Self::path_to_string(&api_path_network, ProcessName::P2pool),
                     Self::path_to_string(&api_path_pool, ProcessName::P2pool),
+                ) && let (Ok(network_api), Ok(pool_api)) = (
+                    PrivP2poolNetworkApi::from_str(&network_api),
+                    PrivP2poolPoolApi::from_str(&pool_api),
                 ) {
-                    if let (Ok(network_api), Ok(pool_api)) = (
-                        PrivP2poolNetworkApi::from_str(&network_api),
-                        PrivP2poolPoolApi::from_str(&pool_api),
-                    ) {
-                        PubP2poolApi::update_from_network_pool(
-                            &mut pub_api_lock,
-                            network_api,
-                            pool_api,
-                        );
-                        last_p2pool_request = tokio::time::Instant::now();
-                    }
+                    PubP2poolApi::update_from_network_pool(
+                        &mut pub_api_lock,
+                        network_api,
+                        pool_api,
+                    );
+                    last_p2pool_request = tokio::time::Instant::now();
                 }
 
                 let last_status_request_expired =
@@ -803,11 +784,11 @@ impl Helper {
                     }
                     #[cfg(target_family = "unix")]
                     if let Err(e) = writeln!(stdin, "statusfromgupaxx") {
-                        error!("P2Pool Watchdog | STDIN error: {}", e);
+                        error!("P2Pool Watchdog | STDIN error: {e}");
                     }
                     // Flush.
                     if let Err(e) = stdin.flush() {
-                        error!("P2Pool Watchdog | STDIN flush error: {}", e);
+                        error!("P2Pool Watchdog | STDIN flush error: {e}");
                     }
                     last_status_request = tokio::time::Instant::now();
                 }
@@ -1059,7 +1040,7 @@ impl PubP2poolApi {
                         sum += num;
                         count += 1;
                     }
-                    Err(e) => error!("P2Pool | Total XMR sum calculation error: [{}]", e),
+                    Err(e) => error!("P2Pool | Total XMR sum calculation error: [{e}]"),
                 }
             }
         }
@@ -1110,25 +1091,17 @@ impl PubP2poolApi {
         let xmr_month = xmr_day * 30.0;
 
         if payouts_new != 0 {
+            debug!("P2Pool Watchdog | New [Payout] found in output ... {payouts_new}");
+            debug!("P2Pool Watchdog | Total [Payout] should be ... {payouts}");
             debug!(
-                "P2Pool Watchdog | New [Payout] found in output ... {}",
-                payouts_new
-            );
-            debug!("P2Pool Watchdog | Total [Payout] should be ... {}", payouts);
-            debug!(
-                "P2Pool Watchdog | Correct [Payout per] should be ... [{}/hour, {}/day, {}/month]",
-                payouts_hour, payouts_day, payouts_month
+                "P2Pool Watchdog | Correct [Payout per] should be ... [{payouts_hour}/hour, {payouts_day}/day, {payouts_month}/month]"
             );
         }
         if xmr_new != 0.0 {
+            debug!("P2Pool Watchdog | New [XMR mined] found in output ... {xmr_new}");
+            debug!("P2Pool Watchdog | Total [XMR mined] should be ... {xmr}");
             debug!(
-                "P2Pool Watchdog | New [XMR mined] found in output ... {}",
-                xmr_new
-            );
-            debug!("P2Pool Watchdog | Total [XMR mined] should be ... {}", xmr);
-            debug!(
-                "P2Pool Watchdog | Correct [XMR mined per] should be ... [{}/hour, {}/day, {}/month]",
-                xmr_hour, xmr_day, xmr_month
+                "P2Pool Watchdog | Correct [XMR mined per] should be ... [{xmr_hour}/hour, {xmr_day}/day, {xmr_month}/month]"
             );
         }
 
@@ -1327,7 +1300,7 @@ impl PrivP2poolLocalApi {
         match serde_json::from_str::<Self>(string) {
             Ok(a) => Ok(a),
             Err(e) => {
-                warn!("P2Pool Local API | Could not deserialize API data: {}", e);
+                warn!("P2Pool Local API | Could not deserialize API data: {e}");
                 Err(e)
             }
         }
@@ -1366,7 +1339,7 @@ impl PrivP2poolNetworkApi {
         match serde_json::from_str::<Self>(string) {
             Ok(a) => Ok(a),
             Err(e) => {
-                warn!("P2Pool Network API | Could not deserialize API data: {}", e);
+                warn!("P2Pool Network API | Could not deserialize API data: {e}");
                 Err(e)
             }
         }
@@ -1397,7 +1370,7 @@ impl PrivP2poolPoolApi {
         match serde_json::from_str::<Self>(string) {
             Ok(a) => Ok(a),
             Err(e) => {
-                warn!("P2Pool Pool API | Could not deserialize API data: {}", e);
+                warn!("P2Pool Pool API | Could not deserialize API data: {e}");
                 Err(e)
             }
         }
@@ -1451,7 +1424,7 @@ impl PrivP2PoolP2PApi {
         match serde_json::from_str::<Self>(string) {
             Ok(a) => Ok(a),
             Err(e) => {
-                warn!("P2Pool Network API | Could not deserialize API data: {}", e);
+                warn!("P2Pool Network API | Could not deserialize API data: {e}");
                 Err(e)
             }
         }

@@ -82,11 +82,11 @@ pub fn clean_dir() -> Result<(), anyhow::Error> {
 pub fn print_disk_file(path: &PathBuf) {
     match std::fs::read_to_string(path) {
         Ok(string) => {
-            print!("{}", string);
+            print!("{string}");
             exit(0);
         }
         Err(e) => {
-            error!("{}", e);
+            error!("{e}");
             exit(1);
         }
     }
@@ -100,28 +100,28 @@ pub fn print_gupax_p2pool_api(gupax_p2pool_api: &Arc<Mutex<GupaxP2poolApi>>) {
     let log = match std::fs::read_to_string(&api.path_log) {
         Ok(string) => string,
         Err(e) => {
-            error!("{}", e);
+            error!("{e}");
             exit(1);
         }
     };
     let payout = match std::fs::read_to_string(&api.path_payout) {
         Ok(string) => string,
         Err(e) => {
-            error!("{}", e);
+            error!("{e}");
             exit(1);
         }
     };
     let xmr = match std::fs::read_to_string(&api.path_xmr) {
         Ok(string) => string,
         Err(e) => {
-            error!("{}", e);
+            error!("{e}");
             exit(1);
         }
     };
     let xmr = match xmr.trim().parse::<u64>() {
         Ok(o) => crate::xmr::AtomicUnit::from_u64(o),
         Err(e) => {
-            warn!("GupaxP2poolApi | [xmr] parse error: {}", e);
+            warn!("GupaxP2poolApi | [xmr] parse error: {e}");
             exit(1);
         }
     };
@@ -180,12 +180,12 @@ pub fn clamp_scale(scale: f32) -> f32 {
 }
 pub fn output_console(output: &mut String, msg: &str, p_name: ProcessName) {
     if let Err(e) = writeln!(output, "{}{msg}", datetimeonsole()) {
-        error!("{} Watchdog | GUI status write failed: {}", p_name, e);
+        error!("{p_name} Watchdog | GUI status write failed: {e}");
     }
 }
 pub fn output_console_without_time(output: &mut String, msg: &str, p_name: ProcessName) {
     if let Err(e) = writeln!(output, "{msg}") {
-        error!("{} Watchdog | GUI status write failed: {}", p_name, e);
+        error!("{p_name} Watchdog | GUI status write failed: {e}");
     }
 }
 fn datetimeonsole() -> String {

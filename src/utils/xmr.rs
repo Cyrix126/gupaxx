@@ -160,7 +160,7 @@ impl PayoutOrd {
         let date = match P2POOL_REGEX.date.find(line) {
             Some(date) => date.as_str().to_string(),
             None => {
-                error!("P2Pool | Date parse error: [{}]", line);
+                error!("P2Pool | Date parse error: [{line}]");
                 "????-??-?? ??:??:??.????".to_string()
             }
         };
@@ -170,16 +170,16 @@ impl PayoutOrd {
                 match word.as_str().parse::<f64>() {
                     Ok(au) => AtomicUnit::from_f64(au),
                     Err(e) => {
-                        error!("P2Pool | AtomicUnit parse error: [{}] on [{}]", e, line);
+                        error!("P2Pool | AtomicUnit parse error: [{e}] on [{line}]");
                         AtomicUnit::new()
                     }
                 }
             } else {
-                error!("P2Pool | AtomicUnit parse error: [{}]", line);
+                error!("P2Pool | AtomicUnit parse error: [{line}]");
                 AtomicUnit::new()
             }
         } else {
-            error!("P2Pool | AtomicUnit parse error: [{}]", line);
+            error!("P2Pool | AtomicUnit parse error: [{line}]");
             AtomicUnit::new()
         };
         // Block
@@ -188,16 +188,16 @@ impl PayoutOrd {
                 match word.as_str().parse::<u64>() {
                     Ok(b) => HumanNumber::from_u64(b),
                     Err(e) => {
-                        error!("P2Pool | Block parse error: [{}] on [{}]", e, line);
+                        error!("P2Pool | Block parse error: [{e}] on [{line}]");
                         HumanNumber::unknown()
                     }
                 }
             } else {
-                error!("P2Pool | Block parse error: [{}]", line);
+                error!("P2Pool | Block parse error: [{line}]");
                 HumanNumber::unknown()
             }
         } else {
-            error!("P2Pool | Block parse error: [{}]", line);
+            error!("P2Pool | Block parse error: [{line}]");
             HumanNumber::unknown()
         };
         (date, atomic_unit, block)
@@ -209,7 +209,7 @@ impl PayoutOrd {
         let date = match P2POOL_REGEX.date.find(line) {
             Some(date) => date.as_str().to_string(),
             None => {
-                error!("P2Pool | Date parse error: [{}]", line);
+                error!("P2Pool | Date parse error: [{line}]");
                 "????-??-?? ??:??:??.????".to_string()
             }
         };
@@ -218,19 +218,19 @@ impl PayoutOrd {
             match word.as_str().parse::<f64>() {
                 Ok(au) => AtomicUnit::from_f64(au),
                 Err(e) => {
-                    error!("P2Pool | AtomicUnit parse error: [{}] on [{}]", e, line);
+                    error!("P2Pool | AtomicUnit parse error: [{e}] on [{line}]");
                     AtomicUnit::new()
                 }
             }
         } else {
-            error!("P2Pool | AtomicUnit parse error: [{}]", line);
+            error!("P2Pool | AtomicUnit parse error: [{line}]");
             AtomicUnit::new()
         };
         // Block
         let block = match P2POOL_REGEX.block_comma.find(line) {
             Some(b) => HumanNumber::from_str(b.as_str()),
             None => {
-                error!("P2Pool | Block parse error: [{}]", line);
+                error!("P2Pool | Block parse error: [{line}]");
                 HumanNumber::unknown()
             }
         };
@@ -251,7 +251,7 @@ impl PayoutOrd {
         let mut vec: Vec<(String, AtomicUnit, HumanNumber)> =
             Vec::with_capacity(70 * amount_of_lines);
         for line in log.lines() {
-            debug!("PayoutOrd | Parsing line: [{}]", line);
+            debug!("PayoutOrd | Parsing line: [{line}]");
             vec.push(Self::parse_formatted_payout_line(line));
         }
         *self = Self(vec);

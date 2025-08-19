@@ -57,19 +57,19 @@ impl Helper {
         // Run a ANSI escape sequence filter.
         while let Some(Ok(line)) = stdout.next() {
             let line = strip_ansi_escapes::strip_str(line);
-            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
-                error!("Node PTY Parse | Output error: {}", e);
+            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{line}") {
+                error!("Node PTY Parse | Output error: {e}");
             }
-            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
-                error!("Node PTY Pub | Output error: {}", e);
+            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{line}") {
+                error!("Node PTY Pub | Output error: {e}");
             }
         }
         while let Some(Ok(line)) = stdout.next() {
-            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
-                error!("P2Pool PTY Parse | Output error: {}", e);
+            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{line}") {
+                error!("P2Pool PTY Parse | Output error: {e}");
             }
-            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
-                error!("P2Pool PTY Pub | Output error: {}", e);
+            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{line}") {
+                error!("P2Pool PTY Pub | Output error: {e}");
             }
         }
     }
@@ -193,7 +193,7 @@ impl Helper {
         let args = Self::build_node_args(state, mode);
 
         // Print arguments & user settings to console
-        crate::disk::print_dash(&format!("Node | Launch arguments: {:#?}", args));
+        crate::disk::print_dash(&format!("Node | Launch arguments: {args:#?}"));
 
         // Spawn watchdog thread
         let process = Arc::clone(&helper.lock().unwrap().node);
@@ -320,10 +320,7 @@ impl Helper {
                     Err(err) => {
                         // if node is just starting, do not throw an error
                         if start.elapsed() > Duration::from_secs(10) {
-                            warn!(
-                                "Node Watchdog | Could not send HTTP API request to node\n{}",
-                                err
-                            );
+                            warn!("Node Watchdog | Could not send HTTP API request to node\n{err}");
                         }
                     }
                 }

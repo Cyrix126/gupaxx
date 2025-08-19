@@ -43,7 +43,7 @@ impl Node {
                 map
             }
             Err(err) => {
-                error!("Node | String parse ... FAIL ... {}", err);
+                error!("Node | String parse ... FAIL ... {err}");
                 return Err(TomlError::Deserialize(err));
             }
         };

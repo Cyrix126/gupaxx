@@ -64,7 +64,7 @@ pub fn parse_args<S: Into<String>>(mut app: App, args: Cli, panic: S) -> App {
     // Abort on panic
     let panic = panic.into();
     if !panic.is_empty() {
-        warn!("[Gupax error] {}", panic);
+        warn!("[Gupax error] {panic}");
         exit(1);
     }
     if let Some(arg) = args.info {

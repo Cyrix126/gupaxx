@@ -48,10 +48,7 @@ pub async fn update_xmrig_config(
     let mut config = request.send().await?.json::<Value>().await?;
     // modify node configuration
     let uri = [node.url(), ":".to_string(), node.port()].concat();
-    info!(
-        "replace xmrig from api url {api_uri} config with node {}",
-        uri
-    );
+    info!("replace xmrig from api url {api_uri} config with node {uri}");
     *config
         .pointer_mut("/pools/0/url")
         .ok_or_else(|| anyhow!("pools/0/url does not exist in xmrig config"))? = uri.into();

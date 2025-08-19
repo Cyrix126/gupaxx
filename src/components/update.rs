@@ -214,7 +214,7 @@ impl Update {
         let tmp_dir = format!("{}{}{}{}", base, r"\gupaxx_update_", rand_string, r"\");
         #[cfg(target_family = "unix")]
         let tmp_dir = format!("{}{}{}{}", base, "/gupaxx_update_", rand_string, "/");
-        info!("Update | Temporary directory ... {}", tmp_dir);
+        info!("Update | Temporary directory ... {tmp_dir}");
         Ok(tmp_dir)
     }
 
@@ -250,8 +250,7 @@ impl Update {
                 Err(e) => {
                     error_state.set(
                         format!(
-                            "Provided P2Pool path could not be turned into an absolute path: {}",
-                            e
+                            "Provided P2Pool path could not be turned into an absolute path: {e}"
                         ),
                         ErrorFerris::Error,
                         ErrorButtons::Okay,
@@ -265,8 +264,7 @@ impl Update {
                 Err(e) => {
                     error_state.set(
                         format!(
-                            "Provided XMRig path could not be turned into an absolute path: {}",
-                            e
+                            "Provided XMRig path could not be turned into an absolute path: {e}"
                         ),
                         ErrorFerris::Error,
                         ErrorButtons::Okay,
@@ -280,8 +278,7 @@ impl Update {
                 Err(e) => {
                     error_state.set(
                         format!(
-                            "Provided Node path could not be turned into an absolute path: {}",
-                            e
+                            "Provided Node path could not be turned into an absolute path: {e}"
                         ),
                         ErrorFerris::Error,
                         ErrorButtons::Okay,
@@ -295,8 +292,7 @@ impl Update {
                 Err(e) => {
                     error_state.set(
                         format!(
-                            "Provided XMRig-Proxy path could not be turned into an absolute path: {}",
-                            e
+                            "Provided XMRig-Proxy path could not be turned into an absolute path: {e}"
                         ),
                         ErrorFerris::Error,
                         ErrorButtons::Okay,
@@ -330,7 +326,7 @@ impl Update {
                             *og.lock().unwrap() = state;
                         }
                         Err(e) => {
-                            warn!("Update | Saving state ... FAIL: {}", e);
+                            warn!("Update | Saving state ... FAIL: {e}");
                             og.lock().unwrap().version = original_version;
                             *update.lock().unwrap().msg.lock().unwrap() =
                                 "Saving new versions into state failed".to_string();
@@ -338,9 +334,9 @@ impl Update {
                     };
                 }
                 Err(e) => {
-                    info!("Update ... FAIL: {}", e);
+                    info!("Update ... FAIL: {e}");
                     *update.lock().unwrap().msg.lock().unwrap() =
-                        format!("{} | {}\n{}", MSG_FAILED, e, MSG_FAILED_HELP);
+                        format!("{MSG_FAILED} | {e}\n{MSG_FAILED_HELP}");
                 }
             };
             *update.lock().unwrap().updating.lock().unwrap() = false;
@@ -378,11 +374,11 @@ impl Update {
         // Set progress bar
         *update.lock().unwrap().msg.lock().unwrap() = MSG_START.to_string();
         *update.lock().unwrap().prog.lock().unwrap() = 0.0;
-        info!("Update | {}", INIT);
+        info!("Update | {INIT}");
 
         // Get temporary directory
         let msg = MSG_TMP.to_string();
-        info!("Update | {}", msg);
+        info!("Update | {msg}");
         *update.lock().unwrap().msg.lock().unwrap() = msg;
         let tmp_dir = Self::get_tmp_dir()?;
         std::fs::create_dir(&tmp_dir)?;
@@ -394,7 +390,7 @@ impl Update {
         // Create HTTPS client
         let lock = update.lock().unwrap();
         let msg = MSG_HTTPS.to_string();
-        info!("Update | {}", msg);
+        info!("Update | {msg}");
         *lock.msg.lock().unwrap() = msg;
         drop(lock);
         let client = Client::new();
@@ -406,7 +402,7 @@ impl Update {
 
         //---------------------------------------------------------------------------------------------------- Metadata
         *update.lock().unwrap().msg.lock().unwrap() = MSG_METADATA.to_string();
-        info!("Update | {}", METADATA);
+        info!("Update | {METADATA}");
         // Loop process:
         // reqwest will retry himself
         // Send to async
@@ -420,22 +416,16 @@ impl Update {
         };
 
         *update.lock().unwrap().prog.lock().unwrap() += 10.0;
-        info!("Update | Gupaxx {} ... OK", new_ver);
+        info!("Update | Gupaxx {new_ver} ... OK");
 
         //---------------------------------------------------------------------------------------------------- Compare
         *update.lock().unwrap().msg.lock().unwrap() = MSG_COMPARE.to_string();
-        info!("Update | {}", COMPARE);
+        info!("Update | {COMPARE}");
         let diff = GUPAX_VERSION != new_ver;
         if diff {
-            info!(
-                "Update | Gupaxx {} != {} ... ADDING",
-                GUPAX_VERSION, new_ver
-            );
+            info!("Update | Gupaxx {GUPAX_VERSION} != {new_ver} ... ADDING");
         } else {
-            info!(
-                "Update | Gupaxx {} == {} ... SKIPPING",
-                GUPAX_VERSION, new_ver
-            );
+            info!("Update | Gupaxx {GUPAX_VERSION} == {new_ver} ... SKIPPING");
             info!("Update | All packages up-to-date ... RETURNING");
             *update.lock().unwrap().prog.lock().unwrap() = 100.0;
             *update.lock().unwrap().msg.lock().unwrap() = MSG_UP_TO_DATE.to_string();
@@ -451,8 +441,8 @@ impl Update {
         // Get amount of packages to divide up the percentage increases
 
         //---------------------------------------------------------------------------------------------------- Download
-        *update.lock().unwrap().msg.lock().unwrap() = format!("{} Gupaxx", MSG_DOWNLOAD);
-        info!("Update | {}", DOWNLOAD);
+        *update.lock().unwrap().msg.lock().unwrap() = format!("{MSG_DOWNLOAD} Gupaxx");
+        info!("Update | {DOWNLOAD}");
         // Clone data before async
         let version = new_ver;
         // Download link = PREFIX + Version (found at runtime) + SUFFIX + Version + EXT
@@ -485,7 +475,7 @@ impl Update {
             ARCHIVE_EXT,
         ]
         .concat();
-        info!("Update | Gupaxx ... {}", link);
+        info!("Update | Gupaxx ... {link}");
         let bytes = if let Ok(bytes) = get_bytes(&client, link, user_agent).await {
             bytes
         } else {
@@ -500,8 +490,8 @@ impl Update {
         );
 
         //---------------------------------------------------------------------------------------------------- Extract
-        *update.lock().unwrap().msg.lock().unwrap() = format!("{} Gupaxx", MSG_EXTRACT);
-        info!("Update | {}", EXTRACT);
+        *update.lock().unwrap().msg.lock().unwrap() = format!("{MSG_EXTRACT} Gupaxx");
+        info!("Update | {EXTRACT}");
         let tmp = tmp_dir.to_owned();
         #[cfg(target_os = "windows")]
         ZipArchive::extract(
@@ -524,8 +514,8 @@ impl Update {
         //
         // 3. Rename tmp path into current path
         // 4. Update [State/Version]
-        *update.lock().unwrap().msg.lock().unwrap() = format!("Gupaxx {}", MSG_UPGRADE);
-        info!("Update | {}", UPGRADE);
+        *update.lock().unwrap().msg.lock().unwrap() = format!("Gupaxx {MSG_UPGRADE}");
+        info!("Update | {UPGRADE}");
         // If this bool doesn't get set, something has gone wrong because
         // we _didn't_ find a binary even though we downloaded it.
         let mut found = false;
@@ -600,16 +590,14 @@ impl Update {
 
         // Remove tmp dir (on Unix)
         #[cfg(target_family = "unix")]
-        info!("Update | Removing temporary directory ... {}", tmp_dir);
+        info!("Update | Removing temporary directory ... {tmp_dir}");
         #[cfg(target_family = "unix")]
         std::fs::remove_dir_all(&tmp_dir)?;
 
         let seconds = now.elapsed().as_secs();
-        info!("Update | Seconds elapsed ... [{}s]", seconds);
-        *update.lock().unwrap().msg.lock().unwrap() = format!(
-            "Updated from {} to {}\nYou need to restart Gupaxx.",
-            GUPAX_VERSION, version
-        );
+        info!("Update | Seconds elapsed ... [{seconds}s]");
+        *update.lock().unwrap().msg.lock().unwrap() =
+            format!("Updated from {GUPAX_VERSION} to {version}\nYou need to restart Gupaxx.");
         *update.lock().unwrap().prog.lock().unwrap() = 100.0;
         Ok(())
     }

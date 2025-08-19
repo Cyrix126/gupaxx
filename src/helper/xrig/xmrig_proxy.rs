@@ -74,11 +74,11 @@ impl Helper {
         let mut i = 0;
         while let Some(Ok(line)) = stdout.next() {
             let line = strip_ansi_escapes::strip_str(line);
-            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
-                error!("XMRig-Proxy PTY Parse | Output error: {}", e);
+            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{line}") {
+                error!("XMRig-Proxy PTY Parse | Output error: {e}");
             }
-            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
-                error!("XMRig-Proxy PTY Pub | Output error: {}", e);
+            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{line}") {
+                error!("XMRig-Proxy PTY Pub | Output error: {e}");
             }
             if i > 7 {
                 break;
@@ -137,11 +137,11 @@ impl Helper {
                 }
             }
             //			println!("{}", line); // For debugging.
-            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
-                error!("XMRig-Proxy PTY Parse | Output error: {}", e);
+            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{line}") {
+                error!("XMRig-Proxy PTY Parse | Output error: {e}");
             }
-            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
-                error!("XMRig-Proxy PTY Pub | Output error: {}", e);
+            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{line}") {
+                error!("XMRig-Proxy PTY Pub | Output error: {e}");
             }
         }
     }
@@ -174,7 +174,7 @@ impl Helper {
                 args.push("-o".to_string());
                 args.push(format!("127.0.0.1:{p2pool_stratum_port}")); // Local P2Pool (the default)
                 args.push("-b".to_string());
-                args.push(format!("0.0.0.0:{}", PROXY_PORT_DEFAULT));
+                args.push(format!("0.0.0.0:{PROXY_PORT_DEFAULT}"));
                 args.push("--user".to_string());
                 args.push(rig); // Rig name
                 args.push("--http-host".to_string());
@@ -213,7 +213,7 @@ impl Helper {
                     state.port.to_string()
                 };
                 let p2pool_url = format!("{}:{}", p2pool_ip, state.p2pool_port); // Combine IP:Port into one string
-                let bind_url = format!("{}:{}", ip, port); // Combine IP:Port into one string
+                let bind_url = format!("{ip}:{port}"); // Combine IP:Port into one string
                 args.push("--user".to_string());
                 args.push(state.address.clone()); // Wallet
                 args.push("--rig-id".to_string());
@@ -348,7 +348,7 @@ impl Helper {
         Helper::mutate_img_proxy(helper, state_proxy);
         let args = Self::build_xp_args(state_proxy, mode, p2pool_stratum_port);
         // Print arguments & user settings to console
-        crate::disk::print_dash(&format!("XMRig-Proxy | Launch arguments: {:#?}", args));
+        crate::disk::print_dash(&format!("XMRig-Proxy | Launch arguments: {args:#?}"));
         info!("XMRig-Proxy | Using path: [{}]", path.display());
 
         // Spawn watchdog thread
@@ -456,7 +456,7 @@ impl Helper {
         }
         #[cfg(target_family = "unix")]
         if let Err(e) = writeln!(stdin, "v") {
-            error!("XMRig-Proxy Watchdog | STDIN error: {}", e);
+            error!("XMRig-Proxy Watchdog | STDIN error: {e}");
         }
         debug!("XMRig-Proxy Watchdog | checking connections");
         #[cfg(target_os = "windows")]
@@ -465,7 +465,7 @@ impl Helper {
         }
         #[cfg(target_family = "unix")]
         if let Err(e) = writeln!(stdin, "c") {
-            error!("XMRig-Proxy Watchdog | STDIN error: {}", e);
+            error!("XMRig-Proxy Watchdog | STDIN error: {e}");
         }
         info!("XMRig-Proxy | Entering watchdog mode... woof!");
         let mut last_redirect_request = Instant::now();
@@ -533,8 +533,7 @@ impl Helper {
                     }
                     Err(err) => {
                         warn!(
-                            "XMRig-Proxy Watchdog | Could not send HTTP API request to: {}\n{}",
-                            api_summary_xp, err
+                            "XMRig-Proxy Watchdog | Could not send HTTP API request to: {api_summary_xp}\n{err}"
                         );
                     }
                 }
@@ -565,10 +564,7 @@ impl Helper {
                         warn!("XMRig-Proxy Process | Failed request HTTP API Xmrig");
                         output_console(
                             &mut gui_api.lock().unwrap().output,
-                            &format!(
-                                "Failure to update xmrig config with HTTP API.\nError: {}",
-                                err
-                            ),
+                            &format!("Failure to update xmrig config with HTTP API.\nError: {err}"),
                             ProcessName::XmrigProxy,
                         );
                     } else {

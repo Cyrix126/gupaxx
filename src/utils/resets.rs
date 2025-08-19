@@ -19,7 +19,7 @@ pub fn reset_state(path: &PathBuf) -> Result<(), TomlError> {
             Ok(())
         }
         Err(e) => {
-            error!("Resetting [state.toml] ... FAIL ... {}", e);
+            error!("Resetting [state.toml] ... FAIL ... {e}");
             Err(e)
         }
     }
@@ -34,7 +34,7 @@ pub fn reset_nodes(path: &PathBuf) -> Result<(), TomlError> {
             Ok(())
         }
         Err(e) => {
-            error!("Resetting [node.toml] ... FAIL ... {}", e);
+            error!("Resetting [node.toml] ... FAIL ... {e}");
             Err(e)
         }
     }
@@ -49,7 +49,7 @@ pub fn reset_pools(path: &PathBuf) -> Result<(), TomlError> {
             Ok(())
         }
         Err(e) => {
-            error!("Resetting [pool.toml] ... FAIL ... {}", e);
+            error!("Resetting [pool.toml] ... FAIL ... {e}");
             Err(e)
         }
     }
@@ -64,7 +64,7 @@ pub fn reset_gupax_p2pool_api(path: &PathBuf) -> Result<(), TomlError> {
             Ok(())
         }
         Err(e) => {
-            error!("Resetting GupaxP2poolApi folder ... FAIL ... {}", e);
+            error!("Resetting GupaxP2poolApi folder ... FAIL ... {e}");
             Err(e)
         }
     }
@@ -84,7 +84,7 @@ pub fn reset(
     match std::fs::remove_dir_all(path) {
         Ok(_) => info!("Removing OS data path ... OK"),
         Err(e) => {
-            error!("Removing OS data path ... FAIL ... {}", e);
+            error!("Removing OS data path ... FAIL ... {e}");
             code = 1;
         }
     }

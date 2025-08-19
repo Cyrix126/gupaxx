@@ -50,7 +50,7 @@ impl State {
                 Ok(state)
             }
             Err(err) => {
-                warn!("State | String -> State ... FAIL ... {}", err);
+                warn!("State | String -> State ... FAIL ... {err}");
                 Err(TomlError::Deserialize(err))
             }
         }
@@ -61,7 +61,7 @@ impl State {
         match toml::ser::to_string(self) {
             Ok(s) => Ok(s),
             Err(e) => {
-                error!("State | Couldn't serialize default file: {}", e);
+                error!("State | Couldn't serialize default file: {e}");
                 Err(TomlError::Serialize(e))
             }
         }
@@ -221,10 +221,10 @@ impl AutoEnabled {
                 let processes = &mut self.processes;
                 if !processes.iter().any(|a| a == p) && enable {
                     self.processes.push(*p);
-                } else if let Some(i) = processes.iter().position(|a| a == p) {
-                    if !enable {
-                        processes.remove(i);
-                    }
+                } else if let Some(i) = processes.iter().position(|a| a == p)
+                    && !enable
+                {
+                    processes.remove(i);
                 }
             }
         }
@@ -511,7 +511,7 @@ impl Display for XvbMode {
             Self::ManualDonationLevel => "Manual Donation Level",
         };
 
-        write!(f, "{}", text)
+        write!(f, "{text}")
     }
 }
 
@@ -533,7 +533,7 @@ impl Display for ManualDonationLevel {
             Self::DonorMega => "Donor Mega",
         };
 
-        write!(f, "{}", text)
+        write!(f, "{text}")
     }
 }
 
@@ -553,7 +553,7 @@ impl Display for ManualDonationMetric {
             Self::Mega => "MH/s",
         };
 
-        write!(f, "{}", text)
+        write!(f, "{text}")
     }
 }
 
@@ -827,9 +827,9 @@ impl P2pool {
                 }
                 last = arg;
             }
-            return P2POOL_PORT_DEFAULT;
+            P2POOL_PORT_DEFAULT
         } else {
-            return self.stratum_port;
+            self.stratum_port
         }
     }
 
@@ -869,9 +869,9 @@ impl XmrigProxy {
                 }
                 last = arg;
             }
-            return PROXY_API_PORT_DEFAULT;
+            PROXY_API_PORT_DEFAULT
         } else {
-            return self.api_port.parse().unwrap_or(PROXY_API_PORT_DEFAULT);
+            self.api_port.parse().unwrap_or(PROXY_API_PORT_DEFAULT)
         }
     }
     /// get the port that would be used if xmrig was started with the current settings
@@ -891,9 +891,9 @@ impl XmrigProxy {
                 }
                 last = arg;
             }
-            return PROXY_PORT_DEFAULT;
+            PROXY_PORT_DEFAULT
         } else {
-            return self.port.parse().unwrap_or(PROXY_PORT_DEFAULT);
+            self.port.parse().unwrap_or(PROXY_PORT_DEFAULT)
         }
     }
     /// get the port that proxy process is currently using or that it will use if started with current settings

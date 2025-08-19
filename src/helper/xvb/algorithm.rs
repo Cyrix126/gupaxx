@@ -209,7 +209,7 @@ impl<'a> Algorithm<'a> {
         };
 
         let msg_xmrig_or_xp = (if xp_alive { "XMRig-Proxy" } else { "XMRig" }).to_string();
-        info!("xp alive: {:?}", xp_alive);
+        info!("xp alive: {xp_alive:?}");
 
         let xvb_24h_avg = pub_api.lock().unwrap().stats_priv.donor_24hr_avg * 1000.0;
         let xvb_1h_avg = pub_api.lock().unwrap().stats_priv.donor_1hr_avg * 1000.0;
@@ -397,10 +397,7 @@ impl<'a> Algorithm<'a> {
     async fn send_all_p2pool(&self) {
         self.target_p2pool_node().await;
 
-        info!(
-            "Algorithm | algo sleep for {} seconds while mining on P2pool",
-            XVB_TIME_ALGO
-        );
+        info!("Algorithm | algo sleep for {XVB_TIME_ALGO} seconds while mining on P2pool");
         sleep(Duration::from_secs(XVB_TIME_ALGO.into())).await;
         let hashrate = current_controllable_hr(self.xp_alive, self.gui_api_xp, self.gui_api_xmrig);
         self.gui_api_xvb
@@ -420,10 +417,7 @@ impl<'a> Algorithm<'a> {
     async fn send_all_xvb(&self) {
         self.target_xvb_node().await;
 
-        info!(
-            "Algorithm | algo sleep for {} seconds while mining on XvB",
-            XVB_TIME_ALGO
-        );
+        info!("Algorithm | algo sleep for {XVB_TIME_ALGO} seconds while mining on XvB");
         sleep(Duration::from_secs(XVB_TIME_ALGO.into())).await;
         let hashrate = current_controllable_hr(self.xp_alive, self.gui_api_xp, self.gui_api_xmrig);
         self.gui_api_xvb
@@ -532,10 +526,7 @@ impl<'a> Algorithm<'a> {
             _ => None,
         };
 
-        info!(
-            "Algorithm | AutoMode target_donation_level detected ({:#?})",
-            donation_level
-        );
+        info!("Algorithm | AutoMode target_donation_level detected ({donation_level:#?})");
 
         let target_donation_hashrate = if let Some(level) = donation_level {
             level.get_hashrate() - self.stats.xvb_external_hashrate
@@ -543,10 +534,7 @@ impl<'a> Algorithm<'a> {
             0.0
         };
 
-        info!(
-            "Algorithm | AutoMode target_donation_hashrate ({})",
-            target_donation_hashrate
-        );
+        info!("Algorithm | AutoMode target_donation_hashrate ({target_donation_hashrate})");
 
         target_donation_hashrate
     }
@@ -592,8 +580,7 @@ impl<'a> Algorithm<'a> {
             - p2pool_external_hashrate;
 
         info!(
-            "Algorithm | (difficulty({}) / (window pplns blocks({}) * seconds per p2pool block({})) * (BUFFER 1 + ({})) / 100) - outside HR({}H/s) = minimum HR({}H/s) to keep a share.",
-            difficulty, pws, second_per_block, p2pool_buffer, p2pool_external_hashrate, minimum_hr
+            "Algorithm | (difficulty({difficulty}) / (window pplns blocks({pws}) * seconds per p2pool block({second_per_block})) * (BUFFER 1 + ({p2pool_buffer})) / 100) - outside HR({p2pool_external_hashrate}H/s) = minimum HR({minimum_hr}H/s) to keep a share."
         );
 
         if minimum_hr.is_sign_negative() {
@@ -720,8 +707,7 @@ impl<'a> Algorithm<'a> {
         let needed_time = target_donation_hashrate / hashrate_xmrig * (XVB_TIME_ALGO as f32);
 
         info!(
-            "Algorithm | Calculating... needed time for XvB ({}seconds)=target_donation_hashrate({})/hashrate_xmrig({})*XVB_TIME_ALGO({})",
-            needed_time, target_donation_hashrate, hashrate_xmrig, XVB_TIME_ALGO
+            "Algorithm | Calculating... needed time for XvB ({needed_time}seconds)=target_donation_hashrate({target_donation_hashrate})/hashrate_xmrig({hashrate_xmrig})*XVB_TIME_ALGO({XVB_TIME_ALGO})"
         );
         // never go above time of algo
         // it could be the case if manual donation level is set

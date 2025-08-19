@@ -212,9 +212,9 @@ impl crate::app::App {
                 ui.available_height(),
             ];
             let name = process.name;
-            let stop_msg = format!("Stop {}", name);
-            let start_msg = format!("Start {}", name);
-            let restart_msg = format!("Restart {}", name);
+            let stop_msg = format!("Stop {name}");
+            let start_msg = format!("Start {name}");
+            let restart_msg = format!("Restart {name}");
             if process.waiting {
                 ui.add_enabled_ui(false, |ui| {
                     ui.add_sized(size, Button::new("▶"))
@@ -316,7 +316,7 @@ impl crate::app::App {
                     {
                         // check if process is running outside of Gupaxx, warn about it and do not start it.
                         if process_running(name) {
-                            error!("Process already running outside: {}", name);
+                            error!("Process already running outside: {name}");
                             self.error_state.set(
                                 PROCESS_OUTSIDE,
                                 ErrorFerris::Error,
@@ -533,7 +533,7 @@ impl crate::app::App {
                         }
                         Err(e) => {
                             self.error_state.set(
-                                format!("State file: {}", e),
+                                format!("State file: {e}"),
                                 ErrorFerris::Error,
                                 ErrorButtons::Okay,
                             );
@@ -542,7 +542,7 @@ impl crate::app::App {
                     match Node::save(&self.node_vec, &self.node_path) {
                         Ok(_) => self.og_node_vec.clone_from(&self.node_vec),
                         Err(e) => self.error_state.set(
-                            format!("Node list: {}", e),
+                            format!("Node list: {e}"),
                             ErrorFerris::Error,
                             ErrorButtons::Okay,
                         ),
@@ -550,7 +550,7 @@ impl crate::app::App {
                     match Pool::save(&self.pool_vec, &self.pool_path) {
                         Ok(_) => self.og_pool_vec.clone_from(&self.pool_vec),
                         Err(e) => self.error_state.set(
-                            format!("Pool list: {}", e),
+                            format!("Pool list: {e}"),
                             ErrorFerris::Error,
                             ErrorButtons::Okay,
                         ),
@@ -586,14 +586,14 @@ impl crate::app::App {
                 if !self.state.node.path_db.is_empty()
                     && !Gupax::path_is_dir(&self.state.node.path_db)
                 {
-                    return Err(format!("Error: {}", NODE_DB_DIR));
+                    return Err(format!("Error: {NODE_DB_DIR}"));
                 }
                 &self.state.gupax.node_path
             }
             ProcessName::P2pool => {
                 // check if p2pool address is valid.
                 if !Regexes::addr_ok(&self.state.p2pool.address) {
-                    return Err(format!("Error: {}", P2POOL_ADDRESS));
+                    return Err(format!("Error: {P2POOL_ADDRESS}"));
                 }
                 &self.state.gupax.p2pool_path
             }
@@ -601,7 +601,7 @@ impl crate::app::App {
             ProcessName::XmrigProxy => &self.state.gupax.xmrig_proxy_path,
             ProcessName::Xvb => {
                 if !Regexes::addr_ok(&self.state.p2pool.address) {
-                    return Err(format!("Error: {}", XVB_NOT_CONFIGURED));
+                    return Err(format!("Error: {XVB_NOT_CONFIGURED}"));
                 }
                 ""
             }

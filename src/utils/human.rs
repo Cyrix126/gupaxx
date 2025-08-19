@@ -128,7 +128,7 @@ impl HumanNumber {
         if f < 0.01 {
             Self("0%".to_string())
         } else {
-            Self(format!("{:.2}%", f))
+            Self(format!("{f:.2}%"))
         }
     }
     #[inline]
@@ -138,7 +138,7 @@ impl HumanNumber {
     }
     #[inline]
     pub fn from_f64_to_percent_6_point(f: f64) -> Self {
-        Self(format!("{:.6}%", f))
+        Self(format!("{f:.6}%"))
     }
     #[inline]
     #[cfg(test)]
@@ -223,7 +223,7 @@ impl HumanNumber {
         let mut n = 0;
         for i in array {
             match i {
-                Some(f) => string.push_str(format!("{:.2}", f).as_str()),
+                Some(f) => string.push_str(format!("{f:.2}").as_str()),
                 None => string.push_str("???"),
             }
             if n != 2 {
@@ -240,19 +240,19 @@ impl HumanNumber {
     #[inline]
     pub fn from_u64_to_megahash_3_point(hash: u64) -> Self {
         let hash = (hash as f64) / 1_000_000.0;
-        let hash = format!("{:.3} MH/s", hash);
+        let hash = format!("{hash:.3} MH/s");
         Self(hash)
     }
     // [1_000_000_000] -> [1.000 GH/s]
     #[inline]
     pub fn from_u64_to_gigahash_3_point(hash: u64) -> Self {
         let hash = (hash as f64) / 1_000_000_000.0;
-        let hash = format!("{:.3} GH/s", hash);
+        let hash = format!("{hash:.3} GH/s");
         Self(hash)
     }
     #[inline]
     pub fn from_f64_12_point(f: f64) -> Self {
-        let f = format!("{:.12}", f);
+        let f = format!("{f:.12}");
         Self(f)
     }
     #[inline]

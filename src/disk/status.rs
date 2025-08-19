@@ -38,7 +38,7 @@ impl Display for Submenu {
         use Submenu::*;
         match self {
             P2pool => write!(f, "P2Pool"),
-            _ => write!(f, "{:?}", self),
+            _ => write!(f, "{self:?}"),
         }
     }
 }

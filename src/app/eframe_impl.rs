@@ -133,13 +133,13 @@ impl ProcessStatesGui {
     pub fn is_alive(&self, name: ProcessName) -> bool {
         self.iter()
             .find(|p| p.name == name)
-            .unwrap_or_else(|| panic!("This vec should always contains all Processes {:?}", self))
+            .unwrap_or_else(|| panic!("This vec should always contains all Processes {self:?}"))
             .alive
     }
     pub fn find(&self, name: ProcessName) -> &ProcessStateGui {
         self.iter()
             .find(|p| p.name == name)
-            .unwrap_or_else(|| panic!("This vec should always contains all Processes {:?}", self))
+            .unwrap_or_else(|| panic!("This vec should always contains all Processes {self:?}"))
     }
     pub fn find_mut(&mut self, name: ProcessName) -> &mut ProcessStateGui {
         self.iter_mut()

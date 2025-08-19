@@ -55,7 +55,7 @@ impl Helper {
         let system_memory = {
             let used = (sysinfo.used_memory() as f64) / 1_000_000_000.0;
             let total = (sysinfo.total_memory() as f64) / 1_000_000_000.0;
-            format!("{:.3} GB / {:.3} GB", used, total)
+            format!("{used:.3} GB / {total:.3} GB")
         };
         let system_cpu_usage = {
             let mut total: f32 = 0.0;

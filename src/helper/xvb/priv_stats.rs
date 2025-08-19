@@ -115,8 +115,7 @@ impl XvbPrivStats {
                 Ok(s) => Ok(s),
                 Err(err) => {
                     error!(
-                        "XvB Watchdog | Data provided from private API is not deserializ-able.Error: {}",
-                        err
+                        "XvB Watchdog | Data provided from private API is not deserializ-able.Error: {err}"
                     );
                     bail!(
                         "Data provided from private API is not deserializ-able.Error: {}",
@@ -158,8 +157,7 @@ impl XvbPrivStats {
             }
             Err(err) => {
                 warn!(
-                    "XvB Watchdog | Could not send HTTP private API request to: {}\n:{}",
-                    XVB_URL, err
+                    "XvB Watchdog | Could not send HTTP private API request to: {XVB_URL}\n:{err}"
                 );
                 if process.lock().unwrap().state != ProcessState::Failed {
                     output_console(

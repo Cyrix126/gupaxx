@@ -71,8 +71,7 @@ impl crate::app::App {
                         let mut text = "".to_string();
                         if *self.update.lock().unwrap().updating.lock().unwrap() {
                             text = format!(
-                                "{}\nUpdate is in progress...! Quitting may cause file corruption!",
-                                text
+                                "{text}\nUpdate is in progress...! Quitting may cause file corruption!"
                             );
                         }
                         for process in processes {
@@ -111,8 +110,7 @@ impl crate::app::App {
                     }
                     ErrorButtons::Sudo => {
                         let text = format!(
-                            "Why does XMRig need admin privilege?\n{}",
-                            XMRIG_ADMIN_REASON
+                            "Why does XMRig need admin privilege?\n{XMRIG_ADMIN_REASON}"
                         );
                         let height = height / 4.0;
                         ui.add_sized(
@@ -232,13 +230,13 @@ impl crate::app::App {
                                         );
                                     }
                                     Err(e) => self.error_state.set(
-                                        format!("State read fail: {}", e),
+                                        format!("State read fail: {e}"),
                                         ErrorFerris::Panic,
                                         ErrorButtons::Quit,
                                     ),
                                 },
                                 Err(e) => self.error_state.set(
-                                    format!("State reset fail: {}", e),
+                                    format!("State reset fail: {e}"),
                                     ErrorFerris::Panic,
                                     ErrorButtons::Quit,
                                 ),
@@ -269,13 +267,13 @@ impl crate::app::App {
                                         );
                                     }
                                     Err(e) => self.error_state.set(
-                                        format!("Node read fail: {}", e),
+                                        format!("Node read fail: {e}"),
                                         ErrorFerris::Panic,
                                         ErrorButtons::Quit,
                                     ),
                                 },
                                 Err(e) => self.error_state.set(
-                                    format!("Node reset fail: {}", e),
+                                    format!("Node reset fail: {e}"),
                                     ErrorFerris::Panic,
                                     ErrorButtons::Quit,
                                 ),

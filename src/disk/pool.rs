@@ -43,7 +43,7 @@ impl Pool {
                 map
             }
             Err(err) => {
-                error!("Pool | String parse ... FAIL ... {}", err);
+                error!("Pool | String parse ... FAIL ... {err}");
                 return Err(TomlError::Deserialize(err));
             }
         };

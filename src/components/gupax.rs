@@ -115,7 +115,7 @@ impl Gupax {
                     .set_title("Select a directory for the DB of your Node")
                     .pick_folder(),
                 _ => rfd::FileDialog::new()
-                    .set_title(format!("Select {} Binary for Gupaxx", name))
+                    .set_title(format!("Select {name} Binary for Gupaxx"))
                     .pick_file(),
             };
             if let Some(path) = path {
@@ -143,7 +143,7 @@ impl Gupax {
                     }
                 };
             } else {
-                info!("Gupaxx | No path selected for {}", name);
+                info!("Gupaxx | No path selected for {name}");
             }
 
             file_window.lock().unwrap().thread = false;

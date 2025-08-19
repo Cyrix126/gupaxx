@@ -339,7 +339,7 @@ impl Helper {
                                 if process.lock().unwrap().state == ProcessState::Alive {
                                     // get current share to know if we are in a round and this is a required data for algo.
                                     let share = gui_api_p2pool.lock().unwrap().sidechain_shares;
-                                    debug!("XvB | Number of current shares: {}", share);
+                                    debug!("XvB | Number of current shares: {share}");
                                 // private stats can be requested every minute or first loop or if the have almost finished.
                                 if last_request_expired || first_loop || should_refresh_before_next_algo {
                                     debug!("XvB Watchdog | Attempting HTTP private API request...");
@@ -353,7 +353,7 @@ impl Helper {
                                     // verify in which round type we are
                                     let round = round_type(share, &pub_api);
                                     // refresh the round we participate in.
-                                    debug!("XvB | Round type: {:#?}", round);
+                                    debug!("XvB | Round type: {round:#?}");
                                     pub_api.lock().unwrap().stats_priv.round_participate = round;
                                     // verify if we are the winner of the current round
                                     if pub_api.lock().unwrap().stats_pub.winner
@@ -532,14 +532,12 @@ async fn check_conditions_for_start(
         info!("XvB | verify address and token");
         // send to console: token non existent for address on XvB server
         warn!(
-            "Xvb | Start ... Partially failed because token and associated address are not existent on XvB server: {}\n",
-            err
+            "Xvb | Start ... Partially failed because token and associated address are not existent on XvB server: {err}\n"
         );
         output_console(
             &mut gui_api.lock().unwrap().output,
             &format!(
-                "Token and associated address are not valid on XvB API.\nCheck if you are registered.\nError: {}",
-                err
+                "Token and associated address are not valid on XvB API.\nCheck if you are registered.\nError: {err}"
             ),
             ProcessName::Xvb,
         );
@@ -680,8 +678,7 @@ async fn check_state_outcauses_xvb(
                                                 output_console(
                                                     &mut gui_api.lock().unwrap().output,
                                                     &format!(
-                                                        "Failure to update {msg_xmrig_or_proxy} config with HTTP API.\nError: {}",
-                                                        err
+                                                        "Failure to update {msg_xmrig_or_proxy} config with HTTP API.\nError: {err}"
                                                     ),
                                                     ProcessName::Xvb
                                                 );
@@ -693,7 +690,7 @@ async fn check_state_outcauses_xvb(
                                     ));
                                                 output_console(
                                                     &mut gui_api.lock().unwrap().output,
-                                                    &format!("XvB process can not completely continue, falling back to {}", pool),
+                                                    &format!("XvB process can not completely continue, falling back to {pool}"),
                                                     ProcessName::Xvb
                                                 );
                                             }
@@ -818,7 +815,7 @@ fn signal_interrupt(
         ProcessSignal::Restart => {
             debug!("XvB Watchdog | Restart SIGNAL caught");
             let uptime = Uptime::from(start.elapsed());
-            info!("XvB Watchdog | Stopped ... Uptime was: [{}]", uptime);
+            info!("XvB Watchdog | Stopped ... Uptime was: [{uptime}]");
             // no output to console because service will be started with fresh output.
             debug!("XvB Watchdog | Restart SIGNAL done, breaking");
             process.lock().unwrap().state = ProcessState::Waiting;
@@ -905,8 +902,7 @@ fn signal_interrupt(
                     output_console(
                         &mut gui_api.lock().unwrap().output,
                         &format!(
-                            "Failure to update {msg_xmrig_or_proxy} config with HTTP API.\nError: {}",
-                            err
+                            "Failure to update {msg_xmrig_or_proxy} config with HTTP API.\nError: {err}"
                         ), ProcessName::Xvb
                     );
                         }

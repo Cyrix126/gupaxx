@@ -63,15 +63,12 @@ impl RemoteNode {
     pub fn check_exists(og_ip: &str) -> String {
         for (ip, _, _, _) in REMOTE_NODES {
             if og_ip == ip {
-                info!("Found remote node in array: {}", ip);
+                info!("Found remote node in array: {ip}");
                 return ip.to_string();
             }
         }
         let ip = REMOTE_NODES[0].0.to_string();
-        warn!(
-            "[{}] remote node does not exist, returning default: {}",
-            og_ip, ip
-        );
+        warn!("[{og_ip}] remote node does not exist, returning default: {ip}");
         ip
     }
 
@@ -312,7 +309,7 @@ impl Ping {
                     ping.lock().unwrap().prog = 100.0;
                 }
                 Err(err) => {
-                    error!("Ping ... FAIL ... {}", err);
+                    error!("Ping ... FAIL ... {err}");
                     ping.lock().unwrap().pinged = false;
                     ping.lock().unwrap().msg = err.to_string();
                 }
@@ -392,7 +389,7 @@ impl Ping {
         let fastest_info = format!("Fastest node: {}ms ... {}", node_vec[0].ms, node_vec[0].ip);
 
         let info = "Cleaning up connections".to_string();
-        info!("Ping | {}...", info);
+        info!("Ping | {info}...");
         let mut ping = ping.lock().unwrap();
         ping.fastest = node_vec[0].ip;
         ping.nodes = node_vec;

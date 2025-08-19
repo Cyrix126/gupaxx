@@ -204,13 +204,13 @@ pub fn monero_address_field(address: &mut String, ui: &mut Ui, hover: &str) {
         let color;
         let len = format!("{:02}", address.len());
         if address.is_empty() {
-            text = format!("Monero Address [{}/95] ➖", len);
+            text = format!("Monero Address [{len}/95] ➖");
             color = Color32::LIGHT_GRAY;
         } else if Regexes::addr_ok(address) {
-            text = format!("Monero Address [{}/95] ✔", len);
+            text = format!("Monero Address [{len}/95] ✔");
             color = Color32::from_rgb(100, 230, 100);
         } else {
-            text = format!("Monero Address [{}/95] ❌", len);
+            text = format!("Monero Address [{len}/95] ❌");
             color = Color32::from_rgb(230, 50, 50);
         }
         ui.style_mut().spacing.text_edit_width = ui.available_width();

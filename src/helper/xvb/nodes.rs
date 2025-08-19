@@ -117,7 +117,7 @@ impl Pool {
             info!("XvB node {} has been chosen manually", manual_pool.url());
             output_console(
                 &mut gui_api_xvb.lock().unwrap().output,
-                &format!("XvB node {} has been chosen manually", manual_pool),
+                &format!("XvB node {manual_pool} has been chosen manually"),
                 ProcessName::Xvb,
             );
             gui_api_xvb.lock().unwrap().stats_priv.pool = manual_pool;
@@ -214,7 +214,7 @@ impl Pool {
             info!("XvB node ping, both online and best is {}", pool.url());
             output_console(
                 &mut gui_api_xvb.lock().unwrap().output,
-                &format!("XvB Pool ping, {} is selected as the fastest.", pool),
+                &format!("XvB Pool ping, {pool} is selected as the fastest."),
                 ProcessName::Xvb,
             );
             info!("ProcessState to Syncing after finding joinable node");

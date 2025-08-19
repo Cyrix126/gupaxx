@@ -136,9 +136,9 @@ impl SudoState {
             match reset {
                 Ok(_) => info!("Sudo | Resetting timestamp ... OK"),
                 Err(e) => {
-                    error!("Sudo | Couldn't reset timestamp: {}", e);
+                    error!("Sudo | Couldn't reset timestamp: {e}");
                     Self::wipe(&state);
-                    state.lock().unwrap().msg = format!("Sudo error: {}", e);
+                    state.lock().unwrap().msg = format!("Sudo error: {e}");
                     state.lock().unwrap().testing = false;
                     return;
                 }
@@ -173,20 +173,20 @@ impl SudoState {
                         }
                     }
                     Ok(None) => {
-                        info!("Sudo | Waiting [{}/5]...", i);
+                        info!("Sudo | Waiting [{i}/5]...");
                         std::thread::sleep(SECOND);
                     }
                     Err(e) => {
-                        error!("Sudo | Couldn't reset timestamp: {}", e);
+                        error!("Sudo | Couldn't reset timestamp: {e}");
                         Self::wipe(&state);
-                        state.lock().unwrap().msg = format!("Sudo error: {}", e);
+                        state.lock().unwrap().msg = format!("Sudo error: {e}");
                         state.lock().unwrap().testing = false;
                         return;
                     }
                 }
             }
             if let Err(e) = sudo.kill() {
-                warn!("Sudo | Kill error (it probably already exited): {}", e);
+                warn!("Sudo | Kill error (it probably already exited): {e}");
             }
             if state.lock().unwrap().success {
                 match state.lock().unwrap().signal {

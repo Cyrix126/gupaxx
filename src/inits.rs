@@ -92,7 +92,7 @@ pub fn init_logger(now: Instant, logfile: bool) {
         .parse_default_env()
         .format_timestamp_millis()
         .init();
-        info!("Log level ... {}", filter);
+        info!("Log level ... {filter}");
     }
     info!("init_logger() ... OK");
 }

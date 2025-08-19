@@ -84,7 +84,7 @@ fn main() {
     // Gupax folder cleanup.
     match clean_dir() {
         Ok(_) => info!("Temporary folder cleanup ... OK"),
-        Err(e) => warn!("Could not cleanup [gupax_tmp] folders: {}", e),
+        Err(e) => warn!("Could not cleanup [gupax_tmp] folders: {e}"),
     }
 
     let resolution = Vec2::new(selected_width, selected_height);

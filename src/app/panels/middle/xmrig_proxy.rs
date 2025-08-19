@@ -310,12 +310,11 @@ impl XmrigProxy {
             .build(ui, &mut self.ip)
     }
     fn stratum_port_field(&mut self, ui: &mut Ui) -> bool {
-        let valid = StateTextEdit::new(ui)
+        StateTextEdit::new(ui)
             .description(" BIND PORT ")
             .max_ch(5)
             .help_msg(HELP_STRATUM_PORT)
             .validations(&[|x| REGEXES.port.is_match(x)])
-            .build(ui, &mut self.port);
-        valid
+            .build(ui, &mut self.port)
     }
 }

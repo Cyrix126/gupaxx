@@ -111,7 +111,7 @@ impl GupaxP2poolApi {
         {
             Ok(o) => o,
             Err(e) => {
-                warn!("GupaxP2poolApi | [payout] parse error: {}", e);
+                warn!("GupaxP2poolApi | [payout] parse error: {e}");
                 return Err(TomlError::Parse("payout"));
             }
         };
@@ -121,7 +121,7 @@ impl GupaxP2poolApi {
         {
             Ok(o) => AtomicUnit::from_u64(o),
             Err(e) => {
-                warn!("GupaxP2poolApi | [xmr] parse error: {}", e);
+                warn!("GupaxP2poolApi | [xmr] parse error: {e}");
                 return Err(TomlError::Parse("xmr"));
             }
         };
@@ -167,7 +167,7 @@ impl GupaxP2poolApi {
     }
 
     pub fn format_payout(date: &str, atomic_unit: &AtomicUnit, block: &HumanNumber) -> String {
-        format!("{} | {} XMR | Block {}", date, atomic_unit, block)
+        format!("{date} | {atomic_unit} XMR | Block {block}")
     }
 
     pub fn append_log(&mut self, formatted_log_line: &str) {
@@ -231,7 +231,7 @@ impl GupaxP2poolApi {
                 return Err(TomlError::Io(e));
             }
         };
-        match writeln!(file, "{}", formatted_log_line) {
+        match writeln!(file, "{formatted_log_line}") {
             Ok(_) => {
                 debug!("GupaxP2poolApi | Append [{}] ... OK", path.display());
                 Ok(())
@@ -265,7 +265,7 @@ impl GupaxP2poolApi {
                 return Err(TomlError::Io(e));
             }
         };
-        match writeln!(file, "{}", string) {
+        match writeln!(file, "{string}") {
             Ok(_) => {
                 debug!("GupaxP2poolApi | Overwrite [{}] ... OK", path.display());
                 Ok(())

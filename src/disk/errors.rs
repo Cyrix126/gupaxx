@@ -32,13 +32,13 @@ impl Display for TomlError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         use TomlError::*;
         match self {
-            Io(err) => write!(f, "{}: IO | {}", ERROR, err),
-            Path(err) => write!(f, "{}: Path | {}", ERROR, err),
-            Serialize(err) => write!(f, "{}: Serialize | {}", ERROR, err),
-            Deserialize(err) => write!(f, "{}: Deserialize | {}", ERROR, err),
-            Merge(err) => write!(f, "{}: Merge | {}", ERROR, err),
-            Format(err) => write!(f, "{}: Format | {}", ERROR, err),
-            Parse(err) => write!(f, "{}: Parse | {}", ERROR, err),
+            Io(err) => write!(f, "{ERROR}: IO | {err}"),
+            Path(err) => write!(f, "{ERROR}: Path | {err}"),
+            Serialize(err) => write!(f, "{ERROR}: Serialize | {err}"),
+            Deserialize(err) => write!(f, "{ERROR}: Deserialize | {err}"),
+            Merge(err) => write!(f, "{ERROR}: Merge | {err}"),
+            Format(err) => write!(f, "{ERROR}: Format | {err}"),
+            Parse(err) => write!(f, "{ERROR}: Parse | {err}"),
         }
     }
 }

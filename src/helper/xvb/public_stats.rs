@@ -93,16 +93,14 @@ impl XvbPubStats {
             }
             Err(err) => {
                 warn!(
-                    "XvB Watchdog | Could not send HTTP API request to: {} even after multiples tries\n:{}",
-                    XVB_URL_PUBLIC_API, err
+                    "XvB Watchdog | Could not send HTTP API request to: {XVB_URL_PUBLIC_API} even after multiples tries\n:{err}"
                 );
                 // output the error to console
                 // if error already present, no need to print it multiple times.
                 output_console(
                     &mut gui_api.lock().unwrap().output,
                     &format!(
-                        "Failure to retrieve public stats from {}\nWill retry shortly...",
-                        XVB_URL_PUBLIC_API
+                        "Failure to retrieve public stats from {XVB_URL_PUBLIC_API}\nWill retry shortly..."
                     ),
                     ProcessName::Xvb,
                 );
