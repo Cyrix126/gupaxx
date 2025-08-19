@@ -46,10 +46,12 @@ use crate::inits::init_text_styles;
 use crate::miscs::cmp_f64;
 use crate::miscs::get_exe;
 use crate::miscs::get_exe_dir;
-use crate::utils::constants::VISUALS;
+use crate::utils::constants::VISUALS_DARK;
+use crate::utils::constants::VISUALS_LIGHT;
 use crate::utils::macros::arc_mut;
 use crate::utils::sudo::SudoState;
 use derive_more::derive::Display;
+use egui::Context;
 use eframe::CreationContext;
 use egui::Vec2;
 use egui::vec2;
@@ -83,6 +85,7 @@ pub struct App {
     // Misc state
     pub tab: Tab,   // What tab are we on?
     pub size: Vec2, // Top-level width and Top-level height
+    pub cc: Option<Context>,
     // Alpha (transparency)
     // This value is used to incrementally increase/decrease
     // the transparency when resizing. Basically, it fades
@@ -174,15 +177,24 @@ pub struct App {
 impl App {
     #[cold]
     #[inline(never)]
-    pub fn cc(cc: &CreationContext<'_>, resolution: Vec2, app: Self) -> Self {
+    pub fn cc(cc: &CreationContext<'_>, resolution: Vec2, mut app: Self) -> Self {
         init_text_styles(
             &cc.egui_ctx,
             crate::miscs::clamp_scale(app.state.gupax.selected_scale),
         );
-        cc.egui_ctx.set_visuals(VISUALS.clone());
+
+        app.cc = Some(cc.egui_ctx.clone()); 
+        Self::set_theme(&app, cc);
         Self { resolution, ..app }
     }
-
+    pub fn set_theme(app: &Self, cc: &CreationContext<'_>) {
+        if app.state.gupax.dark_mode { // this will set dark mode as default, due to dark_mode: bool = true by default. 
+                            // todo: save the settings and make a startup changing this var
+            cc.egui_ctx.set_visuals(VISUALS_DARK.clone());
+        } else {
+            cc.egui_ctx.set_visuals(VISUALS_LIGHT.clone());
+        }
+    }
     #[cold]
     #[inline(never)]
     pub fn save_before_quit(&mut self) {
@@ -314,6 +326,7 @@ impl App {
                 ip_public.clone(),
                 proxy_port_reachable.clone(),
             )),
+            cc: None,
             node,
             p2pool,
             xmrig,
