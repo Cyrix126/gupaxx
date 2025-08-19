@@ -48,6 +48,7 @@ impl Helper {
         p2pool_img: &Arc<Mutex<ImgP2pool>>,
         proxy_img: &Arc<Mutex<ImgProxy>>,
         proxy_state: &XmrigProxy,
+        process: Arc<Mutex<Process>>,
     ) {
         use std::io::BufRead;
         let mut stdout = std::io::BufReader::new(reader).lines();
@@ -61,11 +62,15 @@ impl Helper {
             if i == 0 && !line.contains("ABOUT") {
                 continue;
             }
-            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
-                error!("XMRig PTY Parse | Output error: {}", e);
+            if i == 0 && line.contains("ABOUT") {
+                info!("Xmrig is started");
+                process.lock().unwrap().state = ProcessState::NotMining;
             }
-            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
-                error!("XMRig PTY Pub | Output error: {}", e);
+            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{line}") {
+                error!("XMRig PTY Parse | Output error: {e}");
+            }
+            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{line}") {
+                error!("XMRig PTY Pub | Output error: {e}");
             }
             if i > 7 {
                 break;
@@ -126,11 +131,11 @@ impl Helper {
                 }
             }
             //			println!("{}", line); // For debugging.
-            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{}", line) {
-                error!("XMRig PTY Parse | Output error: {}", e);
+            if let Err(e) = writeln!(output_parse.lock().unwrap(), "{line}") {
+                error!("XMRig PTY Parse | Output error: {e}");
             }
-            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{}", line) {
-                error!("XMRig PTY Pub | Output error: {}", e);
+            if let Err(e) = writeln!(output_pub.lock().unwrap(), "{line}") {
+                error!("XMRig PTY Pub | Output error: {e}");
             }
         }
     }
@@ -153,7 +158,7 @@ impl Helper {
             let mut stdin = child.stdin.take().unwrap();
             use std::io::Write;
             if let Err(e) = writeln!(stdin, "{}\n", sudo.lock().unwrap().pass) {
-                error!("Sudo Kill | STDIN error: {}", e);
+                error!("Sudo Kill | STDIN error: {e}");
             }
         }
 
@@ -178,6 +183,8 @@ impl Helper {
         };
         let cmd = std::process::Command::new("sudo")
             .args(["-n", "true"])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
             .status();
         if cmd.is_ok_and(|s| s.success()) {
             return false;
@@ -257,7 +264,7 @@ impl Helper {
         };
         let args = Self::build_xmrig_args(state, mode, p2pool_stratum_port);
         // Print arguments & user settings to console
-        crate::disk::print_dash(&format!("XMRig | Launch arguments: {:#?}", args));
+        crate::disk::print_dash(&format!("XMRig | Launch arguments: {args:#?}"));
         info!("XMRig | Using path: [{}]", path.display());
 
         // Spawn watchdog thread
@@ -365,7 +372,7 @@ impl Helper {
             };
         }
 
-        format!("{}:{}", api_ip, api_port)
+        format!("{api_ip}:{api_port}")
     }
     #[cold]
     #[inline(never)]
@@ -464,6 +471,7 @@ impl Helper {
     #[cfg(target_family = "unix")]
     fn create_xmrig_cmd_unix(args: Vec<String>, path: PathBuf) -> portable_pty::CommandBuilder {
         let mut cmd = portable_pty::cmdbuilder::CommandBuilder::new("sudo");
+        cmd.arg("-S");
         cmd.args(args);
         cmd.cwd(path.as_path().parent().unwrap());
         cmd
@@ -510,7 +518,8 @@ impl Helper {
         if cfg!(unix) {
             args.splice(..0, vec![path.display().to_string()]);
             // do not use prompt when sudo is not needed
-            // success is still to false if sudo has not been used to start xmrig
+            // success is still to false if sudo has not been used to test the password when starting xmrig
+            // which would happen if the user can use sudo without a password
             if sudo.lock().unwrap().success {
                 args.splice(..0, vec![r#"--"#.to_string()]);
                 args.splice(..0, vec![r#"--prompt="#.to_string()]);
@@ -533,8 +542,8 @@ impl Helper {
         let output_parse = Arc::clone(&process.lock().unwrap().output_parse);
         let output_pub = Arc::clone(&process.lock().unwrap().output_pub);
         spawn(
-            enclose!((pub_api_xvb, process_xp, p2pool_state, p2pool_img, process_p2pool, proxy_img, proxy_state) async move {
-                Self::read_pty_xmrig(output_parse, output_pub, reader, process_xvb, process_xp, process_p2pool, &pub_api_xvb, &p2pool_state, &p2pool_img, &proxy_img, &proxy_state).await;
+            enclose!((pub_api_xvb, process_xp, p2pool_state, p2pool_img, process_p2pool, proxy_img, proxy_state, process) async move {
+                Self::read_pty_xmrig(output_parse, output_pub, reader, process_xvb, process_xp, process_p2pool, &pub_api_xvb, &p2pool_state, &p2pool_img, &proxy_img, &proxy_state, process).await;
             }),
         );
         // 1b. Create command
@@ -552,9 +561,24 @@ impl Helper {
         // 2. Input [sudo] pass, wipe, then drop.
         if cfg!(unix) && sudo.lock().unwrap().success {
             debug!("XMRig | Inputting [sudo] and wiping...");
-            if let Err(e) = writeln!(stdin, "{}", sudo.lock().unwrap().pass) {
-                error!("XMRig | Sudo STDIN error: {}", e);
-            };
+            let max_sudo_prompt_time = Duration::from_secs(6);
+            let now = Instant::now();
+            while process.lock().unwrap().state != ProcessState::NotMining {
+                // let sudo the time to prompt
+                sleep!(30);
+                if let Err(e) = writeln!(stdin, "{}", sudo.lock().unwrap().pass) {
+                    error!("XMRig | Sudo STDIN error: {e}");
+                };
+                // let xmrig time to start before checking if it has started once again
+                sleep!(30);
+                // check that we do not get stuck here if for some reason the sudo prompt never occurs or xmrig does not start
+                if now.elapsed() > max_sudo_prompt_time {
+                    error!(
+                        "XMRig | Could not start with sudo in {} seconds",
+                        max_sudo_prompt_time.as_secs()
+                    );
+                }
+            }
             SudoState::wipe(&sudo);
             SudoState::reset(&sudo);
 
@@ -589,7 +613,7 @@ impl Helper {
             }
             "http://".to_owned() + &api_ip_port + XMRIG_API_SUMMARY_ENDPOINT
         };
-        info!("XMRig | Final API URI: {}", api_uri_config);
+        info!("XMRig | Final API URI: {api_uri_config}");
 
         // Reset stats before loop
         *pub_api.lock().unwrap() = PubXmrigApi::new();
@@ -678,8 +702,7 @@ impl Helper {
                 }
                 Err(err) => {
                     warn!(
-                        "XMRig Watchdog | Could not send HTTP API request to: {}\n{}",
-                        api_uri_summary, err
+                        "XMRig Watchdog | Could not send HTTP API request to: {api_uri_summary}\n{err}"
                     );
                 }
             }
@@ -719,10 +742,7 @@ impl Helper {
                     warn!("XMRig Process | Failed request HTTP API Xmrig");
                     output_console(
                         &mut gui_api.lock().unwrap().output,
-                        &format!(
-                            "Failure to update xmrig config with HTTP API.\nError: {}",
-                            err
-                        ),
+                        &format!("Failure to update xmrig config with HTTP API.\nError: {err}"),
                         ProcessName::Xmrig,
                     );
                 } else {
@@ -758,7 +778,7 @@ impl Helper {
                     SudoState::wipe(sudo);
                 }
             } else if let Err(e) = child_pty.lock().unwrap().kill() {
-                error!("XMRig Watchdog | Kill error: {}", e);
+                error!("XMRig Watchdog | Kill error: {e}");
             }
             let exit_status = match child_pty.lock().unwrap().wait() {
                 Ok(e) => {
@@ -782,19 +802,12 @@ impl Helper {
                 }
             };
             let uptime = Uptime::from(start.elapsed());
-            info!(
-                "XMRig | Stopped ... Uptime was: [{}], Exit status: [{}]",
-                uptime, exit_status
-            );
+            info!("XMRig | Stopped ... Uptime was: [{uptime}], Exit status: [{exit_status}]");
             if let Err(e) = writeln!(
                 gui_api_output_raw,
-                "{}\nXMRig stopped | Uptime: [{}] | Exit status: [{}]\n{}\n\n\n\n",
-                HORI_CONSOLE, uptime, exit_status, HORI_CONSOLE
+                "{HORI_CONSOLE}\nXMRig stopped | Uptime: [{uptime}] | Exit status: [{exit_status}]\n{HORI_CONSOLE}\n\n\n\n"
             ) {
-                error!(
-                    "XMRig Watchdog | GUI Uptime/Exit status write failed: {}",
-                    e
-                );
+                error!("XMRig Watchdog | GUI Uptime/Exit status write failed: {e}");
             }
             match process.signal {
                 ProcessSignal::Stop => process.signal = ProcessSignal::None,
