@@ -45,12 +45,6 @@ impl PartialEq for RemoteNode {
             && self.rpc == other.rpc
             && self.zmq == other.zmq
     }
-    fn ne(&self, other: &Self) -> bool {
-        self.ip != other.ip
-            || self.location != other.location
-            || self.rpc != other.rpc
-            || self.zmq != other.zmq
-    }
 }
 
 #[derive(DerefMut, Deref, Debug, Clone, Default, Deserialize, Serialize, PartialEq)]
@@ -58,15 +52,12 @@ pub struct RemoteNodes(Vec<RemoteNode>);
 
 impl RemoteNodes {
     // Returns a default if index is not found in the const array.
-    pub fn from_index(&self, index: usize) -> Option<&RemoteNode> {
+    pub fn index_or_random(&self, index: usize) -> Option<&RemoteNode> {
         if index >= self.len() {
-            self.new()
+            self.get_random_same_ok()
         } else {
             Some(&self[index])
         }
-    }
-    pub fn new(&self) -> Option<&RemoteNode> {
-        self.get_random_same_ok()
     }
     pub fn find_selected(&self, selected: &RemoteNode) -> Option<&RemoteNode> {
         self.iter().find(|node| *node == selected)
@@ -78,7 +69,7 @@ impl RemoteNodes {
             return None;
         }
         let rng = rng().random_range(0..self.len());
-        self.from_index(rng)
+        self.index_or_random(rng)
     }
     // Return the node [-1] of this one
     pub fn get_last(&self, current: &RemoteNode) -> RemoteNode {

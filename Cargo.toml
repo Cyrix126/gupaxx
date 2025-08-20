@@ -134,3 +134,6 @@ identifier = "com.github.cyrix126.gupaxx"
 icon = ["images/icons/icon@2x.png"]
 category = "public.app-category.utilities"
 
+## Clippy
+[lints.clippy]
+result_large_err = "allow"

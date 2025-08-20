@@ -137,24 +137,27 @@ impl Crawler {
         info!("Inside crawl thread");
         let mut nb_nodes_fast = 0;
         let mut nb_nodes_medium = 0;
-        let crawler_lock = crawler.lock().unwrap();
-        let max_ping = crawler_lock.requirements.max_ping;
-        let zmq_ports = crawler_lock.zmq_ports.clone();
-        let rpc_ports = crawler_lock.rpc_ports.clone();
         let percent = 100.0 / (nb_nodes_fast as f32).floor();
+        let crawl;
+        {
+            let crawler_lock = crawler.lock().unwrap();
 
-        let crawl = CrawlBuilder::default()
-            .capabilities(vec![
-                CapabilitiesChecker::Latency(max_ping),
-                CapabilitiesChecker::Rpc(rpc_ports),
-                CapabilitiesChecker::Zmq(zmq_ports),
-                CapabilitiesChecker::SpyNode(false, vec![]),
-            ])
-            .build()
-            .unwrap();
+            let max_ping = crawler_lock.requirements.max_ping;
+            let zmq_ports = crawler_lock.zmq_ports.clone();
+            let rpc_ports = crawler_lock.rpc_ports.clone();
+
+            crawl = CrawlBuilder::default()
+                .capabilities(vec![
+                    CapabilitiesChecker::Latency(max_ping),
+                    CapabilitiesChecker::Rpc(rpc_ports),
+                    CapabilitiesChecker::Zmq(zmq_ports),
+                    CapabilitiesChecker::SpyNode(false, vec![]),
+                ])
+                .build()
+                .unwrap();
+        }
 
         // we want the crawler data to be accessible while the crawler is running
-        drop(crawler_lock);
         let mut stream = crawl.discover_peers().await;
         info!("discovering");
         while let Some((peer, rpc_port, zmq_port, ms)) = stream.next().await {
