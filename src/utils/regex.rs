@@ -18,7 +18,7 @@
 // Some regexes used throughout Gupax.
 
 use crate::helper::xvb::nodes::Pool;
-use log::{error, warn};
+use log::warn;
 use once_cell::sync::Lazy;
 use regex::Regex;
 
@@ -202,14 +202,10 @@ pub fn estimated_hr(s: &str) -> Option<f32> {
     if let Some(c) = CURRENT_SHARE.captures(s) {
         let coeff = if let Some(unit) = c.name("unit") {
             match unit.as_str() {
-                "K" => 1000,
-                "M" => 1000 * 1000,
-                "G" => 1000 * 1000 * 1000,
-                " " => 1,
-                _ => {
-                    error!("unit of your p2pool sidechain HR is not recognized.");
-                    1
-                }
+                "K" | "k" => 1000,
+                "M" | "m" => 1000 * 1000,
+                "G" | "g" => 1000 * 1000 * 1000,
+                _ => 1,
             }
         } else {
             1
