@@ -14,8 +14,7 @@ use crate::cli::Cli;
 use crate::cli::parse_args;
 use crate::components::gupax::FileWindow;
 use crate::components::node::Ping;
-use crate::components::node::REMOTE_NODES;
-use crate::components::node::RemoteNode;
+use crate::components::node::RemoteNodes;
 use crate::components::update::Update;
 use crate::disk::consts::NODE_TOML;
 use crate::disk::consts::POOL_TOML;
@@ -31,6 +30,7 @@ use crate::errors::ErrorState;
 use crate::helper::Helper;
 use crate::helper::Process;
 use crate::helper::ProcessName;
+use crate::helper::crawler::Crawler;
 use crate::helper::node::ImgNode;
 use crate::helper::node::PubNodeApi;
 use crate::helper::p2pool::ImgP2pool;
@@ -134,6 +134,7 @@ pub struct App {
     pub ip_local: Arc<Mutex<Option<IpAddr>>>,
     pub ip_public: Arc<Mutex<Option<Ipv4Addr>>>,
     pub proxy_port_reachable: Arc<Mutex<bool>>, // is the proxy port reachable from public ip ?
+    pub crawler: Arc<Mutex<Crawler>>,
     // STDIN Buffer
     pub node_stdin: String, // The buffer between the node console and the [Helper]
     pub p2pool_stdin: String, // The buffer between the p2pool console and the [Helper]
@@ -272,7 +273,7 @@ impl App {
         info!("App Init | The rest of the [App]...");
         let mut app = Self {
             tab: Tab::default(),
-            ping: arc_mut!(Ping::new()),
+            ping: arc_mut!(Ping::new(RemoteNodes::default())),
             size: vec2(APP_DEFAULT_WIDTH, APP_DEFAULT_HEIGHT),
             must_resize: true,
             og: arc_mut!(State::new()),
@@ -324,6 +325,7 @@ impl App {
             xvb_api,
             xmrig_api,
             xmrig_proxy_api,
+            crawler: Crawler::new(),
             p2pool_img,
             xmrig_img,
             node_stdin: String::with_capacity(10),
@@ -417,6 +419,9 @@ impl App {
         use crate::disk::errors::TomlError::*;
         // Read disk state
         info!("App Init | Reading disk state...");
+
+        // need to upgrade old Gupaxx state file that is still using a node by the name.
+
         app.state = match State::get(&app.state_path) {
             Ok(toml) => toml,
             Err(err) => {
@@ -666,9 +671,6 @@ impl App {
         }
         app.xvb_api.lock().unwrap().stats_priv.runtime_manual_amount =
             app.state.xvb.manual_amount_raw;
-        // Check if [P2pool.node] exists
-        info!("App Init | Checking if saved remote node still exists...");
-        app.state.p2pool.node = RemoteNode::check_exists(&app.state.p2pool.node);
 
         drop(og); // Unlock [og]
 
@@ -738,22 +740,16 @@ impl App {
         }
 
         if self.state.p2pool.simple {
-            let mut vec = Vec::with_capacity(REMOTE_NODES.len());
-
+            let mut vec = Vec::new();
             // Locking during this entire loop should be fine,
             // only a few nodes to iter through.
             for pinged_node in self.ping.lock().unwrap().nodes.iter() {
                 // Continue if this node is not green/yellow.
-                if pinged_node.ms > crate::components::node::RED_NODE_PING {
-                    continue;
-                }
-
-                let (ip, rpc, zmq) = RemoteNode::get_ip_rpc_zmq(pinged_node.ip);
 
                 let node = Node {
-                    ip: ip.into(),
-                    rpc: rpc.into(),
-                    zmq: zmq.into(),
+                    ip: pinged_node.ip.to_string(),
+                    rpc: pinged_node.rpc.to_string(),
+                    zmq: pinged_node.zmq.to_string(),
                 };
 
                 vec.push(PoolNode::Node(node));

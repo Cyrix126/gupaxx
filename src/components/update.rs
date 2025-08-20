@@ -425,7 +425,6 @@ impl Update {
         if diff {
             info!("Update | Gupaxx {GUPAX_VERSION} != {new_ver} ... ADDING");
         } else {
-            info!("Update | Gupaxx {GUPAX_VERSION} == {new_ver} ... SKIPPING");
             info!("Update | All packages up-to-date ... RETURNING");
             *update.lock().unwrap().prog.lock().unwrap() = 100.0;
             *update.lock().unwrap().msg.lock().unwrap() = MSG_UP_TO_DATE.to_string();

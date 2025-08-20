@@ -91,6 +91,9 @@ local-ip-address = "0.6"
 public-ip = {git="https://github.com/Cyrix126/rust-public-ip"}
 ## check if port open
 port_check = "0.2"
+## node crawler
+monero-crawler-lib = {git="https://github.com/Cyrix126/monero-crawler-rs", features=["rpc", "zmq"]}
+futures = "0.3"
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
 tar = "0.4.44"

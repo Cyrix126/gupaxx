@@ -2,6 +2,7 @@
 use crate::components::update::Update;
 use crate::components::update::check_binary_path;
 use crate::errors::process_running;
+use crate::helper::crawler::Crawler;
 use crate::helper::{Helper, ProcessName, ProcessSignal};
 use crate::utils::constants::{
     APP_MAX_HEIGHT, APP_MAX_WIDTH, APP_MIN_HEIGHT, APP_MIN_WIDTH, BYTES_ICON,
@@ -153,10 +154,21 @@ pub fn init_auto(app: &mut App) {
     }
 
     // [Auto-Ping]
-    if app.state.p2pool.auto_ping && app.state.p2pool.simple {
+    // do not ping if there is no discovered nodes to ping, unless we can add the selected remote node.
+    if app.state.p2pool.auto_ping {
+        if app.ping.lock().unwrap().nodes.is_empty()
+            && let Some(node) = &app.state.p2pool.selected_remote_node
+        {
+            app.ping.lock().unwrap().nodes.push(node.clone());
+        }
         Ping::spawn_thread(&app.ping)
     } else {
         info!("Skipping auto-ping...");
+    }
+    // [Auto-Crawl]
+    if app.state.gupax.auto.crawl {
+        info!("Auto Stating crawler...");
+        Crawler::start(&app.crawler);
     }
 
     // [Auto-Node]
@@ -202,6 +214,10 @@ pub fn init_auto(app: &mut App) {
         } else if process_running(crate::helper::ProcessName::P2pool) {
             warn!(
                 "Gupaxx | P2pool instance is already running outside of Gupaxx ! Skipping auto-node..."
+            );
+        } else if app.crawler.lock().unwrap().nodes.is_empty() {
+            warn!(
+                "Gupaxx | P2pool can start because there is no discovered nodes yet ! Skipping auto-node..."
             );
         } else {
             Helper::start_p2pool(

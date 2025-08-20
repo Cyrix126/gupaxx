@@ -58,7 +58,12 @@ impl State {
 
     // Convert [State] to [String]
     pub fn to_string(&self) -> Result<String, TomlError> {
-        match toml::ser::to_string(self) {
+        // the latency of the selected remote node needs to be 0 because it won't be an up to date information at next restart
+        let mut state = self.clone();
+        if let Some(node) = &mut state.p2pool.selected_remote_node {
+            node.ms = 0;
+        }
+        match toml::ser::to_string(&state) {
             Ok(s) => Ok(s),
             Err(e) => {
                 error!("State | Couldn't serialize default file: {e}");
@@ -206,6 +211,7 @@ pub struct Gupax {
 pub struct AutoEnabled {
     pub update: bool,
     pub bundled: bool,
+    pub crawl: bool,
     pub ask_before_quit: bool,
     pub save_before_quit: bool,
     pub processes: Vec<ProcessName>,
@@ -215,6 +221,7 @@ impl AutoEnabled {
         match auto {
             AutoStart::Update => self.update = enable,
             AutoStart::Bundle => self.bundled = enable,
+            AutoStart::Crawl => self.crawl = enable,
             AutoStart::AskBeforeQuit => self.ask_before_quit = enable,
             AutoStart::SaveBeforequit => self.save_before_quit = enable,
             AutoStart::Process(p) => {
@@ -233,6 +240,7 @@ impl AutoEnabled {
         match auto {
             AutoStart::Update => self.update,
             AutoStart::Bundle => self.bundled,
+            AutoStart::Crawl => self.crawl,
             AutoStart::AskBeforeQuit => self.ask_before_quit,
             AutoStart::SaveBeforequit => self.save_before_quit,
             AutoStart::Process(p) => self.processes.iter().any(|a| a == p),
@@ -244,6 +252,8 @@ pub enum AutoStart {
     #[strum(to_string = "Auto-Update")]
     Update,
     Bundle,
+    #[strum(to_string = "Crawler")]
+    Crawl,
     #[strum(to_string = "Confirm quit")]
     AskBeforeQuit,
     #[strum(to_string = "Save on exit")]
@@ -256,6 +266,7 @@ impl AutoStart {
         match self {
             AutoStart::Update => GUPAX_AUTO_UPDATE,
             AutoStart::Bundle => GUPAX_BUNDLED_UPDATE,
+            AutoStart::Crawl => GUPAX_AUTO_CRAWL,
             AutoStart::AskBeforeQuit => GUPAX_ASK_BEFORE_QUIT,
             AutoStart::SaveBeforequit => GUPAX_SAVE_BEFORE_QUIT,
             AutoStart::Process(p) => p.msg_auto_help(),
@@ -266,6 +277,7 @@ impl AutoStart {
     pub const ALL: &[AutoStart] = &[
         AutoStart::Update,
         AutoStart::Bundle,
+        AutoStart::Crawl,
         AutoStart::Process(ProcessName::Node),
         AutoStart::Process(ProcessName::P2pool),
         AutoStart::Process(ProcessName::Xmrig),
@@ -288,6 +300,7 @@ impl AutoStart {
     //     .for_each(|p| autos.insert(before_quit_index, AutoStart::Process(p)));
     // autos
 }
+/// Some value must be String because they are used directly in editable fields in the UI
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct P2pool {
     pub simple: bool,
@@ -299,7 +312,7 @@ pub struct P2pool {
     pub out_peers: u16,
     pub in_peers: u16,
     pub log_level: u16,
-    pub node: String,
+    pub selected_remote_node: Option<RemoteNode>,
     pub arguments: String,
     pub address: String,
     pub name: String,
@@ -573,6 +586,7 @@ impl Default for AutoEnabled {
             bundled: true,
             #[cfg(not(feature = "bundle"))]
             bundled: false,
+            crawl: true,
             ask_before_quit: true,
             save_before_quit: true,
             processes: Vec::new(),
@@ -627,7 +641,7 @@ impl Default for P2pool {
             out_peers: 10,
             in_peers: 10,
             log_level: 3,
-            node: RemoteNode::new().to_string(),
+            selected_remote_node: None,
             arguments: String::new(),
             address: String::with_capacity(96),
             name: "Local Monero Node".to_string(),

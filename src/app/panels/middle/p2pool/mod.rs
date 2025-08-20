@@ -1,5 +1,6 @@
 use crate::app::panels::middle::common::console::{console, input_args_field, start_options_field};
 use crate::disk::state::{P2pool, StartOptionsMode, State};
+use crate::helper::crawler::Crawler;
 use crate::helper::p2pool::PubP2poolApi;
 // Gupaxx - Fork of Gupax
 //
@@ -46,6 +47,7 @@ impl P2pool {
         path: &Path,
         local_node_zmq_port: u16,
         local_node_rpc_port: u16,
+        crawler: &Arc<Mutex<Crawler>>,
     ) {
         //---------------------------------------------------------------------------------------------------- [Simple] Console
         // debug!("P2Pool Tab | Rendering [Console]");
@@ -105,7 +107,7 @@ impl P2pool {
             );
 
             if self.simple {
-                self.simple(ui, ping, &mut api_lock);
+                self.simple(ui, ping, &mut api_lock, crawler);
             } else {
                 if !self.arguments.is_empty() {
                     ui.disable();

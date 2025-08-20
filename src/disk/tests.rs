@@ -30,6 +30,7 @@ mod test {
 			simple = true
 			auto_update = true
 			auto_p2pool = false
+			auto_crawl = false
 			auto_node = false
 			auto_xmrig = false
             auto_xvb = false
@@ -55,6 +56,7 @@ mod test {
 			[gupax.auto]
             update = false
             bundled = false
+            crawl = false
             ask_before_quit = false
             save_before_quit = true
             processes = []
@@ -67,27 +69,32 @@ mod test {
 			hashrate = 1241.23
 			hash_metric = "Hash"
 			
-
-			[p2pool]
-			simple = true
-			local_node = true
-			chain = "Nano"
-			auto_ping = true
-			auto_select = true
-			backup_host = true
-			out_peers = 10
-			in_peers = 450
-			log_level = 3
-			node = "Seth"
-			arguments = ""
-			address = "44hintoFpuo3ugKfcqJvh5BmrsTRpnTasJmetKC4VXCt6QDtbHVuixdTtsm6Ptp7Y8haXnJ6j8Gj2dra8CKy5ewz7Vi9CYW"
-			name = "Local Monero Node"
-			ip = "192.168.1.123"
-			rpc = "18089"
-			zmq = "18083"
+            [p2pool]
+            simple = true
+            local_node = false
+            chain = "Nano"
+            auto_ping = false
+            auto_select = true
+            backup_host = true
+            out_peers = 10
+            in_peers = 10
+            log_level = 3
+            arguments = ""
+            address = "4A5Dwt2qKwKEQrZfo4aBkSNtvDDAzSFbAJcyFkdW5RwDh9U4WgeZrgKT4hUoE2gv8h6NmsNMTyjsEL8eSLMbABds5rYFWnw"
+            name = "Local Monero Node"
+            ip = "localhost"
+            rpc = "18081"
+            zmq = "18083"
+            stratum_port = 3333
             prefer_local_node = true
             console_height = 360
-            stratum_port = 3333
+
+            [p2pool.selected_remote_node]              
+            ip = "37.187.74.171"                       
+            location = "Unknown"                        
+            rpc = 18089                                
+            zmq = 18084                                
+            ms = 16
 
             [p2pool.selected_node]
             index = 0
@@ -269,7 +276,6 @@ mod test {
 			out_peers = 10
 			in_peers = 450
 			log_level = 6
-			node = "Seth"
 			arguments = ""
 			address = "44hintoFpuo3ugKfcqJvh5BmrsTRpnTasJmetKC4VXCt6QDtbHVuixdTtsm6Ptp7Y8haXnJ6j8Gj2dra8CKy5ewz7Vi9CYW"
 			name = "Local Monero Node"
@@ -318,7 +324,6 @@ mod test {
         assert!(merged_state.contains("simple = false"));
         assert!(merged_state.contains("in_peers = 450"));
         assert!(merged_state.contains("log_level = 6"));
-        assert!(merged_state.contains(r#"node = "Seth""#));
         assert!(!merged_state.contains("SETTING_THAT_DOESNT_EXIST_ANYMORE"));
         assert!(merged_state.contains("44hintoFpuo3ugKfcqJvh5BmrsTRpnTasJmetKC4VXCt6QDtbHVuixdTtsm6Ptp7Y8haXnJ6j8Gj2dra8CKy5ewz7Vi9CYW"));
         assert!(merged_state.contains("backup_host = true"));

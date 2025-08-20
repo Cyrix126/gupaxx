@@ -64,6 +64,7 @@ use strum::{EnumCount, EnumIter};
 use xrig::xmrig_proxy::ImgProxy;
 
 use self::xvb::{PubXvbApi, nodes::Pool};
+pub mod crawler;
 pub mod node;
 pub mod p2pool;
 pub mod sys_info;

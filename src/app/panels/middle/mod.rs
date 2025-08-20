@@ -117,6 +117,7 @@ impl crate::app::App {
                         &self.state.gupax.absolute_p2pool_path,
                         zmq_port,
                         rpc_port,
+                        &self.crawler,
                     );
                 }
                 Tab::Xmrig => {

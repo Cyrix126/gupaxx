@@ -332,6 +332,7 @@ pub const STATUS_SUBMENU_OTHER_BENCHMARKS: &str =
 // Gupaxx
 pub const GUPAX_UPDATE: &str = "Check for updates on Gupaxx and bundled versions of P2Pool and XMRig via GitHub's API and upgrade automatically";
 pub const GUPAX_AUTO_UPDATE: &str = "Automatically check for updates at startup";
+pub const GUPAX_AUTO_CRAWL: &str = "Start the P2Pool compatible Nodes Finder at startup.\nIt will crawl the monero network to find nodes if the ones already found are not online";
 pub const GUPAX_BUNDLED_UPDATE: &str = "Update XMRig and P2Pool with bundled versions of latest Gupaxx. It will replace any present xmrig and p2pool binary in their specified path.";
 pub const GUPAX_SHOULD_RESTART: &str =
     "Gupaxx was updated. A restart is recommended but not required";
@@ -678,6 +679,13 @@ pub static VISUALS: Lazy<Visuals> = Lazy::new(|| {
         ..Visuals::dark()
     }
 });
+
+// CRAWL consts
+
+pub const BUTTON_DISABLED_BY_EMPTY_LIST_NODES: &str =
+    "disabled while no P2Pool compatible Nodes were found";
+pub const EXPECT_BUTTON_DISABLED: &str = "button should be disabled if there is no found nodes";
+
 //---------------------------------------------------------------------------------------------------- CONSTANTS
 #[cfg(test)]
 mod test {

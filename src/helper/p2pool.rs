@@ -18,7 +18,6 @@
 use super::Helper;
 use super::Process;
 use crate::app::panels::middle::common::list_poolnode::PoolNode;
-use crate::components::node::RemoteNode;
 use crate::disk::state::Node;
 use crate::disk::state::P2pool;
 use crate::disk::state::P2poolChain;
@@ -346,13 +345,16 @@ impl Helper {
         let mut api_path = path;
         api_path.pop();
         if state.simple {
-            let (ip, rpc, zmq) = RemoteNode::get_ip_rpc_zmq(&state.node); // Get: (IP, RPC, ZMQ)
+            let node = state
+                .selected_remote_node
+                .as_ref()
+                .expect("P2Pool should always be started with a node set");
             *helper.lock().unwrap().img_p2pool.lock().unwrap() = ImgP2pool {
                 chain: state.chain.to_string(),
                 address: Self::head_tail_of_monero_address(&state.address),
-                host: ip.to_string(),
-                rpc: rpc.to_string(),
-                zmq: zmq.to_string(),
+                host: node.ip.to_string(),
+                rpc: node.rpc.to_string(),
+                zmq: node.zmq.to_string(),
                 out_peers: "10".to_string(),
                 in_peers: "10".to_string(),
                 stratum_port: P2POOL_PORT_DEFAULT,
@@ -447,15 +449,18 @@ impl Helper {
         match mode {
             StartOptionsMode::Simple if !state.local_node && !override_to_local_node => {
                 // Build the p2pool argument
-                let (ip, rpc, zmq) = RemoteNode::get_ip_rpc_zmq(&state.node); // Get: (IP, RPC, ZMQ)
+                let remote_node = state
+                    .selected_remote_node
+                    .as_ref()
+                    .expect("P2Pool should always be started with a node set");
                 args.push("--wallet".to_string());
                 args.push(state.address.clone()); // Wallet address
                 args.push("--host".to_string());
-                args.push(ip.to_string()); // IP Address
+                args.push(remote_node.ip.to_string()); // IP Address
                 args.push("--rpc-port".to_string());
-                args.push(rpc.to_string()); // RPC Port
+                args.push(remote_node.rpc.to_string()); // RPC Port
                 args.push("--zmq-port".to_string());
-                args.push(zmq.to_string()); // ZMQ Port
+                args.push(remote_node.zmq.to_string()); // ZMQ Port
                 args.push("--data-api".to_string());
                 args.push(api_path.display().to_string()); // API Path
                 args.push("--local-api".to_string()); // Enable API
@@ -470,7 +475,13 @@ impl Helper {
                 // Push other nodes if `backup_host`.
                 if let Some(nodes) = backup_hosts {
                     for node in nodes {
-                        if (node.ip(), node.port(), node.custom()) != (ip, rpc, zmq) {
+                        if (node.ip(), node.port(), node.custom())
+                            != (
+                                &remote_node.ip.to_string(),
+                                &remote_node.rpc.to_string(),
+                                &remote_node.zmq.to_string(),
+                            )
+                        {
                             args.push("--host".to_string());
                             args.push(node.ip().to_string());
                             args.push("--rpc-port".to_string());

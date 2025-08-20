@@ -134,7 +134,7 @@ impl Pool {
                 .expect("hardcored valued should always convert to SocketAddr")
                 .collect::<Vec<SocketAddr>>()[0];
 
-            port_ping(socket_address, TIMEOUT_NODE_PING as u64).await
+            port_ping(socket_address, TIMEOUT_NODE_PING).await
         });
         let ms_na_handle = spawn(async move {
             info!("Node | ping North America Node");
@@ -147,7 +147,7 @@ impl Pool {
             .expect("hardcored valued should always convert to SocketAddr")
             .collect::<Vec<SocketAddr>>()[0];
 
-            port_ping(socket_address, TIMEOUT_NODE_PING as u64).await
+            port_ping(socket_address, TIMEOUT_NODE_PING).await
         });
         let ms_eu = ms_eu_handle
             .await

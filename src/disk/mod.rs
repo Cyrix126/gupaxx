@@ -188,9 +188,10 @@ pub fn into_absolute_path(path: String) -> Result<PathBuf, TomlError> {
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub enum File {
     // State files
-    State, // state.toml   | Gupax state
-    Node,  // node.toml    | P2Pool manual node selector
-    Pool,  // pool.toml    | XMRig manual pool selector
+    State, // state.toml        | Gupax state
+    Node,  // node.toml         | P2Pool manual node selector
+    Pool,  // pool.toml         | XMRig manual pool selector
+    Crawl, // found_nodes.toml | Crawler saved results
 
     // Gupax-P2Pool API
     Log,    // log    | Raw log lines of P2Pool payouts received

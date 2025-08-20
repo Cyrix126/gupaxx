@@ -595,6 +595,10 @@ impl crate::app::App {
                 if !Regexes::addr_ok(&self.state.p2pool.address) {
                     return Err(format!("Error: {P2POOL_ADDRESS}"));
                 }
+                // check if a node is selected
+                if self.state.p2pool.selected_remote_node.is_none() {
+                    return Err("Error: no Node for p2pool has been found.\nClick on the button to start finding one\nOr check your connection".to_string());
+                }
                 &self.state.gupax.p2pool_path
             }
             ProcessName::Xmrig => &self.state.gupax.xmrig_path,

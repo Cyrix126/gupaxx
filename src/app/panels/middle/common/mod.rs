@@ -18,5 +18,6 @@
 pub mod console;
 pub mod header_tab;
 pub mod list_poolnode;
+pub mod size_calculator;
 pub mod state_edit_field;
 pub mod toggle;

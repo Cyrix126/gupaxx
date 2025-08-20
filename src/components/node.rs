@@ -16,163 +16,121 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::utils::node_latency::port_ping;
-use crate::{constants::*, macros::*};
+use derive_more::{Deref, DerefMut};
 use egui::Color32;
+use enclose::enc;
 use log::*;
 use rand::{Rng, rng};
-use std::net::{SocketAddr, ToSocketAddrs};
+use serde::{Deserialize, Serialize};
+use std::cmp::Ordering;
+use std::net::{IpAddr, SocketAddr};
 use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
-//---------------------------------------------------------------------------------------------------- Node list
-// Remote Monero Nodes with ZMQ enabled.
-// The format is an array of tuples consisting of: (IP, LOCATION, RPC_PORT, ZMQ_PORT)
-
-pub const REMOTE_NODES: [(&str, &str, &str, &str); 8] = [
-    ("monero.10z.com.ar", "Argentina", "18089", "18084"),
-    ("node.monerodevs.org", "Canada", "18089", "18084"),
-    ("p2pmd.xmrvsbeast.com", "Germany", "18081", "18083"),
-    ("node2.monerodevs.org", "France", "18089", "18084"),
-    ("p2pool.uk", "United Kingdom", "18089", "18084"),
-    ("xmr.support", "United States", "18081", "18083"),
-    ("xmr.spotlightsound.com", "United States", "18081", "18084"),
-    ("node.richfowler.net", "United States", "18089", "18084"),
-];
-
-pub const REMOTE_NODE_LENGTH: usize = REMOTE_NODES.len();
-
 #[allow(dead_code)]
+#[derive(Clone, Debug, Deserialize, Serialize, Eq)]
 pub struct RemoteNode {
-    pub ip: &'static str,
-    pub location: &'static str,
-    pub rpc: &'static str,
-    pub zmq: &'static str,
+    pub ip: IpAddr,
+    pub location: String,
+    pub rpc: u16,
+    pub zmq: u16,
+    pub ms: u64,
 }
 
-impl Default for RemoteNode {
-    fn default() -> Self {
-        Self::new()
+// we ignore latency to identify nodes
+impl PartialEq for RemoteNode {
+    fn eq(&self, other: &Self) -> bool {
+        self.ip == other.ip
+            && self.location == other.location
+            && self.rpc == other.rpc
+            && self.zmq == other.zmq
+    }
+    fn ne(&self, other: &Self) -> bool {
+        self.ip != other.ip
+            || self.location != other.location
+            || self.rpc != other.rpc
+            || self.zmq != other.zmq
+    }
+}
+
+#[derive(DerefMut, Deref, Debug, Clone, Default, Deserialize, Serialize, PartialEq)]
+pub struct RemoteNodes(Vec<RemoteNode>);
+
+impl RemoteNodes {
+    // Returns a default if index is not found in the const array.
+    pub fn from_index(&self, index: usize) -> Option<&RemoteNode> {
+        if index >= self.len() {
+            self.new()
+        } else {
+            Some(&self[index])
+        }
+    }
+    pub fn new(&self) -> Option<&RemoteNode> {
+        self.get_random_same_ok()
+    }
+    pub fn find_selected(&self, selected: &RemoteNode) -> Option<&RemoteNode> {
+        self.iter().find(|node| *node == selected)
+    }
+    // Return a random node (that isn't the one already selected).
+    // Return a random valid node (no input str).
+    pub fn get_random_same_ok(&self) -> Option<&RemoteNode> {
+        if self.is_empty() {
+            return None;
+        }
+        let rng = rng().random_range(0..self.len());
+        self.from_index(rng)
+    }
+    // Return the node [-1] of this one
+    pub fn get_last(&self, current: &RemoteNode) -> RemoteNode {
+        let mut found = false;
+        let mut last = current;
+        for node in self.iter() {
+            if found {
+                return node.clone();
+            }
+            if current == node {
+                found = true;
+            } else {
+                last = node;
+            }
+        }
+        last.clone()
+    }
+    // Return the node [+1] of this one
+    pub fn get_next(&self, current: &RemoteNode) -> RemoteNode {
+        let mut found = false;
+        for node in self.iter() {
+            if found {
+                return node.clone();
+            }
+            if current == node {
+                found = true;
+            }
+        }
+        current.clone()
     }
 }
 
 impl RemoteNode {
-    pub fn new() -> Self {
-        Self::get_random_same_ok()
-    }
-
-    pub fn check_exists(og_ip: &str) -> String {
-        for (ip, _, _, _) in REMOTE_NODES {
-            if og_ip == ip {
-                info!("Found remote node in array: {ip}");
-                return ip.to_string();
-            }
+    pub fn ping_color(&self) -> Color32 {
+        // if it comes from the crawler, the value should always be set.
+        // But if it's 0 (for example if in the future this method is used for used for manually inserted nodes), use the gray color
+        if self.ms == 0 {
+            return Color32::GRAY;
         }
-        let ip = REMOTE_NODES[0].0.to_string();
-        warn!("[{og_ip}] remote node does not exist, returning default: {ip}");
-        ip
-    }
-
-    // Returns a default if index is not found in the const array.
-    pub fn from_index(index: usize) -> Self {
-        if index > REMOTE_NODE_LENGTH {
-            Self::new()
-        } else {
-            let (ip, location, rpc, zmq) = REMOTE_NODES[index];
-            Self {
-                ip,
-                location,
-                rpc,
-                zmq,
-            }
+        match self.ms.cmp(&GREEN_NODE_PING) {
+            Ordering::Less | Ordering::Equal => Color32::GREEN,
+            Ordering::Greater => match self.ms.cmp(&RED_NODE_PING) {
+                Ordering::Less => Color32::ORANGE,
+                Ordering::Greater | Ordering::Equal => Color32::RED,
+            },
         }
     }
 
-    pub fn get_ip_rpc_zmq(og_ip: &str) -> (&str, &str, &str) {
-        for (ip, _, rpc, zmq) in REMOTE_NODES {
-            if og_ip == ip {
-                return (ip, rpc, zmq);
-            }
-        }
-        let (ip, _, rpc, zmq) = REMOTE_NODES[0];
-        (ip, rpc, zmq)
-    }
-
-    // Return a random node (that isn't the one already selected).
-    pub fn get_random(current_ip: &str) -> String {
-        let mut random_rng = rng().random_range(0..REMOTE_NODE_LENGTH);
-        let mut node = REMOTE_NODES[random_rng].0;
-        while current_ip == node {
-            random_rng = rng().random_range(0..REMOTE_NODE_LENGTH);
-            node = REMOTE_NODES[random_rng].0;
-        }
-        node.to_string()
-    }
-
-    // Return a random valid node (no input str).
-    pub fn get_random_same_ok() -> Self {
-        let rng = rng().random_range(0..REMOTE_NODE_LENGTH);
-        Self::from_index(rng)
-    }
-
-    // Return the node [-1] of this one
-    pub fn get_last(current_ip: &str) -> String {
-        let mut found = false;
-        let mut last = current_ip;
-        for (ip, _, _, _) in REMOTE_NODES {
-            if found {
-                return ip.to_string();
-            }
-            if current_ip == ip {
-                found = true;
-            } else {
-                last = ip;
-            }
-        }
-        last.to_string()
-    }
-
-    // Return the node [+1] of this one
-    pub fn get_next(current_ip: &str) -> String {
-        let mut found = false;
-        for (ip, _, _, _) in REMOTE_NODES {
-            if found {
-                return ip.to_string();
-            }
-            if current_ip == ip {
-                found = true;
-            }
-        }
-        current_ip.to_string()
-    }
-
-    // This returns relative to the ping.
-    pub fn get_last_from_ping(current_ip: &str, nodes: &Vec<NodeData>) -> String {
-        let mut found = false;
-        let mut last = current_ip;
-        for data in nodes {
-            if found {
-                return last.to_string();
-            }
-            if current_ip == data.ip {
-                found = true;
-            } else {
-                last = data.ip;
-            }
-        }
-        last.to_string()
-    }
-
-    pub fn get_next_from_ping(current_ip: &str, nodes: &Vec<NodeData>) -> String {
-        let mut found = false;
-        for data in nodes {
-            if found {
-                return data.ip.to_string();
-            }
-            if current_ip == data.ip {
-                found = true;
-            }
-        }
-        current_ip.to_string()
+    /// TODO
+    /// Use a database https://github.com/sapics/ip-location-db to show country of discovered node
+    pub fn country(&self) -> String {
+        "Country Soon".to_string()
     }
 }
 
@@ -184,7 +142,7 @@ impl std::fmt::Display for RemoteNode {
 
 //---------------------------------------------------------------------------------------------------- Formatting
 // 5000 = 4 max length
-pub fn format_ms(ms: u128) -> String {
+pub fn format_ms(ms: u64) -> String {
     match ms.to_string().len() {
         1 => format!("{ms}ms   "),
         2 => format!("{ms}ms  "),
@@ -193,52 +151,11 @@ pub fn format_ms(ms: u128) -> String {
     }
 }
 
-// format_ip_location(monero1.heitechsoft.com) -> "monero1.heitechsoft.com | XX - LOCATION"
-// [extra_space] controls whether extra space is appended so the list aligns.
-pub fn format_ip_location(og_ip: &str, extra_space: bool) -> String {
-    for (ip, location, _, _) in REMOTE_NODES {
-        if og_ip == ip {
-            let ip = if extra_space {
-                format_ip(ip)
-            } else {
-                ip.to_string()
-            };
-            return format!("{ip} | {location}");
-        }
-    }
-    "??? | ???".to_string()
-}
-
-pub fn format_ip(ip: &str) -> String {
-    format!("{ip: >22}")
-}
-
 //---------------------------------------------------------------------------------------------------- Node data
-pub const GREEN_NODE_PING: u128 = 100;
+pub const GREEN_NODE_PING: u64 = 100;
 // yellow is anything in-between green/red
-pub const RED_NODE_PING: u128 = 300;
-pub const TIMEOUT_NODE_PING: u128 = 1000;
-
-#[derive(Debug, Clone)]
-pub struct NodeData {
-    pub ip: &'static str,
-    pub ms: u128,
-    pub color: Color32,
-}
-
-impl NodeData {
-    pub fn new_vec() -> Vec<Self> {
-        let mut vec = Vec::new();
-        for (ip, _, _, _) in REMOTE_NODES {
-            vec.push(Self {
-                ip,
-                ms: 0,
-                color: Color32::LIGHT_GRAY,
-            });
-        }
-        vec
-    }
-}
+pub const RED_NODE_PING: u64 = 300;
+pub const TIMEOUT_NODE_PING: u64 = 1000;
 
 //---------------------------------------------------------------------------------------------------- `/get_info`
 // A struct repr of the JSON-RPC we're
@@ -263,8 +180,7 @@ pub struct GetInfoResult {
 //---------------------------------------------------------------------------------------------------- Ping data
 #[derive(Debug)]
 pub struct Ping {
-    pub nodes: Vec<NodeData>,
-    pub fastest: &'static str,
+    pub nodes: RemoteNodes,
     pub pinging: bool,
     pub msg: String,
     pub prog: f32,
@@ -272,17 +188,10 @@ pub struct Ping {
     pub auto_selected: bool,
 }
 
-impl Default for Ping {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Ping {
-    pub fn new() -> Self {
+    pub fn new(nodes: RemoteNodes) -> Self {
         Self {
-            nodes: NodeData::new_vec(),
-            fastest: REMOTE_NODES[0].0,
+            nodes,
             pinging: false,
             msg: "No ping in progress".to_string(),
             prog: 0.0,
@@ -330,178 +239,88 @@ impl Ping {
     //
     // This used to be done 3x linearly but after testing, sending a single
     // JSON-RPC call to all IPs asynchronously resulted in the same data.
-    //
-    // <300ms  = GREEN
-    // >300ms = YELLOW
-    // >500ms = RED
-    // timeout = RED
-    // default = GRAY
     #[cold]
     #[inline(never)]
     #[tokio::main]
     pub async fn ping(ping: &Arc<Mutex<Self>>) -> Result<String, anyhow::Error> {
         // Start ping
-        let ping = Arc::clone(ping);
         ping.lock().unwrap().pinging = true;
         ping.lock().unwrap().prog = 0.0;
-        let percent = (100.0 / (REMOTE_NODE_LENGTH as f32)).floor();
+        let len = ping.lock().unwrap().nodes.len();
+        let percent = Arc::new((100.0 / (len as f32)).floor());
 
         // Handle vector
-        let mut handles = Vec::with_capacity(REMOTE_NODE_LENGTH);
-        let node_vec = arc_mut!(Vec::with_capacity(REMOTE_NODE_LENGTH));
+        let mut handles = Vec::with_capacity(len);
+        let mut nodes = ping.lock().unwrap().nodes.clone();
+        let vec_nodes = Arc::new(Mutex::new(Vec::with_capacity(nodes.len())));
+        for node in nodes.iter() {
+            let handle = tokio::task::spawn(enc!((vec_nodes, node, ping, percent) async move {
+                let socket_address = SocketAddr::new(node.ip, node.zmq);
 
-        for (ip, _, _, zmq) in REMOTE_NODES {
-            let ping = Arc::clone(&ping);
-            let node_vec = Arc::clone(&node_vec);
-
-            let handle = tokio::task::spawn(async move {
-                let socket_address = format!("{ip}:{zmq}")
-                    .to_socket_addrs()
-                    .expect("hardcored valued should always convert to SocketAddr")
-                    .collect::<Vec<SocketAddr>>()[0];
-                if let Ok(ms) = port_ping(socket_address, TIMEOUT_NODE_PING as u64).await {
-                    let info = format!("{ms}ms ... {ip}");
-                    info!("Ping | {ms}ms ... {ip}");
-                    let color = if ms < GREEN_NODE_PING {
-                        GREEN
-                    } else if ms < RED_NODE_PING {
-                        YELLOW
-                    } else {
-                        RED
-                    };
+                if let Ok(ms) = port_ping(socket_address, TIMEOUT_NODE_PING).await {
+                    let info = format!("{ms}ms ... {}", node.ip);
+                    info!("Ping | {ms}ms ... {}", node.ip);
 
                     let mut ping = ping.lock().unwrap();
                     ping.msg = info;
-                    ping.prog += percent;
+                    ping.prog += *percent;
                     drop(ping);
-                    node_vec.lock().unwrap().push(NodeData { ip, ms, color });
+                    let mut node = node.clone();
+                    node.ms = ms;
+                    dbg!(node.ms);
+                    vec_nodes.lock().unwrap().push(node);
                 }
-            });
+            }));
             handles.push(handle);
         }
 
         for handle in handles {
             handle.await?;
         }
-
-        let mut node_vec = std::mem::take(&mut *node_vec.lock().unwrap());
-        node_vec.sort_by(|a, b| a.ms.cmp(&b.ms));
-        let fastest_info = format!("Fastest node: {}ms ... {}", node_vec[0].ms, node_vec[0].ip);
+        nodes = RemoteNodes(vec_nodes.lock().unwrap().to_vec());
+        nodes.sort_by(|a, b| a.ms.cmp(&b.ms));
+        let fastest_info;
+        if let Some(node) = nodes.first() {
+            fastest_info = format!("Fastest node: {}ms ... {}", node.ms, node.ip);
+        } else {
+            fastest_info = "Pinged without any nodes".to_string();
+        }
 
         let info = "Cleaning up connections".to_string();
         info!("Ping | {info}...");
         let mut ping = ping.lock().unwrap();
-        ping.fastest = node_vec[0].ip;
-        ping.nodes = node_vec;
         ping.msg = info;
+        ping.nodes = nodes;
         drop(ping);
         Ok(fastest_info)
     }
-}
-//---------------------------------------------------------------------------------------------------- NODE
-#[cfg(test)]
-mod test {
-    use std::net::{SocketAddr, ToSocketAddrs};
-
-    use log::error;
-
-    use crate::{
-        components::node::{REMOTE_NODE_LENGTH, REMOTE_NODES, TIMEOUT_NODE_PING, format_ip},
-        utils::node_latency::port_ping,
-    };
-    // Iterate through all nodes, find the longest domain.
-    pub const REMOTE_NODE_MAX_CHARS: usize = {
-        let mut len = 0;
-        let mut index = 0;
-
-        while index < REMOTE_NODE_LENGTH {
-            let (node, _, _, _) = REMOTE_NODES[index];
-            if node.len() > len {
-                len = node.len();
+    // This returns relative to the ping.
+    pub fn get_last_from_ping(&self, current: &RemoteNode) -> RemoteNode {
+        let mut found = false;
+        let mut last = current;
+        for data in self.nodes.iter() {
+            if found {
+                return last.clone();
             }
-            index += 1;
+            if current == data {
+                found = true;
+            } else {
+                last = data;
+            }
         }
-
-        assert!(len != 0);
-        len
-    };
-    #[test]
-    fn validate_node_ips() {
-        for (ip, location, rpc, zmq) in REMOTE_NODES {
-            assert!(ip.len() < 255);
-            assert!(ip.is_ascii());
-            assert!(!location.is_empty());
-            assert!(!ip.is_empty());
-            assert!(rpc == "18081" || rpc == "18089");
-            assert!(zmq == "18083" || zmq == "18084");
-        }
+        last.clone()
     }
 
-    #[test]
-    fn spacing() {
-        for (ip, _, _, _) in REMOTE_NODES {
-            assert!(format_ip(ip).len() <= REMOTE_NODE_MAX_CHARS);
-        }
-    }
-
-    // This one pings the IPs defined in [REMOTE_NODES] and fully serializes the JSON data to make sure they work.
-    // This will only be ran with be ran with [cargo test -- --ignored].
-    #[tokio::test]
-    #[ignore]
-    async fn full_ping() {
-        use serde::{Deserialize, Serialize};
-
-        #[derive(Deserialize, Serialize)]
-        struct GetInfo {
-            id: String,
-            jsonrpc: String,
-        }
-
-        // Only fail this test if >50% of nodes fail.
-        const HALF_REMOTE_NODES: usize = REMOTE_NODE_LENGTH / 2;
-        // A string buffer to append the failed node data.
-        let mut failures = String::new();
-        let mut failure_count = 0;
-
-        let mut n = 1;
-        'outer: for (ip, _, _, zmq) in REMOTE_NODES {
-            println!("[{n}/{REMOTE_NODE_LENGTH}] {ip} |  | {zmq}");
-            // Try 3 times before failure
-            let mut i = 1;
-            loop {
-                let socket_address = format!("{ip}:{zmq}")
-                    .to_socket_addrs()
-                    .expect("hardcored valued should always convert to SocketAddr")
-                    .collect::<Vec<SocketAddr>>()[0];
-                match port_ping(socket_address, TIMEOUT_NODE_PING as u64).await {
-                    Ok(_) => break,
-                    Err(e) => {
-                        println!("{:#?}", e);
-                        if i >= 3 {
-                            use std::fmt::Write;
-                            let _ = writeln!(failures, "Node failure: {ip}: :{zmq}");
-                            failure_count += 1;
-                            continue 'outer;
-                        }
-                        std::thread::sleep(std::time::Duration::from_secs(2));
-                        i += 1;
-                    }
-                }
+    pub fn get_next_from_ping(&self, current: &RemoteNode) -> RemoteNode {
+        let mut found = false;
+        for data in self.nodes.iter() {
+            if found {
+                return data.clone();
             }
-            n += 1;
+            if current == data {
+                found = true;
+            }
         }
-
-        let failure_percent = failure_count as f32 / HALF_REMOTE_NODES as f32;
-
-        // If more than half the nodes fail, something
-        // is definitely wrong, fail this test.
-        if failure_count > HALF_REMOTE_NODES {
-            error!("[{failure_percent:.2}% of nodes failed, failure log:\n{failures}");
-        // If some failures happened, log.
-        } else if failure_count != 0 {
-            eprintln!("[{failure_count}] nodes failed ({failure_percent:.2}%):\n{failures}");
-        } else {
-            println!("No nodes failed - all OK");
-        }
+        current.clone()
     }
 }
