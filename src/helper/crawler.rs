@@ -1,3 +1,4 @@
+use crate::helper::sleep;
 use std::{
     sync::{
         Arc, Mutex,
@@ -77,6 +78,10 @@ impl Crawler {
         info!("Spawning crawl thread...");
 
         let (tx, rx) = mpsc::channel();
+        // do not start if the past crawling did not stopped yet
+        while crawler.lock().unwrap().crawling {
+            sleep!(20);
+        }
         crawler.lock().unwrap().crawling = true;
         crawler.lock().unwrap().prog = 0.0;
         spawn(enc!((crawler) move || {
@@ -97,12 +102,11 @@ impl Crawler {
     /// Used manually by the user
     /// Will do nothing if the crawling wasn't running
     pub fn stop(crawler: &Arc<Mutex<Self>>) {
-        let mut crawler_lock = crawler.lock().unwrap();
+        let crawler_lock = crawler.lock().unwrap();
         if crawler_lock.crawling
             && let Some(handle) = &crawler_lock.handle
         {
             handle.send(true).unwrap();
-            crawler_lock.crawling = false;
         }
     }
 
@@ -154,6 +158,7 @@ impl Crawler {
                     CapabilitiesChecker::SpyNode(false, vec![]),
                     CapabilitiesChecker::SeedNode(false),
                 ])
+                // .connections_limit(Arc::new(Semaphore::new(1)))
                 .build()
                 .unwrap();
         }
@@ -235,6 +240,7 @@ impl Crawler {
         }
         // since the crawling is stopping, we remove the handler that allows to stop it manually
         crawler.lock().unwrap().handle = None;
+        // we only put the crawling to false once the crawling is really done, we don't want to have a second crawling happening when the old one is not yet done.
         crawler.lock().unwrap().crawling = false;
     }
 }
