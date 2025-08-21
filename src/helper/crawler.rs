@@ -62,8 +62,8 @@ impl Default for CrawlerRequirements {
     fn default() -> Self {
         CrawlerRequirements {
             nb_nodes_fast: 2,
-            max_ping: 1000,
-            max_ping_fast: 30,
+            max_ping: 300,
+            max_ping_fast: 25,
             nb_nodes_medium: 5,
         }
     }
@@ -152,6 +152,7 @@ impl Crawler {
                     CapabilitiesChecker::Rpc(rpc_ports),
                     CapabilitiesChecker::Zmq(zmq_ports),
                     CapabilitiesChecker::SpyNode(false, vec![]),
+                    CapabilitiesChecker::SeedNode(false),
                 ])
                 .build()
                 .unwrap();
