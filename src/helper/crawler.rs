@@ -78,6 +78,7 @@ impl Crawler {
 
         let (tx, rx) = mpsc::channel();
         crawler.lock().unwrap().crawling = true;
+        crawler.lock().unwrap().prog = 0.0;
         spawn(enc!((crawler) move || {
             let now = Instant::now();
             Self::crawl(&crawler, rx);
@@ -102,7 +103,6 @@ impl Crawler {
         {
             handle.send(true).unwrap();
             crawler_lock.crawling = false;
-            crawler_lock.prog = 0.0;
         }
     }
 
@@ -110,7 +110,7 @@ impl Crawler {
     pub async fn update_progress(crawler: &Arc<Mutex<Self>>) {
         let timeout = crawler.lock().unwrap().timeout;
 
-        for i in 1..10 {
+        for i in 1..11 {
             sleep(timeout / 10).await;
             let mut crawler_lock = crawler.lock().unwrap();
 
@@ -137,7 +137,7 @@ impl Crawler {
         info!("Inside crawl thread");
         let mut nb_nodes_fast = 0;
         let mut nb_nodes_medium = 0;
-        let percent = 100.0 / (nb_nodes_fast as f32).floor();
+        let percent = 100.0 / (crawler.lock().unwrap().requirements.nb_nodes_fast as f32).floor();
         let crawl;
         {
             let crawler_lock = crawler.lock().unwrap();
@@ -233,7 +233,7 @@ impl Crawler {
                 break;
             }
         }
-        // since the crawling is stopping, we remote the handler that allows to stop it manually
+        // since the crawling is stopping, we remove the handler that allows to stop it manually
         crawler.lock().unwrap().handle = None;
         crawler.lock().unwrap().crawling = false;
     }
