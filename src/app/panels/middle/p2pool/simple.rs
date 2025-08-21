@@ -22,6 +22,7 @@ use crate::app::panels::middle::ProgressBar;
 use crate::app::panels::middle::common::size_calculator::height_dropdown;
 use crate::components::node::Ping;
 use crate::components::node::RemoteNode;
+use crate::components::node::RemoteNodes;
 use crate::components::node::format_ms;
 use crate::constants::*;
 use crate::disk::state::P2pool;
@@ -97,17 +98,21 @@ impl P2pool {
                 crawl_progress(crawler, ui);
             });
             ui.vertical(|ui| {
-                let crawler_lock = crawler.lock().unwrap();
+                let mut crawler_lock = crawler.lock().unwrap();
                 let mut ping_lock = ping.lock().unwrap();
                 // [Ping List]
                 //
                 //
                 // Refresh the ping list with crawled nodes
+                let crawling = crawler_lock.crawling;
                 let ping_nodes = &mut ping_lock.nodes;
-                let crawl_nodes = &crawler_lock.nodes;
+                let crawl_nodes = &mut crawler_lock.nodes;
 
                 if *ping_nodes != *crawl_nodes && !crawl_nodes.is_empty() {
                     *ping_nodes = crawl_nodes.clone();
+                    if !crawling {
+                        *crawl_nodes = RemoteNodes::default();
+                    }
                 }
 
                 // refresh the selected node with the fastest from the pinged nodes if it was empty
