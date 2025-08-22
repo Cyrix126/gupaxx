@@ -383,6 +383,7 @@ pub const GUPAX_PATH_XMRIG: &str = "The location of the XMRig binary: Both absol
 pub const GUPAX_PATH_XMRIG_PROXY: &str = "The location of the XMRig-Proxy binary: Both absolute and relative paths are accepted; A red [X] will appear if there is no file found at the given path";
 
 // P2Pool
+pub const P2POOL_USE_LOCAL_NODE_BUTTON: &str = "Start with a local node";
 pub const P2POOL_PORT_DEFAULT: u16 = 3333;
 pub const P2POOL_MAIN: &str = "Use the P2Pool main-chain. This P2Pool finds blocks faster, but has a higher difficulty. Suitable for miners with more than 100kH/s";
 pub const P2POOL_MINI: &str = "Use the P2Pool mini-chain. This P2Pool finds blocks slower, but has a lower difficulty. Suitable for miners with less than 100kH/s";

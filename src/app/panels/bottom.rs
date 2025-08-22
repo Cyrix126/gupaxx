@@ -7,7 +7,7 @@ use crate::disk::pool::Pool;
 use crate::disk::state::{Gupax, State};
 use crate::disk::status::Submenu;
 use crate::errors::process_running;
-use crate::helper::{Helper, ProcessName, ProcessSignal};
+use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
 use crate::utils::constants::*;
 use crate::utils::errors::{ErrorButtons, ErrorFerris};
 use crate::utils::regex::Regexes;
@@ -333,14 +333,28 @@ impl crate::app::App {
                                 &self.state.node,
                                 &self.state.gupax.absolute_node_path,
                             ),
-                            ProcessName::P2pool => Helper::start_p2pool(
+                            ProcessName::P2pool => {
+                            // check if button to use local node is checked and if the local node is running
+                            // It prevents starting p2pool if the node is not ready
+                            // It is much clearer for the user what the issue is than trying to debug the terminal output.
+                            if self.state.p2pool.local_node && self.node.lock().unwrap().state != ProcessState::Alive {
+                                error!(" {name} needs {} to start because the button \"{P2POOL_USE_LOCAL_NODE_BUTTON}\", but it was not ready", ProcessName::Node);
+                                self.error_state.set(
+                                    format!("P2Pool needs a local Node to be alive and well. Check the Node tab to start one or uncheck the button \"{P2POOL_USE_LOCAL_NODE_BUTTON}\""),
+                                    ErrorFerris::Error,
+                                    ErrorButtons::Okay,
+                                );
+                                return;
+                            }
+                            Helper::start_p2pool(
                                 &self.helper,
                                 &self.state.p2pool,
                                 &self.state.node,
                                 &self.state.gupax.absolute_p2pool_path,
                                 self.backup_hosts.clone(),
                                 false,
-                            ),
+                            )
+                            },
 
                             ProcessName::Xmrig => {
                                 if cfg!(windows) || !Helper::password_needed() {
@@ -595,10 +609,13 @@ impl crate::app::App {
                 if !Regexes::addr_ok(&self.state.p2pool.address) {
                     return Err(format!("Error: {P2POOL_ADDRESS}"));
                 }
-                // check if a node is selected
-                if self.state.p2pool.selected_remote_node.is_none() {
-                    return Err("Error: no Node for p2pool has been found.\nClick on the button to start finding one\nOr check your connection".to_string());
+                // check if a remote node is selected if button unchecked
+                if !self.state.p2pool.local_node && self.state.p2pool.selected_remote_node.is_none()
+                {
+                    return Err("Error: no Node for p2pool has been found.\nClick on the button to start finding one or check your connection".to_string());
                 }
+                // check if a local node is not running and the button is checked
+                // if self.state.p2pool.local_node &&
                 &self.state.gupax.p2pool_path
             }
             ProcessName::Xmrig => &self.state.gupax.xmrig_path,
