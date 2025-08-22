@@ -19,7 +19,6 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use crate::app::panels::middle::ProgressBar;
-use crate::app::panels::middle::common::size_calculator::height_dropdown;
 use crate::components::node::Ping;
 use crate::components::node::RemoteNode;
 use crate::components::node::RemoteNodes;
@@ -82,19 +81,26 @@ impl P2pool {
                 } else {
                     "Start finding P2Pool compatible Nodes"
                 };
-                if ui
-                    .button(button_crawl_text)
-                    .on_hover_text("It will reset the current found nodes")
-                    .clicked()
-                {
-                    if !crawling {
-                        self.selected_remote_node = None;
-                        Crawler::start(crawler);
-                    } else {
-                        crawler.lock().unwrap().msg = "Stopped manually".to_string();
-                        Crawler::stop(crawler);
+                // prevent user clicking on button if it's currently stopping
+                let stopping = crawler.lock().unwrap().stopping;
+
+                ui.add_enabled_ui(!stopping, |ui| {
+                    if ui
+                        .button(button_crawl_text)
+                        .on_hover_text("It will reset the current found nodes")
+                        .clicked()
+                    {
+                        if !crawling {
+                            self.selected_remote_node = None;
+                            Crawler::start(crawler);
+                        } else {
+                            crawler.lock().unwrap().stopping = true;
+                            Crawler::stop(crawler);
+                        }
                     }
-                }
+                })
+                .response
+                .on_disabled_hover_text("Stopping the crawling...");
                 crawl_progress(crawler, ui);
             });
             ui.vertical(|ui| {
@@ -157,9 +163,7 @@ impl P2pool {
 
             // if there is no nodes found, add it to list so it can get pinged
             if ping_nodes.is_empty() {
-                dbg!("before adding {ping_nodes}");
                 ping_nodes.push(selected_saved_node.clone());
-                dbg!("after adding {ping_nodes}");
             }
 
             // the selected node saved in the state file will not include the latency
@@ -181,31 +185,58 @@ impl P2pool {
                 } else {
                     format_ms(selected_node.ms).to_string()
                 };
-                let country = selected_node.country();
-                let text = RichText::new(format!(" ⏺ {ping_msg} | {country}"))
+                let ip = selected_node.ip.to_string();
+                let text = RichText::new(format!(" ⏺ {ping_msg} | {ip}"))
                     .color(selected_node.ping_color());
-                ui.style_mut().override_text_style = Some(egui::TextStyle::Small);
-                ui.spacing_mut().item_spacing.y = 0.0;
                 ui.style_mut().override_text_valign = Some(Align::Center);
-                ui.set_height(0.0);
-                ComboBox::from_id_salt("remote_nodes")
-                    .selected_text(text)
-                    .width(ui.available_width())
-                    .height(height_dropdown(ping_nodes.len(), ui) * 10.0)
-                    .show_ui(ui, |ui| {
-                        for data in ping_nodes.iter() {
-                            let country = data.country();
-                            let ping_msg = if data.ms == 0 {
-                                "Latency not measured".to_string()
-                            } else {
-                                format_ms(data.ms).to_string()
-                            };
+                ui.vertical_centered(|ui| {
+                    let screen_size = ui.ctx().screen_rect().size();
+                    // ui.set_max_size(screen_size);
+                    ui.set_max_height(screen_size.y);
+                    let width = ui.available_width();
+                    ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
+                        ui.ctx().request_repaint();
+                        ComboBox::from_id_salt("remote_nodes")
+                            .selected_text(text)
+                            .width(ui.available_width())
+                            .height(ui.available_height())
+                            .show_ui(ui, |ui| {
+                                // space width fix
+                                // doesn't work with height, fix is under
+                                ui.set_max_width(width - SPACE);
+                                ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Extend);
+                                for data in ping_nodes.iter() {
+                                    let ip = data.ip.to_string();
+                                    let ping_msg = if data.ms == 0 {
+                                        "Latency not measured".to_string()
+                                    } else {
+                                        format_ms(data.ms).to_string()
+                                    };
 
-                            let text = RichText::new(format!(" ⏺ {ping_msg} | {country}"))
-                                .color(data.ping_color());
-                            ui.selectable_value(selected_saved_node, data.clone(), text);
-                        }
+                                    let text = RichText::new(format!(" ⏺ {ping_msg} | {ip}"))
+                                        .color(data.ping_color());
+                                    ui.selectable_value(selected_saved_node, data.clone(), text);
+                                }
+                                // space height fix
+                                // the combo box will keep the height of the first time the menu is clicked.
+                                // So if the user click on the menu with only one item, it will keep the same small height when
+                                // the menu will have more items, which make it ugly because it forces the user to
+                                // use the scrollbar when there was enough space to show more of them.
+                                // https://github.com/emilk/egui/issues/5225
+                                //
+                                // The fix is to preallocate the space
+
+                                if ping_nodes.len() < 4 {
+                                    for _ in 1..(5 - ping_nodes.len()) {
+                                        //
+
+                                        ui.label(String::new());
+                                    }
+                                }
+                                // });
+                            });
                     });
+                });
             });
         }
     }

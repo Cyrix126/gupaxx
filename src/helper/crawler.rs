@@ -11,7 +11,7 @@ use std::{
 use enclose::enc;
 use futures::StreamExt;
 use log::info;
-use monero_crawler_lib::{CapabilitiesChecker, CrawlBuilder};
+use monero_crawler_lib::{CrawlBuilder, capability_checkers::CapabilitiesChecker};
 use tokio::time::sleep;
 
 use crate::components::node::{RemoteNode, RemoteNodes};
@@ -20,6 +20,7 @@ pub struct Crawler {
     pub nodes: RemoteNodes,
     // crawling will keep running while it didn't find nb_nodes_fast number
     pub crawling: bool,
+    pub stopping: bool,
     pub msg: String,
     pub prog: f32,
     pub requirements: CrawlerRequirements,
@@ -34,6 +35,7 @@ impl Default for Crawler {
         Crawler {
             nodes: RemoteNodes::default(),
             crawling: false,
+            stopping: false,
             msg: "Inactive".to_string(),
             prog: 0.0,
             requirements: CrawlerRequirements::default(),
@@ -62,10 +64,10 @@ pub struct CrawlerRequirements {
 impl Default for CrawlerRequirements {
     fn default() -> Self {
         CrawlerRequirements {
-            nb_nodes_fast: 2,
+            nb_nodes_fast: 1,
             max_ping: 300,
-            max_ping_fast: 25,
-            nb_nodes_medium: 5,
+            max_ping_fast: 35,
+            nb_nodes_medium: 3,
         }
     }
 }
@@ -128,17 +130,14 @@ impl Crawler {
             if crawler_lock.prog < i as f32 * 10.0 {
                 crawler_lock.prog += 10.0;
             }
-            info!("prog: {}", crawler_lock.prog);
         }
         Self::stop(crawler);
-        crawler.lock().unwrap().msg = "Stopped after reaching the timeout".to_string();
     }
 
     #[tokio::main]
     pub async fn crawl(crawler: &Arc<Mutex<Self>>, terminate_rx: Receiver<bool>) {
         // reset the peers found
         crawler.lock().unwrap().nodes = RemoteNodes::default();
-        info!("Inside crawl thread");
         let mut nb_nodes_fast = 0;
         let mut nb_nodes_medium = 0;
         let percent = 100.0 / (crawler.lock().unwrap().requirements.nb_nodes_fast as f32).floor();
@@ -165,17 +164,14 @@ impl Crawler {
 
         // we want the crawler data to be accessible while the crawler is running
         let mut stream = crawl.discover_peers().await;
-        info!("discovering");
         while let Some((peer, rpc_port, zmq_port, ms)) = stream.next().await {
             let remote_node = RemoteNode {
                 ip: peer.ip(),
-                location: "Unknown".to_string(),
                 rpc: rpc_port,
                 zmq: zmq_port,
                 ms: ms as u64,
             };
             info!("Crawl | found a new compatible p2pool node !");
-            info!("{remote_node:?}");
             let mut crawler_lock = crawler.lock().unwrap();
 
             match ms.cmp(&crawler_lock.requirements.max_ping_fast) {
@@ -224,7 +220,6 @@ impl Crawler {
             // sort by latency every time a new one is found
             crawler_lock.nodes.sort_by(|a, b| a.ms.cmp(&b.ms));
 
-            info!("nodes: {:?}", crawler_lock.nodes);
             // stop if the max number of fast nodes is reached
             if nb_nodes_fast == crawler_lock.requirements.nb_nodes_fast {
                 crawler_lock.msg = "Discovered enough fast latency nodes".to_string();
@@ -234,6 +229,11 @@ impl Crawler {
 
             // stop if a signal to terminate is received
             if terminate_rx.try_recv().is_ok() {
+                if crawler_lock.prog < 100.0 {
+                    crawler_lock.msg = "Stopped manually".to_string();
+                } else {
+                    crawler_lock.msg = "Stopped after reaching the timeout".to_string();
+                }
                 drop(crawler_lock);
                 break;
             }
@@ -242,5 +242,6 @@ impl Crawler {
         crawler.lock().unwrap().handle = None;
         // we only put the crawling to false once the crawling is really done, we don't want to have a second crawling happening when the old one is not yet done.
         crawler.lock().unwrap().crawling = false;
+        crawler.lock().unwrap().stopping = false;
     }
 }

@@ -31,7 +31,6 @@ use std::time::Instant;
 #[derive(Clone, Debug, Deserialize, Serialize, Eq)]
 pub struct RemoteNode {
     pub ip: IpAddr,
-    pub location: String,
     pub rpc: u16,
     pub zmq: u16,
     pub ms: u64,
@@ -40,10 +39,7 @@ pub struct RemoteNode {
 // we ignore latency to identify nodes
 impl PartialEq for RemoteNode {
     fn eq(&self, other: &Self) -> bool {
-        self.ip == other.ip
-            && self.location == other.location
-            && self.rpc == other.rpc
-            && self.zmq == other.zmq
+        self.ip == other.ip && self.rpc == other.rpc && self.zmq == other.zmq
     }
 }
 
@@ -118,11 +114,11 @@ impl RemoteNode {
         }
     }
 
-    /// TODO
-    /// Use a database https://github.com/sapics/ip-location-db to show country of discovered node
-    pub fn country(&self) -> String {
-        "Country Soon".to_string()
-    }
+    // TODO if ever wanting to show the country
+    // Use a database https://github.com/sapics/ip-location-db to show country of discovered node
+    // pub fn country(&self) -> String {
+    //     "Country Soon".to_string()
+    // }
 }
 
 impl std::fmt::Display for RemoteNode {

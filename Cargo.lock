@@ -1218,35 +1218,35 @@ dependencies = [
 [[package]]
 name = "cuprate-constants"
 version = "0.1.0"
-source = "git+https://github.com/Cuprate/cuprate.git?branch=expose-support-flags2#48e9e9df78310ab7451fc09b65eadfe4d4002a8c"
+source = "git+https://github.com/Cuprate/cuprate#807bfafb35dd3e0ea8a6a76000e8d1cb95afb675"
 
 [[package]]
 name = "cuprate-epee-encoding"
 version = "0.5.0"
-source = "git+https://github.com/Cuprate/cuprate.git?branch=expose-support-flags2#48e9e9df78310ab7451fc09b65eadfe4d4002a8c"
+source = "git+https://github.com/Cuprate/cuprate#807bfafb35dd3e0ea8a6a76000e8d1cb95afb675"
 dependencies = [
  "bytes",
  "cuprate-fixed-bytes",
  "cuprate-hex",
  "paste",
  "ref-cast",
- "thiserror 1.0.69",
+ "thiserror 2.0.16",
 ]
 
 [[package]]
 name = "cuprate-fixed-bytes"
 version = "0.1.0"
-source = "git+https://github.com/Cuprate/cuprate.git?branch=expose-support-flags2#48e9e9df78310ab7451fc09b65eadfe4d4002a8c"
+source = "git+https://github.com/Cuprate/cuprate#807bfafb35dd3e0ea8a6a76000e8d1cb95afb675"
 dependencies = [
  "bytes",
  "serde",
- "thiserror 1.0.69",
+ "thiserror 2.0.16",
 ]
 
 [[package]]
 name = "cuprate-helper"
 version = "0.1.0"
-source = "git+https://github.com/Cuprate/cuprate.git?branch=expose-support-flags2#48e9e9df78310ab7451fc09b65eadfe4d4002a8c"
+source = "git+https://github.com/Cuprate/cuprate#807bfafb35dd3e0ea8a6a76000e8d1cb95afb675"
 dependencies = [
  "cuprate-constants",
  "futures",
@@ -1257,7 +1257,7 @@ dependencies = [
 [[package]]
 name = "cuprate-hex"
 version = "0.0.0"
-source = "git+https://github.com/Cuprate/cuprate.git?branch=expose-support-flags2#48e9e9df78310ab7451fc09b65eadfe4d4002a8c"
+source = "git+https://github.com/Cuprate/cuprate#807bfafb35dd3e0ea8a6a76000e8d1cb95afb675"
 dependencies = [
  "hex",
  "serde",
@@ -1266,13 +1266,13 @@ dependencies = [
 [[package]]
 name = "cuprate-levin"
 version = "0.1.0"
-source = "git+https://github.com/Cuprate/cuprate.git?branch=expose-support-flags2#48e9e9df78310ab7451fc09b65eadfe4d4002a8c"
+source = "git+https://github.com/Cuprate/cuprate#807bfafb35dd3e0ea8a6a76000e8d1cb95afb675"
 dependencies = [
  "bitflags 2.9.2",
  "bytes",
  "cfg-if",
  "cuprate-helper",
- "thiserror 1.0.69",
+ "thiserror 2.0.16",
  "tokio-util",
  "tracing",
 ]
@@ -1280,7 +1280,7 @@ dependencies = [
 [[package]]
 name = "cuprate-p2p-core"
 version = "0.1.0"
-source = "git+https://github.com/Cuprate/cuprate.git?branch=expose-support-flags2#48e9e9df78310ab7451fc09b65eadfe4d4002a8c"
+source = "git+https://github.com/Cuprate/cuprate#807bfafb35dd3e0ea8a6a76000e8d1cb95afb675"
 dependencies = [
  "async-trait",
  "borsh",
@@ -1290,30 +1290,31 @@ dependencies = [
  "cuprate-types",
  "cuprate-wire",
  "futures",
- "hex-literal",
+ "hex",
+ "hex-literal 1.0.0",
  "rand 0.8.5",
- "thiserror 1.0.69",
+ "thiserror 2.0.16",
  "tokio",
  "tokio-stream",
  "tokio-util",
- "tower 0.5.1",
+ "tower",
  "tracing",
 ]
 
 [[package]]
 name = "cuprate-pruning"
 version = "0.1.0"
-source = "git+https://github.com/Cuprate/cuprate.git?branch=expose-support-flags2#48e9e9df78310ab7451fc09b65eadfe4d4002a8c"
+source = "git+https://github.com/Cuprate/cuprate#807bfafb35dd3e0ea8a6a76000e8d1cb95afb675"
 dependencies = [
  "borsh",
  "cuprate-constants",
- "thiserror 1.0.69",
+ "thiserror 2.0.16",
 ]
 
 [[package]]
 name = "cuprate-types"
 version = "0.0.0"
-source = "git+https://github.com/Cuprate/cuprate.git?branch=expose-support-flags2#48e9e9df78310ab7451fc09b65eadfe4d4002a8c"
+source = "git+https://github.com/Cuprate/cuprate#807bfafb35dd3e0ea8a6a76000e8d1cb95afb675"
 dependencies = [
  "bitflags 2.9.2",
  "bytes",
@@ -1322,23 +1323,24 @@ dependencies = [
  "cuprate-fixed-bytes",
  "curve25519-dalek",
  "monero-serai",
- "strum 0.26.3",
- "thiserror 1.0.69",
+ "strum 0.27.2",
+ "thiserror 2.0.16",
 ]
 
 [[package]]
 name = "cuprate-wire"
 version = "0.1.0"
-source = "git+https://github.com/Cuprate/cuprate.git?branch=expose-support-flags2#48e9e9df78310ab7451fc09b65eadfe4d4002a8c"
+source = "git+https://github.com/Cuprate/cuprate#807bfafb35dd3e0ea8a6a76000e8d1cb95afb675"
 dependencies = [
  "bitflags 2.9.2",
+ "borsh",
  "bytes",
  "cuprate-epee-encoding",
  "cuprate-fixed-bytes",
  "cuprate-helper",
  "cuprate-levin",
  "cuprate-types",
- "thiserror 1.0.69",
+ "thiserror 2.0.16",
 ]
 
 [[package]]
@@ -2571,6 +2573,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6fe2267d4ed49bc07b63801559be28c718ea06c4738b7a03c94df7386d2cde46"
 
 [[package]]
+name = "hex-literal"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bcaaec4551594c969335c98c903c1397853d4198408ea609190f420500f6be71"
+
+[[package]]
 name = "hexf-parse"
 version = "0.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2704,7 +2712,7 @@ dependencies = [
  "rustls-pki-types",
  "tokio",
  "tokio-rustls",
- "tower-service 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tower-service",
  "webpki-roots",
 ]
 
@@ -2728,7 +2736,7 @@ dependencies = [
  "pin-project-lite",
  "socket2 0.6.0",
  "tokio",
- "tower-service 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tower-service",
  "tracing",
 ]
 
@@ -3409,8 +3417,8 @@ dependencies = [
 
 [[package]]
 name = "monero-crawler-lib"
-version = "0.1.0"
-source = "git+https://github.com/Cyrix126/monero-crawler-rs#9126df7bf1f162dc1453443c8ae608fc18d722a4"
+version = "0.2.1"
+source = "git+https://github.com/Cyrix126/monero-crawler-rs#5aeec5df89f7306d1a6c7459b3d82774076433fc"
 dependencies = [
  "cuprate-p2p-core",
  "cuprate-wire",
@@ -3422,7 +3430,7 @@ dependencies = [
  "reqwest",
  "tokio",
  "tokio-stream",
- "tower 0.5.1",
+ "tokio-util",
  "zeromq",
 ]
 
@@ -3481,7 +3489,7 @@ version = "0.1.4-alpha"
 source = "git+https://github.com/Cuprate/serai.git?rev=e6ae8c2#e6ae8c2b1f9d791f35ea225032cc0a3f79dec99d"
 dependencies = [
  "curve25519-dalek",
- "hex-literal",
+ "hex-literal 0.4.1",
  "monero-borromean",
  "monero-bulletproofs",
  "monero-clsag",
@@ -4863,12 +4871,12 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_urlencoded",
- "sync_wrapper 1.0.2",
+ "sync_wrapper",
  "tokio",
  "tokio-rustls",
- "tower 0.5.2",
+ "tower",
  "tower-http",
- "tower-service 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tower-service",
  "url",
  "wasm-bindgen",
  "wasm-bindgen-futures",
@@ -4888,7 +4896,7 @@ dependencies = [
  "reqwest",
  "serde",
  "thiserror 1.0.69",
- "tower-service 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tower-service",
 ]
 
 [[package]]
@@ -5554,12 +5562,6 @@ dependencies = [
 
 [[package]]
 name = "sync_wrapper"
-version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2047c6ded9c721764247e62cd3b03c09ffc529b2ba5b10ec482ae507a4a70160"
-
-[[package]]
-name = "sync_wrapper"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0bf256ce5efdfa370213c1dabab5935a12e49f2c58d15e9eac2870d3b4f27263"
@@ -5929,21 +5931,6 @@ checksum = "fcc842091f2def52017664b53082ecbbeb5c7731092bad69d2c63050401dfd64"
 
 [[package]]
 name = "tower"
-version = "0.5.1"
-source = "git+https://github.com/Cuprate/tower.git?rev=6c7faf0#6c7faf0e9dbc74aef5d3110313324bc7e1f997cf"
-dependencies = [
- "futures-core",
- "futures-util",
- "pin-project-lite",
- "sync_wrapper 0.1.2",
- "tokio",
- "tower-layer 0.3.3 (git+https://github.com/Cuprate/tower.git?rev=6c7faf0)",
- "tower-service 0.3.3 (git+https://github.com/Cuprate/tower.git?rev=6c7faf0)",
- "tracing",
-]
-
-[[package]]
-name = "tower"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d039ad9159c98b70ecfd540b2573b97f7f52c3e8d9f8ad57a24b916a536975f9"
@@ -5951,10 +5938,11 @@ dependencies = [
  "futures-core",
  "futures-util",
  "pin-project-lite",
- "sync_wrapper 1.0.2",
+ "sync_wrapper",
  "tokio",
- "tower-layer 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "tower-service 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tower-layer",
+ "tower-service",
+ "tracing",
 ]
 
 [[package]]
@@ -5970,9 +5958,9 @@ dependencies = [
  "http-body",
  "iri-string",
  "pin-project-lite",
- "tower 0.5.2",
- "tower-layer 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
- "tower-service 0.3.3 (registry+https://github.com/rust-lang/crates.io-index)",
+ "tower",
+ "tower-layer",
+ "tower-service",
 ]
 
 [[package]]
@@ -5982,20 +5970,10 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "121c2a6cda46980bb0fcd1647ffaf6cd3fc79a013de288782836f6df9c48780e"
 
 [[package]]
-name = "tower-layer"
-version = "0.3.3"
-source = "git+https://github.com/Cuprate/tower.git?rev=6c7faf0#6c7faf0e9dbc74aef5d3110313324bc7e1f997cf"
-
-[[package]]
 name = "tower-service"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8df9b6e13f2d32c91b9bd719c00d1958837bc7dec474d94952798cc8e69eeec3"
-
-[[package]]
-name = "tower-service"
-version = "0.3.3"
-source = "git+https://github.com/Cuprate/tower.git?rev=6c7faf0#6c7faf0e9dbc74aef5d3110313324bc7e1f997cf"
 
 [[package]]
 name = "tracing"
