@@ -59,7 +59,6 @@ mod test {
         let a = arc_mut!(false);
         assert!(!(*a.lock().unwrap()));
     }
-
     #[test]
     fn flip() {
         let mut b = true;

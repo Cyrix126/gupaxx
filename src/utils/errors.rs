@@ -1,11 +1,13 @@
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashSet,
+    sync::{Arc, Mutex},
+    time::Instant,
+};
 
+use log::warn;
 use sysinfo::System;
 
-use crate::{
-    components::update::{NODE_BINARY, P2POOL_BINARY, XMRIG_BINARY, XMRIG_PROXY_BINARY},
-    helper::ProcessName,
-};
+use crate::helper::ProcessName;
 
 use super::sudo::SudoState;
 
@@ -14,6 +16,7 @@ use super::sudo::SudoState;
 #[allow(dead_code)]
 pub enum ErrorButtons {
     YesNo,
+    UseDetectedLocalNode((u16, u16)),
     StayQuit,
     ResetState,
     ResetNode,
@@ -100,19 +103,23 @@ impl ErrorState {
 }
 
 pub fn process_running(process_name: ProcessName) -> bool {
-    let name = match process_name {
-        ProcessName::Node => NODE_BINARY,
-        ProcessName::P2pool => P2POOL_BINARY,
-        ProcessName::Xmrig => XMRIG_BINARY,
-        ProcessName::XmrigProxy => XMRIG_PROXY_BINARY,
-        ProcessName::Xvb => {
-            // XvB does not exist as a process outside of Gupaxx (not yet anyway);
-            return false;
-        }
-    };
+    let now = Instant::now();
     let s = System::new_all();
-    if s.processes_by_exact_name(name.as_ref()).next().is_some() {
+    warn!(
+        "took {}ms to get all system info",
+        now.elapsed().as_millis()
+    );
+    if s.processes_by_exact_name(process_name.binary_name().as_ref())
+        .next()
+        .is_some()
+    {
         return true;
     }
     false
+}
+
+/// find the ports used by a process
+/// Used to find ports used by a possible local monerod running outside of Gupaxx
+pub fn process_ports(process_name: ProcessName) -> Option<HashSet<u16>> {
+    listeners::get_ports_by_process_name(process_name.binary_name()).ok()
 }

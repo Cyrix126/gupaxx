@@ -43,7 +43,7 @@ use crate::{
         xrig::update_xmrig_config,
         xvb::{PubXvbApi, nodes::Pool},
     },
-    macros::{arc_mut, sleep},
+    macros::sleep,
     miscs::output_console,
     regex::{XMRIG_REGEX, contains_timeout, contains_usepool, detect_pool_xmrig},
 };
@@ -430,7 +430,7 @@ impl Helper {
         cmd.cwd(path.as_path().parent().unwrap());
         // 1c. Create child
         debug!("XMRig-Proxy | Creating child...");
-        let child_pty = arc_mut!(pair.slave.spawn_command(cmd).unwrap());
+        let child_pty = Arc::new(Mutex::new(pair.slave.spawn_command(cmd).unwrap()));
         drop(pair.slave);
         let mut stdin = pair.master.take_writer().unwrap();
         // to refactor to let user use his own ports
@@ -485,7 +485,7 @@ impl Helper {
                 // check signal
                 if signal_end(
                     &mut process.lock().unwrap(),
-                    &child_pty,
+                    Some(&child_pty.clone()),
                     &start,
                     &mut gui_api.lock().unwrap().output,
                 ) {

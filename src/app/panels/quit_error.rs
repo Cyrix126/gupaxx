@@ -21,6 +21,7 @@ use crate::app::eframe_impl::ProcessStateGui;
 use crate::app::keys::KeyPressed;
 use crate::disk::node::Node;
 use crate::disk::state::State;
+use crate::helper::Helper;
 use crate::utils::constants::*;
 use crate::utils::errors::ErrorState;
 use crate::utils::ferris::*;
@@ -154,6 +155,7 @@ impl crate::app::App {
                                 Label::new("--- Gupax has encountered an unrecoverable error! ---"),
                             ),
                             Happy => ui.add_sized([width, height], Label::new("--- Success! ---")),
+                            Cute => ui.add_sized([width, height], Label::new("--- Gupaxx needs your Attention ! ---")),
                             _ => ui.add_sized(
                                 [width, height],
                                 Label::new("--- Gupax has encountered an error! ---"),
@@ -175,6 +177,27 @@ impl crate::app::App {
                 let height = ui.available_height();
 
                 match self.error_state.buttons {
+                    UseDetectedLocalNode((rpc, zmq)) => {
+                        if ui
+                            .add_sized([width, height / 2.0], Button::new("Use the detected Node"))
+                            .clicked()
+                        {
+                            *self.helper.lock().unwrap().ports_detected_local_node.lock().unwrap() = Some((rpc, zmq));
+                            self.error_state.reset();
+                                Helper::start_node(
+                                &self.helper,
+                                &self.state.node,
+                                &self.state.gupax.absolute_node_path);
+                        }
+                        // If [Esc] was pressed, assume [No]
+                        if key.is_esc()
+                            || ui
+                                .add_sized([width, height / 2.0], Button::new("Cancel"))
+                                .clicked()
+                        {
+                            self.error_state.reset()
+                        }
+                    }
                     YesNo => {
                         if ui
                             .add_sized([width, height / 2.0], Button::new("Yes"))

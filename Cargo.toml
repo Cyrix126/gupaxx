@@ -94,6 +94,8 @@ port_check = "0.3"
 ## node crawler
 monero-crawler-lib = {git="https://github.com/Cyrix126/monero-crawler-rs", features=["rpc", "zmq"]}
 futures = "0.3"
+## find ports used by a local monerod
+listeners = "0.3"
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
 tar = "0.4.44"

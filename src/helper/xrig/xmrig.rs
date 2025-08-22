@@ -4,7 +4,7 @@ use crate::helper::p2pool::ImgP2pool;
 use crate::helper::xrig::update_xmrig_config;
 use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
 use crate::helper::{Pool, PubXvbApi};
-use crate::helper::{Process, arc_mut, check_died, check_user_input, sleep, sleep_end_loop};
+use crate::helper::{Process, check_died, check_user_input, sleep, sleep_end_loop};
 use crate::human::HumanTime;
 use crate::miscs::{client, output_console};
 use crate::regex::{XMRIG_REGEX, contains_error, contains_usepool, detect_pool_xmrig};
@@ -554,7 +554,7 @@ impl Helper {
         let cmd = Self::create_xmrig_cmd_unix(args, path);
         // 1c. Create child
         debug!("XMRig | Creating child...");
-        let child_pty = arc_mut!(pair.slave.spawn_command(cmd).unwrap());
+        let child_pty = Arc::new(Mutex::new(pair.slave.spawn_command(cmd).unwrap()));
         drop(pair.slave);
 
         let mut stdin = pair.master.take_writer().unwrap();

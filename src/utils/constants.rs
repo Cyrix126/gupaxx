@@ -16,7 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub const GUPAX_VERSION: &str = concat!("v", env!("CARGO_PKG_VERSION")); // e.g: v1.0.0
-pub const P2POOL_VERSION: &str = "v4.9";
+pub const P2POOL_VERSION: &str = "v4.9.1";
 pub const XMRIG_VERSION: &str = "v6.24.0";
 pub const XMRIG_PROXY_VERSION: &str = "v6.24.0";
 pub const NODE_VERSION: &str = "v18.4.1";
@@ -453,6 +453,8 @@ pub const NODE_RPC_PORT_DEFAULT: u16 = 18081;
 pub const NODE_ZMQ_PORT_DEFAULT: u16 = 18083;
 pub const NODE_INPUT: &str = "Send a command to Node";
 pub const NODE_PRUNNING: &str = "Reduce the database size to a third. Does not have any security/privacy impact.If you have enough storage, a full node is preferable to make the network even more decentralized.";
+pub const NODE_START_DETECT_VALID: &str = "A monero Node has been detected running on your system.\n\nGupaxx can not start a Node if there is already one running on the same system.\nThis is a Node that can be used by Gupaxx for P2Pool.\n\nDo you want to use the already running Node ? You will have a limited control from Gupaxx.";
+pub const NODE_START_DETECT_NON_VALID: &str = "A monero Node has been detected running on your system.\n\nGupaxx can not start a Node if there is already one running on the same system.\nThis is a Node that can not be used by Gupaxx for P2Pool.\n\nYou will not be able to use P2Pool or start a Node from Gupaxx while this node is running.";
 #[cfg(not(windows))]
 pub const NODE_DB_PATH_EMPTY: &str =
     "If the PATH of the DB is empty, the default ~/.bitmonero will be used.";
@@ -569,6 +571,8 @@ pub const XVB_ROUND_DONOR_VIP_MIN_HR: u32 = 10000;
 pub const XVB_ROUND_DONOR_WHALE_MIN_HR: u32 = 100000;
 pub const XVB_ROUND_DONOR_MEGA_MIN_HR: u32 = 1000000;
 
+pub const SOCKET_MONERO_LOCAL_OUTSIDE: SocketAddr =
+    SocketAddr::V4(SocketAddrV4::new(Ipv4Addr::new(127, 0, 0, 1), 18080));
 // Common help
 pub const HELP_STRATUM_PORT: &str = "Specify the stratum port to bind to";
 pub const HELP_STRATUM_IP: &str = "Specify the stratum ip to bind to";
@@ -601,6 +605,8 @@ pub const SECOND_PER_BLOCK_P2POOL_NANO: u64 = 30;
 // pub const TIME_PPLNS_WINDOW_MAIN: Duration = Duration::from_secs(BLOCK_PPLNS_WINDOW_MAIN * SECOND_PER_BLOCK_P2POOL);
 pub const PROCESS_OUTSIDE: &str =
     "This process is running outside of Gupaxx.\nYou need to stop it before starting it in Gupaxx.";
+use std::net::{Ipv4Addr, SocketAddr, SocketAddrV4};
+
 //---------------------------------------------------------------------------------------------------- Visuals
 use egui::epaint::{Shadow, Stroke};
 

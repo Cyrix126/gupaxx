@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use crate::app::eframe_impl::{ProcessStateGui, ProcessStatesGui};
 use crate::app::{Restart, keys::KeyPressed};
@@ -7,12 +7,14 @@ use crate::disk::pool::Pool;
 use crate::disk::state::{Gupax, State};
 use crate::disk::status::Submenu;
 use crate::errors::process_running;
+use crate::helper::node::{CheckLocalOutsideNode, spawn_local_outside_checker};
 use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
 use crate::utils::constants::*;
 use crate::utils::errors::{ErrorButtons, ErrorFerris};
+use crate::utils::macros::sleep;
 use crate::utils::regex::Regexes;
 use egui::*;
-use log::{debug, error};
+use log::{debug, error, warn};
 
 use crate::app::Tab;
 use crate::helper::ProcessState::*;
@@ -315,7 +317,8 @@ impl crate::app::App {
                             .clicked()
                     {
                         // check if process is running outside of Gupaxx, warn about it and do not start it.
-                        if process_running(name) {
+                        // Except for Node which will be treated differently.
+                        if name != ProcessName::Node && process_running(name) {
                             error!("Process already running outside: {name}");
                             self.error_state.set(
                                 PROCESS_OUTSIDE,
@@ -328,11 +331,45 @@ impl crate::app::App {
                         let _ = self.state.update_absolute_path();
                         // start process
                         match process.name {
-                            ProcessName::Node => Helper::start_node(
-                                &self.helper,
-                                &self.state.node,
-                                &self.state.gupax.absolute_node_path,
-                            ),
+                            ProcessName::Node => {
+                            // check if a local node is running outside of gupaxx. If that's the case, check if it's compatible with p2pool. If that's the case, offer the choice to the user to use it.
+                            // The scanning of nodes should take less than 100ms since it's local
+                            // the checking can take a bit of time, specially if a node is running with opened ports but not responding as expected.
+                            // The check needs to run in another thread.
+                            let check_local_outside = Arc::new(OnceLock::new());
+
+                            spawn_local_outside_checker(check_local_outside.clone());
+                            let mut count = 0;
+                            while check_local_outside.get().is_none() {
+                                // a precaution to free the UI from the freeze after 500ms if something wrong happens with the check and it get stuck.
+                                if count == 50 {break}
+                                // wait just a little bit with the UI freezing, it should take under 100ms which is too short to be annoying.
+                                sleep!(10);
+                                count += 1;
+                            }
+                            if let Some(check) = check_local_outside.get() {
+                                match check {
+                                    CheckLocalOutsideNode::Valid(rpc_port, zmq_port) => {
+                                        // show window prompt to ask the user if they want to use the Node outside Gupaxx.
+                                        // But the prompt will only come with the next refresh of frames.
+                                        warn!("A monero Node is already running outside of Gupaxx and can be used for p2pool");
+                                        self.error_state.set(NODE_START_DETECT_VALID,ErrorFerris::Cute,ErrorButtons::UseDetectedLocalNode((*rpc_port, *zmq_port)));
+                                        // the start will start from the prompt
+                                    }
+                                    CheckLocalOutsideNode::NonValid => {
+                                        // show window with error explaining a node is running but can be used
+                                        error!("A monero Node is already running outside of Gupaxx and can not be used for p2pool");
+                                        self.error_state.set(NODE_START_DETECT_NON_VALID,ErrorFerris::Oops,ErrorButtons::Okay);
+                                    }
+                                    CheckLocalOutsideNode::None => {
+                                        // No running local outside node, nothing special to do. Start normally.
+                                        Helper::start_node(
+                                        &self.helper,
+                                        &self.state.node,
+                                        &self.state.gupax.absolute_node_path);                                    }
+                                    }
+                                }
+                            },
                             ProcessName::P2pool => {
                             // check if button to use local node is checked and if the local node is running
                             // It prevents starting p2pool if the node is not ready

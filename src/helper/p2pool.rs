@@ -617,7 +617,7 @@ impl Helper {
         cmd.cwd(path.as_path().parent().unwrap());
         // 1c. Create child
         debug!("P2Pool | Creating child...");
-        let child_pty = arc_mut!(pair.slave.spawn_command(cmd).unwrap());
+        let child_pty = Arc::new(Mutex::new(pair.slave.spawn_command(cmd).unwrap()));
         drop(pair.slave);
 
         // 2. Set process state
@@ -707,7 +707,7 @@ impl Helper {
                 // Check SIGNAL
                 if signal_end(
                     &mut process.lock().unwrap(),
-                    &child_pty,
+                    Some(&child_pty),
                     &start,
                     &mut gui_api.lock().unwrap().output,
                 ) {

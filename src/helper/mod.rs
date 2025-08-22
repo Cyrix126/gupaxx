@@ -42,6 +42,7 @@ use crate::helper::{
     p2pool::{ImgP2pool, PubP2poolApi},
     xrig::{xmrig::ImgXmrig, xmrig::PubXmrigApi},
 };
+// use crate::utils::errors::process_running;
 use crate::{constants::*, disk::gupax_p2pool_api::GupaxP2poolApi, human::*, macros::*};
 use derive_more::derive::Display;
 use enclose::enc;
@@ -61,6 +62,7 @@ use std::{
     time::*,
 };
 use strum::{EnumCount, EnumIter};
+use sysinfo::{Pid, System};
 use xrig::xmrig_proxy::ImgProxy;
 
 use self::xvb::{PubXvbApi, nodes::Pool};
@@ -112,6 +114,8 @@ pub struct Helper {
     pub ip_public: Arc<Mutex<Option<Ipv4Addr>>>,
     pub ip_local: Arc<Mutex<Option<IpAddr>>>,
     pub proxy_port_reachable: Arc<Mutex<bool>>,
+    // consider it true if it is Some
+    pub ports_detected_local_node: Arc<Mutex<Option<(u16, u16)>>>,
 }
 
 // The communication between the data here and the GUI thread goes as follows:
@@ -160,6 +164,10 @@ pub struct Process {
 
     // Start time of process.
     start: std::time::Instant,
+
+    // Pid of process if needed
+    // Only used for Node for now to check if it still exist without an expensive operation, but can allow a lot more in the future by getting data about the process.
+    pid: Option<Pid>,
 }
 
 //---------------------------------------------------------------------------------------------------- [Process] Impl
@@ -175,6 +183,7 @@ impl Process {
             output_parse: arc_mut!(String::with_capacity(500)),
             output_pub: arc_mut!(String::with_capacity(500)),
             input: vec![String::new()],
+            pid: None,
         }
     }
 
@@ -379,6 +388,7 @@ impl Helper {
         ip_local: Arc<Mutex<Option<IpAddr>>>,
         ip_public: Arc<Mutex<Option<Ipv4Addr>>>,
         proxy_port_reachable: Arc<Mutex<bool>>,
+        ports_detected_local_node: Arc<Mutex<Option<(u16, u16)>>>,
     ) -> Self {
         Self {
             instant,
@@ -408,6 +418,7 @@ impl Helper {
             ip_local,
             ip_public,
             proxy_port_reachable,
+            ports_detected_local_node,
         }
     }
 
@@ -727,6 +738,42 @@ fn check_died(
     }
     false
 }
+
+// Allow to check if a process outside of Gupaxx is still alive, without having a pty to it
+// Used when using a detected local node instead of one started by Gupaxx
+// pub fn check_died_process(
+//     process: &mut Process,
+//     start: &Instant,
+//     gui_api_output_raw: &mut String,
+// ) -> bool {
+//     if !process_running(process.name) {
+//         process.state = ProcessState::Failed;
+//         debug!(
+//             "{} Watchdog | Process secretly died on us! can not get exit status...",
+//             process.name
+//         );
+//         let uptime = Uptime::from(start.elapsed());
+//         info!("{} | Stopped ... Uptime was: [{}]", process.name, uptime);
+//         if let Err(e) = writeln!(
+//             *gui_api_output_raw,
+//             "{}\n{} stopped | Uptime: [{}]\n{}\n\n\n\n",
+//             process.name, HORI_CONSOLE, uptime, HORI_CONSOLE
+//         ) {
+//             error!(
+//                 "{} Watchdog | GUI Uptime/Exit status write failed: {}",
+//                 process.name, e
+//             );
+//         }
+//         process.signal = ProcessSignal::None;
+//         debug!(
+//             "{} Watchdog | Secret dead process reap OK, breaking",
+//             process.name
+//         );
+//         return true;
+//     }
+//     false
+// }
+
 fn check_user_input(process: &Arc<Mutex<Process>>, stdin: &mut Box<dyn std::io::Write + Send>) {
     let mut lock = process.lock().unwrap();
     if !lock.input.is_empty() {
@@ -754,35 +801,67 @@ fn check_user_input(process: &Arc<Mutex<Process>>, stdin: &mut Box<dyn std::io::
         }
     }
 }
+/// If the process is not started by Gupaxx, we use a pid kill instead of the terminal.
+/// Won't work with xmrig as admin unless we resask for sudo but we don't manage an external xmrig miner, only possibly a local node.
 fn signal_end(
     process: &mut Process,
-    child_pty: &Arc<Mutex<Box<dyn Child + Sync + Send>>>,
+    child_pty: Option<&Arc<Mutex<Box<dyn Child + Send + Sync + 'static>>>>,
     start: &Instant,
     gui_api_output_raw: &mut String,
 ) -> bool {
-    let mut child_pty_lock = child_pty.lock().unwrap();
     if process.signal == ProcessSignal::Stop {
         debug!("{} Watchdog | Stop SIGNAL caught", process.name);
+        let mut exit_status = "";
         // This actually sends a SIGHUP to p2pool (closes the PTY, hangs up on p2pool)
-        if let Err(e) = child_pty_lock.kill() {
-            error!("{} Watchdog | Kill error: {}", process.name, e);
-        }
-        // Wait to get the exit status
-        let exit_status = match child_pty_lock.wait() {
-            Ok(e) => {
-                if e.success() {
-                    process.state = ProcessState::Dead;
-                    "Successful"
-                } else {
+        if let Some(child_pty) = child_pty {
+            let mut child_pty_lock = child_pty.lock().unwrap();
+            if let Err(e) = child_pty_lock.kill() {
+                error!("{} Watchdog | Kill error: {}", process.name, e);
+            }
+            // Wait to get the exit status
+            exit_status = match child_pty_lock.wait() {
+                Ok(e) => {
+                    if e.success() {
+                        process.state = ProcessState::Dead;
+                        "Successful"
+                    } else {
+                        process.state = ProcessState::Failed;
+                        "Failed"
+                    }
+                }
+                _ => {
                     process.state = ProcessState::Failed;
-                    "Failed"
+                    "Unknown Error"
+                }
+            };
+        } else {
+            // send the pid kill
+            // https://docs.rs/sysinfo/latest/sysinfo/struct.Process.html#method.kill_and_wait
+            // find the process pid
+            // kill and wait
+            // it cost us almost 100ms, does a refresh and lock would cost less instead ?
+            let s = System::new_all();
+            if let Some(pid) = s
+                .processes_by_exact_name(process.name.binary_name().as_ref())
+                .last()
+            {
+                match pid.kill_and_wait() {
+                    Ok(status) => {
+                        if status.is_some_and(|s| s.success()) {
+                            process.state = ProcessState::Dead;
+                            exit_status = "Successful";
+                        } else {
+                            process.state = ProcessState::Failed;
+                            exit_status = "Failed";
+                        }
+                    }
+                    Err(_) => {
+                        process.state = ProcessState::Failed;
+                        exit_status = "Failed";
+                    }
                 }
             }
-            _ => {
-                process.state = ProcessState::Failed;
-                "Unknown Error"
-            }
-        };
+        }
         let uptime = HumanTime::into_human(start.elapsed());
         info!(
             "{} Watchdog | Stopped ... Uptime was: [{}], Exit status: [{}]",
@@ -807,7 +886,12 @@ fn signal_end(
         debug!("{} Watchdog | Stop SIGNAL done, breaking", process.name,);
         return true;
     // Check RESTART
-    } else if process.signal == ProcessSignal::Restart {
+    // Restart are only for process started by Gupaxx
+    } else if process.signal == ProcessSignal::Restart
+        && let Some(child) = child_pty
+    {
+        let mut child_pty_lock = child.lock().unwrap();
+
         debug!("{} Watchdog | Restart SIGNAL caught", process.name,);
         // This actually sends a SIGHUP to p2pool (closes the PTY, hangs up on p2pool)
         if let Err(e) = child_pty_lock.kill() {

@@ -17,14 +17,16 @@
 
 use enclose::enc;
 use log::{debug, error, info, warn};
+use monero_crawler_lib::capability_checkers::{is_rpc_capable, is_zmq_capable};
 use readable::byte::Byte;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 #[cfg(target_os = "windows")]
 use std::os::windows::fs::MetadataExt;
 use std::{
+    net::{SocketAddr, ToSocketAddrs},
     path::Path,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, OnceLock},
     thread,
     time::{Duration, Instant},
 };
@@ -37,7 +39,8 @@ use crate::{
         ProcessName, ProcessSignal, ProcessState, check_died, check_user_input, signal_end,
         sleep_end_loop,
     },
-    macros::{arc_mut, sleep},
+    macros::sleep,
+    utils::{constants::SOCKET_MONERO_LOCAL_OUTSIDE, errors::process_ports},
 };
 use std::fmt::Write;
 
@@ -188,6 +191,7 @@ impl Helper {
         } else {
             StartOptionsMode::Advanced
         };
+
         let (rpc_port, zmq_port) = state.ports();
         *helper.lock().unwrap().img_node.lock().unwrap() = ImgNode { rpc_port, zmq_port };
         let args = Self::build_node_args(state, mode);
@@ -201,8 +205,22 @@ impl Helper {
         let pub_api = Arc::clone(&helper.lock().unwrap().pub_api_node);
         let path = path.to_path_buf();
         let state = state.clone();
+        let ports_detected_local_node = *helper
+            .lock()
+            .unwrap()
+            .ports_detected_local_node
+            .lock()
+            .unwrap();
         thread::spawn(move || {
-            Self::spawn_node_watchdog(&process, &gui_api, &pub_api, args, path, state);
+            Self::spawn_node_watchdog(
+                &process,
+                &gui_api,
+                &pub_api,
+                args,
+                path,
+                state,
+                ports_detected_local_node,
+            );
         });
     }
     #[tokio::main]
@@ -215,47 +233,53 @@ impl Helper {
         args: Vec<String>,
         path: std::path::PathBuf,
         state: Node,
+        ports_detected_local_node: Option<(u16, u16)>,
     ) {
         process.lock().unwrap().start = Instant::now();
-        // spawn pty
+        // spawn pty if we are starting it from gupaxx
         debug!("Node | Creating PTY...");
-        let pty = portable_pty::native_pty_system();
-        let pair = pty
-            .openpty(portable_pty::PtySize {
-                rows: 100,
-                cols: 1000,
-                pixel_width: 0,
-                pixel_height: 0,
-            })
-            .unwrap();
-        // 4. Spawn PTY read thread
-        debug!("Node | Spawning PTY read thread...");
-        let reader = pair.master.try_clone_reader().unwrap(); // Get STDOUT/STDERR before moving the PTY
-        let output_parse = Arc::clone(&process.lock().unwrap().output_parse);
-        let output_pub = Arc::clone(&process.lock().unwrap().output_pub);
-        spawn(enc!((output_parse, output_pub) async move {
-            Self::read_pty_node(output_parse, output_pub, reader);
-        }));
-        // 1b. Create command
-        debug!("Node | Creating command...");
-        let mut cmd = portable_pty::cmdbuilder::CommandBuilder::new(path.clone());
-        cmd.args(args);
-        // if in simple state and enough free memory, enable full memory env
-        if state.simple {
-            let mut sys = sysinfo::System::new();
-            sys.refresh_memory_specifics(MemoryRefreshKind::nothing().with_ram());
-            if sys.available_memory() > 4_000_000_000 {
+        let mut child_pty = None;
+        let mut stdin = None;
+        let mut output_pub = None;
+        if ports_detected_local_node.is_none() {
+            let pty = portable_pty::native_pty_system();
+            let pair = pty
+                .openpty(portable_pty::PtySize {
+                    rows: 100,
+                    cols: 1000,
+                    pixel_width: 0,
+                    pixel_height: 0,
+                })
+                .unwrap();
+            // 4. Spawn PTY read thread
+            debug!("Node | Spawning PTY read thread...");
+            let reader = pair.master.try_clone_reader().unwrap(); // Get STDOUT/STDERR before moving the PTY
+            let output_parse = Arc::clone(&process.lock().unwrap().output_parse);
+            output_pub = Some(Arc::clone(&process.lock().unwrap().output_pub));
+            spawn(enc!((output_parse, output_pub) async move {
+                Self::read_pty_node(output_parse, output_pub.unwrap(), reader);
+            }));
+            // 1b. Create command
+            debug!("Node | Creating command...");
+            let mut cmd = portable_pty::cmdbuilder::CommandBuilder::new(path.clone());
+            cmd.args(args);
+            // if in simple state and enough free memory, enable full memory env
+            if state.simple {
+                let mut sys = sysinfo::System::new();
+                sys.refresh_memory_specifics(MemoryRefreshKind::nothing().with_ram());
+                if sys.available_memory() > 4_000_000_000 {
+                    cmd.env("MONERO_RANDOMX_FULL_MEM", "1");
+                }
+            } else if state.full_memory {
                 cmd.env("MONERO_RANDOMX_FULL_MEM", "1");
             }
-        } else if state.full_memory {
-            cmd.env("MONERO_RANDOMX_FULL_MEM", "1");
+            cmd.cwd(path.as_path().parent().unwrap());
+            // 1c. Create child
+            debug!("Node | Creating child...");
+            child_pty = Some(Arc::new(Mutex::new(pair.slave.spawn_command(cmd).unwrap())));
+            drop(pair.slave);
+            stdin = Some(pair.master.take_writer().unwrap());
         }
-        cmd.cwd(path.as_path().parent().unwrap());
-        // 1c. Create child
-        debug!("Node | Creating child...");
-        let child_pty = arc_mut!(pair.slave.spawn_command(cmd).unwrap());
-        drop(pair.slave);
-        let mut stdin = pair.master.take_writer().unwrap();
         // set state
         let client = Client::new();
         process.lock().unwrap().state = ProcessState::Syncing;
@@ -272,25 +296,40 @@ impl Helper {
             {
                 // scope to drop locked mutex before the sleep
                 // check state
-                if check_died(
-                    &child_pty,
-                    &mut process.lock().unwrap(),
-                    &start,
-                    &mut gui_api.lock().unwrap().output,
-                ) {
+                if let Some(child) = &child_pty
+                    && check_died(
+                        child,
+                        &mut process.lock().unwrap(),
+                        &start,
+                        &mut gui_api.lock().unwrap().output,
+                    )
+                {
                     break;
                 }
+
+                // it is possible to check detected local node if it died, but it is costly to do it every seconds.
+                // Since it's a GUI miner, preserve resources.
+                // else if check_died_process(
+                //     &mut process.lock().unwrap(),
+                //     &start,
+                //     &mut gui_api.lock().unwrap().output,
+                // ) {
+                //     break;
+                // }
                 // check signal
+                // if needed, kill by the pid
                 if signal_end(
                     &mut process.lock().unwrap(),
-                    &child_pty,
+                    child_pty.as_ref(),
                     &start,
                     &mut gui_api.lock().unwrap().output,
                 ) {
                     break;
                 }
                 // check user input
-                check_user_input(process, &mut stdin);
+                if let Some(stdin) = &mut stdin {
+                    check_user_input(process, stdin);
+                }
                 // get data output/api
 
                 // Check if logs need resetting
@@ -303,26 +342,44 @@ impl Helper {
                 }
                 // No need to check output since monerod has a sufficient API
                 // Always update from output
-                debug!("Node Watchdog | Starting [update_from_output()]");
-                PubNodeApi::update_from_output(pub_api, &output_pub, start.elapsed());
+                if let Some(output) = &output_pub {
+                    debug!("Node Watchdog | Starting [update_from_output()]");
+                    PubNodeApi::update_from_output(pub_api, output, start.elapsed());
+                }
                 // update data from api
                 debug!("Node Watchdog | Attempting HTTP API request...");
-                match PrivNodeApi::request_api(&client, &state).await {
-                    Ok(priv_api) => {
-                        debug!(
-                            "Node Watchdog | HTTP API request OK, attempting [update_from_priv()]"
-                        );
-                        if priv_api.result.synchronized && priv_api.result.status == "OK" {
-                            process.lock().unwrap().state = ProcessState::Alive
+                // need to construct the socket from String and possibly domain name
+                let adr = if let Some((rpc, _)) = ports_detected_local_node {
+                    format!("127.0.0.1:{rpc}")
+                } else {
+                    format!("{}:{}", state.api_ip, state.api_port)
+                };
+                if let Ok(sockets) = adr.to_socket_addrs()
+                    && let Some(socket) = sockets.last()
+                {
+                    match PrivNodeApi::request_api(&client, &socket).await {
+                        Ok(priv_api) => {
+                            debug!(
+                                "Node Watchdog | HTTP API request OK, attempting [update_from_priv()]"
+                            );
+                            if priv_api.result.synchronized && priv_api.result.status == "OK" {
+                                process.lock().unwrap().state = ProcessState::Alive
+                            }
+                            PubNodeApi::update_from_priv(pub_api, priv_api);
                         }
-                        PubNodeApi::update_from_priv(pub_api, priv_api);
-                    }
-                    Err(err) => {
-                        // if node is just starting, do not throw an error
-                        if start.elapsed() > Duration::from_secs(10) {
-                            warn!("Node Watchdog | Could not send HTTP API request to node\n{err}");
+                        Err(err) => {
+                            // if node is just starting, do not throw an error
+                            if start.elapsed() > Duration::from_secs(10) {
+                                warn!(
+                                    "Node Watchdog | Could not send HTTP API request to node\n{err}"
+                                );
+                            }
                         }
                     }
+                } else {
+                    warn!(
+                        "Node Watchdog | Could not send HTTP API request to node\nConversion of ip/domain and port rpc failed"
+                    );
                 }
             }
             // do not use more than 1 second for the loop
@@ -433,18 +490,9 @@ struct ResultNodeJson {
 impl PrivNodeApi {
     async fn request_api(
         client: &Client,
-        state: &Node,
+        socket: &SocketAddr,
     ) -> std::result::Result<Self, anyhow::Error> {
-        let adr = format!("http://{}:{}/json_rpc", state.api_ip, state.api_port);
-        #[cfg(target_os = "windows")]
-        let mut private = client
-            .post(adr)
-            .body(r#"{"jsonrpc":"2.0","id":"0","method":"get_info"}"#)
-            .send()
-            .await?
-            .json::<PrivNodeApi>()
-            .await?;
-        #[cfg(not(target_os = "windows"))]
+        let adr = format!("http://{}:{}/json_rpc", socket.ip(), socket.port());
         let private = client
             .post(adr)
             .body(r#"{"jsonrpc":"2.0","id":"0","method":"get_info"}"#)
@@ -452,20 +500,6 @@ impl PrivNodeApi {
             .await?
             .json::<PrivNodeApi>()
             .await?;
-        #[cfg(target_os = "windows")]
-        // api returns 0 for DB size for Windows so we read the size directly from the filesystem.
-        // https://github.com/monero-project/monero/issues/9513
-        {
-            if let Ok(metadata) = std::fs::metadata(if !state.path_db.is_empty() {
-                let mut path_db = std::path::PathBuf::from(&state.path_db);
-                path_db.push("lmdb/data.mdb");
-                path_db.to_str().unwrap().to_string()
-            } else {
-                r#"C:\ProgramData\bitmonero\lmdb\data.mdb"#.to_string()
-            }) {
-                private.result.database_size = metadata.file_size();
-            }
-        }
         Ok(private)
     }
 }
@@ -482,4 +516,50 @@ impl Default for ImgNode {
             zmq_port: 18083,
         }
     }
+}
+
+pub fn spawn_local_outside_checker(tx: Arc<OnceLock<CheckLocalOutsideNode>>) {
+    thread::spawn(move || check_local_node_outside(tx));
+}
+
+#[tokio::main]
+async fn check_local_node_outside(tx: Arc<OnceLock<CheckLocalOutsideNode>>) {
+    warn!("in spawn thread checking");
+    let local_outside_node_ports = process_ports(ProcessName::Node);
+    if let Some(set_ports) = local_outside_node_ports
+        && !set_ports.is_empty()
+    {
+        warn!("there are ports that are used");
+        let ports = set_ports.iter().cloned().collect::<Vec<u16>>();
+        let timeout = Duration::from_millis(100);
+        if let Some(port_zmq) = is_zmq_capable(SOCKET_MONERO_LOCAL_OUTSIDE, &ports, timeout).await
+            && let Some(port_rpc) = is_rpc_capable(
+                SOCKET_MONERO_LOCAL_OUTSIDE,
+                18081,
+                &ports,
+                timeout,
+                &Client::new(),
+            )
+            .await
+        {
+            warn!("zmq and rpc port are both available");
+            // local outside node is compatible
+            tx.set(CheckLocalOutsideNode::Valid(port_rpc, port_zmq))
+                .unwrap();
+        } else {
+            warn!("this node can not be used for p2pool");
+            tx.set(CheckLocalOutsideNode::NonValid).unwrap();
+        }
+    } else {
+        warn!("there was no Node outside of Gupaxx");
+        tx.set(CheckLocalOutsideNode::None).unwrap();
+    }
+}
+
+#[derive(Clone, Debug)]
+pub enum CheckLocalOutsideNode {
+    // rpc port, zmq port
+    Valid(u16, u16),
+    NonValid,
+    None,
 }

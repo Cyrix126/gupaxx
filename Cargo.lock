@@ -2481,6 +2481,7 @@ dependencies = [
  "futures",
  "image",
  "is_elevated",
+ "listeners",
  "local-ip-address",
  "log",
  "monero-crawler-lib",
@@ -3214,6 +3215,17 @@ name = "linux-raw-sys"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd945864f07fe9f5371a27ad7b52a172b4b499999f1d97574c9fa68373937e12"
+
+[[package]]
+name = "listeners"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "557f908c6cb431dd2496687aa9ea326507110ee4780517a42ade2df25d31126c"
+dependencies = [
+ "byteorder",
+ "rustix 1.0.8",
+ "windows 0.61.3",
+]
 
 [[package]]
 name = "litemap"

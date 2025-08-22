@@ -254,7 +254,6 @@ impl Ping {
                     drop(ping);
                     let mut node = node.clone();
                     node.ms = ms;
-                    dbg!(node.ms);
                     vec_nodes.lock().unwrap().push(node);
                 }
             }));

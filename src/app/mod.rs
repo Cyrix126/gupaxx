@@ -240,6 +240,7 @@ impl App {
         let ip_local = arc_mut!(None);
         let ip_public = arc_mut!(None);
         let proxy_port_reachable = arc_mut!(false);
+        let ports_detected_local_node = arc_mut!(None);
 
         info!("App Init | Sysinfo...");
         // We give this to the [Helper] thread.
@@ -314,6 +315,7 @@ impl App {
                 ip_local.clone(),
                 ip_public.clone(),
                 proxy_port_reachable.clone(),
+                ports_detected_local_node.clone()
             )),
             node,
             p2pool,
