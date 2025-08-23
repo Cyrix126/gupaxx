@@ -7,8 +7,7 @@ use crate::helper::node::PubNodeApi;
 use crate::helper::p2pool::{ImgP2pool, PubP2poolApi};
 use crate::helper::xrig::xmrig::{ImgXmrig, PubXmrigApi};
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
-use crate::helper::xvb::nodes::Pool;
-use crate::helper::xvb::{PubXvbApi, rounds::XvbRound};
+use crate::helper::xvb::{PubXvbApi, nodes::Pool};
 use crate::helper::{ProcessName, sys_info::Sys};
 
 use crate::constants::*;
@@ -414,19 +413,14 @@ fn xvb(ui: &mut Ui, xvb_alive: bool, xvb_api: &Arc<Mutex<PubXvbApi>>) {
         if api.reward_yearly.is_empty() {
             ui.label("No information".to_string());
         } else {
-            ui.label(format!(
-                "{}: {} XMR\n{}: {} XMR\n{}: {} XMR\n{}: {} XMR\n{}: {} XMR",
-                XvbRound::Vip,
-                api.reward_yearly[0],
-                XvbRound::Donor,
-                api.reward_yearly[1],
-                XvbRound::DonorVip,
-                api.reward_yearly[2],
-                XvbRound::DonorWhale,
-                api.reward_yearly[3],
-                XvbRound::DonorMega,
-                api.reward_yearly[4]
-            ));
+            let text = api
+                .rewards()
+                .iter()
+                .map(|(round, reward)| format!("{round}: {reward} XMR\n"))
+                .collect::<Vec<String>>()
+                .join("");
+
+            ui.label(text);
         }
     });
 }

@@ -19,6 +19,7 @@ use std::sync::{Arc, Mutex};
 
 use derive_more::Display;
 use serde::Deserialize;
+use strum::EnumIter;
 
 use crate::{
     XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR, XVB_ROUND_DONOR_VIP_MIN_HR,
@@ -26,12 +27,15 @@ use crate::{
 };
 
 use super::PubXvbApi;
-#[derive(Debug, Clone, Default, Display, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Default, Display, Deserialize, PartialEq, EnumIter)]
 pub enum XvbRound {
     #[default]
     #[display("VIP")]
     #[serde(alias = "vip")]
     Vip,
+    #[serde(alias = "mvp")]
+    #[display("MVP")]
+    Mvp,
     #[serde(alias = "donor")]
     Donor,
     #[display("VIP Donor")]

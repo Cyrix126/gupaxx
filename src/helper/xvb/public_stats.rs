@@ -24,6 +24,7 @@ use log::{debug, info, warn};
 use reqwest_middleware::ClientWithMiddleware as Client;
 use serde::Deserialize;
 use serde_this_or_that::as_u64;
+use strum::IntoEnumIterator;
 
 use crate::{
     XVB_URL_PUBLIC_API,
@@ -55,7 +56,18 @@ pub struct XvbPubStats {
     pub roll_round: u64,
     pub reward_yearly: Vec<f64>,
 }
+
 impl XvbPubStats {
+    pub fn rewards(&self) -> Vec<(XvbRound, f64)> {
+        let mut rounds = XvbRound::iter();
+        let mut vec = vec![];
+        for reward in self.reward_yearly.iter() {
+            if let Some(round) = rounds.next() {
+                vec.push((round, *reward));
+            }
+        }
+        vec
+    }
     #[inline]
     // Send an HTTP request to XvB's API, serialize it into [Self] and return it
     pub(in crate::helper) async fn request_api(
