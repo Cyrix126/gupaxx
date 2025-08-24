@@ -18,6 +18,7 @@
 #[cfg(test)]
 mod test {
 
+    use crate::app::submenu_enum::SubmenuP2pool;
     use crate::disk::state::{StartOptionsMode, XmrigProxy};
     use crate::helper::p2pool::ImgP2pool;
     use crate::helper::xrig::xmrig::ImgXmrig;
@@ -850,7 +851,7 @@ Uptime         = 0h 2m 4s
         // check that custom args are parsed correctly.
         let arguments = "--wallet 4A5Dwt2qKwKEQrZfo4aBkSNtvDDAzSFbAJcyFkdW5RwDh9U4WgeZrgKT4hUoE2gv8h6NmsNMTyjsEL8eSLMbABds5rYFWnw --host node2.monerodevs.org --rpc-port 18089 --zmq-port 18084 --data-api /home/lm/Téléchargements/gupaxx-v1.5.4-rc3-linux-x64-bundle/p2pool --local-api --no-color --mini --light-mode".to_string();
         let state = P2pool {
-            simple: false,
+            submenu: SubmenuP2pool::Advanced,
             arguments: arguments.clone(),
             ..Default::default()
         };

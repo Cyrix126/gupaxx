@@ -27,6 +27,9 @@ use log::*;
 
 impl P2pool {
     pub(super) fn advanced(&mut self, ui: &mut Ui, node_vec: &mut Vec<(String, PoolNode)>) {
+        if !self.arguments.is_empty() {
+            ui.disable();
+        }
         // let height = size.y / 16.0;
         // let space_h = size.y / 128.0;
         debug!("P2Pool Tab | Rendering [Node List] elements");

@@ -18,7 +18,10 @@
 use egui::{Key, Modifiers};
 use log::info;
 
-use crate::{disk::status::Submenu, utils::macros::flip};
+use crate::{
+    app::submenu_enum::{SubmenuP2pool, SubmenuStatus},
+    utils::macros::flip,
+};
 
 use super::{App, Tab};
 
@@ -167,13 +170,19 @@ impl App {
         } else if key.is_c() && !wants_input {
             match self.tab {
                 Tab::Status => match self.state.status.submenu {
-                    Submenu::Processes => self.state.status.submenu = Submenu::Benchmarks,
-                    Submenu::P2pool => self.state.status.submenu = Submenu::Processes,
-                    Submenu::Benchmarks => self.state.status.submenu = Submenu::P2pool,
+                    SubmenuStatus::Processes => {
+                        self.state.status.submenu = SubmenuStatus::Benchmarks
+                    }
+                    SubmenuStatus::P2pool => self.state.status.submenu = SubmenuStatus::Processes,
+                    SubmenuStatus::Benchmarks => self.state.status.submenu = SubmenuStatus::P2pool,
                 },
                 Tab::Gupax => flip!(self.state.gupax.simple),
                 Tab::Node => flip!(self.state.node.simple),
-                Tab::P2pool => flip!(self.state.p2pool.simple),
+                Tab::P2pool => match self.state.p2pool.submenu {
+                    SubmenuP2pool::Simple => self.state.p2pool.submenu = SubmenuP2pool::Crawler,
+                    SubmenuP2pool::Advanced => self.state.p2pool.submenu = SubmenuP2pool::Simple,
+                    SubmenuP2pool::Crawler => self.state.p2pool.submenu = SubmenuP2pool::Advanced,
+                },
                 Tab::Xmrig => flip!(self.state.xmrig.simple),
                 Tab::XmrigProxy => flip!(self.state.xmrig_proxy.simple),
                 Tab::Xvb => flip!(self.state.xvb.simple),
@@ -183,12 +192,18 @@ impl App {
         } else if key.is_v() && !wants_input {
             match self.tab {
                 Tab::Status => match self.state.status.submenu {
-                    Submenu::Processes => self.state.status.submenu = Submenu::P2pool,
-                    Submenu::P2pool => self.state.status.submenu = Submenu::Benchmarks,
-                    Submenu::Benchmarks => self.state.status.submenu = Submenu::Processes,
+                    SubmenuStatus::Processes => self.state.status.submenu = SubmenuStatus::P2pool,
+                    SubmenuStatus::P2pool => self.state.status.submenu = SubmenuStatus::Benchmarks,
+                    SubmenuStatus::Benchmarks => {
+                        self.state.status.submenu = SubmenuStatus::Processes
+                    }
                 },
                 Tab::Gupax => flip!(self.state.gupax.simple),
-                Tab::P2pool => flip!(self.state.p2pool.simple),
+                Tab::P2pool => match self.state.p2pool.submenu {
+                    SubmenuP2pool::Simple => self.state.p2pool.submenu = SubmenuP2pool::Advanced,
+                    SubmenuP2pool::Advanced => self.state.p2pool.submenu = SubmenuP2pool::Crawler,
+                    SubmenuP2pool::Crawler => self.state.p2pool.submenu = SubmenuP2pool::Simple,
+                },
                 Tab::Xmrig => flip!(self.state.xmrig.simple),
                 Tab::XmrigProxy => flip!(self.state.xmrig_proxy.simple),
                 Tab::Xvb => flip!(self.state.xvb.simple),

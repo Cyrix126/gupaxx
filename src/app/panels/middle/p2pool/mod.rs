@@ -1,4 +1,5 @@
 use crate::app::panels::middle::common::console::{console, input_args_field, start_options_field};
+use crate::app::submenu_enum::SubmenuP2pool;
 use crate::disk::state::{P2pool, StartOptionsMode, State};
 use crate::helper::crawler::Crawler;
 use crate::helper::p2pool::PubP2poolApi;
@@ -28,6 +29,7 @@ use super::common::header_tab::header_tab;
 use super::common::list_poolnode::PoolNode;
 
 mod advanced;
+mod crawler;
 mod simple;
 
 impl P2pool {
@@ -51,7 +53,6 @@ impl P2pool {
     ) {
         //---------------------------------------------------------------------------------------------------- [Simple] Console
         // debug!("P2Pool Tab | Rendering [Console]");
-        let mut api_lock = api.lock().unwrap();
         // let mut prefer_local_node = api.lock().unwrap().prefer_local_node;
         header_tab(
             ui,
@@ -61,10 +62,10 @@ impl P2pool {
             true,
         );
         egui::ScrollArea::vertical().show(ui, |ui| {
-            let text = &api_lock.output;
+            let text = &api.lock().unwrap().output;
             ui.group(|ui| {
                 console(ui, text, &mut self.console_height, ProcessName::P2pool);
-                if !self.simple {
+                if self.submenu == SubmenuP2pool::Advanced {
                     ui.separator();
                     input_args_field(
                         ui,
@@ -75,7 +76,8 @@ impl P2pool {
                     );
                 }
             });
-            if !self.simple {
+
+            if self.submenu == SubmenuP2pool::Advanced {
                 let default_args_simple = self.start_options(
                     path,
                     &backup_nodes,
@@ -105,14 +107,12 @@ impl P2pool {
                 ui,
                 P2POOL_ADDRESS,
             );
-
-            if self.simple {
-                self.simple(ui, ping, &mut api_lock, crawler);
-            } else {
-                if !self.arguments.is_empty() {
-                    ui.disable();
+            match self.submenu {
+                SubmenuP2pool::Simple => self.simple(ui, crawler),
+                SubmenuP2pool::Advanced => {
+                    self.advanced(ui, node_vec);
                 }
-                self.advanced(ui, node_vec);
+                SubmenuP2pool::Crawler => self.crawler(ui, crawler, ping, api),
             }
         });
     }

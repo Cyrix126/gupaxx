@@ -18,6 +18,7 @@
 use super::Helper;
 use super::Process;
 use crate::app::panels::middle::common::list_poolnode::PoolNode;
+use crate::app::submenu_enum::SubmenuP2pool;
 use crate::disk::state::Node;
 use crate::disk::state::P2pool;
 use crate::disk::state::P2poolChain;
@@ -237,7 +238,8 @@ impl Helper {
         helper.lock().unwrap().p2pool.lock().unwrap().state = ProcessState::Middle;
         let (api_path_local, api_path_network, api_path_pool, api_path_p2p) =
             Self::mutate_img_p2pool(state, helper, path);
-        let mode = if state.simple {
+        let simple = state.submenu != SubmenuP2pool::Advanced;
+        let mode = if simple {
             StartOptionsMode::Simple
         } else if !state.arguments.is_empty() {
             StartOptionsMode::Custom
@@ -347,7 +349,8 @@ impl Helper {
         let path = path.to_path_buf();
         let mut api_path = path;
         api_path.pop();
-        if state.simple {
+        let simple = state.submenu != SubmenuP2pool::Advanced;
+        if simple {
             let node = state
                 .selected_remote_node
                 .as_ref()
@@ -837,7 +840,7 @@ impl Helper {
             let process = helper_lock.p2pool.lock().unwrap();
             let gui_api = helper_lock.gui_api_p2pool.lock().unwrap();
             if gui_api.prefer_local_node
-                && state.simple
+                && state.submenu != SubmenuP2pool::Advanced
                 && !state.local_node
                 && node_process.state == ProcessState::Alive
                 && process.is_alive()

@@ -10,6 +10,7 @@ use crate::GUPAX_TAB_XMRIG_PROXY;
 use crate::GUPAX_TAB_XVB;
 use crate::GUPAX_VERSION;
 use crate::OS;
+use crate::app::submenu_enum::SubmenuP2pool;
 use crate::cli::Cli;
 use crate::cli::parse_args;
 use crate::components::gupax::FileWindow;
@@ -74,6 +75,7 @@ pub mod eframe_impl;
 pub mod keys;
 pub mod panels;
 pub mod quit;
+pub mod submenu_enum;
 //---------------------------------------------------------------------------------------------------- Struct + Impl
 // The state of the outer main [App].
 // See the [State] struct in [state.rs] for the
@@ -741,7 +743,7 @@ impl App {
             return None;
         }
 
-        if self.state.p2pool.simple {
+        if self.state.p2pool.submenu != SubmenuP2pool::Advanced {
             let mut vec = Vec::new();
             // Locking during this entire loop should be fine,
             // only a few nodes to iter through.

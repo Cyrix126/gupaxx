@@ -70,11 +70,10 @@ mod test {
 			hash_metric = "Hash"
 			
             [p2pool]
-            simple = true
+            submenu = "Simple"
             local_node = false
             chain = "Nano"
             auto_ping = false
-            auto_select = true
             backup_host = true
             out_peers = 10
             in_peers = 10

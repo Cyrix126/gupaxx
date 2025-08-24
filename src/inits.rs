@@ -153,6 +153,11 @@ pub fn init_auto(app: &mut App) {
         info!("Skipping auto-update...");
     }
 
+    // [Auto-Crawl]
+    if app.state.gupax.auto.crawl {
+        info!("Auto Stating crawler...");
+        Crawler::start(&app.crawler);
+    }
     // [Auto-Ping]
     // do not ping if there is no discovered nodes to ping, unless we can add the selected remote node.
     if app.state.p2pool.auto_ping {
@@ -164,11 +169,6 @@ pub fn init_auto(app: &mut App) {
         Ping::spawn_thread(&app.ping)
     } else {
         info!("Skipping auto-ping...");
-    }
-    // [Auto-Crawl]
-    if app.state.gupax.auto.crawl {
-        info!("Auto Stating crawler...");
-        Crawler::start(&app.crawler);
     }
 
     // [Auto-Node]
@@ -215,7 +215,7 @@ pub fn init_auto(app: &mut App) {
             warn!(
                 "Gupaxx | P2pool instance is already running outside of Gupaxx ! Skipping auto-node..."
             );
-        } else if app.crawler.lock().unwrap().nodes.is_empty() {
+        } else if app.state.p2pool.selected_remote_node.is_none() {
             warn!(
                 "Gupaxx | P2pool can start because there is no discovered nodes yet ! Skipping auto-node..."
             );
@@ -233,6 +233,32 @@ pub fn init_auto(app: &mut App) {
         info!("Skipping auto-p2pool...");
     }
 
+    // [Auto-XMRig-Proxy]
+    if app
+        .state
+        .gupax
+        .auto
+        .is_enabled(&AutoStart::Process(ProcessName::XmrigProxy))
+    {
+        if !Gupax::path_is_file(&app.state.gupax.xmrig_proxy_path) {
+            warn!("Gupaxx | Xmrig-Proxy path is not a file! Skipping auto-xmrig_proxy...");
+        } else if !check_binary_path(&app.state.gupax.xmrig_proxy_path, ProcessName::XmrigProxy) {
+            warn!("Gupaxx | Xmrig-Proxy path is not valid! Skipping auto-xmrig_proxy...");
+        } else if process_running(crate::helper::ProcessName::XmrigProxy) {
+            warn!(
+                "Gupaxx | Xmrig-Proxy instance is already running outside of Gupaxx ! Skipping auto-node..."
+            );
+        } else {
+            Helper::start_xp(
+                &app.helper,
+                &app.state.xmrig_proxy,
+                &app.state.p2pool,
+                &app.state.gupax.absolute_xp_path,
+            );
+        }
+    } else {
+        info!("Skipping auto-XMRig-Proxy...");
+    }
     // [Auto-XMRig]
     if app
         .state
@@ -263,32 +289,6 @@ pub fn init_auto(app: &mut App) {
         }
     } else {
         info!("Skipping auto-xmrig...");
-    }
-    // [Auto-XMRig-Proxy]
-    if app
-        .state
-        .gupax
-        .auto
-        .is_enabled(&AutoStart::Process(ProcessName::XmrigProxy))
-    {
-        if !Gupax::path_is_file(&app.state.gupax.xmrig_proxy_path) {
-            warn!("Gupaxx | Xmrig-Proxy path is not a file! Skipping auto-xmrig_proxy...");
-        } else if !check_binary_path(&app.state.gupax.xmrig_proxy_path, ProcessName::XmrigProxy) {
-            warn!("Gupaxx | Xmrig-Proxy path is not valid! Skipping auto-xmrig_proxy...");
-        } else if process_running(crate::helper::ProcessName::XmrigProxy) {
-            warn!(
-                "Gupaxx | Xmrig-Proxy instance is already running outside of Gupaxx ! Skipping auto-node..."
-            );
-        } else {
-            Helper::start_xp(
-                &app.helper,
-                &app.state.xmrig_proxy,
-                &app.state.p2pool,
-                &app.state.gupax.absolute_xp_path,
-            );
-        }
-    } else {
-        info!("Skipping auto-XMRig-Proxy...");
     }
     // [Auto-XvB]
     if app

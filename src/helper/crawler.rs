@@ -64,9 +64,11 @@ pub struct CrawlerRequirements {
 impl Default for CrawlerRequirements {
     fn default() -> Self {
         CrawlerRequirements {
-            nb_nodes_fast: 1,
+            // slower to find
+            nb_nodes_fast: 2,
             max_ping: 300,
             max_ping_fast: 35,
+            // faster to find, can be useful if the crawling timeout and no fast nodes are found
             nb_nodes_medium: 3,
         }
     }

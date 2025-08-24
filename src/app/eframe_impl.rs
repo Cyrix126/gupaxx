@@ -1,6 +1,8 @@
 use std::sync::{Arc, Mutex};
 
 use super::App;
+use crate::app::Tab;
+use crate::components::node::RemoteNodes;
 #[cfg(target_os = "windows")]
 use crate::errors::{ErrorButtons, ErrorFerris, process_running};
 use crate::helper::{Helper, ProcessName, ProcessState};
@@ -66,6 +68,27 @@ impl eframe::App for App {
             || self.og_node_vec != self.node_vec
             || self.og_pool_vec != self.pool_vec;
         drop(og);
+
+        // crawl/pinged/selected remote node refresh
+        if self.state.gupax.auto.crawl || self.tab == Tab::P2pool {
+            let mut crawler_lock = self.crawler.lock().unwrap();
+            let mut ping_lock = self.ping.lock().unwrap();
+            let crawling = crawler_lock.crawling;
+            let ping_nodes = &mut ping_lock.nodes;
+            let crawl_nodes = &mut crawler_lock.nodes;
+
+            if *ping_nodes != *crawl_nodes && !crawl_nodes.is_empty() {
+                *ping_nodes = crawl_nodes.clone();
+                if !crawling {
+                    *crawl_nodes = RemoteNodes::default();
+                }
+            }
+
+            // refresh the selected node with the fastest from the pinged nodes if it was empty
+            if self.state.p2pool.selected_remote_node.is_none() {
+                self.state.p2pool.selected_remote_node = ping_nodes.first().cloned();
+            }
+        }
 
         self.top_panel(ctx);
         self.bottom_panel(ctx, &key, wants_input, &process_states);

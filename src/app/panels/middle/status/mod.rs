@@ -16,8 +16,8 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 use crate::{
-    app::{Benchmark, eframe_impl::ProcessStatesGui},
-    disk::{gupax_p2pool_api::GupaxP2poolApi, state::Status, status::*},
+    app::{Benchmark, eframe_impl::ProcessStatesGui, submenu_enum::SubmenuStatus},
+    disk::{gupax_p2pool_api::GupaxP2poolApi, state::Status},
     helper::{
         ProcessName, ProcessState,
         node::PubNodeApi,
@@ -58,7 +58,7 @@ impl Status {
         ui: &mut egui::Ui,
     ) {
         //---------------------------------------------------------------------------------------------------- [Processes]
-        if self.submenu == Submenu::Processes {
+        if self.submenu == SubmenuStatus::Processes {
             self.processes(
                 show_process,
                 sys,
@@ -74,7 +74,7 @@ impl Status {
                 states,
             );
         //---------------------------------------------------------------------------------------------------- [P2Pool]
-        } else if self.submenu == Submenu::P2pool {
+        } else if self.submenu == SubmenuStatus::P2pool {
             self.p2pool(
                 ui,
                 gupax_p2pool_api,
@@ -82,7 +82,7 @@ impl Status {
                 p2pool_api,
             );
         //---------------------------------------------------------------------------------------------------- [Benchmarks]
-        } else if self.submenu == Submenu::Benchmarks {
+        } else if self.submenu == SubmenuStatus::Benchmarks {
             self.benchmarks(
                 ui,
                 benchmarks,

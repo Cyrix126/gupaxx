@@ -394,8 +394,8 @@ pub const P2POOL_OUT: &str = "How many out-bound peers to connect to? (you conne
 pub const P2POOL_IN: &str = "How many in-bound peers to allow? (others connecting to you)";
 pub const P2POOL_LOG: &str = "Verbosity of the console log.\nA verbosity level more than 0 is recommended to let the P2Pool process detect more rapidly errors with the Monero Node.\nIf the level is at 0, it can take up to 2 minutes to detect an error.";
 pub const P2POOL_AUTO_NODE: &str = "Automatically ping the remote Monero nodes at Gupaxx startup";
-pub const P2POOL_AUTO_SELECT: &str =
-    "Automatically select the fastest remote Monero node after pinging";
+// pub const P2POOL_AUTO_SELECT: &str =
+// "Automatically select the fastest remote Monero node after pinging";
 pub const P2POOL_BACKUP_HOST_SIMPLE: &str = r#"Automatically switch to the other nodes listed if the current one is down.
 
 Note: you must ping the remote nodes or this feature will default to only using the currently selected node."#;
@@ -422,17 +422,20 @@ For a simple guide, see the [Running a Local Monero Node] section on Gupaxx s Gi
 pub const P2POOL_INPUT: &str = "Send a command to P2Pool";
 
 pub const P2POOL_SIMPLE: &str = r#"Use simple P2Pool settings:
-  - Remote remote Monero node
-  - Default P2Pool settings + Mini
-  - Backup host setting"#;
+  - Default P2Pool settings + Nano
+  - Use Remote/local Monero node
+  - Find a remote node"#;
 pub const P2POOL_ADVANCED: &str = r#"Use advanced P2Pool settings:
   - Terminal input
   - Overriding command arguments
   - Manual node list
-  - P2Pool Main/Mini selection
+  - P2Pool Main/Mini/Nano selection
   - Out/In peer setting
   - Log level setting
   - Backup host setting"#;
+pub const P2POOL_CRAWLER: &str = r#"Set crawler P2Pool settings:
+  - selection of found nodes
+  - adjust crawler parameters"#;
 pub const P2POOL_NAME: &str = "Add a unique name to identify this node; Only [A-Za-z0-9-_.] and spaces allowed; Max length = 30 characters";
 pub const P2POOL_NODE_IP: &str = "Specify the Monero Node IP to connect to with P2Pool; It must be a valid IPv4 address or a valid domain name; Max length = 255 characters";
 pub const P2POOL_RPC_PORT: &str = "Specify the RPC port of the Monero node; [1-65535]";

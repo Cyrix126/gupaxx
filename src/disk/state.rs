@@ -5,7 +5,10 @@ use strum::{EnumCount, EnumIter};
 
 use super::*;
 use crate::{
-    app::panels::middle::common::list_poolnode::PoolNode,
+    app::{
+        panels::middle::common::list_poolnode::PoolNode,
+        submenu_enum::{SubmenuP2pool, SubmenuStatus},
+    },
     components::node::RemoteNode,
     disk::status::*,
     helper::{Helper, ProcessName, node::ImgNode, p2pool::ImgP2pool, xrig::xmrig_proxy::ImgProxy},
@@ -179,7 +182,7 @@ pub struct State {
 
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub struct Status {
-    pub submenu: Submenu,
+    pub submenu: SubmenuStatus,
     pub payout_view: PayoutView,
     pub monero_enabled: bool,
     pub manual_hash: bool,
@@ -303,11 +306,10 @@ impl AutoStart {
 /// Some value must be String because they are used directly in editable fields in the UI
 #[derive(Clone, Eq, PartialEq, Debug, Deserialize, Serialize)]
 pub struct P2pool {
-    pub simple: bool,
+    pub submenu: SubmenuP2pool,
     pub local_node: bool,
     pub chain: P2poolChain,
     pub auto_ping: bool,
-    pub auto_select: bool,
     pub backup_host: bool,
     pub out_peers: u16,
     pub in_peers: u16,
@@ -596,7 +598,7 @@ impl Default for AutoEnabled {
 impl Default for Status {
     fn default() -> Self {
         Self {
-            submenu: Submenu::default(),
+            submenu: SubmenuStatus::default(),
             payout_view: PayoutView::default(),
             monero_enabled: false,
             manual_hash: false,
@@ -632,11 +634,10 @@ impl Default for Gupax {
 impl Default for P2pool {
     fn default() -> Self {
         Self {
-            simple: true,
+            submenu: SubmenuP2pool::default(),
             local_node: false,
             chain: P2poolChain::Nano,
             auto_ping: true,
-            auto_select: true,
             backup_host: true,
             out_peers: 10,
             in_peers: 10,
@@ -826,7 +827,9 @@ impl P2pool {
     }
     /// get the port that the p2pool process would use for stratum if it were using the current settings
     pub fn stratum_port(&self) -> u16 {
-        if self.simple {
+        // If in the crawler tab, it means the use does not use advanced tab because he won't set a custom node.
+        let simple = self.submenu != SubmenuP2pool::Advanced;
+        if simple {
             P2POOL_PORT_DEFAULT
         } else if !self.arguments.is_empty() {
             let mut last = "";

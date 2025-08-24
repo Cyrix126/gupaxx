@@ -1,11 +1,11 @@
 use std::sync::{Arc, OnceLock};
 
 use crate::app::eframe_impl::{ProcessStateGui, ProcessStatesGui};
+use crate::app::submenu_enum::{Submenu, SubmenuP2pool, SubmenuStatus};
 use crate::app::{Restart, keys::KeyPressed};
 use crate::disk::node::Node;
 use crate::disk::pool::Pool;
 use crate::disk::state::{Gupax, State};
-use crate::disk::status::Submenu;
 use crate::errors::process_running;
 use crate::helper::node::{CheckLocalOutsideNode, spawn_local_outside_checker};
 use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
@@ -15,6 +15,7 @@ use crate::utils::macros::sleep;
 use crate::utils::regex::Regexes;
 use egui::*;
 use log::{debug, error, warn};
+use strum::IntoEnumIterator;
 
 use crate::app::Tab;
 use crate::helper::ProcessState::*;
@@ -451,9 +452,9 @@ impl crate::app::App {
         match self.tab {
             Tab::About => {}
             Tab::Gupax => self.gupaxx_submenu(ui),
-            Tab::Status => self.status_submenu(ui),
+            Tab::Status => Self::status_submenu(&mut self.state.status.submenu, ui),
             Tab::Node => self.node_submenu(ui),
-            Tab::P2pool => self.p2pool_submenu(ui),
+            Tab::P2pool => Self::p2pool_submenu(&mut self.state.p2pool.submenu, ui),
             Tab::Xmrig => self.xmrig_submenu(ui),
             Tab::XmrigProxy => self.xp_submenu(ui),
             Tab::Xvb => self.xvb_submenu(ui),
@@ -473,13 +474,6 @@ impl crate::app::App {
             (NODE_SIMPLE, NODE_ADVANCED),
         );
     }
-    fn p2pool_submenu(&mut self, ui: &mut Ui) {
-        Self::simple_advanced_submenu(
-            ui,
-            &mut self.state.p2pool.simple,
-            (P2POOL_SIMPLE, P2POOL_ADVANCED),
-        );
-    }
     fn xmrig_submenu(&mut self, ui: &mut Ui) {
         Self::simple_advanced_submenu(
             ui,
@@ -497,51 +491,55 @@ impl crate::app::App {
     fn xvb_submenu(&mut self, ui: &mut Ui) {
         Self::simple_advanced_submenu(ui, &mut self.state.xvb.simple, (XVB_SIMPLE, XVB_ADVANCED));
     }
-    fn status_submenu(&mut self, ui: &mut Ui) {
-        // ui.style_mut().wrap = Some(true);
+    fn status_submenu(state_submenu: &mut SubmenuStatus, ui: &mut Ui) {
         ui.group(|ui| {
             let spacing = spacing(ui);
+            // should be calculated from the len of variants and their name
             let width = ((ui.available_width() / 1.5 / 3.0) - spacing).max(0.0);
-            if ui
-                .add_sized(
-                    [width, ui.available_height()],
-                    Button::selectable(
-                        self.state.status.submenu == Submenu::Processes,
-                        "Processes",
-                    ),
-                )
-                .on_hover_text(STATUS_SUBMENU_PROCESSES)
-                .clicked()
-            {
-                self.state.status.submenu = Submenu::Processes;
-            }
-            ui.separator();
-            if ui
-                .add_sized(
-                    [width, ui.available_height()],
-                    Button::selectable(self.state.status.submenu == Submenu::P2pool, "P2Pool"),
-                )
-                .on_hover_text(STATUS_SUBMENU_P2POOL)
-                .clicked()
-            {
-                self.state.status.submenu = Submenu::P2pool;
-            }
-            ui.separator();
-            if ui
-                .add_sized(
-                    [width, ui.available_height()],
-                    Button::selectable(
-                        self.state.status.submenu == Submenu::Benchmarks,
-                        "Benchmarks",
-                    ),
-                )
-                .on_hover_text(STATUS_SUBMENU_HASHRATE)
-                .clicked()
-            {
-                self.state.status.submenu = Submenu::Benchmarks;
+            let variants = SubmenuStatus::iter();
+            let nb_variants = variants.len();
+            for (nb, variant) in variants.enumerate() {
+                if ui
+                    .add_sized(
+                        [width, ui.available_height()],
+                        Button::selectable(*state_submenu == variant, variant.to_string()),
+                    )
+                    .on_hover_text(variant.hover_text())
+                    .clicked()
+                {
+                    *state_submenu = variant;
+                }
+                if nb != nb_variants - 1 {
+                    ui.separator();
+                }
             }
         });
     }
+    fn p2pool_submenu(state_submenu: &mut SubmenuP2pool, ui: &mut Ui) {
+        ui.group(|ui| {
+            let spacing = spacing(ui);
+            // should be calculated from the len of variants and their name
+            let width = ((ui.available_width() / 1.5 / 3.0) - spacing).max(0.0);
+            let variants = SubmenuP2pool::iter();
+            let nb_variants = variants.len();
+            for (nb, variant) in variants.enumerate() {
+                if ui
+                    .add_sized(
+                        [width, ui.available_height()],
+                        Button::selectable(*state_submenu == variant, variant.to_string()),
+                    )
+                    .on_hover_text(variant.hover_text())
+                    .clicked()
+                {
+                    *state_submenu = variant;
+                }
+                if nb != nb_variants - 1 {
+                    ui.separator();
+                }
+            }
+        });
+    }
+
     fn simple_advanced_submenu(ui: &mut Ui, simple: &mut bool, hover_text: (&str, &str)) {
         let spacing = spacing(ui);
         let width = ((ui.available_width() - spacing) / 4.0).max(0.0);

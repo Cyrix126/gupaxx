@@ -19,29 +19,6 @@ use derive_more::derive::Display;
 use strum::{EnumCount, EnumIter};
 
 use super::*;
-//---------------------------------------------------------------------------------------------------- [Submenu] enum for [Status] tab
-#[derive(Clone, Copy, Eq, PartialEq, Debug, Deserialize, Serialize)]
-pub enum Submenu {
-    Processes,
-    P2pool,
-    Benchmarks,
-}
-
-impl Default for Submenu {
-    fn default() -> Self {
-        Self::Processes
-    }
-}
-
-impl Display for Submenu {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        use Submenu::*;
-        match self {
-            P2pool => write!(f, "P2Pool"),
-            _ => write!(f, "{self:?}"),
-        }
-    }
-}
 
 //---------------------------------------------------------------------------------------------------- [PayoutView] enum for [Status/P2Pool] tab
 // The enum buttons for selecting which "view" to sort the payout log in.
