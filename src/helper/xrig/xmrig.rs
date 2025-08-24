@@ -626,7 +626,7 @@ impl Helper {
         #[cfg(target_os = "windows")]
         {
             use std::os::windows::process::CommandExt;
-            std::process::Command::new("cmd")
+            if let Ok(mut child) = std::process::Command::new("cmd")
                 .creation_flags(0x08000000)
                 .args(["/c", "wmic"])
                 .args([
@@ -638,7 +638,15 @@ impl Helper {
                     "below normal",
                 ])
                 .spawn()
-                .expect("failure to execute command wmic");
+                && let Ok(status) = child.wait()
+                && status.success()
+            {
+                info!("Xmrig | wmic command successful")
+            } else {
+                warn!(
+                    "Xmrig | wmic command unsuccessful, you might experience freeze with xmrig taking all the cpu time."
+                )
+            }
         }
         loop {
             // Set timer
