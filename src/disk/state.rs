@@ -11,7 +11,10 @@ use crate::{
     },
     components::node::RemoteNode,
     disk::status::*,
-    helper::{Helper, ProcessName, node::ImgNode, p2pool::ImgP2pool, xrig::xmrig_proxy::ImgProxy},
+    helper::{
+        Helper, ProcessName, crawler::CrawlerRequirements, node::ImgNode, p2pool::ImgP2pool,
+        xrig::xmrig_proxy::ImgProxy,
+    },
 };
 //---------------------------------------------------------------------------------------------------- [State] Impl
 impl Default for State {
@@ -325,6 +328,7 @@ pub struct P2pool {
     pub selected_node: SelectedPoolNode,
     pub prefer_local_node: bool,
     pub console_height: u32,
+    pub crawl_settings: CrawlerRequirements,
 }
 
 // compatible for P2Pool and Xmrig/Proxy
@@ -659,6 +663,7 @@ impl Default for P2pool {
             },
             prefer_local_node: true,
             console_height: APP_DEFAULT_CONSOLE_HEIGHT,
+            crawl_settings: CrawlerRequirements::default(),
         }
     }
 }

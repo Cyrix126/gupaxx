@@ -156,7 +156,7 @@ pub fn init_auto(app: &mut App) {
     // [Auto-Crawl]
     if app.state.gupax.auto.crawl {
         info!("Auto Stating crawler...");
-        Crawler::start(&app.crawler);
+        Crawler::start(&app.crawler, &app.state.p2pool.crawl_settings);
     }
     // [Auto-Ping]
     // do not ping if there is no discovered nodes to ping, unless we can add the selected remote node.

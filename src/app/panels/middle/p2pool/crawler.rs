@@ -1,8 +1,8 @@
 use std::sync::{Arc, Mutex};
 
 use egui::{
-    Align, Button, Checkbox, ComboBox, ProgressBar, RichText, ScrollArea, TextStyle, TextWrapMode,
-    Ui, vec2,
+    Align, Button, Checkbox, ComboBox, Label, ProgressBar, RichText, ScrollArea, Slider, TextStyle,
+    TextWrapMode, Ui, vec2,
 };
 use log::debug;
 
@@ -12,10 +12,10 @@ use crate::{
     helper::{crawler::Crawler, p2pool::PubP2poolApi},
     miscs::height_txt_before_button,
     utils::constants::{
-        BUTTON_DISABLED_BY_EMPTY_LIST_NODES, EXPECT_BUTTON_DISABLED, P2POOL_AUTO_NODE,
-        P2POOL_AUTOSWITCH_LOCAL_NODE, P2POOL_BACKUP_HOST_SIMPLE, P2POOL_COMMUNITY_NODE_WARNING,
-        P2POOL_PING, P2POOL_SELECT_FASTEST, P2POOL_SELECT_LAST, P2POOL_SELECT_NEXT,
-        P2POOL_SELECT_RANDOM, SPACE,
+        BUTTON_DISABLED_BY_EMPTY_LIST_NODES, CRAWLER_PARAMETERS_HELP, EXPECT_BUTTON_DISABLED,
+        P2POOL_AUTO_NODE, P2POOL_AUTOSWITCH_LOCAL_NODE, P2POOL_BACKUP_HOST_SIMPLE,
+        P2POOL_COMMUNITY_NODE_WARNING, P2POOL_PING, P2POOL_SELECT_FASTEST, P2POOL_SELECT_LAST,
+        P2POOL_SELECT_NEXT, P2POOL_SELECT_RANDOM, SPACE,
     },
 };
 
@@ -28,7 +28,29 @@ impl P2pool {
         api: &Arc<Mutex<PubP2poolApi>>,
     ) {
         self.crawl_button(crawler, ui);
+        self.crawl_parameters(ui);
         self.remote_nodes_menu(ui, api, crawler, ping);
+    }
+
+    fn crawl_parameters(&mut self, ui: &mut Ui) {
+        let text_height = height_txt_before_button(ui, &TextStyle::Button);
+        ScrollArea::horizontal()
+            .id_salt("crawling parameters")
+            .show(ui, |ui| {
+                ui.horizontal(|ui| {
+                    ui.add_space(ui.spacing().item_spacing.x);
+                    ui.add_sized([0.0, text_height], Label::new("Crawl Parameters"))
+                        .on_hover_text(CRAWLER_PARAMETERS_HELP);
+                });
+                ui.group(|ui| {
+                    ui.set_max_width(0.0);
+                    self.slider_latency(ui);
+                    self.slider_nb_fast_nodes(ui);
+                    self.slider_nb_medium_nodes(ui);
+                    self.slider_timeout(ui);
+                    ui.add_space(ui.spacing().item_spacing.x);
+                });
+            });
     }
 
     fn remote_nodes_menu(
@@ -237,7 +259,7 @@ impl P2pool {
                 {
                     if !crawling {
                         self.selected_remote_node = None;
-                        Crawler::start(crawler);
+                        Crawler::start(crawler, &self.crawl_settings);
                     } else {
                         crawler.lock().unwrap().stopping = true;
                         Crawler::stop(crawler);
@@ -249,7 +271,73 @@ impl P2pool {
             crawl_progress(crawler, ui);
         });
     }
+    fn slider_latency(&mut self, ui: &mut Ui) {
+        ui.horizontal(|ui|{
+        let text_height = height_txt_before_button(ui, &TextStyle::Button);
+        ui.add_sized([0.0, text_height], Label::new("Max latency (ms) of fast nodes"));
+        ui.spacing_mut().slider_width = ui.text_style_height(&TextStyle::Button) * 10.0;
+        ui.add_sized(
+            [ui.available_width(), text_height],
+            Slider::new(&mut self.crawl_settings.max_ping_fast, 0..=100)
+                .text("ms")
+        )
+        .on_hover_text("Set the maximum latency in millisecond where a found capable node is considered fast.");
+        });
+        // TODO make a state builder
+        // slider_state_field(
+        //     ui,
+        //     "Max latency (ms) of fast nodes",
+        //     "Set the maximum latency in millisecond where a found capable node is considered fast.",
+        //     &mut self.crawl_settings.max_ping_fast,
+        //     0..=100,
+        //     "ms"
+        // );
+    }
+    fn slider_nb_fast_nodes(&mut self, ui: &mut Ui) {
+        ui.horizontal(|ui| {
+            // let text_height = height_txt_before_button(ui, &TextStyle::Heading) * 1.4;
+            let text_height = height_txt_before_button(ui, &TextStyle::Button);
+            ui.add_sized(
+                [0.0, text_height],
+                Label::new("Number of                     "),
+            );
+            // ui.spacing_mut().slider_width = ui.text_style_height(&TextStyle::Button) * 18.0;
+            ui.spacing_mut().slider_width = ui.text_style_height(&TextStyle::Button) * 10.0;
+            ui.add_sized(
+                [ui.available_width(), text_height],
+                Slider::new(&mut self.crawl_settings.nb_nodes_fast, 1..=10).text("Fast Nodes"),
+            )
+            .on_hover_text("How many fast nodes the crawler must find before stopping");
+        });
+    }
+    fn slider_nb_medium_nodes(&mut self, ui: &mut Ui) {
+        ui.horizontal(|ui|{
+        let text_height = height_txt_before_button(ui, &TextStyle::Button);
+        ui.add_sized([0.0, text_height], Label::new("Maximum number of             "));
+        ui.spacing_mut().slider_width = ui.text_style_height(&TextStyle::Button) * 10.0;
+        ui.add_sized(
+            [ui.available_width(), text_height],
+            Slider::new(&mut self.crawl_settings.nb_nodes_medium, 1..=10)
+                .text("Medium Nodes")
+        )
+        .on_hover_text("How many mediumly fast nodes the crawler must find before replacing the slowest ones.\nUsefull in case no fast nodes are found or to be used as backup nodes");
+        });
+    }
+    fn slider_timeout(&mut self, ui: &mut Ui) {
+        ui.horizontal(|ui|{
+        let text_height = height_txt_before_button(ui, &TextStyle::Button);
+        ui.add_sized([0.0, text_height], Label::new("Timeout                       "));
+        ui.spacing_mut().slider_width = ui.text_style_height(&TextStyle::Button) * 10.0;
+        ui.add_sized(
+            [ui.available_width(), text_height],
+            Slider::new(&mut self.crawl_settings.timeout, 1..=600)
+                .text("seconds")
+        )
+        .on_hover_text("Maximum duration for the crawler before terminationg even if it didn't reach the requirements.\nConsider raising this value if you don't find enough fast nodes");
+        });
+    }
 }
+
 fn warning_should_run_local_node(ui: &mut Ui) {
     debug!("P2Pool Tab | Rendering warning text");
     ui.add_space(SPACE);

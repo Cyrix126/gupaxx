@@ -88,6 +88,16 @@ mod test {
             prefer_local_node = true
             console_height = 360
 
+            [p2pool.crawl_settings]
+            nb_nodes_fast = 7
+            max_ping = 300
+            max_ping_fast = 30
+            nb_nodes_medium = 10
+            rpc_ports = [18081, 18089]
+            zmq_ports = [18083, 18084]
+            timeout = 10
+
+
             [p2pool.selected_remote_node]              
             ip = "37.187.74.171"                       
             location = "Unknown"                        

@@ -446,6 +446,7 @@ pub const P2POOL_PATH_OK: &str = "P2Pool was found at the given PATH";
 pub const P2POOL_PATH_EMPTY: &str = "P2Pool PATH is empty! To fix: goto the [Gupaxx Advanced] tab, select [Open] and specify where P2Pool is located.";
 pub const P2POOL_URL: &str = "https://github.com/SChernykh/p2pool";
 
+pub const CRAWLER_PARAMETERS_HELP: &str = "You can define parameters for the crawling. Depending on the value, it will make the crawling faster or slower to reach the requirements";
 // Node/Pool list
 pub const LIST_ADD: &str = "Add the current values to the list";
 pub const LIST_SAVE: &str = "Save the current values to the already existing entry";

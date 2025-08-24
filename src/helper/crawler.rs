@@ -12,6 +12,7 @@ use enclose::enc;
 use futures::StreamExt;
 use log::info;
 use monero_crawler_lib::{CrawlBuilder, capability_checkers::CapabilitiesChecker};
+use serde::{Deserialize, Serialize};
 use tokio::time::sleep;
 
 use crate::components::node::{RemoteNode, RemoteNodes};
@@ -23,10 +24,6 @@ pub struct Crawler {
     pub stopping: bool,
     pub msg: String,
     pub prog: f32,
-    pub requirements: CrawlerRequirements,
-    pub rpc_ports: Vec<u16>,
-    pub zmq_ports: Vec<u16>,
-    pub timeout: Duration,
     pub handle: Option<Sender<bool>>,
 }
 
@@ -38,16 +35,13 @@ impl Default for Crawler {
             stopping: false,
             msg: "Inactive".to_string(),
             prog: 0.0,
-            requirements: CrawlerRequirements::default(),
-            rpc_ports: vec![18081, 18089],
-            zmq_ports: vec![18083, 18084],
-            timeout: Duration::new(10, 0),
             handle: None,
         }
     }
 }
 
 /// The crawler will keep running and replace the found nodes by faster ones until the number of fast nodes has been fulfilled or the time limit is reached.
+#[derive(Clone, PartialEq, Serialize, Deserialize, Debug, Eq)]
 pub struct CrawlerRequirements {
     // number of saved fast nodes after which the crawler will stop
     pub nb_nodes_fast: u8,
@@ -59,6 +53,12 @@ pub struct CrawlerRequirements {
     // number of nodes that are not fast but will be saved anyway.
     // It allows the user to stop the crawl and use a medium fast node if the crawl did not find a fast node yet
     pub nb_nodes_medium: u8,
+    // rpc ports to scan until one is working
+    pub rpc_ports: Vec<u16>,
+    // zmq ports to scan until one is working
+    pub zmq_ports: Vec<u16>,
+    // time in seconds after which the algorithm will stop
+    pub timeout: u64,
 }
 
 impl Default for CrawlerRequirements {
@@ -70,6 +70,9 @@ impl Default for CrawlerRequirements {
             max_ping_fast: 35,
             // faster to find, can be useful if the crawling timeout and no fast nodes are found
             nb_nodes_medium: 3,
+            rpc_ports: vec![18081, 18089],
+            zmq_ports: vec![18083, 18084],
+            timeout: 10,
         }
     }
 }
@@ -78,7 +81,7 @@ impl Crawler {
     pub fn new() -> Arc<Mutex<Self>> {
         Arc::new(Mutex::new(Crawler::default()))
     }
-    pub fn start(crawler: &Arc<Mutex<Self>>) {
+    pub fn start(crawler: &Arc<Mutex<Self>>, settings: &CrawlerRequirements) {
         info!("Spawning crawl thread...");
 
         let (tx, rx) = mpsc::channel();
@@ -88,9 +91,9 @@ impl Crawler {
         }
         crawler.lock().unwrap().crawling = true;
         crawler.lock().unwrap().prog = 0.0;
-        spawn(enc!((crawler) move || {
+        spawn(enc!((crawler, settings) move || {
             let now = Instant::now();
-            Self::crawl(&crawler, rx);
+            Self::crawl(&crawler, &settings, rx);
             info!(
                 "Crawl... Took [{}] seconds to find the minimum required nodes",
                 now.elapsed().as_secs_f32()
@@ -99,8 +102,8 @@ impl Crawler {
         crawler.lock().unwrap().handle = Some(tx);
         // spawn a timeout
 
-        spawn(enc!((crawler) move || {
-            Self::update_progress(&crawler);
+        spawn(enc!((crawler, settings) move || {
+            Self::update_progress(&crawler, &settings);
         }));
     }
     /// Used manually by the user
@@ -115,8 +118,8 @@ impl Crawler {
     }
 
     #[tokio::main]
-    pub async fn update_progress(crawler: &Arc<Mutex<Self>>) {
-        let timeout = crawler.lock().unwrap().timeout;
+    pub async fn update_progress(crawler: &Arc<Mutex<Self>>, settings: &CrawlerRequirements) {
+        let timeout = Duration::from_secs(settings.timeout);
 
         for i in 1..11 {
             sleep(timeout / 10).await;
@@ -137,32 +140,32 @@ impl Crawler {
     }
 
     #[tokio::main]
-    pub async fn crawl(crawler: &Arc<Mutex<Self>>, terminate_rx: Receiver<bool>) {
+    pub async fn crawl(
+        crawler: &Arc<Mutex<Self>>,
+        settings: &CrawlerRequirements,
+        terminate_rx: Receiver<bool>,
+    ) {
         // reset the peers found
         crawler.lock().unwrap().nodes = RemoteNodes::default();
         let mut nb_nodes_fast = 0;
         let mut nb_nodes_medium = 0;
-        let percent = 100.0 / (crawler.lock().unwrap().requirements.nb_nodes_fast as f32).floor();
-        let crawl;
-        {
-            let crawler_lock = crawler.lock().unwrap();
+        let percent = 100.0 / (settings.nb_nodes_fast as f32).floor();
 
-            let max_ping = crawler_lock.requirements.max_ping;
-            let zmq_ports = crawler_lock.zmq_ports.clone();
-            let rpc_ports = crawler_lock.rpc_ports.clone();
+        let max_ping = settings.max_ping;
+        let zmq_ports = settings.zmq_ports.clone();
+        let rpc_ports = settings.rpc_ports.clone();
 
-            crawl = CrawlBuilder::default()
-                .capabilities(vec![
-                    CapabilitiesChecker::Latency(max_ping),
-                    CapabilitiesChecker::Rpc(rpc_ports),
-                    CapabilitiesChecker::Zmq(zmq_ports),
-                    CapabilitiesChecker::SpyNode(false, vec![]),
-                    CapabilitiesChecker::SeedNode(false),
-                ])
-                // .connections_limit(Arc::new(Semaphore::new(1)))
-                .build()
-                .unwrap();
-        }
+        let crawl = CrawlBuilder::default()
+            .capabilities(vec![
+                CapabilitiesChecker::Latency(max_ping),
+                CapabilitiesChecker::Rpc(rpc_ports),
+                CapabilitiesChecker::Zmq(zmq_ports),
+                CapabilitiesChecker::SpyNode(false, vec![]),
+                CapabilitiesChecker::SeedNode(false),
+            ])
+            // .connections_limit(Arc::new(Semaphore::new(1)))
+            .build()
+            .unwrap();
 
         // we want the crawler data to be accessible while the crawler is running
         let mut stream = crawl.discover_peers().await;
@@ -175,12 +178,16 @@ impl Crawler {
             };
             info!("Crawl | found a new compatible p2pool node !");
             let mut crawler_lock = crawler.lock().unwrap();
+            info!(
+                "max_ping_fast is {}, node is {}",
+                settings.max_ping_fast, remote_node.ms
+            );
 
-            match ms.cmp(&crawler_lock.requirements.max_ping_fast) {
+            match ms.cmp(&settings.max_ping_fast) {
                 std::cmp::Ordering::Greater => {
-                    if crawler_lock.requirements.nb_nodes_medium > 0 {
+                    if settings.nb_nodes_medium > 0 {
                         // if the max number of medium nodes is not reached, add the node to the list
-                        if nb_nodes_medium < crawler_lock.requirements.nb_nodes_medium {
+                        if nb_nodes_medium < settings.nb_nodes_medium {
                             nb_nodes_medium += 1;
                             crawler_lock.nodes.push(remote_node);
                             crawler_lock.msg = format!(
@@ -223,7 +230,7 @@ impl Crawler {
             crawler_lock.nodes.sort_by(|a, b| a.ms.cmp(&b.ms));
 
             // stop if the max number of fast nodes is reached
-            if nb_nodes_fast == crawler_lock.requirements.nb_nodes_fast {
+            if nb_nodes_fast == settings.nb_nodes_fast {
                 crawler_lock.msg = "Discovered enough fast latency nodes".to_string();
                 drop(crawler_lock);
                 break;
