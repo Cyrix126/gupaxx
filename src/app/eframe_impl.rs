@@ -5,7 +5,7 @@ use crate::app::Tab;
 use crate::app::submenu_enum::SubmenuP2pool;
 use crate::components::node::RemoteNodes;
 #[cfg(target_os = "windows")]
-use crate::errors::{ErrorButtons, ErrorFerris, process_running};
+use crate::errors::{ErrorButtons, ErrorFerris};
 use crate::helper::{Helper, ProcessName, ProcessState};
 use crate::inits::init_text_styles;
 use crate::{NODE_MIDDLE, P2POOL_MIDDLE, SECOND, XMRIG_MIDDLE, XMRIG_PROXY_MIDDLE, XVB_MIDDLE};
@@ -41,7 +41,8 @@ impl eframe::App for App {
         // Warn only once per restart of Gupaxx.
         #[cfg(target_os = "windows")]
         if !self.xmrig_outside_warning_acknowledge
-            && process_running(ProcessName::Xmrig)
+            && ProcessName::Xmrig
+                .is_process_running(&mut self.helper.lock().unwrap().sys_info.lock().unwrap())
             && !process_states.find(ProcessName::Xmrig).alive
         {
             self.error_state.set("An instance of xmrig is running outside of Gupaxx.\nThis is not supported and could lead to crashes on this platform.\nPlease stop your local instance and start xmrig from Gupaxx Xmrig tab.", ErrorFerris::Error, ErrorButtons::Okay);

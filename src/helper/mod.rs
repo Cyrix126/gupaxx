@@ -814,7 +814,7 @@ fn check_user_input(process: &Arc<Mutex<Process>>, stdin: &mut Box<dyn std::io::
                 lock.name, line
             );
             #[cfg(target_os = "windows")]
-            if let Err(e) = write!(stdin, "{}\r\n", line) {
+            if let Err(e) = write!(stdin, "{line}\r\n") {
                 error!("{} Watchdog | STDIN error: {}", lock.name, e);
             }
             #[cfg(target_family = "unix")]

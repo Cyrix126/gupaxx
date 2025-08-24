@@ -21,8 +21,6 @@ use monero_crawler_lib::capability_checkers::{is_rpc_capable, is_zmq_capable};
 use readable::byte::Byte;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-#[cfg(target_os = "windows")]
-use std::os::windows::fs::MetadataExt;
 use std::{
     net::{SocketAddr, ToSocketAddrs},
     path::Path,

@@ -695,7 +695,7 @@ impl App {
             app.admin = true;
         } else {
             error!("Windows | Admin user not detected!");
-            app.error_state.set(format!("Gupaxx was not launched as Administrator!\nBe warned, XMRig might have less hashrate!"), ErrorFerris::Sudo, ErrorButtons::WindowsAdmin);
+            app.error_state.set("Gupaxx was not launched as Administrator!\nBe warned, XMRig might have less hashrate!".to_string(), ErrorFerris::Sudo, ErrorButtons::WindowsAdmin);
         }
         #[cfg(target_family = "unix")]
         if sudo_check::check() != sudo_check::RunningAs::User {

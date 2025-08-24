@@ -558,7 +558,7 @@ impl Update {
                     path.display(),
                     tmp_windows
                 );
-                std::fs::rename(&path, tmp_windows)?;
+                std::fs::rename(path, tmp_windows)?;
             }
             info!(
                 "Update | Moving new [{}] -> [{}]",

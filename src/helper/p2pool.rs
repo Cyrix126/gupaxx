@@ -804,7 +804,7 @@ impl Helper {
                     debug!("P2Pool Watchdog | Reading status output of p2pool node");
                     #[cfg(target_os = "windows")]
                     if let Err(e) = write!(stdin, "statusfromgupaxx\r\n") {
-                        error!("P2Pool Watchdog | STDIN error: {}", e);
+                        error!("P2Pool Watchdog | STDIN error: {e}");
                     }
                     #[cfg(target_family = "unix")]
                     if let Err(e) = writeln!(stdin, "statusfromgupaxx") {

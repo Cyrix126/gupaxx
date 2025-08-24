@@ -452,7 +452,7 @@ impl Helper {
         debug!("Xmrig-Proxy Watchdog | enabling verbose mode");
         #[cfg(target_os = "windows")]
         if let Err(e) = write!(stdin, "v\r\n") {
-            error!("P2Pool Watchdog | STDIN error: {}", e);
+            error!("P2Pool Watchdog | STDIN error: {e}");
         }
         #[cfg(target_family = "unix")]
         if let Err(e) = writeln!(stdin, "v") {
@@ -461,7 +461,7 @@ impl Helper {
         debug!("XMRig-Proxy Watchdog | checking connections");
         #[cfg(target_os = "windows")]
         if let Err(e) = write!(stdin, "c\r\n") {
-            error!("XMRig-Proxy Watchdog | STDIN error: {}", e);
+            error!("XMRig-Proxy Watchdog | STDIN error: {e}");
         }
         #[cfg(target_family = "unix")]
         if let Err(e) = writeln!(stdin, "c") {
