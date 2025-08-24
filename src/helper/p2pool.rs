@@ -525,10 +525,6 @@ impl Helper {
                 args.push("--local-api".to_string()); // Enable API
                 args.push("--no-color".to_string()); // Remove color escape sequences, Gupax terminal can't parse it :(
                 args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
-                args.push("--sidechain-config".to_string());
-                args.push("nano_config.json".to_string());
-                args.push("--p2p".to_string());
-                args.push("0.0.0.0:37890".to_string());
             }
             StartOptionsMode::Advanced => {
                 // build the argument
