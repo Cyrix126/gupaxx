@@ -247,25 +247,6 @@ impl Helper {
             StartOptionsMode::Advanced
         };
 
-        // if nano chain is used, add a file to p2pool directory since it's not a standard chain yet.
-        if state.chain == P2poolChain::Nano {
-            let mut path_nano_config = path.to_path_buf();
-            path_nano_config.pop();
-            path_nano_config.push("nano_config.json");
-            if path_nano_config.try_exists().is_ok_and(|x| !x)
-                && let Err(err) = std::fs::write(&path_nano_config, P2POOL_NANO_CONFIG)
-            {
-                error!("Could not write the p2pool nano chain config file: {err}");
-            }
-            // also replace the peers list
-            let mut path_peer_list = path.to_path_buf();
-            path_peer_list.pop();
-            path_peer_list.push("p2pool_peers.txt");
-            if let Err(err) = std::fs::write(&path_peer_list, P2POOL_NANO_PEER_LIST) {
-                error!("Could not write the p2pool peer list file for the nano chain: {err}");
-            }
-        }
-
         // get the rpc and zmq port used when starting the node if it is alive, else use current settings of the Node.
         // If the Node is started with different ports that the one used in settings when P2Pool was started,
         // the user will need to restart p2pool
@@ -378,6 +359,10 @@ impl Helper {
                         chain = P2poolChain::Mini;
                         p2pool_image.chain = chain.to_string();
                     }
+                    "--nano" => {
+                        chain = P2poolChain::Nano;
+                        p2pool_image.chain = chain.to_string();
+                    }
                     // used for nano chain, Gupaxx will not recognize another custom chain
                     "--sidechain-config" => {
                         chain = P2poolChain::Nano;
@@ -459,6 +444,7 @@ impl Helper {
                     .selected_remote_node
                     .as_ref()
                     .expect("P2Pool should always be started with a node set");
+                args.push("--nano".to_string());
                 args.push("--wallet".to_string());
                 args.push(state.address.clone()); // Wallet address
                 args.push("--host".to_string());
@@ -472,11 +458,6 @@ impl Helper {
                 args.push("--local-api".to_string()); // Enable API
                 args.push("--no-color".to_string()); // Remove color escape sequences, Gupax terminal can't parse it :(
                 args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
-                // Nano as default
-                args.push("--sidechain-config".to_string());
-                args.push("nano_config.json".to_string());
-                args.push("--p2p".to_string());
-                args.push("0.0.0.0:37890".to_string());
 
                 // Push other nodes if `backup_host`.
                 if let Some(nodes) = backup_hosts {
@@ -501,6 +482,7 @@ impl Helper {
             StartOptionsMode::Simple if state.local_node || override_to_local_node => {
                 // use the local node
                 // Build the p2pool argument
+                args.push("--nano".to_string());
                 args.push("--wallet".to_string());
                 args.push(state.address.clone()); // Wallet address
                 args.push("--host".to_string());
@@ -548,10 +530,7 @@ impl Helper {
                 if state.chain == P2poolChain::Mini {
                     args.push("--mini".to_string());
                 } else if state.chain == P2poolChain::Nano {
-                    args.push("--sidechain-config".to_string());
-                    args.push("nano_config.json".to_string());
-                    args.push("--p2p".to_string());
-                    args.push("0.0.0.0:37890".to_string());
+                    args.push("--nano".to_string());
                 }
 
                 // Push other nodes if `backup_host`.
