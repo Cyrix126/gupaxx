@@ -52,6 +52,7 @@ use port_check::is_port_reachable_with_timeout;
 use portable_pty::Child;
 use readable::up::Uptime;
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 use std::fmt::Write;
 use std::net::{IpAddr, Ipv4Addr};
 use std::path::Path;
@@ -62,7 +63,7 @@ use std::{
     time::*,
 };
 use strum::{EnumCount, EnumIter};
-use sysinfo::{Pid, System};
+use sysinfo::{Pid, ProcessRefreshKind, System};
 use xrig::xmrig_proxy::ImgProxy;
 
 use self::xvb::{PubXvbApi, nodes::Pool};
@@ -116,6 +117,7 @@ pub struct Helper {
     pub proxy_port_reachable: Arc<Mutex<bool>>,
     // consider it true if it is Some
     pub ports_detected_local_node: Arc<Mutex<Option<(u16, u16)>>>,
+    pub sys_info: Arc<Mutex<System>>,
 }
 
 // The communication between the data here and the GUI thread goes as follows:
@@ -200,6 +202,18 @@ impl Process {
     #[inline]
     pub fn is_waiting(&self) -> bool {
         self.state == ProcessState::Middle || self.state == ProcessState::Waiting
+    }
+    pub fn _initialize_process_pid(&mut self, sys: Arc<Mutex<System>>) -> bool {
+        if let Some(process) = sys
+            .lock()
+            .unwrap()
+            .processes_by_exact_name(self.name.binary_name().as_ref())
+            .next()
+        {
+            self.pid = Some(process.pid());
+            return true;
+        }
+        false
     }
 }
 
@@ -350,6 +364,19 @@ impl ProcessName {
             ProcessName::Xvb => "",
         }
     }
+    pub fn ports_listen_sys(&self) -> Option<HashSet<u16>> {
+        listeners::get_ports_by_process_name(self.binary_name()).ok()
+    }
+    pub fn is_process_running(&self, sys: &mut System) -> bool {
+        sys.refresh_processes_specifics(
+            sysinfo::ProcessesToUpdate::All,
+            true,
+            ProcessRefreshKind::nothing(),
+        );
+        sys.processes_by_exact_name(self.binary_name().as_ref())
+            .next()
+            .is_some()
+    }
 }
 
 impl std::fmt::Display for ProcessState {
@@ -389,6 +416,7 @@ impl Helper {
         ip_public: Arc<Mutex<Option<Ipv4Addr>>>,
         proxy_port_reachable: Arc<Mutex<bool>>,
         ports_detected_local_node: Arc<Mutex<Option<(u16, u16)>>>,
+        sys_info: Arc<Mutex<System>>,
     ) -> Self {
         Self {
             instant,
@@ -419,6 +447,7 @@ impl Helper {
             ip_public,
             proxy_port_reachable,
             ports_detected_local_node,
+            sys_info,
         }
     }
 
@@ -458,12 +487,7 @@ impl Helper {
     #[inline(never)]
     // The "helper" thread. Syncs data between threads here and the GUI.
     #[allow(clippy::await_holding_lock)]
-    pub fn spawn_helper(
-        helper: &Arc<Mutex<Self>>,
-        mut sysinfo: sysinfo::System,
-        pid: sysinfo::Pid,
-        max_threads: u16,
-    ) {
+    pub fn spawn_helper(helper: &Arc<Mutex<Self>>, pid: sysinfo::Pid, max_threads: u16) {
         // The ordering of these locks is _very_ important. They MUST be in sync with how the main GUI thread locks stuff
         // or a deadlock will occur given enough time. They will eventually both want to lock the [Arc<Mutex>] the other
         // thread is already locking. Yes, I figured this out the hard way, hence the vast amount of debug!() messages.
@@ -498,11 +522,11 @@ impl Helper {
         let pub_api_xmrig = Arc::clone(&lock.pub_api_xmrig);
         let pub_api_xp = Arc::clone(&lock.pub_api_xp);
         let pub_api_xvb = Arc::clone(&lock.pub_api_xvb);
+        let sysinfo = Arc::clone(&lock.sys_info);
         drop(lock);
 
         let sysinfo_cpu = sysinfo::CpuRefreshKind::everything();
         let sysinfo_processes = sysinfo::ProcessRefreshKind::nothing().with_cpu();
-
         thread::spawn(move || {
             info!(
                 "Helper | Hello from helper thread! Entering loop where I will spend the rest of my days..."
@@ -591,24 +615,26 @@ impl Helper {
                 }
 
                 // 2. Selectively refresh [sysinfo] for only what we need (better performance).
-                sysinfo.refresh_cpu_specifics(sysinfo_cpu);
+                let mut sysinfo_lock = sysinfo.lock().unwrap();
+                sysinfo_lock.refresh_cpu_specifics(sysinfo_cpu);
                 debug!("Helper | Sysinfo refresh (1/3) ... [cpu]");
-                sysinfo.refresh_processes_specifics(
+                sysinfo_lock.refresh_processes_specifics(
                     sysinfo::ProcessesToUpdate::All,
                     false,
                     sysinfo_processes,
                 );
                 debug!("Helper | Sysinfo refresh (2/3) ... [processes]");
-                sysinfo.refresh_memory();
+                sysinfo_lock.refresh_memory();
                 debug!("Helper | Sysinfo refresh (3/3) ... [memory]");
                 debug!("Helper | Sysinfo OK, running [update_pub_sys_from_sysinfo()]");
                 Self::update_pub_sys_from_sysinfo(
-                    &sysinfo,
+                    &sysinfo_lock,
                     &mut lock_pub_sys,
                     &pid,
                     &lock,
                     max_threads,
                 );
+                drop(sysinfo_lock);
 
                 // 3. Drop... (almost) EVERYTHING... IN REVERSE!
                 drop(lock_pub_sys);
@@ -741,38 +767,39 @@ fn check_died(
 
 // Allow to check if a process outside of Gupaxx is still alive, without having a pty to it
 // Used when using a detected local node instead of one started by Gupaxx
-// pub fn check_died_process(
-//     process: &mut Process,
-//     start: &Instant,
-//     gui_api_output_raw: &mut String,
-// ) -> bool {
-//     if !process_running(process.name) {
-//         process.state = ProcessState::Failed;
-//         debug!(
-//             "{} Watchdog | Process secretly died on us! can not get exit status...",
-//             process.name
-//         );
-//         let uptime = Uptime::from(start.elapsed());
-//         info!("{} | Stopped ... Uptime was: [{}]", process.name, uptime);
-//         if let Err(e) = writeln!(
-//             *gui_api_output_raw,
-//             "{}\n{} stopped | Uptime: [{}]\n{}\n\n\n\n",
-//             process.name, HORI_CONSOLE, uptime, HORI_CONSOLE
-//         ) {
-//             error!(
-//                 "{} Watchdog | GUI Uptime/Exit status write failed: {}",
-//                 process.name, e
-//             );
-//         }
-//         process.signal = ProcessSignal::None;
-//         debug!(
-//             "{} Watchdog | Secret dead process reap OK, breaking",
-//             process.name
-//         );
-//         return true;
-//     }
-//     false
-// }
+pub fn check_died_process(
+    process: &mut Process,
+    start: &Instant,
+    gui_api_output_raw: &mut String,
+    sys_info: &mut System,
+) -> bool {
+    if !process.name.is_process_running(sys_info) {
+        process.state = ProcessState::Failed;
+        debug!(
+            "{} Watchdog | Process secretly died on us! can not get exit status...",
+            process.name
+        );
+        let uptime = Uptime::from(start.elapsed());
+        info!("{} | Stopped ... Uptime was: [{}]", process.name, uptime);
+        if let Err(e) = writeln!(
+            *gui_api_output_raw,
+            "{}\n{} stopped | Uptime: [{}]\n{}\n\n\n\n",
+            process.name, HORI_CONSOLE, uptime, HORI_CONSOLE
+        ) {
+            error!(
+                "{} Watchdog | GUI Uptime/Exit status write failed: {}",
+                process.name, e
+            );
+        }
+        process.signal = ProcessSignal::None;
+        debug!(
+            "{} Watchdog | Secret dead process reap OK, breaking",
+            process.name
+        );
+        return true;
+    }
+    false
+}
 
 fn check_user_input(process: &Arc<Mutex<Process>>, stdin: &mut Box<dyn std::io::Write + Send>) {
     let mut lock = process.lock().unwrap();

@@ -6,7 +6,6 @@ use crate::app::{Restart, keys::KeyPressed};
 use crate::disk::node::Node;
 use crate::disk::pool::Pool;
 use crate::disk::state::{Gupax, State};
-use crate::errors::process_running;
 use crate::helper::node::{CheckLocalOutsideNode, spawn_local_outside_checker};
 use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
 use crate::utils::constants::*;
@@ -320,7 +319,7 @@ impl crate::app::App {
                     {
                         // check if process is running outside of Gupaxx, warn about it and do not start it.
                         // Except for Node which will be treated differently.
-                        if name != ProcessName::Node && process_running(name) {
+                        if name != ProcessName::Node && name.is_process_running(&mut self.helper.lock().unwrap().sys_info.lock().unwrap())   {
                             error!("Process already running outside: {name}");
                             self.error_state.set(
                                 PROCESS_OUTSIDE,

@@ -247,6 +247,8 @@ impl App {
 
         info!("App Init | Sysinfo...");
         // We give this to the [Helper] thread.
+        //
+
         let mut sysinfo = sysinfo::System::new_with_specifics(
             sysinfo::RefreshKind::nothing()
                 .with_cpu(sysinfo::CpuRefreshKind::everything())
@@ -275,6 +277,7 @@ impl App {
         info!("App Init | Assuming user's CPU is: {}", benchmarks[0].cpu);
 
         info!("App Init | The rest of the [App]...");
+        let sysinfo = arc_mut!(sysinfo);
         let mut app = Self {
             tab: Tab::default(),
             ping: arc_mut!(Ping::new(RemoteNodes::default())),
@@ -318,7 +321,8 @@ impl App {
                 ip_local.clone(),
                 ip_public.clone(),
                 proxy_port_reachable.clone(),
-                ports_detected_local_node.clone()
+                ports_detected_local_node.clone(),
+                sysinfo.clone()
             )),
             node,
             p2pool,
@@ -681,7 +685,7 @@ impl App {
 
         // Spawn the "Helper" thread.
         info!("Helper | Spawning helper thread...");
-        Helper::spawn_helper(&app.helper, sysinfo, app.pid, app.max_threads);
+        Helper::spawn_helper(&app.helper, app.pid, app.max_threads);
         info!("Helper ... OK");
 
         // Check for privilege. Should be Admin on [Windows] and NOT root on Unix.

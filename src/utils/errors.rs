@@ -1,13 +1,4 @@
-use std::{
-    collections::HashSet,
-    sync::{Arc, Mutex},
-    time::Instant,
-};
-
-use log::warn;
-use sysinfo::System;
-
-use crate::helper::ProcessName;
+use std::sync::{Arc, Mutex};
 
 use super::sudo::SudoState;
 
@@ -101,26 +92,4 @@ impl ErrorState {
         };
         SudoState::reset(state)
     }
-}
-
-pub fn process_running(process_name: ProcessName) -> bool {
-    let now = Instant::now();
-    let s = System::new_all();
-    warn!(
-        "took {}ms to get all system info",
-        now.elapsed().as_millis()
-    );
-    if s.processes_by_exact_name(process_name.binary_name().as_ref())
-        .next()
-        .is_some()
-    {
-        return true;
-    }
-    false
-}
-
-/// find the ports used by a process
-/// Used to find ports used by a possible local monerod running outside of Gupaxx
-pub fn process_ports(process_name: ProcessName) -> Option<HashSet<u16>> {
-    listeners::get_ports_by_process_name(process_name.binary_name()).ok()
 }

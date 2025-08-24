@@ -30,17 +30,17 @@ use std::{
     thread,
     time::{Duration, Instant},
 };
-use sysinfo::MemoryRefreshKind;
+use sysinfo::{MemoryRefreshKind, System};
 use tokio::spawn;
 
 use crate::{
     disk::state::{Node, StartOptionsMode},
     helper::{
-        ProcessName, ProcessSignal, ProcessState, check_died, check_user_input, signal_end,
-        sleep_end_loop,
+        ProcessName, ProcessSignal, ProcessState, check_died, check_died_process, check_user_input,
+        signal_end, sleep_end_loop,
     },
     macros::sleep,
-    utils::{constants::SOCKET_MONERO_LOCAL_OUTSIDE, errors::process_ports},
+    utils::constants::SOCKET_MONERO_LOCAL_OUTSIDE,
 };
 use std::fmt::Write;
 
@@ -218,6 +218,7 @@ impl Helper {
         let pub_api = Arc::clone(&helper.lock().unwrap().pub_api_node);
         let path = path.to_path_buf();
         let state = state.clone();
+        let sys = Arc::clone(&helper.lock().unwrap().sys_info);
         thread::spawn(move || {
             Self::spawn_node_watchdog(
                 &process,
@@ -227,6 +228,7 @@ impl Helper {
                 path,
                 state,
                 ports_detected_local_node,
+                &sys,
             );
         });
     }
@@ -241,6 +243,7 @@ impl Helper {
         path: std::path::PathBuf,
         state: Node,
         ports_detected_local_node: Option<(u16, u16)>,
+        sys: &Arc<Mutex<System>>,
     ) {
         process.lock().unwrap().start = Instant::now();
         // spawn pty if we are starting it from gupaxx
@@ -312,17 +315,14 @@ impl Helper {
                     )
                 {
                     break;
+                } else if check_died_process(
+                    &mut process.lock().unwrap(),
+                    &start,
+                    &mut gui_api.lock().unwrap().output,
+                    &mut sys.lock().unwrap(),
+                ) {
+                    break;
                 }
-
-                // it is possible to check detected local node if it died, but it is costly to do it every seconds.
-                // Since it's a GUI miner, preserve resources.
-                // else if check_died_process(
-                //     &mut process.lock().unwrap(),
-                //     &start,
-                //     &mut gui_api.lock().unwrap().output,
-                // ) {
-                //     break;
-                // }
                 // check signal
                 // if needed, kill by the pid
                 if signal_end(
@@ -531,12 +531,10 @@ pub fn spawn_local_outside_checker(tx: Arc<OnceLock<CheckLocalOutsideNode>>) {
 
 #[tokio::main]
 async fn check_local_node_outside(tx: Arc<OnceLock<CheckLocalOutsideNode>>) {
-    warn!("in spawn thread checking");
-    let local_outside_node_ports = process_ports(ProcessName::Node);
+    let local_outside_node_ports = ProcessName::Node.ports_listen_sys();
     if let Some(set_ports) = local_outside_node_ports
         && !set_ports.is_empty()
     {
-        warn!("there are ports that are used");
         let ports = set_ports.iter().cloned().collect::<Vec<u16>>();
         let timeout = Duration::from_millis(100);
         if let Some(port_zmq) = is_zmq_capable(SOCKET_MONERO_LOCAL_OUTSIDE, &ports, timeout).await
@@ -549,7 +547,6 @@ async fn check_local_node_outside(tx: Arc<OnceLock<CheckLocalOutsideNode>>) {
             )
             .await
         {
-            warn!("zmq and rpc port are both available");
             // local outside node is compatible
             tx.set(CheckLocalOutsideNode::Valid(port_rpc, port_zmq))
                 .unwrap();
@@ -558,7 +555,6 @@ async fn check_local_node_outside(tx: Arc<OnceLock<CheckLocalOutsideNode>>) {
             tx.set(CheckLocalOutsideNode::NonValid).unwrap();
         }
     } else {
-        warn!("there was no Node outside of Gupaxx");
         tx.set(CheckLocalOutsideNode::None).unwrap();
     }
 }

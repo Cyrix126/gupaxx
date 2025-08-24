@@ -1,7 +1,6 @@
 #[cfg(not(feature = "distro"))]
 use crate::components::update::Update;
 use crate::components::update::check_binary_path;
-use crate::errors::process_running;
 use crate::helper::crawler::Crawler;
 use crate::helper::{Helper, ProcessName, ProcessSignal};
 use crate::utils::constants::{
@@ -187,7 +186,9 @@ pub fn init_auto(app: &mut App) {
             warn!("Gupaxx | Node path is not a file! Skipping auto-node...");
         } else if !check_binary_path(&app.state.gupax.node_path, ProcessName::Node) {
             warn!("Gupaxx | Node path is not valid! Skipping auto-node...");
-        } else if process_running(ProcessName::Node) {
+        } else if ProcessName::Node
+            .is_process_running(&mut app.helper.lock().unwrap().sys_info.lock().unwrap())
+        {
             warn!(
                 "Gupaxx | Node instance is already running outside of Gupaxx ! Skipping auto-node..."
             );
@@ -219,7 +220,9 @@ pub fn init_auto(app: &mut App) {
             warn!("Gupaxx | P2Pool path is not a file! Skipping auto-p2pool...");
         } else if !check_binary_path(&app.state.gupax.p2pool_path, ProcessName::P2pool) {
             warn!("Gupaxx | P2Pool path is not valid! Skipping auto-p2pool...");
-        } else if process_running(crate::helper::ProcessName::P2pool) {
+        } else if crate::helper::ProcessName::P2pool
+            .is_process_running(&mut app.helper.lock().unwrap().sys_info.lock().unwrap())
+        {
             warn!(
                 "Gupaxx | P2pool instance is already running outside of Gupaxx ! Skipping auto-node..."
             );
@@ -253,7 +256,9 @@ pub fn init_auto(app: &mut App) {
             warn!("Gupaxx | Xmrig-Proxy path is not a file! Skipping auto-xmrig_proxy...");
         } else if !check_binary_path(&app.state.gupax.xmrig_proxy_path, ProcessName::XmrigProxy) {
             warn!("Gupaxx | Xmrig-Proxy path is not valid! Skipping auto-xmrig_proxy...");
-        } else if process_running(crate::helper::ProcessName::XmrigProxy) {
+        } else if crate::helper::ProcessName::XmrigProxy
+            .is_process_running(&mut app.helper.lock().unwrap().sys_info.lock().unwrap())
+        {
             warn!(
                 "Gupaxx | Xmrig-Proxy instance is already running outside of Gupaxx ! Skipping auto-node..."
             );
@@ -279,7 +284,9 @@ pub fn init_auto(app: &mut App) {
             warn!("Gupaxx | XMRig path is not an executable! Skipping auto-xmrig...");
         } else if !check_binary_path(&app.state.gupax.xmrig_path, ProcessName::Xmrig) {
             warn!("Gupaxx | XMRig path is not valid! Skipping auto-xmrig...");
-        } else if process_running(crate::helper::ProcessName::Xmrig) {
+        } else if crate::helper::ProcessName::Xmrig
+            .is_process_running(&mut app.helper.lock().unwrap().sys_info.lock().unwrap())
+        {
             warn!(
                 "Gupaxx | Xmrig instance is already running outside of Gupaxx ! Skipping auto-node..."
             );
