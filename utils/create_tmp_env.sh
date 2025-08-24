@@ -35,12 +35,12 @@ mv xmrig-6.24.0/xmrig /tmp/${FOLDER}/skel/macos-x64_b/Gupaxx.app/Contents/MacOS/
 rm -r xmrig-6.24.0
 rm xmrig-6.24.0-macos-x64.tar.gz
 # download xmrig into directory windows
-wget https://github.com/xmrig/xmrig/releases/download/v6.24.0/xmrig-6.24.0-msvc-win64.zip
-unzip xmrig-6.24.0-msvc-win64.zip
+wget https://github.com/xmrig/xmrig/releases/download/v6.24.0/xmrig-6.24.0-windows-x64.zip
+unzip xmrig-6.24.0-windows-x64.zip
 mv xmrig-6.24.0/xmrig.exe /tmp/${FOLDER}/skel/windows_b/XMRig/xmrig.exe
 mv xmrig-6.24.0/WinRing0x64.sys /tmp/${FOLDER}/skel/windows_b/XMRig/WinRing0x64.sys
 rm -r xmrig-6.24.0
-rm xmrig-6.24.0-msvc-win64.zip
+rm xmrig-6.24.0-windows-x64.zip
 
 ## Download XMRig-Proxy Binaries
 wget https://github.com/xmrig/xmrig-proxy/releases/download/v6.24.0/xmrig-proxy-6.24.0-jammy-x64.tar.gz
@@ -62,11 +62,11 @@ mv xmrig-proxy-6.24.0/xmrig-proxy /tmp/${FOLDER}/skel/macos-x64_b/Gupaxx.app/Con
 rm -r xmrig-proxy-6.24.0
 rm xmrig-proxy-6.24.0-macos-x64.tar.gz
 # download xmrig into directory windows
-wget https://github.com/xmrig/xmrig-proxy/releases/download/v6.24.0/xmrig-proxy-6.24.0-msvc-win64.zip
-unzip xmrig-proxy-6.24.0-msvc-win64.zip
+wget https://github.com/xmrig/xmrig-proxy/releases/download/v6.24.0/xmrig-proxy-6.24.0-windows-x64.zip
+unzip xmrig-proxy-6.24.0-windows-x64.zip
 mv xmrig-proxy-6.24.0/xmrig-proxy.exe /tmp/${FOLDER}/skel/windows_b/XMRig-Proxy/xmrig-proxy.exe
 rm -r xmrig-proxy-6.24.0
-rm xmrig-proxy-6.24.0-msvc-win64.zip
+rm xmrig-proxy-6.24.0-windows-x64.zip
 
 ## Download P2Pool Binaries
 # download p2pool into directory linux
