@@ -1,4 +1,8 @@
-use crate::helper::sleep;
+use crate::{
+    app::{BackupNodes, panels::middle::common::list_poolnode::PoolNode},
+    disk::node::Node,
+    helper::sleep,
+};
 use std::{
     sync::{
         Arc, Mutex,
@@ -81,19 +85,22 @@ impl Crawler {
     pub fn new() -> Arc<Mutex<Self>> {
         Arc::new(Mutex::new(Crawler::default()))
     }
-    pub fn start(crawler: &Arc<Mutex<Self>>, settings: &CrawlerRequirements) {
-        info!("Spawning crawl thread...");
-
-        let (tx, rx) = mpsc::channel();
+    pub fn start(
+        crawler: &Arc<Mutex<Self>>,
+        settings: &CrawlerRequirements,
+        backup_hosts: Option<BackupNodes>,
+    ) {
         // do not start if the past crawling did not stopped yet
         while crawler.lock().unwrap().crawling {
             sleep!(20);
         }
         crawler.lock().unwrap().crawling = true;
         crawler.lock().unwrap().prog = 0.0;
-        spawn(enc!((crawler, settings) move || {
+        info!("Spawning crawl thread...");
+        let (tx, rx) = mpsc::channel();
+        spawn(enc!((crawler, settings, backup_hosts) move || {
             let now = Instant::now();
-            Self::crawl(&crawler, &settings, rx);
+            Self::crawl(&crawler, backup_hosts, &settings, rx);
             info!(
                 "Crawl... Took [{}] seconds to find the minimum required nodes",
                 now.elapsed().as_secs_f32()
@@ -142,6 +149,7 @@ impl Crawler {
     #[tokio::main]
     pub async fn crawl(
         crawler: &Arc<Mutex<Self>>,
+        backup_hosts: Option<BackupNodes>,
         settings: &CrawlerRequirements,
         terminate_rx: Receiver<bool>,
     ) {
@@ -169,6 +177,11 @@ impl Crawler {
 
         // we want the crawler data to be accessible while the crawler is running
         let mut stream = crawl.discover_peers().await;
+
+        // reset backup host
+        if let Some(backup_hosts) = &backup_hosts {
+            backup_hosts.lock().unwrap().clear();
+        }
         while let Some((peer, rpc_port, zmq_port, ms)) = stream.next().await {
             let remote_node = RemoteNode {
                 ip: peer.ip(),
@@ -229,6 +242,13 @@ impl Crawler {
             // sort by latency every time a new one is found
             crawler_lock.nodes.sort_by(|a, b| a.ms.cmp(&b.ms));
 
+            // We need to update backup nodes if they are used
+            // We update them here so that we do not rely on UI to do the update
+            // We update them in real time, so that if p2pool is waiting for it to start, it can do so.
+            if let Some(hosts) = &backup_hosts {
+                let mut vec = hosts.lock().unwrap();
+                crawler_lock.update_backup_hosts(&mut vec);
+            }
             // stop if the max number of fast nodes is reached
             if nb_nodes_fast == settings.nb_nodes_fast {
                 crawler_lock.msg = "Discovered enough fast latency nodes".to_string();
@@ -247,10 +267,25 @@ impl Crawler {
                 break;
             }
         }
+
         // since the crawling is stopping, we remove the handler that allows to stop it manually
         crawler.lock().unwrap().handle = None;
         // we only put the crawling to false once the crawling is really done, we don't want to have a second crawling happening when the old one is not yet done.
         crawler.lock().unwrap().crawling = false;
         crawler.lock().unwrap().stopping = false;
+    }
+    fn update_backup_hosts(&self, backup_hosts: &mut Vec<PoolNode>) {
+        let mut vec = Vec::new();
+        // ping will return only valid nodes.
+        for pinged_node in self.nodes.iter() {
+            let node = Node {
+                ip: pinged_node.ip.to_string(),
+                rpc: pinged_node.rpc.to_string(),
+                zmq: pinged_node.zmq.to_string(),
+            };
+
+            vec.push(PoolNode::Node(node));
+        }
+        *backup_hosts = vec;
     }
 }

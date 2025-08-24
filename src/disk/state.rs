@@ -6,7 +6,7 @@ use strum::{EnumCount, EnumIter};
 use super::*;
 use crate::{
     app::{
-        panels::middle::common::list_poolnode::PoolNode,
+        BackupNodes,
         submenu_enum::{SubmenuP2pool, SubmenuStatus},
     },
     components::node::RemoteNode,
@@ -814,7 +814,7 @@ impl P2pool {
     pub fn start_options(
         &self,
         path: &Path,
-        backup_nodes: &Option<Vec<PoolNode>>,
+        backup_nodes: &BackupNodes,
         mode: StartOptionsMode,
         local_node_zmq_port: u16,
         local_node_rpc_port: u16,
@@ -822,7 +822,7 @@ impl P2pool {
         Helper::build_p2pool_args(
             self,
             path,
-            backup_nodes,
+            &backup_nodes.lock().unwrap(),
             false,
             local_node_rpc_port,
             local_node_zmq_port,
@@ -933,7 +933,8 @@ impl XmrigProxy {
 //         ProcessName::Xvb
 //     }
 // }
-
+//
+#[derive(PartialEq)]
 pub enum StartOptionsMode {
     Simple,
     Advanced,

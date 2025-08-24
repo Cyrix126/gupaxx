@@ -2,6 +2,7 @@ use std::sync::{Arc, Mutex};
 
 use super::App;
 use crate::app::Tab;
+use crate::app::submenu_enum::SubmenuP2pool;
 use crate::components::node::RemoteNodes;
 #[cfg(target_os = "windows")]
 use crate::errors::{ErrorButtons, ErrorFerris, process_running};
@@ -87,6 +88,14 @@ impl eframe::App for App {
             // refresh the selected node with the fastest from the pinged nodes if it was empty
             if self.state.p2pool.selected_remote_node.is_none() {
                 self.state.p2pool.selected_remote_node = ping_nodes.first().cloned();
+            }
+        }
+        // replace backup host by custom ones when user is in p2pool advanced sub menu
+        // Only if the backup host is different from the custom ones
+        if self.state.p2pool.submenu != SubmenuP2pool::Advanced && self.tab == Tab::P2pool {
+            let mut backup_hosts = self.backup_hosts.lock().unwrap();
+            if self.node_vec.iter().any(|(_, n)| backup_hosts.contains(n)) {
+                *backup_hosts = self.node_vec.iter().map(|n| n.1.clone()).collect();
             }
         }
 

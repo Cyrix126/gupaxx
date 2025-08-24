@@ -7,6 +7,7 @@ use egui::{
 use log::debug;
 
 use crate::{
+    app::BackupNodes,
     components::node::{Ping, RemoteNode, format_ms},
     disk::state::P2pool,
     helper::{crawler::Crawler, p2pool::PubP2poolApi},
@@ -26,8 +27,9 @@ impl P2pool {
         crawler: &Arc<Mutex<Crawler>>,
         ping: &Arc<Mutex<Ping>>,
         api: &Arc<Mutex<PubP2poolApi>>,
+        backup_nodes: BackupNodes,
     ) {
-        self.crawl_button(crawler, ui);
+        self.crawl_button(crawler, backup_nodes, ui);
         self.crawl_parameters(ui);
         self.remote_nodes_menu(ui, api, crawler, ping);
     }
@@ -239,7 +241,12 @@ impl P2pool {
             })
         });
     }
-    pub fn crawl_button(&mut self, crawler: &Arc<Mutex<Crawler>>, ui: &mut Ui) {
+    pub fn crawl_button(
+        &mut self,
+        crawler: &Arc<Mutex<Crawler>>,
+        backup_hosts: BackupNodes,
+        ui: &mut Ui,
+    ) {
         ui.vertical_centered(|ui| {
             ui.add_space(SPACE);
             let crawling = crawler.lock().unwrap().crawling;
@@ -259,7 +266,7 @@ impl P2pool {
                 {
                     if !crawling {
                         self.selected_remote_node = None;
-                        Crawler::start(crawler, &self.crawl_settings);
+                        Crawler::start(crawler, &self.crawl_settings, Some(backup_hosts));
                     } else {
                         crawler.lock().unwrap().stopping = true;
                         Crawler::stop(crawler);

@@ -208,8 +208,9 @@ impl crate::app::App {
                                 &self.state.p2pool,
                                 &self.state.node,
                                 &self.state.gupax.absolute_p2pool_path,
-                                self.backup_hosts.clone(),
+                                &self.backup_hosts,
                                 false,
+                                &self.crawler
                             )
                         }
                         // If [Esc] was pressed, assume [No]
@@ -368,7 +369,7 @@ impl crate::app::App {
                                 if !sudo.testing {
                                     SudoState::test_sudo(
                                         self.sudo.clone(),
-                                        &self.helper.clone(),
+                                        &self.helper,
                                         &self.state.xmrig,
                                         &self.state.p2pool,
                                         &self.state.xmrig_proxy,

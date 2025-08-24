@@ -17,6 +17,7 @@
 
 use super::Helper;
 use super::Process;
+use crate::app::BackupNodes;
 use crate::app::panels::middle::common::list_poolnode::PoolNode;
 use crate::app::submenu_enum::SubmenuP2pool;
 use crate::disk::state::Node;
@@ -28,6 +29,7 @@ use crate::helper::ProcessSignal;
 use crate::helper::ProcessState;
 use crate::helper::check_died;
 use crate::helper::check_user_input;
+use crate::helper::crawler::Crawler;
 use crate::helper::signal_end;
 use crate::helper::sleep_end_loop;
 use crate::regex::P2POOL_REGEX;
@@ -193,8 +195,9 @@ impl Helper {
         state: &P2pool,
         state_node: &Node,
         path: &Path,
-        backup_hosts: Option<Vec<PoolNode>>,
+        backup_hosts: BackupNodes,
         override_to_local_node: bool,
+        crawler: &Arc<Mutex<Crawler>>,
     ) {
         info!("P2Pool | Attempting to restart...");
         helper.lock().unwrap().p2pool.lock().unwrap().signal = ProcessSignal::Restart;
@@ -204,6 +207,7 @@ impl Helper {
         let state = state.clone();
         let state_node = state_node.clone();
         let path = path.to_path_buf();
+        let crawler = crawler.clone();
         // This thread lives to wait, start p2pool then die.
         thread::spawn(move || {
             while helper.lock().unwrap().p2pool.lock().unwrap().state != ProcessState::Waiting {
@@ -217,8 +221,9 @@ impl Helper {
                 &state,
                 &state_node,
                 &path,
-                backup_hosts,
+                &backup_hosts,
                 override_to_local_node,
+                &crawler,
             );
         });
         info!("P2Pool | Restart ... OK");
@@ -232,12 +237,38 @@ impl Helper {
         state: &P2pool,
         state_node: &Node,
         path: &Path,
-        backup_hosts: Option<Vec<PoolNode>>,
+        backup_hosts: &BackupNodes,
         override_to_local_node: bool,
+        crawler: &Arc<Mutex<Crawler>>,
+    ) {
+        let path = path.to_path_buf();
+        // start a spawn here directly
+        thread::spawn(
+            enc!((helper,  state, state_node, path, backup_hosts, crawler)  move || {
+                Self::prestart_p2pool(
+                    &helper,
+                    &state,
+                    &state_node,
+                    &path,
+                    &backup_hosts,
+                    override_to_local_node,
+                    &crawler,
+                )
+            }),
+        );
+    }
+    #[tokio::main]
+    pub async fn prestart_p2pool(
+        helper: &Arc<Mutex<Self>>,
+        state: &P2pool,
+        state_node: &Node,
+        path: &Path,
+        backup_hosts: &BackupNodes,
+        override_to_local_node: bool,
+        crawler: &Arc<Mutex<Crawler>>,
     ) {
         helper.lock().unwrap().p2pool.lock().unwrap().state = ProcessState::Middle;
-        let (api_path_local, api_path_network, api_path_pool, api_path_p2p) =
-            Self::mutate_img_p2pool(state, helper, path);
+
         let simple = state.submenu != SubmenuP2pool::Advanced;
         let mode = if simple {
             StartOptionsMode::Simple
@@ -246,7 +277,6 @@ impl Helper {
         } else {
             StartOptionsMode::Advanced
         };
-
         // get the rpc and zmq port used when starting the node if it is alive, else use current settings of the Node.
         // If the Node is started with different ports that the one used in settings when P2Pool was started,
         // the user will need to restart p2pool
@@ -259,15 +289,33 @@ impl Helper {
             node_process.lock().unwrap().is_alive(),
             &img_node.lock().unwrap(),
         );
+        if state.backup_host {
+            // we want to add backup host but the crawler is still running and did not add at least the minimum of number of fast node (including medium nodes);
+            // So we wait for the crawling to either add a minimum amount of backup host or to finish.
+            while crawler.lock().unwrap().crawling
+                && backup_hosts.lock().unwrap().len() < state.crawl_settings.nb_nodes_fast.into()
+            {
+                // sleep 100ms
+                sleep!(100);
+            }
+        }
+        let mut backup_nodes = vec![];
+        if state.backup_host && backup_hosts.lock().unwrap().len() > 1 {
+            backup_nodes = backup_hosts.lock().unwrap().clone();
+        }
+
+        // Once the crawling is completed or at least a minimum remote nodes are added, we use them.
         let args = Self::build_p2pool_args(
             state,
             path,
-            &backup_hosts,
+            &backup_nodes,
             override_to_local_node,
             local_node_zmq,
             local_node_rpc,
             mode,
         );
+        let (api_path_local, api_path_network, api_path_pool, api_path_p2p) =
+            Self::mutate_img_p2pool(state, helper, path);
 
         // Print arguments & user settings to console
         crate::disk::print_dash(&format!(
@@ -285,13 +333,14 @@ impl Helper {
         // Start this thread only if we don't already override to local node
         if !override_to_local_node {
             thread::spawn(
-                enc!((helper, state, state_node, path, backup_hosts) move || {
+                enc!((helper, state, state_node, path, backup_hosts, crawler) move || {
                     Self::watch_switch_p2pool_to_local_node(
                         &helper,
                         &state,
                         &state_node,
                         &path,
                         backup_hosts,
+                        &crawler
                     );
                 }),
             );
@@ -424,7 +473,7 @@ impl Helper {
     pub fn build_p2pool_args(
         state: &P2pool,
         path: &Path,
-        backup_hosts: &Option<Vec<PoolNode>>,
+        backup_hosts: &[PoolNode],
         override_to_local_node: bool,
         local_node_zmq_port: u16,
         local_node_rpc_port: u16,
@@ -458,26 +507,6 @@ impl Helper {
                 args.push("--local-api".to_string()); // Enable API
                 args.push("--no-color".to_string()); // Remove color escape sequences, Gupax terminal can't parse it :(
                 args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
-
-                // Push other nodes if `backup_host`.
-                if let Some(nodes) = backup_hosts {
-                    for node in nodes {
-                        if (node.ip(), node.port(), node.custom())
-                            != (
-                                &remote_node.ip.to_string(),
-                                &remote_node.rpc.to_string(),
-                                &remote_node.zmq.to_string(),
-                            )
-                        {
-                            args.push("--host".to_string());
-                            args.push(node.ip().to_string());
-                            args.push("--rpc-port".to_string());
-                            args.push(node.port().to_string());
-                            args.push("--zmq-port".to_string());
-                            args.push(node.custom().to_string());
-                        }
-                    }
-                }
             }
             StartOptionsMode::Simple if state.local_node || override_to_local_node => {
                 // use the local node
@@ -532,25 +561,6 @@ impl Helper {
                 } else if state.chain == P2poolChain::Nano {
                     args.push("--nano".to_string());
                 }
-
-                // Push other nodes if `backup_host`.
-                if let Some(nodes) = backup_hosts {
-                    for node in nodes {
-                        let ip = if node.ip() == "localhost" {
-                            "127.0.0.1"
-                        } else {
-                            node.ip()
-                        };
-                        if (node.ip(), node.port(), node.custom()) != (ip, &state.rpc, &state.zmq) {
-                            args.push("--host".to_string());
-                            args.push(node.ip().to_string());
-                            args.push("--rpc-port".to_string());
-                            args.push(node.port().to_string());
-                            args.push("--zmq-port".to_string());
-                            args.push(node.custom().to_string());
-                        }
-                    }
-                }
             }
             StartOptionsMode::Custom => {
                 // Overriding command arguments
@@ -560,6 +570,24 @@ impl Helper {
                 }
             }
             _ => (),
+        }
+        // Push other nodes if `backup_host`, unless we are in custom args
+        if state.backup_host && mode != StartOptionsMode::Custom {
+            for node in backup_hosts.iter() {
+                let ip = if node.ip() == "localhost" {
+                    "127.0.0.1"
+                } else {
+                    node.ip()
+                };
+                if (node.ip(), node.port(), node.custom()) != (ip, &state.rpc, &state.zmq) {
+                    args.push("--host".to_string());
+                    args.push(node.ip().to_string());
+                    args.push("--rpc-port".to_string());
+                    args.push(node.port().to_string());
+                    args.push("--zmq-port".to_string());
+                    args.push(node.custom().to_string());
+                }
+            }
         }
         args
     }
@@ -807,7 +835,8 @@ impl Helper {
         state: &P2pool,
         state_node: &Node,
         path_p2pool: &Path,
-        backup_hosts: Option<Vec<PoolNode>>,
+        backup_hosts: BackupNodes,
+        crawler: &Arc<Mutex<Crawler>>,
     ) {
         // do not try to restart immediately after a first start, or else the two start will be in conflict.
         sleep(Duration::from_secs(10)).await;
@@ -828,7 +857,15 @@ impl Helper {
                 drop(process);
                 drop(node_process);
                 drop(helper_lock);
-                Helper::restart_p2pool(helper, state, state_node, path_p2pool, backup_hosts, true);
+                Helper::restart_p2pool(
+                    helper,
+                    state,
+                    state_node,
+                    path_p2pool,
+                    backup_hosts,
+                    true,
+                    crawler,
+                );
                 break;
             }
             drop(gui_api);

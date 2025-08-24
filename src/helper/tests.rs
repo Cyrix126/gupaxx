@@ -858,7 +858,7 @@ Uptime         = 0h 2m 4s
         let args = Helper::build_p2pool_args(
             &state,
             Path::new(""),
-            &None,
+            &Vec::new(),
             false,
             18083,
             18081,

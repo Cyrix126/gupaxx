@@ -10,7 +10,6 @@ use crate::GUPAX_TAB_XMRIG_PROXY;
 use crate::GUPAX_TAB_XVB;
 use crate::GUPAX_VERSION;
 use crate::OS;
-use crate::app::submenu_enum::SubmenuP2pool;
 use crate::cli::Cli;
 use crate::cli::parse_args;
 use crate::components::gupax::FileWindow;
@@ -76,6 +75,8 @@ pub mod keys;
 pub mod panels;
 pub mod quit;
 pub mod submenu_enum;
+
+pub type BackupNodes = Arc<Mutex<Vec<PoolNode>>>;
 //---------------------------------------------------------------------------------------------------- Struct + Impl
 // The state of the outer main [App].
 // See the [State] struct in [state.rs] for the
@@ -153,21 +154,21 @@ pub struct App {
     // actual stats, and all the functions needed to mutate them.
     pub gupax_p2pool_api: Arc<Mutex<GupaxP2poolApi>>,
     // Static stuff
-    pub benchmarks: Vec<Benchmark>,          // XMRig CPU benchmarks
-    pub pid: sysinfo::Pid,                   // Gupax's PID
-    pub max_threads: u16,                    // Max amount of detected system threads
-    pub now: Instant,                        // Internal timer
-    pub exe: String,                         // Path for [Gupax] binary
-    pub dir: String,                         // Directory [Gupax] binary is in
-    pub resolution: Vec2,                    // Frame resolution
-    pub os: &'static str,                    // OS
-    pub admin: bool,                         // Are we admin? (for Windows)
-    pub os_data_path: PathBuf,               // OS data path (e.g: ~/.local/share/gupax/)
+    pub benchmarks: Vec<Benchmark>,     // XMRig CPU benchmarks
+    pub pid: sysinfo::Pid,              // Gupax's PID
+    pub max_threads: u16,               // Max amount of detected system threads
+    pub now: Instant,                   // Internal timer
+    pub exe: String,                    // Path for [Gupax] binary
+    pub dir: String,                    // Directory [Gupax] binary is in
+    pub resolution: Vec2,               // Frame resolution
+    pub os: &'static str,               // OS
+    pub admin: bool,                    // Are we admin? (for Windows)
+    pub os_data_path: PathBuf,          // OS data path (e.g: ~/.local/share/gupax/)
     pub gupax_p2pool_api_path: PathBuf, // Gupax-P2Pool API path (e.g: ~/.local/share/gupax/p2pool/)
     pub state_path: PathBuf,            // State file path
     pub node_path: PathBuf,             // Node file path
     pub pool_path: PathBuf,             // Pool file path
-    pub backup_hosts: Option<Vec<PoolNode>>, // P2Pool backup nodes
+    pub backup_hosts: BackupNodes,      // P2Pool backup nodes
     pub version: &'static str,          // Gupax version
     pub name_version: String,           // [Gupax vX.X.X]
     #[cfg(target_os = "windows")]
@@ -356,7 +357,7 @@ impl App {
             state_path: PathBuf::new(),
             node_path: PathBuf::new(),
             pool_path: PathBuf::new(),
-            backup_hosts: None,
+            backup_hosts: Arc::new(Mutex::new(vec![])),
             version: GUPAX_VERSION,
             name_version: format!("Gupaxx {GUPAX_VERSION}"),
             ip_local,
@@ -708,67 +709,7 @@ impl App {
 
         info!("App ... OK");
 
-        // Backup hosts needs to be available to print the custom args correctly for p2pool
-        app.backup_hosts = app.gather_backup_hosts();
         app
-    }
-
-    #[cold]
-    #[inline(never)]
-    pub fn gather_backup_hosts(&self) -> Option<Vec<PoolNode>> {
-        if !self.state.p2pool.backup_host {
-            return None;
-        }
-
-        // INVARIANT:
-        // We must ensure all nodes are capable of
-        // sending/receiving valid JSON-RPC requests.
-        //
-        // This is done during the `Ping` phase, meaning
-        // all the nodes listed in our `self.ping` should
-        // have ping data. We can use this data to filter
-        // out "dead" nodes.
-        //
-        // The user must have at least pinged once so that
-        // we actually have this data to work off of, else,
-        // this "backup host" feature will return here
-        // with 0 extra nodes as we can't be sure that any
-        // of them are actually online.
-        //
-        // Realistically, most of them are, but we can't be sure,
-        // and checking here without explicitly asking the user
-        // to connect to nodes is a no-go (also, non-async environment).
-        if !self.ping.lock().unwrap().pinged {
-            warn!("Backup hosts ... simple node backup: no ping data available, returning None");
-            return None;
-        }
-
-        if self.state.p2pool.submenu != SubmenuP2pool::Advanced {
-            let mut vec = Vec::new();
-            // Locking during this entire loop should be fine,
-            // only a few nodes to iter through.
-            for pinged_node in self.ping.lock().unwrap().nodes.iter() {
-                // Continue if this node is not green/yellow.
-
-                let node = Node {
-                    ip: pinged_node.ip.to_string(),
-                    rpc: pinged_node.rpc.to_string(),
-                    zmq: pinged_node.zmq.to_string(),
-                };
-
-                vec.push(PoolNode::Node(node));
-            }
-
-            if vec.is_empty() {
-                warn!("Backup hosts ... simple node backup: no viable nodes found");
-                None
-            } else {
-                info!("Backup hosts ... simple node backup list: {vec:#?}");
-                Some(vec)
-            }
-        } else {
-            Some(self.node_vec.iter().map(|(_, node)| node.clone()).collect())
-        }
     }
 }
 //---------------------------------------------------------------------------------------------------- [Tab] Enum + Impl

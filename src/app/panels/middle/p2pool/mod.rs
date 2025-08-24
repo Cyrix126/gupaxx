@@ -1,3 +1,4 @@
+use crate::app::BackupNodes;
 use crate::app::panels::middle::common::console::{console, input_args_field, start_options_field};
 use crate::app::submenu_enum::SubmenuP2pool;
 use crate::disk::state::{P2pool, StartOptionsMode, State};
@@ -45,7 +46,7 @@ impl P2pool {
         buffer: &mut String,
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
-        backup_nodes: Option<Vec<PoolNode>>,
+        backup_nodes: BackupNodes,
         path: &Path,
         local_node_zmq_port: u16,
         local_node_rpc_port: u16,
@@ -108,11 +109,11 @@ impl P2pool {
                 P2POOL_ADDRESS,
             );
             match self.submenu {
-                SubmenuP2pool::Simple => self.simple(ui, crawler),
+                SubmenuP2pool::Simple => self.simple(ui, crawler, backup_nodes),
                 SubmenuP2pool::Advanced => {
                     self.advanced(ui, node_vec);
                 }
-                SubmenuP2pool::Crawler => self.crawler(ui, crawler, ping, api),
+                SubmenuP2pool::Crawler => self.crawler(ui, crawler, ping, api, backup_nodes),
             }
         });
     }

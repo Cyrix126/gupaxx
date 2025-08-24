@@ -154,9 +154,14 @@ pub fn init_auto(app: &mut App) {
     }
 
     // [Auto-Crawl]
+    // If the crawling is used, we do not use custom backup nodes
     if app.state.gupax.auto.crawl {
         info!("Auto Stating crawler...");
-        Crawler::start(&app.crawler, &app.state.p2pool.crawl_settings);
+        Crawler::start(
+            &app.crawler,
+            &app.state.p2pool.crawl_settings,
+            Some(app.backup_hosts.clone()),
+        );
     }
     // [Auto-Ping]
     // do not ping if there is no discovered nodes to ping, unless we can add the selected remote node.
@@ -199,6 +204,9 @@ pub fn init_auto(app: &mut App) {
         info!("Skipping auto-node...");
     }
     // [Auto-P2Pool]
+    // Needs auto Crawl to be done if it wants to use backup nodes.
+    // We can not wait for the crawling to be done here because the user would wait the UI to show up.
+    // We must spawn p2pool and make it wait and fetch the backup nodes from the thread.
     if app
         .state
         .gupax
@@ -225,8 +233,9 @@ pub fn init_auto(app: &mut App) {
                 &app.state.p2pool,
                 &app.state.node,
                 &app.state.gupax.absolute_p2pool_path,
-                app.backup_hosts.clone(),
+                &app.backup_hosts.clone(),
                 false,
+                &app.crawler,
             );
         }
     } else {
