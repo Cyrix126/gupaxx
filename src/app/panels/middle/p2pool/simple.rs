@@ -19,6 +19,7 @@ use std::sync::Arc;
 use std::sync::Mutex;
 
 use crate::app::BackupNodes;
+use crate::app::panels::middle::p2pool::crawler::warning_should_run_local_node;
 use crate::constants::*;
 use crate::disk::state::P2pool;
 use crate::helper::crawler::Crawler;
@@ -42,5 +43,6 @@ impl P2pool {
         ui.add_enabled_ui(!self.local_node, |ui| {
             self.crawl_button(crawler, backup_hosts, ui);
         });
+        warning_should_run_local_node(ui);
     }
 }

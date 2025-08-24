@@ -14,7 +14,7 @@ use crate::{
     miscs::height_txt_before_button,
     utils::constants::{
         BUTTON_DISABLED_BY_EMPTY_LIST_NODES, CRAWLER_PARAMETERS_HELP, EXPECT_BUTTON_DISABLED,
-        P2POOL_AUTO_NODE, P2POOL_AUTOSWITCH_LOCAL_NODE, P2POOL_BACKUP_HOST_SIMPLE,
+        ORANGE, P2POOL_AUTO_NODE, P2POOL_AUTOSWITCH_LOCAL_NODE, P2POOL_BACKUP_HOST_SIMPLE,
         P2POOL_COMMUNITY_NODE_WARNING, P2POOL_PING, P2POOL_SELECT_FASTEST, P2POOL_SELECT_LAST,
         P2POOL_SELECT_NEXT, P2POOL_SELECT_RANDOM, SPACE,
     },
@@ -253,7 +253,7 @@ impl P2pool {
             let button_crawl_text = if crawling {
                 "Stop finding P2Pool compatible Nodes"
             } else {
-                "Start finding P2Pool compatible Nodes"
+                "Find P2Pool compatible Nodes"
             };
             // prevent user clicking on button if it's currently stopping
             let stopping = crawler.lock().unwrap().stopping;
@@ -345,14 +345,16 @@ impl P2pool {
     }
 }
 
-fn warning_should_run_local_node(ui: &mut Ui) {
+pub fn warning_should_run_local_node(ui: &mut Ui) {
     debug!("P2Pool Tab | Rendering warning text");
     ui.add_space(SPACE);
     ui.vertical_centered(|ui| {
-        ui.hyperlink_to(
-            "WARNING: It is recommended to run/use your own Monero Node (hover for details)",
-            "https://github.com/Cyrix126/gupaxx#running-a-local-monero-node",
-        )
+        ui.add(Label::new(
+            RichText::new(
+                "WARNING: It is recommended to run/use your own Monero Node (hover for details)",
+            )
+            .color(ORANGE),
+        ))
         .on_hover_text(P2POOL_COMMUNITY_NODE_WARNING);
     });
 }

@@ -413,9 +413,7 @@ Using a Remote Monero Node is convenient but comes at the cost of privacy and re
 
 You may encounter connection issues with remote nodes which may cause mining performance loss! Late info from laggy nodes will cause your mining jobs to start later than they should.
 
-Running and using your own local Monero node improves privacy and ensures your connection is as stable as your own internet connection. This comes at the cost of downloading and syncing Monero's blockchain yourself (currently 170GB). If you have the disk space, consider using the [Advanced] tab and connecting to your own Monero node.
-
-For a simple guide, see the [Running a Local Monero Node] section on Gupaxx s GitHub by clicking this message."#;
+Running and using your own local Monero node improves privacy and ensures your connection is as stable as your own internet connection. This comes at the cost of downloading and syncing Monero's blockchain yourself (currently about 100GB for pruned nodes). If you have the disk space, consider using the [Node] tab and start the process."#;
 
 pub const P2POOL_INPUT: &str = "Send a command to P2Pool";
 
