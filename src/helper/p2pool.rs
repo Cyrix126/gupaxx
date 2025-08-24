@@ -269,7 +269,10 @@ impl Helper {
         // the user will need to restart p2pool
         let node_process = Arc::clone(&helper.lock().unwrap().node);
         let img_node = Arc::clone(&helper.lock().unwrap().img_node);
-        let (local_node_zmq, local_node_rpc) = state_node.current_ports(
+        // img_node must have been updated when the node process started.
+        // If the node was started from gupaxx, it was from the state values.
+        // If the node process detected a local node started without gupaxx, it will be from the detected nodes.
+        let (local_node_rpc, local_node_zmq) = state_node.current_ports(
             node_process.lock().unwrap().is_alive(),
             &img_node.lock().unwrap(),
         );

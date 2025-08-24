@@ -183,21 +183,34 @@ impl Helper {
     #[inline(never)]
     // The "frontend" function that parses the arguments, and spawns either the [Simple] or [Advanced] Node watchdog thread.
     pub fn start_node(helper: &Arc<Mutex<Self>>, state: &Node, path: &Path) {
-        helper.lock().unwrap().node.lock().unwrap().state = ProcessState::Middle;
-        let mode = if state.simple {
-            StartOptionsMode::Simple
-        } else if !state.arguments.is_empty() {
-            StartOptionsMode::Custom
+        let mut args = vec![];
+
+        let ports_detected_local_node = *helper
+            .lock()
+            .unwrap()
+            .ports_detected_local_node
+            .lock()
+            .unwrap();
+        if let Some((rpc_port, zmq_port)) = ports_detected_local_node {
+            *helper.lock().unwrap().img_node.lock().unwrap() = ImgNode { rpc_port, zmq_port };
+            crate::disk::print_dash(&format!(
+                "Node | Starting the Process to watch a detected local Node with ports:\nrpc: {rpc_port}\nzmq: {zmq_port}"
+            ));
         } else {
-            StartOptionsMode::Advanced
-        };
-
-        let (rpc_port, zmq_port) = state.ports();
-        *helper.lock().unwrap().img_node.lock().unwrap() = ImgNode { rpc_port, zmq_port };
-        let args = Self::build_node_args(state, mode);
-
-        // Print arguments & user settings to console
-        crate::disk::print_dash(&format!("Node | Launch arguments: {args:#?}"));
+            helper.lock().unwrap().node.lock().unwrap().state = ProcessState::Middle;
+            let mode = if state.simple {
+                StartOptionsMode::Simple
+            } else if !state.arguments.is_empty() {
+                StartOptionsMode::Custom
+            } else {
+                StartOptionsMode::Advanced
+            };
+            let (rpc_port, zmq_port) = state.ports();
+            *helper.lock().unwrap().img_node.lock().unwrap() = ImgNode { rpc_port, zmq_port };
+            args = Self::build_node_args(state, mode);
+            // Print arguments & user settings to console
+            crate::disk::print_dash(&format!("Node | Launch arguments: {args:#?}"));
+        }
 
         // Spawn watchdog thread
         let process = Arc::clone(&helper.lock().unwrap().node);
@@ -205,12 +218,6 @@ impl Helper {
         let pub_api = Arc::clone(&helper.lock().unwrap().pub_api_node);
         let path = path.to_path_buf();
         let state = state.clone();
-        let ports_detected_local_node = *helper
-            .lock()
-            .unwrap()
-            .ports_detected_local_node
-            .lock()
-            .unwrap();
         thread::spawn(move || {
             Self::spawn_node_watchdog(
                 &process,

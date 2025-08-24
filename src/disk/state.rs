@@ -795,7 +795,7 @@ impl Node {
     /// get the ports that the node process is currently using or that it will use if started with current settings
     pub fn current_ports(&self, alive: bool, img_node: &ImgNode) -> (u16, u16) {
         if alive {
-            (img_node.zmq_port, img_node.rpc_port)
+            (img_node.rpc_port, img_node.zmq_port)
         } else {
             self.ports()
         }
