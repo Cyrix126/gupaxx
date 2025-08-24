@@ -71,7 +71,7 @@ impl Default for CrawlerRequirements {
             // slower to find
             nb_nodes_fast: 2,
             max_ping: 300,
-            max_ping_fast: 35,
+            max_ping_fast: 50,
             // faster to find, can be useful if the crawling timeout and no fast nodes are found
             nb_nodes_medium: 3,
             rpc_ports: vec![18081, 18089],
@@ -213,11 +213,13 @@ impl Crawler {
                         // if the max number of medium nodes is reached, replace the slowest one if the new one is faster.
                         else {
                             let index_slowest = crawler_lock.nodes.len() - 1;
-                            if ms < crawler_lock.nodes[index_slowest].ms as u32 {
+                            let ms_slowest = crawler_lock.nodes[index_slowest].ms;
+                            if ms < ms_slowest as u32 {
                                 crawler_lock.nodes.remove(index_slowest);
                                 crawler_lock.nodes.push(remote_node);
-                                crawler_lock.msg =
-                                    "Replaced the slowest node with a faster one".to_string();
+                                crawler_lock.msg = format!(
+                                    "Replaced the slowest node ({ms_slowest}ms) with a faster one ({ms}ms)"
+                                );
                             }
                         }
                     }
@@ -261,7 +263,13 @@ impl Crawler {
                 if crawler_lock.prog < 100.0 {
                     crawler_lock.msg = "Stopped manually".to_string();
                 } else {
-                    crawler_lock.msg = "Stopped after reaching the timeout".to_string();
+                    crawler_lock.msg = format!(
+                        "Stopped after reaching the timeout\nfound {} fast node{} and {} medium node{}",
+                        nb_nodes_fast,
+                        if nb_nodes_fast > 1 { "s" } else { "" },
+                        nb_nodes_medium,
+                        if nb_nodes_medium > 1 { "s" } else { "" }
+                    );
                 }
                 drop(crawler_lock);
                 break;
