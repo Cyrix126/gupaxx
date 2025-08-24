@@ -10,6 +10,8 @@ We can use [Radicle](https://radicle.xyz/) to get Gupaxx on a p2p collaboration 
 We can create mirrors between Github and Radicle.
 The code, issues and PR could be synchronized with Github.
 ### Integrate a P2Pool compatible Nodes crawler
+[Done](https://github.com/Cyrix126/releases/tag/v1.11.0)  
+
 To get rid of integrating nodes list, we can include a crawler like monero.fail inside Gupaxx.
 ### Integrate a Monero Node
 [Done](https://github.com/Cyrix126/releases/tag/v1.5.0)  
