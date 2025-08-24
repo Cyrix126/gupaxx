@@ -452,7 +452,6 @@ impl Helper {
 pub struct PubXvbApi {
     pub output: String,
     pub _uptime: u64,
-    pub xvb_sent_last_hour_samples: SamplesAverageHour,
     pub p2pool_sent_last_hour_samples: SamplesAverageHour,
     pub stats_pub: XvbPubStats,
     pub stats_priv: XvbPrivStats,
@@ -508,7 +507,6 @@ impl PubXvbApi {
             p2pool_sent_last_hour_samples: std::mem::take(
                 &mut gui_api.p2pool_sent_last_hour_samples,
             ),
-            xvb_sent_last_hour_samples: std::mem::take(&mut gui_api.xvb_sent_last_hour_samples),
             use_p2pool_sidechain_hr: std::mem::take(&mut gui_api.use_p2pool_sidechain_hr),
             ..pub_api.clone()
         };

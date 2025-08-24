@@ -125,7 +125,6 @@ pub struct Stats {
     pub target_donation_hashrate: f32,
     xvb_24h_avg: f32,
     xvb_1h_avg: f32,
-    xvb_external_hashrate: f32,
     address: String,
     runtime_mode: RuntimeMode,
     runtime_donation_level: RuntimeDonationLevel,
@@ -214,19 +213,11 @@ impl<'a> Algorithm<'a> {
         let xvb_24h_avg = pub_api.lock().unwrap().stats_priv.donor_24hr_avg * 1000.0;
         let xvb_1h_avg = pub_api.lock().unwrap().stats_priv.donor_1hr_avg * 1000.0;
 
-        let xvb_avg_last_hour_hashrate = Self::calc_last_hour_avg_hash_rate(
-            &gui_api_xvb.lock().unwrap().xvb_sent_last_hour_samples,
-        );
-        let xvb_external_hashrate = (xvb_1h_avg - xvb_avg_last_hour_hashrate).max(0.0);
-        info!(
-            "xvb external hashrate({xvb_external_hashrate}) = xvb_1h_avg({xvb_1h_avg}) - xvb_avg_last_hour_hashrate({xvb_avg_last_hour_hashrate})"
-        );
         let stats = Stats {
             share,
             hashrate_xmrig,
             xvb_24h_avg,
             xvb_1h_avg,
-            xvb_external_hashrate,
             address,
             target_donation_hashrate: f32::default(),
             runtime_mode,
@@ -288,13 +279,10 @@ impl<'a> Algorithm<'a> {
             return true;
         }
         // add external to target to have the real total target
-        let is_criteria_fulfilled = self.stats.xvb_24h_avg
-            >= self.stats.target_donation_hashrate + self.stats.xvb_external_hashrate;
+        let is_criteria_fulfilled = self.stats.xvb_24h_avg >= self.stats.target_donation_hashrate;
         info!(
             "Algorithm | xvb_24h_avg({}) > target_donation_hashrate({}) : {}",
-            self.stats.xvb_24h_avg,
-            self.stats.target_donation_hashrate + self.stats.xvb_external_hashrate,
-            is_criteria_fulfilled
+            self.stats.xvb_24h_avg, self.stats.target_donation_hashrate, is_criteria_fulfilled
         );
         is_criteria_fulfilled
     }
@@ -406,12 +394,6 @@ impl<'a> Algorithm<'a> {
             .p2pool_sent_last_hour_samples
             .0
             .push_back(hashrate);
-        self.gui_api_xvb
-            .lock()
-            .unwrap()
-            .xvb_sent_last_hour_samples
-            .0
-            .push_back(0.0);
     }
 
     async fn send_all_xvb(&self) {
@@ -419,13 +401,6 @@ impl<'a> Algorithm<'a> {
 
         info!("Algorithm | algo sleep for {XVB_TIME_ALGO} seconds while mining on XvB");
         sleep(Duration::from_secs(XVB_TIME_ALGO.into())).await;
-        let hashrate = current_controllable_hr(self.xp_alive, self.gui_api_xp, self.gui_api_xmrig);
-        self.gui_api_xvb
-            .lock()
-            .unwrap()
-            .xvb_sent_last_hour_samples
-            .0
-            .push_back(hashrate);
         self.gui_api_xvb
             .lock()
             .unwrap()
@@ -469,12 +444,6 @@ impl<'a> Algorithm<'a> {
                     * ((XVB_TIME_ALGO as f32 - self.stats.needed_time_xvb as f32)
                         / XVB_TIME_ALGO as f32),
             );
-        self.gui_api_xvb
-            .lock()
-            .unwrap()
-            .xvb_sent_last_hour_samples
-            .0
-            .push_back(hashrate * (self.stats.needed_time_xvb as f32 / XVB_TIME_ALGO as f32));
     }
 
     pub fn get_target_donation_hashrate(&self) -> f32 {
@@ -501,8 +470,7 @@ impl<'a> Algorithm<'a> {
             }
             // manual donation level will take into account external HR
             RuntimeMode::ManualDonationLevel => {
-                let target_donation_hashrate = self.stats.runtime_donation_level.get_hashrate()
-                    - self.stats.xvb_external_hashrate;
+                let target_donation_hashrate = self.stats.runtime_donation_level.get_hashrate();
 
                 info!(
                     "Algorithm | ManualDonationLevelMode target_donation_hashrate({})={:#?}.get_hashrate()",
@@ -515,8 +483,7 @@ impl<'a> Algorithm<'a> {
     }
 
     fn get_auto_mode_target_donation_hashrate(&self) -> f32 {
-        let donation_level = match self.stats.spareable_hashrate + self.stats.xvb_external_hashrate
-        {
+        let donation_level = match self.stats.spareable_hashrate {
             x if x > (XVB_ROUND_DONOR_MEGA_MIN_HR as f32) => Some(RuntimeDonationLevel::DonorMega),
             x if x > (XVB_ROUND_DONOR_WHALE_MIN_HR as f32) => {
                 Some(RuntimeDonationLevel::DonorWhale)
@@ -529,7 +496,7 @@ impl<'a> Algorithm<'a> {
         info!("Algorithm | AutoMode target_donation_level detected ({donation_level:#?})");
 
         let target_donation_hashrate = if let Some(level) = donation_level {
-            level.get_hashrate() - self.stats.xvb_external_hashrate
+            level.get_hashrate()
         } else {
             0.0
         };
@@ -664,18 +631,6 @@ impl<'a> Algorithm<'a> {
         info!("Algorithm | Starting...");
         info!("Algorithm | {:#?}", self.stats);
 
-        // inform user about external HR detected to explain better the decision.
-        let external_xvb_hr = self.stats.xvb_external_hashrate;
-        if external_xvb_hr > 0.0 {
-            output_console(
-                &mut self.gui_api_xvb.lock().unwrap().output,
-                &format!(
-                    "estimated external HR on XvB: {:.3}kH/s",
-                    external_xvb_hr / 1000.0
-                ),
-                crate::helper::ProcessName::Xvb,
-            );
-        }
         let external_p2pool_hr = self.stats.p2pool_external_hashrate;
         if external_p2pool_hr > 0.0 {
             output_console(
