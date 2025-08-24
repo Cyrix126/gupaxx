@@ -245,7 +245,11 @@ impl Helper {
 
     pub fn mutate_img_proxy(helper: &Arc<Mutex<Self>>, state: &crate::disk::state::XmrigProxy) {
         if state.simple {
-            *helper.lock().unwrap().img_proxy.lock().unwrap() = ImgProxy::new();
+            *helper.lock().unwrap().img_proxy.lock().unwrap() = ImgProxy {
+                api_port: PROXY_API_PORT_DEFAULT,
+                port: PROXY_PORT_DEFAULT,
+                token: state.token.clone(),
+            }
         } else if !state.arguments.is_empty() {
             // This parses the input and attempts to fill out
             // the [ImgXmrig]... This is pretty bad code...
