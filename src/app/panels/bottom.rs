@@ -374,7 +374,18 @@ impl crate::app::App {
                             // check if button to use local node is checked and if the local node is running
                             // It prevents starting p2pool if the node is not ready
                             // It is much clearer for the user what the issue is than trying to debug the terminal output.
-                            if self.state.p2pool.local_node && self.node.lock().unwrap().state != ProcessState::Alive {
+                            // Still allow the user to continue if the issue is that the node is syncing.
+                            // Could also be used with a remote node if we make a request
+                            if self.state.p2pool.local_node && self.node.lock().unwrap().state == ProcessState::Syncing {
+                                warn!("Trying to start {name} without an unsynced Node");
+                                self.error_state.set(
+                                    "P2Pool needs a fully synced Node.\nThe one selected is not. You can continue to start P2Pool but it won't be ready until the Node is synced".to_string(),
+                                    ErrorFerris::Cute,
+                                    ErrorButtons::UseNonSyncedNode,
+                                );
+                                return;
+                            }
+                            else if self.state.p2pool.local_node && self.node.lock().unwrap().state != ProcessState::Alive {
                                 error!(" {name} needs {} to start because the button \"{P2POOL_USE_LOCAL_NODE_BUTTON}\", but it was not ready", ProcessName::Node);
                                 self.error_state.set(
                                     format!("P2Pool needs a local Node to be alive and well. Check the Node tab to start one or uncheck the button \"{P2POOL_USE_LOCAL_NODE_BUTTON}\""),

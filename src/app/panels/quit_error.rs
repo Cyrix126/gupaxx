@@ -23,7 +23,6 @@ use crate::disk::node::Node;
 use crate::disk::state::State;
 use crate::helper::Helper;
 use crate::utils::constants::*;
-use crate::utils::errors::ErrorState;
 use crate::utils::ferris::*;
 use crate::utils::macros::{arc_mut, flip};
 use crate::utils::resets::{reset_nodes, reset_state};
@@ -198,7 +197,32 @@ impl crate::app::App {
                             self.error_state.reset()
                         }
                     }
-                    YesNo => {
+                    UseNonSyncedNode => {
+                        if ui
+                            .add_sized([width, height / 2.0], Button::new("Use the unsynced Node"))
+                            .clicked()
+                        {
+                            self.error_state.reset();
+                            Helper::start_p2pool(
+                                &self.helper,
+                                &self.state.p2pool,
+                                &self.state.node,
+                                &self.state.gupax.absolute_p2pool_path,
+                                self.backup_hosts.clone(),
+                                false,
+                            )
+                        }
+                        // If [Esc] was pressed, assume [No]
+                        if key.is_esc()
+                            || ui
+                                .add_sized([width, height / 2.0], Button::new("Cancel"))
+                                .clicked()
+                        {
+                            self.error_state.reset()
+                        }
+                    },
+                    // no means to exit without saving the state
+                    ErrorButtons::YesQuit => {
                         if ui
                             .add_sized([width, height / 2.0], Button::new("Yes"))
                             .clicked()
@@ -214,6 +238,7 @@ impl crate::app::App {
                             exit(0);
                         }
                     }
+                    // Quit means exiting saving the state
                     StayQuit => {
                         // If [Esc] was pressed, assume [Stay]
                         if key.is_esc()
@@ -221,7 +246,7 @@ impl crate::app::App {
                                 .add_sized([width, height / 2.0], Button::new("Stay"))
                                 .clicked()
                         {
-                            self.error_state = ErrorState::new();
+                            self.error_state.reset();
                         }
                         if ui
                             .add_sized([width, height / 2.0], Button::new("Quit"))

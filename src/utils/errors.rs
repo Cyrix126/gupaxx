@@ -15,8 +15,9 @@ use super::sudo::SudoState;
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[allow(dead_code)]
 pub enum ErrorButtons {
-    YesNo,
+    YesQuit,
     UseDetectedLocalNode((u16, u16)),
+    UseNonSyncedNode,
     StayQuit,
     ResetState,
     ResetNode,
