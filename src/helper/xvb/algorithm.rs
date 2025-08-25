@@ -424,7 +424,10 @@ impl<'a> Algorithm<'a> {
         .await;
 
         // only update xmrig config if it is actually mining.
-        info!("Algorithm | request xmrig to mine on XvB");
+        info!(
+            "Algorithm | request {} to mine on XvB",
+            self.stats.msg_xmrig_or_xp
+        );
 
         self.target_xvb_node().await;
 
