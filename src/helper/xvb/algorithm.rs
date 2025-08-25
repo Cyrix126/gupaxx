@@ -275,18 +275,23 @@ impl<'a> Algorithm<'a> {
         is_criteria_fulfilled
     }
 
-    fn is_xvb_24h_fulfilled(&self) -> bool {
-        if self.stats.runtime_mode != RuntimeMode::Auto
-            && self.stats.runtime_mode != RuntimeMode::ManualDonationLevel
-        {
-            info!("Algorithm | not running auto or manual round selection, no fast 24h average");
+    fn is_xvb_fulfilled(&self) -> bool {
+        let runtime_mode = &self.stats.runtime_mode;
+        if *runtime_mode != RuntimeMode::Auto && *runtime_mode != RuntimeMode::ManualDonationLevel {
+            info!("Algorithm | not running auto or manual round selection, no fast average");
             return true;
         }
+        let target_donation_hashrate = self.stats.target_donation_hashrate;
         // add external to target to have the real total target
-        let is_criteria_fulfilled = self.stats.xvb_24h_avg >= self.stats.target_donation_hashrate;
+        let is_criteria_fulfilled = self.stats.xvb_24h_avg >= target_donation_hashrate
+            && self.stats.xvb_1h_avg >= target_donation_hashrate;
         info!(
-            "Algorithm | xvb_24h_avg({}) > target_donation_hashrate({}) : {}",
-            self.stats.xvb_24h_avg, self.stats.target_donation_hashrate, is_criteria_fulfilled
+            "Algorithm | xvb_24h_avg({}) > target_donation_hashrate({}) && xvb_1h_avg({}) > target_donation_hashrate({}) : {}",
+            self.stats.xvb_24h_avg,
+            target_donation_hashrate,
+            self.stats.xvb_1h_avg,
+            target_donation_hashrate,
+            is_criteria_fulfilled
         );
         is_criteria_fulfilled
     }
@@ -513,7 +518,7 @@ impl<'a> Algorithm<'a> {
         target_donation_hashrate
     }
     // hero mode, send all spareable hashrate to XvB. the targeted hashrate is the spearable hashrate.
-    // 24h fast needs to be disabled in hero mode, or else the min share HR will never get his needed time.
+    // XvB fast average needs to be disabled in hero mode, or else the min share HR will never get his needed time.
     fn get_hero_mode_target_donation_hashrate(&self) -> f32 {
         info!(
             "Algorithm | HeroMode target_donation_hashrate=spareable_hashrate({})",
@@ -576,14 +581,14 @@ impl<'a> Algorithm<'a> {
         self.send_all_p2pool().await
     }
 
-    async fn fulfill_xvb_24_avg(&self) {
+    async fn fulfill_xvb(&self) {
         output_console(
             &mut self.gui_api_xvb.lock().unwrap().output,
-            "24H avg XvB target not achieved. Sending all hashrate to XvB!",
+            "XvB average target not achieved. Sending all hashrate to XvB!",
             crate::helper::ProcessName::Xvb,
         );
 
-        info!("Algorithm | 24H avg XvB target not achieved. Sending all hashrate to XvB!");
+        info!("Algorithm | XvB average target not achieved. Sending all hashrate to XvB!");
 
         *self.time_donated.lock().unwrap() = XVB_TIME_ALGO;
 
@@ -603,7 +608,7 @@ impl<'a> Algorithm<'a> {
         output_console(
             &mut self.gui_api_xvb.lock().unwrap().output,
             &format!(
-                "There is a share in p2pool and 24H avg XvB is achieved. Sending {} seconds to XvB!",
+                "There is a share in p2pool and XvB average is achieved. Sending {} seconds to XvB!",
                 self.stats.needed_time_xvb
             ),
             crate::helper::ProcessName::Xvb,
@@ -621,7 +626,7 @@ impl<'a> Algorithm<'a> {
             }
             std::cmp::Ordering::Greater => {
                 info!(
-                    "Algorithm | There is a share in p2pool and 24H avg XvB is achieved. Sending  {} seconds to XvB!",
+                    "Algorithm | There is a share in p2pool and XvB average is achieved. Sending  {} seconds to XvB!",
                     self.stats.needed_time_xvb
                 );
                 self.target_p2pool_node().await;
@@ -657,8 +662,8 @@ impl<'a> Algorithm<'a> {
 
         if !self.is_share_fulfilled() {
             self.fulfill_share().await
-        } else if !self.is_xvb_24h_fulfilled() {
-            self.fulfill_xvb_24_avg().await
+        } else if !self.is_xvb_fulfilled() {
+            self.fulfill_xvb().await
         } else {
             self.fulfill_normal_cycles().await
         }
