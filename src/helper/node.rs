@@ -456,7 +456,17 @@ impl PubNodeApi {
             blockheight: HumanNumber::from_u64(private.result.height),
             difficulty: HumanNumber::from_u64(private.result.difficulty),
             database_size: Byte::from(private.result.database_size).to_string(),
-            free_space: Byte::from(private.result.free_space).to_string(),
+            // free space can be unavailable if the node was started with a restricted rpc.
+            // In this case 18 exa will be reported.
+            // If that's the case, it means the user did start the node with restricted rpc,
+            // so it should be aware of what this means.
+            // A noob user that doesn't know what an rpc interface is should not see
+            // this message.
+            free_space: if private.result.free_space >= 18_000_000_000_000_000_000 {
+                "Restricted RPC".to_string()
+            } else {
+                Byte::from(private.result.free_space).to_string()
+            },
             nettype: private.result.nettype,
             outgoing_connections: private.result.outgoing_connections_count,
             incoming_connections: private.result.incoming_connections_count,
