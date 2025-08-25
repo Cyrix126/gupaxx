@@ -671,7 +671,10 @@ impl<'a> Algorithm<'a> {
     }
     // time needed to send on XvB get to the targeted doner round
     fn get_needed_time_xvb(target_donation_hashrate: f32, hashrate_xmrig: f32) -> u32 {
-        let needed_time = target_donation_hashrate / hashrate_xmrig * (XVB_TIME_ALGO as f32);
+        // the ceil() is required since we dont' send half seconds, we take the value above to be sure to not undersent.
+        // It specially makes a difference for whales for whom one second can mean a lot of hashrate.
+        let needed_time =
+            (target_donation_hashrate / hashrate_xmrig) * (XVB_TIME_ALGO as f32).ceil();
 
         info!(
             "Algorithm | Calculating... needed time for XvB ({needed_time}seconds)=target_donation_hashrate({target_donation_hashrate})/hashrate_xmrig({hashrate_xmrig})*XVB_TIME_ALGO({XVB_TIME_ALGO})"
