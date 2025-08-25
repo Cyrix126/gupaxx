@@ -194,6 +194,13 @@ impl Helper {
             crate::disk::print_dash(&format!(
                 "Node | Starting the Process to watch a detected local Node with ports:\nrpc: {rpc_port}\nzmq: {zmq_port}"
             ));
+            // Need to reset the detected ports value so that the next time we are here to start from Gupaxx it will not take the old values.
+            *helper
+                .lock()
+                .unwrap()
+                .ports_detected_local_node
+                .lock()
+                .unwrap() = None;
         } else {
             helper.lock().unwrap().node.lock().unwrap().state = ProcessState::Middle;
             let mode = if state.simple {
