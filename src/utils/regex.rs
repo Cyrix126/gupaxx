@@ -17,7 +17,7 @@
 
 // Some regexes used throughout Gupax.
 
-use crate::helper::xvb::nodes::Pool;
+use crate::{disk::node::Node, helper::xvb::nodes::Pool};
 use log::warn;
 use once_cell::sync::Lazy;
 use regex::Regex;
@@ -156,6 +156,25 @@ pub fn nb_current_shares(s: &str) -> Option<u32> {
     }
     None
 }
+// get the number of current shares
+pub fn p2pool_monero_node(s: &str) -> Option<Node> {
+    static CURRENT_NODE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"= (?P<ip>\S+):RPC (?P<rpc>\d+):ZMQ (?P<zmq>\d+)").unwrap());
+    if let Some(c) = CURRENT_NODE.captures(s)
+        && let Some(m_ip) = c.name("ip")
+        && let Some(m_rpc) = c.name("rpc")
+        && let Ok(rpc) = m_rpc.as_str().parse::<u16>()
+        && let Some(m_zmq) = c.name("zmq")
+        && let Ok(zmq) = m_zmq.as_str().parse::<u16>()
+    {
+        return Some(Node {
+            ip: m_ip.as_str().to_string(),
+            rpc: rpc.to_string(),
+            zmq: zmq.to_string(),
+        });
+    }
+    None
+}
 pub fn detect_pool_xmrig(s: &str, proxy_port: u16, p2pool_port: u16) -> Option<Pool> {
     static CURRENT_SHARE: Lazy<Regex> =
         Lazy::new(|| Regex::new(r"(use pool|new job from) (?P<pool>.*:\d{1,5})(| diff)").unwrap());
@@ -228,6 +247,10 @@ pub fn estimated_hr(s: &str) -> Option<f32> {
     None
 }
 
+pub fn contains_node(l: &str) -> bool {
+    static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"(Monero node|host )").unwrap());
+    LINE_SHARE.is_match(l)
+}
 pub fn contains_timeout(l: &str) -> bool {
     static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"timeout").unwrap());
     LINE_SHARE.is_match(l)

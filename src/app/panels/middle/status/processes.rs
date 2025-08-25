@@ -229,10 +229,12 @@ fn p2pool(
         let img = p2pool_img.lock().unwrap();
         ui.label(RichText::new("Monero Node").underline().color(BONE))
             .on_hover_text(STATUS_P2POOL_MONERO_NODE);
-        ui.label(format!(
-            "IP: {}]\n[RPC: {}] [ZMQ: {}]",
-            &img.host, &img.rpc, &img.zmq
-        ));
+        let text_node = if let Some(node) = &api.current_node {
+            format!("IP: [{}]\n[RPC: {}] [ZMQ: {}]", node.ip, node.rpc, node.zmq)
+        } else {
+            "Not connected to any node".to_string()
+        };
+        ui.label(text_node);
         ui.label(RichText::new("Sidechain").underline().color(BONE))
             .on_hover_text(STATUS_P2POOL_POOL);
         ui.label(&img.chain);

@@ -20,6 +20,8 @@ use super::Process;
 use crate::app::BackupNodes;
 use crate::app::panels::middle::common::list_poolnode::PoolNode;
 use crate::app::submenu_enum::SubmenuP2pool;
+use crate::components::node::RemoteNode;
+use crate::disk::node::Node as NodeString;
 use crate::disk::state::Node;
 use crate::disk::state::P2pool;
 use crate::disk::state::P2poolChain;
@@ -40,6 +42,8 @@ use crate::regex::contains_yourshare;
 use crate::regex::contains_zmq_failure;
 use crate::regex::estimated_hr;
 use crate::regex::nb_current_shares;
+use crate::utils::regex::contains_node;
+use crate::utils::regex::p2pool_monero_node;
 use crate::{
     constants::*,
     disk::gupax_p2pool_api::GupaxP2poolApi,
@@ -106,6 +110,17 @@ impl Helper {
             }
         }
         while let Some(Ok(line)) = stdout.next() {
+            if contains_node(&line) {
+                if let Some(node) = p2pool_monero_node(&line) {
+                    if gui_api.lock().unwrap().current_node.as_ref() != Some(&node) {
+                        gui_api.lock().unwrap().current_node = Some(node);
+                    }
+                } else {
+                    error!(
+                        "P2pool | PTY Getting data from status: Lines contains a Monero no but no value found: {line}"
+                    );
+                }
+            }
             // if command status is sent by gupaxx process and not the user, forward it only to update_from_status method.
             // 25 lines after the command are the result of status, with last line finishing by update.
             if contains_statuscommand(&line) {
@@ -328,6 +343,11 @@ impl Helper {
         let pub_api = Arc::clone(&helper.lock().unwrap().pub_api_p2pool);
         let gupax_p2pool_api = Arc::clone(&helper.lock().unwrap().gupax_p2pool_api);
         let path = path.to_path_buf();
+        let node_to_start_with = state
+            .selected_remote_node
+            .as_ref()
+            .expect("P2Pool should always be started with a node set")
+            .clone();
         // thread to check if the button for switching to local node if it is synced to restart p2pool.
         // starting the thread even if the option is disabled allows to apply the change immediately in case it is enabled again without asking the user to restart p2pool.
         // Start this thread only if we don't already override to local node
@@ -358,6 +378,7 @@ impl Helper {
                 api_path_pool,
                 api_path_p2p,
                 gupax_p2pool_api,
+                node_to_start_with,
             );
         });
     }
@@ -381,16 +402,9 @@ impl Helper {
         api_path.pop();
         let simple = state.submenu != SubmenuP2pool::Advanced;
         if simple {
-            let node = state
-                .selected_remote_node
-                .as_ref()
-                .expect("P2Pool should always be started with a node set");
             *helper.lock().unwrap().img_p2pool.lock().unwrap() = ImgP2pool {
                 chain: state.chain.to_string(),
                 address: Self::head_tail_of_monero_address(&state.address),
-                host: node.ip.to_string(),
-                rpc: node.rpc.to_string(),
-                zmq: node.zmq.to_string(),
                 out_peers: "10".to_string(),
                 in_peers: "10".to_string(),
                 stratum_port: P2POOL_PORT_DEFAULT,
@@ -418,9 +432,6 @@ impl Helper {
                         p2pool_image.chain = chain.to_string();
                     }
                     "--wallet" => p2pool_image.address = Self::head_tail_of_monero_address(arg),
-                    "--host" => p2pool_image.host = arg.to_string(),
-                    "--rpc-port" => p2pool_image.rpc = arg.to_string(),
-                    "--zmq-port" => p2pool_image.zmq = arg.to_string(),
                     "--out-peers" => p2pool_image.out_peers = arg.to_string(),
                     "--in-peers" => p2pool_image.in_peers = arg.to_string(),
                     "--data-api" => api_path = PathBuf::from(arg),
@@ -442,9 +453,6 @@ impl Helper {
             *helper.lock().unwrap().img_p2pool.lock().unwrap() = ImgP2pool {
                 chain: state.chain.to_string(),
                 address: Self::head_tail_of_monero_address(&state.address),
-                host: state.selected_node.ip.to_string(),
-                rpc: state.selected_node.rpc.to_string(),
-                zmq: state.selected_node.zmq_rig.to_string(),
                 stratum_port: state.stratum_port,
                 out_peers: state.out_peers.to_string(),
                 in_peers: state.in_peers.to_string(),
@@ -606,6 +614,7 @@ impl Helper {
         api_path_pool: std::path::PathBuf,
         api_path_p2p: std::path::PathBuf,
         gupax_p2pool_api: Arc<Mutex<GupaxP2poolApi>>,
+        node: RemoteNode,
     ) {
         // 1a. Create PTY
         debug!("P2Pool | Creating PTY...");
@@ -690,6 +699,14 @@ impl Helper {
 
         // Reset stats before loop, except action parameters without a need for saving to state.
         reset_data_p2pool(&pub_api, &gui_api);
+
+        // Set the node used so that Stats can fetch it.
+        // It will be updated with the output console of P2Pool while the process is still running
+        gui_api.lock().unwrap().current_node = Some(NodeString {
+            ip: node.ip.to_string(),
+            rpc: node.rpc.to_string(),
+            zmq: node.zmq.to_string(),
+        });
 
         // 4. Loop as watchdog
         let mut first_loop = true;
@@ -881,9 +898,6 @@ impl Helper {
 pub struct ImgP2pool {
     pub chain: String,     // Did the user start on the mini-chain?
     pub address: String, // What address is the current p2pool paying out to? (This gets shortened to [4xxxxx...xxxxxx])
-    pub host: String,    // What monerod are we using?
-    pub rpc: String,     // What is the RPC port?
-    pub zmq: String,     // What is the ZMQ port?
     pub out_peers: String, // How many out-peers?
     pub in_peers: String, // How many in-peers?
     pub stratum_port: u16, // on which port p2pool is listening for stratum connections
@@ -900,9 +914,6 @@ impl ImgP2pool {
         Self {
             chain: String::from("???"),
             address: String::from("???"),
-            host: String::from("???"),
-            rpc: String::from("???"),
-            zmq: String::from("???"),
             out_peers: String::from("???"),
             in_peers: String::from("???"),
             stratum_port: P2POOL_PORT_DEFAULT,
@@ -975,6 +986,7 @@ pub struct PubP2poolApi {
     pub p2p_connected: u32,
     pub node_connected: bool,
     pub prefer_local_node: bool,
+    pub current_node: Option<NodeString>,
 }
 
 impl Default for PubP2poolApi {
@@ -1031,6 +1043,7 @@ impl PubP2poolApi {
             node_connected: false,
             prefer_local_node: true,
             fails_zmq_since: None,
+            current_node: None,
         }
     }
 
@@ -1051,6 +1064,7 @@ impl PubP2poolApi {
             sidechain_shares: std::mem::take(&mut gui_api.sidechain_shares),
             sidechain_ehr: std::mem::take(&mut gui_api.sidechain_ehr),
             prefer_local_node: std::mem::take(&mut gui_api.prefer_local_node),
+            current_node: std::mem::take(&mut gui_api.current_node),
             ..pub_api.clone()
         };
     }
