@@ -38,7 +38,7 @@ use crate::{
         signal_end, sleep_end_loop,
     },
     macros::sleep,
-    utils::constants::SOCKET_MONERO_LOCAL_OUTSIDE,
+    utils::constants::{NODE_RPC_PORT_DEFAULT, NODE_ZMQ_PORT_DEFAULT, SOCKET_MONERO_LOCAL_OUTSIDE},
 };
 use std::fmt::Write;
 
@@ -132,7 +132,6 @@ impl Helper {
             }
             StartOptionsMode::Custom => {
                 // This parses the input
-                // todo: set the state if user change port and token
                 for arg in state.arguments.split_whitespace() {
                     let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
                     args.push(arg.to_string());
@@ -190,6 +189,7 @@ impl Helper {
             .lock()
             .unwrap();
         if let Some((rpc_port, zmq_port)) = ports_detected_local_node {
+            // Set the ImgNode to ports of the detected Node
             *helper.lock().unwrap().img_node.lock().unwrap() = ImgNode { rpc_port, zmq_port };
             crate::disk::print_dash(&format!(
                 "Node | Starting the Process to watch a detected local Node with ports:\nrpc: {rpc_port}\nzmq: {zmq_port}"
@@ -210,9 +210,10 @@ impl Helper {
             } else {
                 StartOptionsMode::Advanced
             };
-            let (rpc_port, zmq_port) = state.ports();
-            *helper.lock().unwrap().img_node.lock().unwrap() = ImgNode { rpc_port, zmq_port };
+            // Set the ImgNode with ports that the Node started with
+            *helper.lock().unwrap().img_node.lock().unwrap() = ImgNode::new(state, &mode);
             args = Self::build_node_args(state, mode);
+
             // Print arguments & user settings to console
             crate::disk::print_dash(&format!("Node | Launch arguments: {args:#?}"));
         }
@@ -534,8 +535,50 @@ pub struct ImgNode {
 impl Default for ImgNode {
     fn default() -> Self {
         Self {
-            rpc_port: 18081,
-            zmq_port: 18083,
+            rpc_port: NODE_RPC_PORT_DEFAULT,
+            zmq_port: NODE_ZMQ_PORT_DEFAULT,
+        }
+    }
+}
+
+impl ImgNode {
+    pub fn new(state: &crate::disk::state::Node, mode: &StartOptionsMode) -> ImgNode {
+        match mode {
+            StartOptionsMode::Simple => ImgNode::default(),
+            StartOptionsMode::Advanced => {
+                let (rpc_port, zmq_port) = state.ports();
+                ImgNode { rpc_port, zmq_port }
+            }
+            StartOptionsMode::Custom => {
+                // This parses the input and attempts to fill out
+                // the [ImgXmrig]... This is pretty bad code...
+                let mut last = "";
+                let mut img = ImgNode::default();
+                for arg in state.arguments.split_whitespace() {
+                    match last {
+                        "--zmq-rpc-bind-port" => {
+                            if let Ok(port) = arg.parse::<u16>() {
+                                img.zmq_port = port
+                            }
+                        }
+                        "--zmq-pub" => {
+                            if let Some(port_str) = last.split(":").last()
+                                && let Ok(port) = port_str.parse::<u16>()
+                            {
+                                img.zmq_port = port;
+                            }
+                        }
+                        "--rpc-bind-port" => {
+                            if let Ok(port) = arg.parse::<u16>() {
+                                img.rpc_port = port
+                            }
+                        }
+                        _ => (),
+                    }
+                    last = arg;
+                }
+                img
+            }
         }
     }
 }
