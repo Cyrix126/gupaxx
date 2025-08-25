@@ -53,6 +53,7 @@ use crate::{
 
 use super::{PubXvbApi, SamplesAverageHour, priv_stats::RuntimeDonationLevel};
 
+const MARGIN_EXTERNAL_HR: f32 = 0.02;
 #[allow(clippy::too_many_arguments)]
 pub(crate) async fn algorithm(
     client: &Client,
@@ -186,8 +187,12 @@ impl<'a> Algorithm<'a> {
         let p2pool_avg_last_hour_hashrate = Self::calc_last_hour_avg_hash_rate(
             &gui_api_xvb.lock().unwrap().p2pool_sent_last_hour_samples,
         );
-        let p2pool_external_hashrate =
+        let mut p2pool_external_hashrate =
             (p2pool_total_hashrate - p2pool_avg_last_hour_hashrate).max(0.0);
+        // do not take into account very small external hashrate as the estimation has a margin of error.
+        if p2pool_external_hashrate < (p2pool_total_hashrate * MARGIN_EXTERNAL_HR) {
+            p2pool_external_hashrate = 0.0;
+        }
         info!(
             "p2pool external hashrate({p2pool_external_hashrate}) = p2ool_total_hashrate({p2pool_total_hashrate}) - p2pool_avg_last_hour_hashrate({p2pool_avg_last_hour_hashrate})"
         );
