@@ -378,7 +378,7 @@ impl crate::app::App {
                             // Still allow the user to continue if the issue is that the node is syncing.
                             // Could also be used with a remote node if we make a request
                             if self.state.p2pool.local_node && self.node.lock().unwrap().state == ProcessState::Syncing {
-                                warn!("Trying to start {name} without an unsynced Node");
+                                warn!("Trying to start {name} with an unsynced Node");
                                 self.error_state.set(
                                     "P2Pool needs a fully synced Node.\nThe one selected is not. You can continue to start P2Pool but it won't be ready until the Node is synced".to_string(),
                                     ErrorFerris::Cute,

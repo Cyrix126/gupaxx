@@ -392,7 +392,7 @@ impl Helper {
         }
 
         // 5. If loop broke, we must be done here.
-        info!("XMRig-Proxy Watchdog | Watchdog thread exiting... Goodbye!");
+        info!("Node Watchdog | Watchdog thread exiting... Goodbye!");
         // sleep
     }
 }
