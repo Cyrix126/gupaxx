@@ -35,7 +35,6 @@ use std::{
     time::Duration,
 };
 
-use log::error;
 use log::{info, warn};
 use reqwest_middleware::ClientWithMiddleware as Client;
 use tokio::time::sleep;
@@ -588,7 +587,15 @@ impl<'a> Algorithm<'a> {
         self.send_all_xvb().await
     }
 
-    async fn fulfill_normal_cycles(&self) {
+    async fn fulfill_normal_cycles(&mut self) {
+        // do not switch pool for a very short time, so mine a minimum on XvB with XVB_MIN_TIME_SEND value
+        if self.stats.needed_time_xvb < XVB_MIN_TIME_SEND {
+            self.stats.needed_time_xvb = XVB_MIN_TIME_SEND;
+            info!(
+                "Algorithm | Needed time: {} to send on XvB is less than minimum time to send, sending the minimum {XVB_MIN_TIME_SEND}s to XvB !",
+                self.stats.needed_time_xvb
+            );
+        }
         output_console(
             &mut self.gui_api_xvb.lock().unwrap().output,
             &format!(
@@ -599,16 +606,16 @@ impl<'a> Algorithm<'a> {
         );
 
         *self.time_donated.lock().unwrap() = self.stats.needed_time_xvb;
-        // do not switch pool for a few seconds, let's make 6 seconds minimum.
 
-        match self.stats.needed_time_xvb {
-            x if x <= XVB_MIN_TIME_SEND => {
+        match self.stats.needed_time_xvb.cmp(&0) {
+            std::cmp::Ordering::Equal => {
                 info!(
-                    "Algorithm | Needed time: {x} to send on XvB is less than minimum time to send, sending all HR to p2pool"
+                    "Algorithm | Needed time: {}s to send on XvB, sending all HR to p2pool",
+                    self.stats.needed_time_xvb
                 );
                 self.send_all_p2pool().await;
             }
-            x if x <= XVB_TIME_ALGO - XVB_MIN_TIME_SEND => {
+            std::cmp::Ordering::Greater => {
                 info!(
                     "Algorithm | There is a share in p2pool and 24H avg XvB is achieved. Sending  {} seconds to XvB!",
                     self.stats.needed_time_xvb
@@ -616,13 +623,9 @@ impl<'a> Algorithm<'a> {
                 self.target_p2pool_node().await;
                 self.sleep_then_update_node_xmrig().await;
             }
-            x if x >= XVB_TIME_ALGO - XVB_MIN_TIME_SEND => {
-                info!(
-                    "Algorithm | time : {x} seconds for XvB is more than time algo - minimum time to send, sending all to XvB"
-                );
-                self.send_all_xvb().await;
+            std::cmp::Ordering::Less => {
+                // this should not happen since the needed_time_xvb value is u32 so it can not be negative
             }
-            _ => error!("should not be possible"),
         };
     }
 
