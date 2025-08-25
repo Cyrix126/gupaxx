@@ -385,10 +385,20 @@ impl Helper {
                         }
                         Err(err) => {
                             // if node is just starting, do not throw an error
-                            if start.elapsed() > Duration::from_secs(10) {
-                                warn!(
-                                    "Node Watchdog | Could not send HTTP API request to node\n{err}"
-                                );
+                            match start.elapsed() {
+                                x if x < Duration::from_secs(30) => {}
+                                x if x >= Duration::from_secs(30)
+                                    && x <= Duration::from_secs(60) =>
+                                {
+                                    warn!(
+                                        "Node Watchdog | Could not send HTTP API request to node\n{err}\nPossibly because it is just starting"
+                                    );
+                                }
+                                _ => {
+                                    warn!(
+                                        "Node Watchdog | Could not send HTTP API request to node\n{err}"
+                                    );
+                                }
                             }
                         }
                     }
