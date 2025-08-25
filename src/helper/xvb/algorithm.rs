@@ -589,8 +589,9 @@ impl<'a> Algorithm<'a> {
 
     async fn fulfill_normal_cycles(&mut self) {
         // do not switch pool for a very short time, so mine a minimum on XvB with XVB_MIN_TIME_SEND value
-        if self.stats.needed_time_xvb < XVB_MIN_TIME_SEND {
-            self.stats.needed_time_xvb = XVB_MIN_TIME_SEND;
+        let needed_time = &mut self.stats.needed_time_xvb;
+        if *needed_time > 0 && *needed_time < XVB_MIN_TIME_SEND {
+            *needed_time = XVB_MIN_TIME_SEND;
             info!(
                 "Algorithm | Needed time: {} to send on XvB is less than minimum time to send, sending the minimum {XVB_MIN_TIME_SEND}s to XvB !",
                 self.stats.needed_time_xvb
