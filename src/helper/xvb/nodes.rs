@@ -128,7 +128,7 @@ impl Pool {
         }
         // two spawn to ping the two nodes in parallel and not one after the other.
         let ms_eu_handle = spawn(async move {
-            info!("Node | ping XvBEuropean XvB Node");
+            info!("XvB | ping XvBEuropean XvB Node");
             let socket_address = format!("{}:{}", &Pool::XvBEurope.url(), &Pool::XvBEurope.port())
                 .to_socket_addrs()
                 .expect("hardcored valued should always convert to SocketAddr")
@@ -137,7 +137,7 @@ impl Pool {
             port_ping(socket_address, TIMEOUT_NODE_PING).await
         });
         let ms_na_handle = spawn(async move {
-            info!("Node | ping North America Node");
+            info!("XvB | ping North America Node");
             let socket_address = format!(
                 "{}:{}",
                 &Pool::XvBNorthAmerica.url(),
