@@ -225,6 +225,7 @@ impl Helper {
         let path = path.to_path_buf();
         let state = state.clone();
         let sys = Arc::clone(&helper.lock().unwrap().sys_info);
+        let img_node = helper.lock().unwrap().img_node.lock().unwrap().clone();
         thread::spawn(move || {
             Self::spawn_node_watchdog(
                 &process,
@@ -235,6 +236,7 @@ impl Helper {
                 state,
                 ports_detected_local_node,
                 &sys,
+                img_node,
             );
         });
     }
@@ -250,6 +252,7 @@ impl Helper {
         state: Node,
         ports_detected_local_node: Option<(u16, u16)>,
         sys: &Arc<Mutex<System>>,
+        img: ImgNode,
     ) {
         process.lock().unwrap().start = Instant::now();
         // spawn pty if we are starting it from gupaxx
@@ -365,7 +368,7 @@ impl Helper {
                 let adr = if let Some((rpc, _)) = ports_detected_local_node {
                     format!("127.0.0.1:{rpc}")
                 } else {
-                    format!("{}:{}", state.api_ip, state.api_port)
+                    format!("{}:{}", state.api_ip, img.rpc_port)
                 };
                 if let Ok(sockets) = adr.to_socket_addrs()
                     && let Some(socket) = sockets.last()
