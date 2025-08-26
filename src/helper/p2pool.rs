@@ -538,10 +538,10 @@ impl Helper {
                                 .as_ref()
                                 .is_some_and(|s| s != node)
                         {
-                            let ip = if state.ip == "localhost" {
+                            let ip = if node.ip() == "localhost" {
                                 "127.0.0.1"
                             } else {
-                                &state.ip
+                                node.ip()
                             };
                             args.push("--host".to_string());
                             args.push(ip.to_string());
