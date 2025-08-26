@@ -96,29 +96,29 @@ rm p2pool-v4.9.1-windows-x64.zip
 
 ## Download Monero Binaries
 # download monero into directory linux
-wget https://downloads.getmonero.org/cli/monero-linux-x64-v0.18.4.1.tar.bz2
-tar -xf monero-linux-x64-v0.18.4.1.tar.bz2
-mv monero-x86_64-linux-gnu-v0.18.4.1/monerod /tmp/${FOLDER}/skel/linux_b/node/monerod
-rm -r monero-x86_64-linux-gnu-v0.18.4.1
-rm monero-linux-x64-v0.18.4.1.tar.bz2
+wget https://downloads.getmonero.org/cli/monero-linux-x64-v0.18.4.2.tar.bz2
+tar -xf monero-linux-x64-v0.18.4.2.tar.bz2
+mv monero-x86_64-linux-gnu-v0.18.4.2/monerod /tmp/${FOLDER}/skel/linux_b/node/monerod
+rm -r monero-x86_64-linux-gnu-v0.18.4.2
+rm monero-linux-x64-v0.18.4.2.tar.bz2
 # download monero into directory macos-arm64
-wget https://downloads.getmonero.org/cli/monero-mac-armv8-v0.18.4.1.tar.bz2
-tar -xf monero-mac-armv8-v0.18.4.1.tar.bz2
-mv monero-aarch64-apple-darwin11-v0.18.4.1/monerod /tmp/${FOLDER}/skel/macos-arm64_b/Gupaxx.app/Contents/MacOS/node/monerod
-rm -r monero-aarch64-apple-darwin11-v0.18.4.1
-rm monero-mac-armv8-v0.18.4.1.tar.bz2
+wget https://downloads.getmonero.org/cli/monero-mac-armv8-v0.18.4.2.tar.bz2
+tar -xf monero-mac-armv8-v0.18.4.2.tar.bz2
+mv monero-aarch64-apple-darwin11-v0.18.4.2/monerod /tmp/${FOLDER}/skel/macos-arm64_b/Gupaxx.app/Contents/MacOS/node/monerod
+rm -r monero-aarch64-apple-darwin11-v0.18.4.2
+rm monero-mac-armv8-v0.18.4.2.tar.bz2
 # download monero into directory macos-x64
-wget https://downloads.getmonero.org/cli/monero-mac-x64-v0.18.4.1.tar.bz2
-tar -xf monero-mac-x64-v0.18.4.1.tar.bz2
-mv monero-x86_64-apple-darwin11-v0.18.4.1/monerod /tmp/${FOLDER}/skel/macos-x64_b/Gupaxx.app/Contents/MacOS/node/monerod
-rm -r monero-x86_64-apple-darwin11-v0.18.4.1
-rm monero-mac-x64-v0.18.4.1.tar.bz2
+wget https://downloads.getmonero.org/cli/monero-mac-x64-v0.18.4.2.tar.bz2
+tar -xf monero-mac-x64-v0.18.4.2.tar.bz2
+mv monero-x86_64-apple-darwin11-v0.18.4.2/monerod /tmp/${FOLDER}/skel/macos-x64_b/Gupaxx.app/Contents/MacOS/node/monerod
+rm -r monero-x86_64-apple-darwin11-v0.18.4.2
+rm monero-mac-x64-v0.18.4.2.tar.bz2
 # download monero into directory windows
-wget https://downloads.getmonero.org/cli/monero-win-x64-v0.18.4.1.zip
-unzip monero-win-x64-v0.18.4.1.zip
-mv monero-x86_64-w64-mingw32-v0.18.4.1/monerod.exe /tmp/${FOLDER}/skel/windows_b/Node/monerod.exe
-rm -r monero-x86_64-w64-mingw32-v0.18.4.1
-rm monero-win-x64-v0.18.4.1.zip
+wget https://downloads.getmonero.org/cli/monero-win-x64-v0.18.4.2.zip
+unzip monero-win-x64-v0.18.4.2.zip
+mv monero-x86_64-w64-mingw32-v0.18.4.2/monerod.exe /tmp/${FOLDER}/skel/windows_b/Node/monerod.exe
+rm -r monero-x86_64-w64-mingw32-v0.18.4.2
+rm monero-win-x64-v0.18.4.2.zip
 
 set +ex
 
