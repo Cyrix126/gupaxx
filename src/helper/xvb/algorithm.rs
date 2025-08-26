@@ -30,6 +30,7 @@ use crate::utils::constants::BLOCK_PPLNS_WINDOW_NANO;
 use crate::utils::constants::SECOND_PER_BLOCK_P2POOL_MAIN;
 use crate::utils::constants::SECOND_PER_BLOCK_P2POOL_MINI;
 use crate::utils::constants::SECOND_PER_BLOCK_P2POOL_NANO;
+use crate::utils::constants::XVB_SIDE_MARGIN_1H;
 use std::{
     sync::{Arc, Mutex},
     time::Duration,
@@ -282,9 +283,13 @@ impl<'a> Algorithm<'a> {
             return true;
         }
         let target_donation_hashrate = self.stats.target_donation_hashrate;
-        // add external to target to have the real total target
+
+        // For 1h average, there is 20% margin.
+        // Since we calculate the time needed for a exact target and hashrate is a bit variable,
+        // The fast mode could get triggered without being usefull since being a bit under the 1h target is normal
+        // and still respect the 20% margin. Trigger the fast mode when we are under the 20% of one hour hashrate
         let is_criteria_fulfilled = self.stats.xvb_24h_avg >= target_donation_hashrate
-            && self.stats.xvb_1h_avg >= target_donation_hashrate;
+            && self.stats.xvb_1h_avg >= target_donation_hashrate * (1.0 - XVB_SIDE_MARGIN_1H);
         info!(
             "Algorithm | xvb_24h_avg({}) > target_donation_hashrate({}) && xvb_1h_avg({}) > target_donation_hashrate({}) : {}",
             self.stats.xvb_24h_avg,

@@ -48,24 +48,36 @@ pub enum XvbRound {
     #[serde(alias = "donor_mega")]
     DonorMega,
 }
-
+/// The round type that the algorithm detects we are in.
+/// The 1h average required is multiplied by 0.8 to reflect the 20% margin accepted by XvB
+/// So if the private stats are giving 800H average per hour and 1kH/day, the doner will be in the Donor round.
 pub(crate) fn round_type(share: u32, pub_api: &Arc<Mutex<PubXvbApi>>) -> Option<XvbRound> {
     if share > 0 {
         let stats_priv = &pub_api.lock().unwrap().stats_priv;
         match (
-            ((stats_priv.donor_1hr_avg * 1000.0) * XVB_SIDE_MARGIN_1H) as u32,
+            (stats_priv.donor_1hr_avg * 1000.0) as u32,
             (stats_priv.donor_24hr_avg * 1000.0) as u32,
         ) {
-            x if x.0 >= XVB_ROUND_DONOR_MEGA_MIN_HR && x.1 >= XVB_ROUND_DONOR_MEGA_MIN_HR => {
+            x if x.0
+                >= (XVB_ROUND_DONOR_MEGA_MIN_HR as f32 * (1.0 - XVB_SIDE_MARGIN_1H)) as u32
+                && x.1 >= XVB_ROUND_DONOR_MEGA_MIN_HR =>
+            {
                 Some(XvbRound::DonorMega)
             }
-            x if x.0 >= XVB_ROUND_DONOR_WHALE_MIN_HR && x.1 >= XVB_ROUND_DONOR_WHALE_MIN_HR => {
+            x if x.0
+                >= (XVB_ROUND_DONOR_WHALE_MIN_HR as f32 * (1.0 - XVB_SIDE_MARGIN_1H)) as u32
+                && x.1 >= XVB_ROUND_DONOR_WHALE_MIN_HR =>
+            {
                 Some(XvbRound::DonorWhale)
             }
-            x if x.0 >= XVB_ROUND_DONOR_VIP_MIN_HR && x.1 >= XVB_ROUND_DONOR_VIP_MIN_HR => {
+            x if x.0 >= (XVB_ROUND_DONOR_VIP_MIN_HR as f32 * (1.0 - XVB_SIDE_MARGIN_1H)) as u32
+                && x.1 >= XVB_ROUND_DONOR_VIP_MIN_HR =>
+            {
                 Some(XvbRound::DonorVip)
             }
-            x if x.0 >= XVB_ROUND_DONOR_MIN_HR && x.1 >= XVB_ROUND_DONOR_MIN_HR => {
+            x if x.0 >= (XVB_ROUND_DONOR_MIN_HR as f32 * (1.0 - XVB_SIDE_MARGIN_1H)) as u32
+                && x.1 >= XVB_ROUND_DONOR_MIN_HR =>
+            {
                 Some(XvbRound::Donor)
             }
             (_, _) => Some(XvbRound::Vip),
