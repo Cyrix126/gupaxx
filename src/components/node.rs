@@ -15,6 +15,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
+use crate::app::panels::middle::common::list_poolnode::PoolNode;
 use crate::utils::node_latency::port_ping;
 use derive_more::{Deref, DerefMut};
 use egui::Color32;
@@ -40,6 +41,14 @@ pub struct RemoteNode {
 impl PartialEq for RemoteNode {
     fn eq(&self, other: &Self) -> bool {
         self.ip == other.ip && self.rpc == other.rpc && self.zmq == other.zmq
+    }
+}
+
+impl PartialEq<PoolNode> for RemoteNode {
+    fn eq(&self, other: &PoolNode) -> bool {
+        self.ip.to_string() == other.ip()
+            && self.rpc.to_string() == other.port()
+            && self.zmq.to_string() == other.custom()
     }
 }
 

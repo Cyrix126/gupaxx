@@ -493,103 +493,116 @@ impl Helper {
         let mut api_path = path;
         api_path.pop();
 
-        // [Simple]
+        // common Simple and Advanced args
         match mode {
-            StartOptionsMode::Simple if !state.local_node && !override_to_local_node => {
-                // Build the p2pool argument
-                let remote_node = state
-                    .selected_remote_node
-                    .as_ref()
-                    .expect("P2Pool should always be started with a node set");
-                args.push("--nano".to_string());
+            StartOptionsMode::Simple | StartOptionsMode::Advanced => {
                 args.push("--wallet".to_string());
                 args.push(state.address.clone()); // Wallet address
-                args.push("--host".to_string());
-                args.push(remote_node.ip.to_string()); // IP Address
-                args.push("--rpc-port".to_string());
-                args.push(remote_node.rpc.to_string()); // RPC Port
-                args.push("--zmq-port".to_string());
-                args.push(remote_node.zmq.to_string()); // ZMQ Port
                 args.push("--data-api".to_string());
                 args.push(api_path.display().to_string()); // API Path
                 args.push("--local-api".to_string()); // Enable API
-                args.push("--no-color".to_string()); // Remove color escape sequences, Gupax terminal can't parse it :(
+                args.push("--no-color".to_string()); // Remove color escape sequences
                 args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
             }
-            StartOptionsMode::Simple if state.local_node || override_to_local_node => {
-                // use the local node
-                // Build the p2pool argument
+            StartOptionsMode::Custom => {}
+        }
+        // Specific args
+        match mode {
+            StartOptionsMode::Simple => {
                 args.push("--nano".to_string());
-                args.push("--wallet".to_string());
-                args.push(state.address.clone()); // Wallet address
-                args.push("--host".to_string());
-                args.push("127.0.0.1".to_string()); // IP Address
-                args.push("--rpc-port".to_string());
-                args.push(local_node_rpc_port.to_string()); // RPC Port
-                args.push("--zmq-port".to_string());
-                args.push(local_node_zmq_port.to_string()); // ZMQ Port
-                args.push("--data-api".to_string());
-                args.push(api_path.display().to_string()); // API Path
-                args.push("--local-api".to_string()); // Enable API
-                args.push("--no-color".to_string()); // Remove color escape sequences, Gupax terminal can't parse it :(
-                args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
+                if state.local_node || override_to_local_node {
+                    // use the local node
+                    // Build the p2pool argument
+                    args.push("--host".to_string());
+                    args.push("127.0.0.1".to_string());
+                    args.push("--rpc-port".to_string());
+                    args.push(local_node_rpc_port.to_string());
+                    args.push("--zmq-port".to_string());
+                    args.push(local_node_zmq_port.to_string());
+                } else if let Some(remote_node) = &state.selected_remote_node {
+                    // Do we want to show the args if there's no selected remote ?
+                    args.push("--host".to_string());
+                    args.push(remote_node.ip.to_string());
+                    args.push("--rpc-port".to_string());
+                    args.push(remote_node.rpc.to_string());
+                    args.push("--zmq-port".to_string());
+                    args.push(remote_node.zmq.to_string());
+                }
+
+                if state.backup_host {
+                    for node in backup_hosts.iter() {
+                        // Add the backup node only if it's not the selected remote node, because it would had already been added
+                        if state.selected_remote_node.is_none()
+                            || state
+                                .selected_remote_node
+                                .as_ref()
+                                .is_some_and(|s| s != node)
+                        {
+                            let ip = if state.ip == "localhost" {
+                                "127.0.0.1"
+                            } else {
+                                &state.ip
+                            };
+                            args.push("--host".to_string());
+                            args.push(ip.to_string());
+                            args.push("--rpc-port".to_string());
+                            args.push(node.port().to_string());
+                            args.push("--zmq-port".to_string());
+                            args.push(node.custom().to_string()); // ZMQ PORT
+                        }
+                    }
+                }
             }
             StartOptionsMode::Advanced => {
+                match state.chain {
+                    P2poolChain::Main => {}
+                    P2poolChain::Mini => args.push("--mini".to_string()),
+                    P2poolChain::Nano => args.push("--nano".to_string()),
+                }
                 // build the argument
                 let ip = if state.ip == "localhost" {
                     "127.0.0.1"
                 } else {
                     &state.ip
                 };
-                args.push("--wallet".to_string());
-                args.push(state.address.clone()); // Wallet
+                args.push("--loglevel".to_string());
+                args.push(state.log_level.to_string()); // Log Level
+                args.push("--out-peers".to_string());
+                args.push(state.out_peers.to_string()); // Out Peers
+                args.push("--in-peers".to_string());
+                args.push(state.in_peers.to_string()); // In Peers            }
                 args.push("--host".to_string());
                 args.push(ip.to_string()); // IP
                 args.push("--rpc-port".to_string());
                 args.push(state.rpc.to_string()); // RPC
                 args.push("--zmq-port".to_string());
                 args.push(state.zmq.to_string()); // ZMQ
-                args.push("--loglevel".to_string());
-                args.push(state.log_level.to_string()); // Log Level
-                args.push("--out-peers".to_string());
-                args.push(state.out_peers.to_string()); // Out Peers
-                args.push("--in-peers".to_string());
-                args.push(state.in_peers.to_string()); // In Peers
-                args.push("--data-api".to_string());
-                args.push(api_path.display().to_string()); // API Path
-                args.push("--local-api".to_string()); // Enable API
-                args.push("--no-color".to_string()); // Remove color escape sequences
-                args.push("--light-mode".to_string()); // Assume user is not using P2Pool to mine.
-                if state.chain == P2poolChain::Mini {
-                    args.push("--mini".to_string());
-                } else if state.chain == P2poolChain::Nano {
-                    args.push("--nano".to_string());
+
+                // Add backup hosts
+                if state.backup_host {
+                    for node in backup_hosts.iter() {
+                        let host = (node.ip(), node.port(), node.custom());
+                        // Add the backup node only if it's not saved in state because it would had already been added
+                        if host != (&state.ip, &state.rpc, &state.zmq) {
+                            let ip = if node.ip() == "localhost" {
+                                "127.0.0.1"
+                            } else {
+                                node.ip()
+                            };
+                            args.push("--host".to_string());
+                            args.push(ip.to_string());
+                            args.push("--rpc-port".to_string());
+                            args.push(node.port().to_string());
+                            args.push("--zmq-port".to_string());
+                            args.push(node.custom().to_string());
+                        }
+                    }
                 }
             }
             StartOptionsMode::Custom => {
-                // Overriding command arguments
                 for arg in state.arguments.split_whitespace() {
                     let arg = if arg == "localhost" { "127.0.0.1" } else { arg };
                     args.push(arg.to_string());
-                }
-            }
-            _ => (),
-        }
-        // Push other nodes if `backup_host`, unless we are in custom args
-        if state.backup_host && mode != StartOptionsMode::Custom {
-            for node in backup_hosts.iter() {
-                let ip = if node.ip() == "localhost" {
-                    "127.0.0.1"
-                } else {
-                    node.ip()
-                };
-                if (node.ip(), node.port(), node.custom()) != (ip, &state.rpc, &state.zmq) {
-                    args.push("--host".to_string());
-                    args.push(node.ip().to_string());
-                    args.push("--rpc-port".to_string());
-                    args.push(node.port().to_string());
-                    args.push("--zmq-port".to_string());
-                    args.push(node.custom().to_string());
                 }
             }
         }
