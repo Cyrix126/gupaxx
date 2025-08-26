@@ -286,7 +286,7 @@ impl<'a> Algorithm<'a> {
 
         // For 1h average, there is 20% margin.
         // Since we calculate the time needed for a exact target and hashrate is a bit variable,
-        // The fast mode could get triggered without being usefull since being a bit under the 1h target is normal
+        // The fast mode could get triggered without being useful since being a bit under the 1h target is normal
         // and still respect the 20% margin. Trigger the fast mode when we are under the 20% of one hour hashrate
         let is_criteria_fulfilled = self.stats.xvb_24h_avg >= target_donation_hashrate
             && self.stats.xvb_1h_avg >= target_donation_hashrate * (1.0 - XVB_SIDE_MARGIN_1H);
