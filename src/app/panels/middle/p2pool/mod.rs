@@ -63,8 +63,8 @@ impl P2pool {
             true,
         );
         egui::ScrollArea::vertical().show(ui, |ui| {
-            let text = &api.lock().unwrap().output;
             ui.group(|ui| {
+                let text = &api.lock().unwrap().output;
                 console(ui, text, &mut self.console_height, ProcessName::P2pool);
                 if self.submenu == SubmenuP2pool::Advanced {
                     ui.separator();
