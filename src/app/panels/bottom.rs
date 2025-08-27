@@ -343,7 +343,7 @@ impl crate::app::App {
                             let mut count = 0;
                             while check_local_outside.get().is_none() {
                                 // a precaution to free the UI from the freeze after 500ms if something wrong happens with the check and it get stuck.
-                                if count == 50 {break}
+                                if count >= 300 {break}
                                 // wait just a little bit with the UI freezing, it should take under 100ms which is too short to be annoying.
                                 sleep!(10);
                                 count += 1;
@@ -369,8 +369,22 @@ impl crate::app::App {
                                         &self.state.node,
                                         &self.state.gupax.absolute_node_path);                                    }
                                     }
+                                } else {
+                                    // if for some reason we were stuck for 3s, we go back to process_running check
+                                    if name.is_process_running(&mut self.helper.lock().unwrap().sys_info.lock().unwrap())  {
+                            error!("Process already running outside: {name}");
+                            self.error_state.set(
+                                PROCESS_OUTSIDE,
+                                ErrorFerris::Error,
+                                ErrorButtons::Okay,
+                            );
+                                } else {
+                                        Helper::start_node(
+                                        &self.helper,
+                                        &self.state.node,
+                                        &self.state.gupax.absolute_node_path);                                    }
                                 }
-                            },
+                                },
                             ProcessName::P2pool => {
                             // check if button to use local node is checked and if the local node is running
                             // It prevents starting p2pool if the node is not ready

@@ -260,16 +260,17 @@ impl Helper {
         let mut child_pty = None;
         let mut stdin = None;
         let mut output_pub = None;
+        // pty on Windows must live as a the started process
+        let pty = portable_pty::native_pty_system();
+        let pair = pty
+            .openpty(portable_pty::PtySize {
+                rows: 100,
+                cols: 1000,
+                pixel_width: 0,
+                pixel_height: 0,
+            })
+            .unwrap();
         if ports_detected_local_node.is_none() {
-            let pty = portable_pty::native_pty_system();
-            let pair = pty
-                .openpty(portable_pty::PtySize {
-                    rows: 100,
-                    cols: 1000,
-                    pixel_width: 0,
-                    pixel_height: 0,
-                })
-                .unwrap();
             // 4. Spawn PTY read thread
             debug!("Node | Spawning PTY read thread...");
             let reader = pair.master.try_clone_reader().unwrap(); // Get STDOUT/STDERR before moving the PTY
@@ -607,9 +608,9 @@ async fn check_local_node_outside(tx: Arc<OnceLock<CheckLocalOutsideNode>>) {
         && !set_ports.is_empty()
     {
         let ports = set_ports.iter().cloned().collect::<Vec<u16>>();
-        let timeout = Duration::from_millis(100);
-        if let Some(port_zmq) = is_zmq_capable(SOCKET_MONERO_LOCAL_OUTSIDE, &ports, timeout).await
-            && let Some(port_rpc) = is_rpc_capable(
+        let timeout = Duration::from_millis(1500);
+        if let Some(zmq) = is_zmq_capable(SOCKET_MONERO_LOCAL_OUTSIDE, &ports, timeout).await {
+            if let Some(rpc) = is_rpc_capable(
                 SOCKET_MONERO_LOCAL_OUTSIDE,
                 18081,
                 &ports,
@@ -617,13 +618,15 @@ async fn check_local_node_outside(tx: Arc<OnceLock<CheckLocalOutsideNode>>) {
                 &Client::new(),
             )
             .await
-        {
-            // local outside node is compatible
-            tx.set(CheckLocalOutsideNode::Valid(port_rpc, port_zmq))
-                .unwrap();
+            {
+                tx.set(CheckLocalOutsideNode::Valid(rpc, zmq)).unwrap();
+            } else {
+                tx.set(CheckLocalOutsideNode::NonValid).unwrap();
+                warn!("the detected node does not have a valid zmq port/response");
+            }
         } else {
-            warn!("this node can not be used for p2pool");
             tx.set(CheckLocalOutsideNode::NonValid).unwrap();
+            warn!("the detected node does not have a valid rpc port/response");
         }
     } else {
         tx.set(CheckLocalOutsideNode::None).unwrap();
