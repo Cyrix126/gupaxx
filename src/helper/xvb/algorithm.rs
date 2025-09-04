@@ -26,6 +26,7 @@ use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
 use crate::helper::xvb::current_controllable_hr;
 use crate::miscs::output_console;
 use crate::miscs::output_console_without_time;
+use crate::utils::constants::BLOCK_PPLNS_WINDOW_MAIN_MAX;
 use crate::utils::constants::BLOCK_PPLNS_WINDOW_NANO;
 use crate::utils::constants::SECOND_PER_BLOCK_P2POOL_MAIN;
 use crate::utils::constants::SECOND_PER_BLOCK_P2POOL_MINI;
@@ -41,9 +42,8 @@ use reqwest_middleware::ClientWithMiddleware as Client;
 use tokio::time::sleep;
 
 use crate::{
-    BLOCK_PPLNS_WINDOW_MAIN, BLOCK_PPLNS_WINDOW_MINI, XVB_ROUND_DONOR_MEGA_MIN_HR,
-    XVB_ROUND_DONOR_MIN_HR, XVB_ROUND_DONOR_VIP_MIN_HR, XVB_ROUND_DONOR_WHALE_MIN_HR,
-    XVB_TIME_ALGO,
+    BLOCK_PPLNS_WINDOW_MINI, XVB_ROUND_DONOR_MEGA_MIN_HR, XVB_ROUND_DONOR_MIN_HR,
+    XVB_ROUND_DONOR_VIP_MIN_HR, XVB_ROUND_DONOR_WHALE_MIN_HR, XVB_TIME_ALGO,
     helper::{
         p2pool::PubP2poolApi,
         xrig::{update_xmrig_config, xmrig::PubXmrigApi},
@@ -197,11 +197,14 @@ impl<'a> Algorithm<'a> {
             "p2pool external hashrate({p2pool_external_hashrate}) = p2ool_total_hashrate({p2pool_total_hashrate}) - p2pool_avg_last_hour_hashrate({p2pool_avg_last_hour_hashrate})"
         );
 
+        let difficulty_p2pool = gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64;
+        let pws_dynamic = gui_api_p2pool.lock().unwrap().window_length_blocks;
         let share_min_hashrate = Self::minimum_hashrate_share(
-            gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64,
+            difficulty_p2pool,
             state_p2pool.chain.clone(),
             p2pool_external_hashrate,
             p2pool_buffer,
+            pws_dynamic,
         );
 
         let spareable_hashrate = hashrate_xmrig - share_min_hashrate;
@@ -543,11 +546,12 @@ impl<'a> Algorithm<'a> {
         chain: P2poolChain,
         p2pool_external_hashrate: f32,
         p2pool_buffer: i8,
+        pws_dynamic: Option<u64>,
     ) -> f32 {
         let pws;
         let second_per_block = match chain {
             P2poolChain::Main => {
-                pws = BLOCK_PPLNS_WINDOW_MAIN;
+                pws = pws_dynamic.unwrap_or(BLOCK_PPLNS_WINDOW_MAIN_MAX);
                 SECOND_PER_BLOCK_P2POOL_MAIN
             }
             P2poolChain::Mini => {

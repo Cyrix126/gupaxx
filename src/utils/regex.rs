@@ -247,6 +247,17 @@ pub fn estimated_hr(s: &str) -> Option<f32> {
     None
 }
 
+pub fn pplns_window_nb_blocks(l: &str) -> Option<u64> {
+    static LINE_SHARE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"Your shares               = (?P<nb>\d+) blocks").unwrap());
+    if let Some(captures) = LINE_SHARE.captures(l)
+        && let Some(blocks) = captures.name("nb")
+        && let Ok(nb) = blocks.as_str().parse::<u64>()
+    {
+        return Some(nb);
+    }
+    None
+}
 pub fn contains_node(l: &str) -> bool {
     static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"(Monero node|host )").unwrap());
     LINE_SHARE.is_match(l)
@@ -270,6 +281,11 @@ pub fn contains_statuscommand(l: &str) -> bool {
 pub fn contains_yourshare(l: &str) -> bool {
     static LINE_SHARE: Lazy<Regex> =
         Lazy::new(|| Regex::new(r"^Your shares               = ").unwrap());
+    LINE_SHARE.is_match(l)
+}
+pub fn contains_window_nb_blocks(l: &str) -> bool {
+    static LINE_SHARE: Lazy<Regex> =
+        Lazy::new(|| Regex::new(r"^PPLNS window              = ").unwrap());
     LINE_SHARE.is_match(l)
 }
 pub fn contains_yourhashrate(l: &str) -> bool {

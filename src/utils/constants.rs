@@ -594,14 +594,15 @@ pub const XVB_DONATION_LEVEL_MEGA_DONOR_HELP: &str =
 
 // Unknown Data, replace HumanNumlber::unknown()
 pub const UNKNOWN_DATA: &str = "???";
-// Time PPLNS WINDOW in seconds
-// it is an estimation based on number of block in a pplns window and block time (10s). The difficulty of the network should adapt to get close to this value.
-pub const BLOCK_PPLNS_WINDOW_MAIN: u64 = 363;
+// MAIN chain PPLNS window has a dynamic number of block based on the frequency and size of payouts
+pub const BLOCK_PPLNS_WINDOW_MAIN_MAX: u64 = 2160;
 pub const BLOCK_PPLNS_WINDOW_MINI: u64 = 2160;
 pub const BLOCK_PPLNS_WINDOW_NANO: u64 = 2160;
 pub const SECOND_PER_BLOCK_P2POOL_MAIN: u64 = 10;
 pub const SECOND_PER_BLOCK_P2POOL_MINI: u64 = 10;
 pub const SECOND_PER_BLOCK_P2POOL_NANO: u64 = 30;
+// Time PPLNS WINDOW in seconds
+// it is an estimation based on number of block in a pplns window and block time (10s). The difficulty of the network should adapt to get close to this value.
 // pub const TIME_PPLNS_WINDOW_MINI: Duration = Duration::from_secs(BLOCK_PPLNS_WINDOW_MINI * SECOND_PER_BLOCK_P2POOL);
 // pub const TIME_PPLNS_WINDOW_MAIN: Duration = Duration::from_secs(BLOCK_PPLNS_WINDOW_MAIN * SECOND_PER_BLOCK_P2POOL);
 pub const PROCESS_OUTSIDE: &str =

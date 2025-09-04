@@ -43,7 +43,9 @@ use crate::regex::contains_zmq_failure;
 use crate::regex::estimated_hr;
 use crate::regex::nb_current_shares;
 use crate::utils::regex::contains_node;
+use crate::utils::regex::contains_window_nb_blocks;
 use crate::utils::regex::p2pool_monero_node;
+use crate::utils::regex::pplns_window_nb_blocks;
 use crate::{
     constants::*,
     disk::gupax_p2pool_api::GupaxP2poolApi,
@@ -157,6 +159,11 @@ impl Helper {
                             "P2pool | PTY Getting data from status: Lines contains Your shares but no value found: {line}"
                         );
                     }
+                }
+                if contains_window_nb_blocks(&line)
+                    && let Some(nb_blocks) = pplns_window_nb_blocks(&line)
+                {
+                    gui_api.lock().unwrap().window_length_blocks = Some(nb_blocks);
                 }
                 if contains_end_status(&line) {
                     // end of status
@@ -1000,6 +1007,7 @@ pub struct PubP2poolApi {
     pub node_connected: bool,
     pub prefer_local_node: bool,
     pub current_node: Option<NodeString>,
+    pub window_length_blocks: Option<u64>,
 }
 
 impl Default for PubP2poolApi {
@@ -1057,6 +1065,7 @@ impl PubP2poolApi {
             prefer_local_node: true,
             fails_zmq_since: None,
             current_node: None,
+            window_length_blocks: None,
         }
     }
 
@@ -1078,6 +1087,7 @@ impl PubP2poolApi {
             sidechain_ehr: std::mem::take(&mut gui_api.sidechain_ehr),
             prefer_local_node: std::mem::take(&mut gui_api.prefer_local_node),
             current_node: std::mem::take(&mut gui_api.current_node),
+            window_length_blocks: std::mem::take(&mut gui_api.window_length_blocks),
             ..pub_api.clone()
         };
     }
