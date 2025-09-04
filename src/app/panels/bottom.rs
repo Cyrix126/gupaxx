@@ -670,8 +670,10 @@ impl crate::app::App {
                 if !Regexes::addr_ok(&self.state.p2pool.address) {
                     return Err(format!("Error: {P2POOL_ADDRESS}"));
                 }
-                // check if a remote node is selected if button unchecked
-                if !self.state.p2pool.local_node && self.state.p2pool.selected_remote_node.is_none()
+                // check if a remote node is selected if button unchecked and not in advanced mode
+                if !self.state.p2pool.local_node
+                    && self.state.p2pool.selected_remote_node.is_none()
+                    && self.state.p2pool.submenu != SubmenuP2pool::Advanced
                 {
                     return Err("Error: no Node for p2pool has been found.\nClick on the button to start finding one or check your connection.\nOtherwise you can use a local Node instead".to_string());
                 }
