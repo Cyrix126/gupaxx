@@ -2459,7 +2459,7 @@ dependencies = [
 
 [[package]]
 name = "gupaxx"
-version = "1.11.1"
+version = "1.11.3"
 dependencies = [
  "anyhow",
  "benri",
