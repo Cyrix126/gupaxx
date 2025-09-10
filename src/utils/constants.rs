@@ -16,7 +16,7 @@
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 pub const GUPAX_VERSION: &str = concat!("v", env!("CARGO_PKG_VERSION")); // e.g: v1.0.0
-pub const P2POOL_VERSION: &str = "v4.10";
+pub const P2POOL_VERSION: &str = "v4.10.1";
 pub const XMRIG_VERSION: &str = "v6.24.0";
 pub const XMRIG_PROXY_VERSION: &str = "v6.24.0";
 pub const NODE_VERSION: &str = "v18.4.1";
