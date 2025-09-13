@@ -25,7 +25,6 @@ use strum::EnumCount;
 
 use crate::app::panels::middle::common::console::console;
 use crate::app::panels::middle::common::header_tab::header_tab;
-use crate::app::panels::middle::common::state_edit_field::StateTextEdit;
 use crate::app::panels::middle::common::toggle::toggle_ui_compact;
 use crate::disk::state::{ManualDonationLevel, ManualDonationMetric, XvbMode};
 use crate::helper::ProcessName;
@@ -37,10 +36,10 @@ use crate::miscs::height_txt_before_button;
 use crate::utils::constants::{
     ORANGE, XVB_DONATED_1H_FIELD, XVB_DONATED_24H_FIELD, XVB_DONATION_LEVEL_DONOR_HELP,
     XVB_DONATION_LEVEL_MEGA_DONOR_HELP, XVB_DONATION_LEVEL_VIP_DONOR_HELP,
-    XVB_DONATION_LEVEL_WHALE_DONOR_HELP, XVB_FAILURE_FIELD, XVB_HELP, XVB_HERO_SELECT,
-    XVB_MANUAL_POOL, XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP, XVB_MANUAL_SLIDER_MANUAL_XVB_HELP,
+    XVB_DONATION_LEVEL_WHALE_DONOR_HELP, XVB_FAILURE_FIELD, XVB_HERO_SELECT, XVB_MANUAL_POOL,
+    XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP, XVB_MANUAL_SLIDER_MANUAL_XVB_HELP,
     XVB_MODE_MANUAL_DONATION_LEVEL_HELP, XVB_MODE_MANUAL_P2POOL_HELP, XVB_MODE_MANUAL_XVB_HELP,
-    XVB_ROUND_TYPE_FIELD, XVB_TOKEN_LEN, XVB_URL_RULES, XVB_WINNER_FIELD,
+    XVB_ROUND_TYPE_FIELD, XVB_URL_RULES, XVB_WINNER_FIELD,
 };
 use crate::utils::regex::Regexes;
 use crate::{XVB_MINING_ON_FIELD, XVB_P2POOL_BUFFER, XVB_SIDECHAIN};
@@ -87,13 +86,8 @@ impl crate::disk::state::Xvb {
                 let text = &api.lock().unwrap().output;
                 console(ui, text, &mut self.console_height, ProcessName::Xvb);
             });
-            // input token
             ui.add_space(SPACE);
             ui.horizontal(|ui| {
-                ui.group(|ui|{
-                    ui.style_mut().override_text_valign = Some(Align::Center);
-                    self.field_token(ui);
-                });
 
         // --------------------------- XVB Simple -------------------------------------------
         if self.simple {
@@ -358,15 +352,6 @@ if priv_stats.win_current {
                 });
                     // currently mining on
                 });
-    }
-    fn field_token(&mut self, ui: &mut Ui) {
-        StateTextEdit::new(ui)
-            .help_msg(XVB_HELP)
-            .max_ch(XVB_TOKEN_LEN as u8)
-            .text_edit_width_same_as_max_ch(ui)
-            .description(" Token ")
-            .validations(&[|x| x.parse::<u32>().is_ok() && x.len() == XVB_TOKEN_LEN])
-            .build(ui, &mut self.token);
     }
 }
 fn stat_box(ui: &mut Ui, title: &str, value: &str, column_height: f32) {

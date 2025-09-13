@@ -532,7 +532,6 @@ pub const PROXY_API_PORT_DEFAULT: u16 = 18089;
 pub const PROXY_PORT_DEFAULT: u16 = 3355;
 
 // XvB
-pub const XVB_HELP: &str = "You need to register an account by clicking on the link above to get your token with the same p2pool XMR address you use for payment.";
 pub const XVB_MANUAL_SLIDER_MANUAL_XVB_HELP: &str = "Set the hashrate amount to donate to XvB manually, The remaining hashrate will be sent to p2pool. If the selected hashrate is more than your xmrig hashrate it will be overwritten";
 pub const XVB_MANUAL_SLIDER_MANUAL_P2POOL_HELP: &str = "Set the hashrate amount to keep on p2pool manually, The remaining hasrate will be donated to xvb. If the selected hashrate is more than your xmrig hashrate it will be overwritten ";
 pub const XVB_URL: &str = "https://xmrvsbeast.com";
@@ -558,7 +557,6 @@ pub const XVB_SIDE_MARGIN_1H: f32 = 0.2;
 pub const XVB_TIME_ALGO: u32 = 600;
 // minimum time to send to XvB if any
 pub const XVB_MIN_TIME_SEND: u32 = 3;
-pub const XVB_TOKEN_LEN: usize = 9;
 pub const XVB_HERO_SELECT: &str = "Donate as much as possible while keeping a share on p2pool, increases the odds of your round winning\nWhen modified, the algorithm will use the new choice at the next decision.";
 pub const XVB_FAILURE_FIELD: &str = "Failures";
 pub const XVB_DONATED_1H_FIELD: &str = "Donated last hour";

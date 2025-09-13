@@ -95,15 +95,13 @@ pub struct XvbPrivStats {
 }
 
 impl XvbPrivStats {
-    pub async fn request_api(client: &Client, address: &str, token: &str) -> anyhow::Result<Self> {
+    pub async fn request_api(client: &Client, address: &str) -> anyhow::Result<Self> {
         let resp = client
             .get(
                 [
                     XVB_URL,
                     "/cgi-bin/p2pool_bonus_history_gupaxx_api.cgi?address=",
                     address,
-                    "&token=",
-                    token,
                 ]
                 .concat(),
             )
@@ -124,7 +122,7 @@ impl XvbPrivStats {
                 }
             },
             StatusCode::UNPROCESSABLE_ENTITY => {
-                bail!("the token is invalid for this xmr address.")
+                bail!("the address is not registered")
             }
             _ => bail!("The status of the response is not expected"),
         }
@@ -132,12 +130,11 @@ impl XvbPrivStats {
     pub async fn update_stats(
         client: &Client,
         address: &str,
-        token: &str,
         pub_api: &Arc<Mutex<PubXvbApi>>,
         gui_api: &Arc<Mutex<PubXvbApi>>,
         process: &Arc<Mutex<Process>>,
     ) {
-        match XvbPrivStats::request_api(client, address, token).await {
+        match XvbPrivStats::request_api(client, address).await {
             Ok(new_data) => {
                 debug!("XvB Watchdog | HTTP API request OK");
                 pub_api.lock().unwrap().stats_priv.fails = new_data.fails;

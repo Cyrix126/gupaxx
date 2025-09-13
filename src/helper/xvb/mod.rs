@@ -131,7 +131,7 @@ impl Helper {
         gui_api.lock().unwrap().output.clear();
         // 2. Set process state
         // XvB has not yet decided if it can continue.
-        // it could fail if XvB server is offline or start partially if token/address is invalid or if p2pool or xmrig are offline.
+        // it could fail if XvB server is offline or start partially if address is invalid or if p2pool or xmrig are offline.
         // this state will be received accessed by the UI directly and put the status on yellow.
         info!("XvB | Setting process state...");
         {
@@ -140,7 +140,7 @@ impl Helper {
             lock.signal = ProcessSignal::None;
             lock.start = std::time::Instant::now();
         }
-        // verify if token and address are existent on XvB server
+        // verify if address is existent on XvB server
 
         info!("XvB | spawn watchdog");
         thread::spawn(
@@ -208,7 +208,6 @@ impl Helper {
             process_xp,
             process,
             state_p2pool,
-            state_xvb,
         )
         .await;
         let mut xp_alive = false;
@@ -246,7 +245,7 @@ impl Helper {
                     msg_retry_done = false;
                     *retry.lock().unwrap() = false;
                 }
-                // verify if p2pool and xmrig are running, else XvB must be reloaded with another token/address to start verifying the other process.
+                // verify if p2pool and xmrig are running, else XvB must be reloaded with another address to start verifying the other process.
                 if check_state_outcauses_xvb(
                     &client,
                     gui_api,
@@ -332,7 +331,7 @@ impl Helper {
                                 XvbPubStats::update_stats(&client, &gui_api, &pub_api, &process).await;
                                     *last_request.lock().unwrap() = Instant::now();
                                 }
-                                // private stats needs valid token and address.
+                                // private stats needs a valid address.
                                 // other stats needs everything to be alive, so just require alive here for now.
                                 // maybe later differentiate to add a way to get private stats without running the algo ?
                                 if process.lock().unwrap().state == ProcessState::Alive {
@@ -344,7 +343,7 @@ impl Helper {
                                     debug!("XvB Watchdog | Attempting HTTP private API request...");
                                     // reload private stats, it send a signal if error that will be captured on the upper thread.
                                     XvbPrivStats::update_stats(
-                                        &client, &state_p2pool.address, &state_xvb.token, &pub_api, &gui_api, &process,
+                                        &client, &state_p2pool.address, &pub_api, &gui_api, &process,
                                     )
                                     .await;
                                     *last_request.lock().unwrap() = Instant::now();
@@ -517,20 +516,16 @@ async fn check_conditions_for_start(
     process_xp: &Arc<Mutex<Process>>,
     process_xvb: &Arc<Mutex<Process>>,
     state_p2pool: &crate::disk::state::P2pool,
-    state_xvb: &crate::disk::state::Xvb,
 ) {
-    let state = if let Err(err) =
-        XvbPrivStats::request_api(client, &state_p2pool.address, &state_xvb.token).await
-    {
-        info!("XvB | verify address and token");
-        // send to console: token non existent for address on XvB server
+    let state = if let Err(err) = XvbPrivStats::request_api(client, &state_p2pool.address).await {
+        info!("XvB | verify address");
         warn!(
-            "Xvb | Start ... Partially failed because token and associated address are not existent on XvB server: {err}\n"
+            "Xvb | Start ... Partially failed because address is not registered on XvB server: {err}\n"
         );
         output_console(
             &mut gui_api.lock().unwrap().output,
             &format!(
-                "Token and associated address are not valid on XvB API.\nCheck if you are registered.\nError: {err}"
+                "Address is not valid on XvB API.\nCheck if you are registered.\nError: {err}"
             ),
             ProcessName::Xvb,
         );
@@ -566,7 +561,7 @@ async fn check_conditions_for_start(
         ProcessState::Middle
     };
     if state != ProcessState::Middle {
-        // while waiting for xmrig and p2pool or getting right address/token, it can get public stats
+        // while waiting for xmrig and p2pool or getting right address, it can get public stats
         info!("XvB | print to console state");
         output_console(
             &mut gui_api.lock().unwrap().output,

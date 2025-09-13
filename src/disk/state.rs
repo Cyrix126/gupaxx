@@ -495,7 +495,6 @@ impl Default for XmrigProxy {
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
 pub struct Xvb {
     pub simple: bool,
-    pub token: String,
     pub simple_hero_mode: bool,
     pub mode: XvbMode,
     pub manual_amount_raw: f64,
@@ -724,7 +723,6 @@ impl Default for Xvb {
     fn default() -> Self {
         Self {
             simple: true,
-            token: String::with_capacity(9),
             simple_hero_mode: Default::default(),
             mode: Default::default(),
             manual_amount_raw: Default::default(),
