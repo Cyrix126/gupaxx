@@ -488,7 +488,7 @@ pub const NODE_API_BIND: &str = "bind address of RPC API";
 pub const NODE_API_PORT: &str = "RPC API listen port";
 pub const NODE_ZMQ_BIND: &str = "bind address of ZMQ API";
 pub const NODE_ZMQ_PORT: &str = "ZMQ API listen port";
-pub const NODE_FULL_MEM: &str = "Use 2GB of RAM insteal of 256MB for faster block verification";
+pub const NODE_FULL_MEM: &str = "Use 2GB of RAM instead of 256MB for faster block verification";
 // XMRig
 pub const XMRIG_API_PORT_DEFAULT: u16 = 18088;
 pub const XMRIG_SIMPLE: &str = r#"Use simple XMRig settings:
