@@ -354,7 +354,7 @@ impl Helper {
                                     debug!("XvB | Round type: {round:#?}");
                                     pub_api.lock().unwrap().stats_priv.round_participate = round;
                                     // verify if we are the winner of the current round
-                                    let win_current = &pub_api.lock().unwrap().stats_pub.winner == Helper::head_tail_of_monero_address(&state_p2pool.address).as_str();                                    pub_api.lock().unwrap().stats_priv.win_current = win_current;
+                                    let win_current = pub_api.lock().unwrap().stats_pub.winner == Helper::head_tail_of_monero_address(&state_p2pool.address).as_str();                                    pub_api.lock().unwrap().stats_priv.win_current = win_current;
                                 }
                                 let hashrate = current_controllable_hr(xp_alive, &gui_api_xp, &gui_api_xmrig);
                                 let difficulty_data_is_ready = gui_api_p2pool.lock().unwrap().p2pool_difficulty_u64 > 100_000;
