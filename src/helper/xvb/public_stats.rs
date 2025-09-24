@@ -36,7 +36,9 @@ use super::{PubXvbApi, rounds::XvbRound};
 #[allow(dead_code)] // because deserialize doesn't use all the fields
 #[derive(Debug, Clone, Default, Deserialize)]
 pub struct XvbPubStats {
-    pub time_remain: u32, // remaining time of round in minutes
+    // remaining time of round in minutes
+    // this value can be negative if the round did not yet found a share in the main sidechain.
+    pub time_remain: i32,
     pub bonus_hr: f64,
     pub donate_hr: f64,      // donated hr from all donors
     pub donate_miners: u32,  // numbers of donors
