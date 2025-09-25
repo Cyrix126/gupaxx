@@ -116,8 +116,7 @@ impl XvbPrivStats {
                         "XvB Watchdog | Data provided from private API is not deserializ-able.Error: {err}"
                     );
                     bail!(
-                        "Data provided from private API is not deserializ-able.Error: {}",
-                        err
+                        "Data provided from private API is not deserializ-able.Error: {err}"
                     );
                 }
             },

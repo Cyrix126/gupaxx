@@ -574,7 +574,7 @@ impl Update {
             {
                 std::fs::create_dir_all(
                     path.parent()
-                        .ok_or_else(|| anyhow!(format!("{} path failed", name)))?,
+                        .ok_or_else(|| anyhow!(format!("{name} path failed")))?,
                 )?;
             }
             // Move downloaded path into old path
