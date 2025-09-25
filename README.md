@@ -19,7 +19,6 @@ It is intended for end users and offers a friendly and easy user experience.
 * [Guide](#guide) 
 * [XvB Tab](#xvb-tab) 
 	- [Console](#console-of-xvb) 
-	- [Token Input](#token-input) 
 	- [Account stats](#account-stats) 
 * [XvB Raffle](#xvb-raffle-status) 
 * [Other changes](#other-changes) 
@@ -46,7 +45,6 @@ Or watch this video by Anti MoonBoy: https://www.youtube.com/watch?v=8_MOQHYRE1c
 
 4. Input your Monero address in the `P2Pool` tab
 5. Register the same address on [XMRvsBeast](https://xmrvsbeast.com)
-6. Input the token received in the `XvB` Tab
 6. Start `P2Pool`
 7. Start `XMRig`
 8. Start `XvB`
@@ -61,16 +59,14 @@ It will by default send just enough to get to the highest round or, if hero mode
 ![CI](assets/images/xvb_tab.png)
 ### Console of XvB
 The output of the console will show useful information on the status of the XvB process and the decision of the algorithm for every 10 minutes.
-### Token input
-When you registered your XMR payout address, you should have received a token. Please enter this token here.
 ### Account stats
-Account stats about your address on XMRvsBeast can be found here after the process is started with your token provided.
+Account stats about your address on XMRvsBeast can be found here after the process is started.
 
 
 ## XvB Raffle Status
 Gupaxx adds a new column called **XvB Raffle** on the Status Tab in the Process submenu. It displays public statistics of XMRvsBeast, which are available [here](https://xmrvsbeast.com/p2pool).  
 It is refreshed every minute.
-This column will be active if the XvB process is started even partially, it doesn't need the token to be provided.
+This column will be active if the XvB process is started even partially.
 
 ![XvB raffle stats](assets/images/xvb_raffle_stats.png)
 
