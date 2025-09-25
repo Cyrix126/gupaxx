@@ -554,9 +554,10 @@ pub const XVB_NODE_NA: &str = "na.xmrvsbeast.com";
 pub const XVB_URL_RULES: &str = "https://xmrvsbeast.com/p2pool/rules.html";
 // buffer in percentage of HR to have plus the requirement.
 pub const XVB_SIDE_MARGIN_1H: f32 = 0.2;
-pub const XVB_TIME_ALGO: u32 = 600;
+// time is in ms
+pub const XVB_TIME_ALGO: u64 = 60_000;
 // minimum time to send to XvB if any
-pub const XVB_MIN_TIME_SEND: u32 = 3;
+pub const XVB_MIN_TIME_SEND: u64 = 50;
 pub const XVB_HERO_SELECT: &str = "Donate as much as possible while keeping a share on p2pool, increases the odds of your round winning\nWhen modified, the algorithm will use the new choice at the next decision.";
 pub const XVB_FAILURE_FIELD: &str = "Failures";
 pub const XVB_DONATED_1H_FIELD: &str = "Donated last hour";

@@ -64,7 +64,7 @@ pub(crate) async fn algorithm(
     gui_api_p2pool: &Arc<Mutex<PubP2poolApi>>,
     state_p2pool: &crate::disk::state::P2pool,
     share: u32,
-    time_donated: &Arc<Mutex<u32>>,
+    time_donated: &Arc<Mutex<u64>>,
     rig: &str,
     xp_alive: bool,
     p2pool_buffer: i8,
@@ -110,7 +110,7 @@ pub struct Algorithm<'a> {
     gui_api_p2pool: &'a Arc<Mutex<PubP2poolApi>>,
     token_xmrig: &'a str,
     state_p2pool: &'a crate::disk::state::P2pool,
-    time_donated: &'a Arc<Mutex<u32>>,
+    time_donated: &'a Arc<Mutex<u64>>,
     rig: &'a str,
     xp_alive: bool,
     pub stats: Stats,
@@ -136,7 +136,7 @@ pub struct Stats {
     p2pool_external_hashrate: f32,
     share_min_hashrate: f32,
     spareable_hashrate: f32,
-    needed_time_xvb: u32,
+    needed_time_xvb: u64,
     api_url: String,
     msg_xmrig_or_xp: String,
 }
@@ -153,7 +153,7 @@ impl<'a> Algorithm<'a> {
         token_xmrig: &'a str,
         state_p2pool: &'a crate::disk::state::P2pool,
         share: u32,
-        time_donated: &'a Arc<Mutex<u32>>,
+        time_donated: &'a Arc<Mutex<u64>>,
         rig: &'a str,
         xp_alive: bool,
         p2pool_buffer: i8,
@@ -236,7 +236,7 @@ impl<'a> Algorithm<'a> {
             p2pool_external_hashrate,
             share_min_hashrate,
             spareable_hashrate,
-            needed_time_xvb: u32::default(),
+            needed_time_xvb: 0,
             api_url,
             msg_xmrig_or_xp,
         };
@@ -402,8 +402,11 @@ impl<'a> Algorithm<'a> {
     async fn send_all_p2pool(&self) {
         self.target_p2pool_node().await;
 
-        info!("Algorithm | algo sleep for {XVB_TIME_ALGO} seconds while mining on P2pool");
-        sleep(Duration::from_secs(XVB_TIME_ALGO.into())).await;
+        info!(
+            "Algorithm | algo sleep for {} seconds while mining on P2pool",
+            XVB_MIN_TIME_SEND / 1000
+        );
+        sleep(Duration::from_millis(XVB_TIME_ALGO)).await;
         let hashrate = current_controllable_hr(self.xp_alive, self.gui_api_xp, self.gui_api_xmrig);
         self.gui_api_xvb
             .lock()
@@ -416,8 +419,11 @@ impl<'a> Algorithm<'a> {
     async fn send_all_xvb(&self) {
         self.target_xvb_node().await;
 
-        info!("Algorithm | algo sleep for {XVB_TIME_ALGO} seconds while mining on XvB");
-        sleep(Duration::from_secs(XVB_TIME_ALGO.into())).await;
+        info!(
+            "Algorithm | algo sleep for {} seconds while mining on XvB",
+            XVB_TIME_ALGO / 1000
+        );
+        sleep(Duration::from_millis(XVB_TIME_ALGO)).await;
         self.gui_api_xvb
             .lock()
             .unwrap()
@@ -429,10 +435,10 @@ impl<'a> Algorithm<'a> {
     async fn sleep_then_update_node_xmrig(&self) {
         info!(
             "Algorithm | algo sleep for {} seconds while mining on P2pool",
-            XVB_TIME_ALGO - self.stats.needed_time_xvb
+            (XVB_TIME_ALGO - self.stats.needed_time_xvb) as f32 / 1000.0
         );
-        sleep(Duration::from_secs(
-            (XVB_TIME_ALGO - self.stats.needed_time_xvb).into(),
+        sleep(Duration::from_millis(
+            XVB_TIME_ALGO - self.stats.needed_time_xvb,
         ))
         .await;
 
@@ -449,21 +455,21 @@ impl<'a> Algorithm<'a> {
 
         info!(
             "Algorithm | algo sleep for {} seconds while mining on XvB",
-            self.stats.needed_time_xvb
+            self.stats.needed_time_xvb as f32 / 1000.0
         );
-        sleep(Duration::from_secs(self.stats.needed_time_xvb.into())).await;
+        sleep(Duration::from_millis(self.stats.needed_time_xvb)).await;
         // HR could be not the same now as the avg sent the last 10mn, will be replaced later by a better history of HR
         let hashrate = current_controllable_hr(self.xp_alive, self.gui_api_xp, self.gui_api_xmrig);
+        let hashes = hashrate
+            * ((XVB_TIME_ALGO as f32 - self.stats.needed_time_xvb as f32) / XVB_TIME_ALGO as f32);
+        // dbg
+        info!("hashes p2pool sample: {hashes}");
         self.gui_api_xvb
             .lock()
             .unwrap()
             .p2pool_sent_last_hour_samples
             .0
-            .push_back(
-                hashrate
-                    * ((XVB_TIME_ALGO as f32 - self.stats.needed_time_xvb as f32)
-                        / XVB_TIME_ALGO as f32),
-            );
+            .push_back(hashes);
     }
 
     pub fn get_target_donation_hashrate(&self) -> f32 {
@@ -618,7 +624,7 @@ impl<'a> Algorithm<'a> {
             &mut self.gui_api_xvb.lock().unwrap().output,
             &format!(
                 "There is a share in p2pool and XvB average is achieved. Sending {} seconds to XvB!",
-                self.stats.needed_time_xvb
+                self.stats.needed_time_xvb as f32 / 1000.0
             ),
             crate::helper::ProcessName::Xvb,
         );
@@ -629,14 +635,14 @@ impl<'a> Algorithm<'a> {
             std::cmp::Ordering::Equal => {
                 info!(
                     "Algorithm | Needed time: {}s to send on XvB, sending all HR to p2pool",
-                    self.stats.needed_time_xvb
+                    self.stats.needed_time_xvb as f32 / 1000.0
                 );
                 self.send_all_p2pool().await;
             }
             std::cmp::Ordering::Greater => {
                 info!(
                     "Algorithm | There is a share in p2pool and XvB average is achieved. Sending  {} seconds to XvB!",
-                    self.stats.needed_time_xvb
+                    self.stats.needed_time_xvb as f32 / 1000.0
                 );
                 self.target_p2pool_node().await;
                 self.sleep_then_update_node_xmrig().await;
@@ -650,7 +656,7 @@ impl<'a> Algorithm<'a> {
     pub async fn run(&mut self) {
         output_console(
             &mut self.gui_api_xvb.lock().unwrap().output,
-            "Algorithm of HR distribution started for the next 10 minutes.",
+            "Algorithm of HR distribution started for one minute.",
             crate::helper::ProcessName::Xvb,
         );
 
@@ -684,17 +690,17 @@ impl<'a> Algorithm<'a> {
         )
     }
     // time needed to send on XvB get to the targeted doner round
-    fn get_needed_time_xvb(target_donation_hashrate: f32, hashrate_xmrig: f32) -> u32 {
+    fn get_needed_time_xvb(target_donation_hashrate: f32, hashrate_xmrig: f32) -> u64 {
         // the ceil() is required since we dont' send half seconds, we take the value above to be sure to not undersent.
         // It specially makes a difference for whales for whom one second can mean a lot of hashrate.
         let needed_time =
-            ((target_donation_hashrate / hashrate_xmrig) * (XVB_TIME_ALGO as f32)).ceil();
+            (target_donation_hashrate / hashrate_xmrig) * (XVB_TIME_ALGO as f32).ceil();
 
         info!(
-            "Algorithm | Calculating... needed time for XvB ({needed_time}seconds)=target_donation_hashrate({target_donation_hashrate})/hashrate_xmrig({hashrate_xmrig})*XVB_TIME_ALGO({XVB_TIME_ALGO})"
+            "Algorithm | Calculating... needed time for XvB ({needed_time}milis)=(target_donation_hashrate({target_donation_hashrate})/hashrate_xmrig({hashrate_xmrig})/1000)*XVB_TIME_ALGO({XVB_TIME_ALGO})"
         );
         // never go above time of algo
         // it could be the case if manual donation level is set
-        needed_time.clamp(0.0, XVB_TIME_ALGO as f32) as u32
+        needed_time.clamp(0.0, XVB_TIME_ALGO as f32) as u64
     }
 }

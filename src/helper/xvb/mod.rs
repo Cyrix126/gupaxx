@@ -462,7 +462,7 @@ pub struct PubXvbApi {
 pub struct SamplesAverageHour(BoundedVecDeque<f32>);
 impl Default for SamplesAverageHour {
     fn default() -> Self {
-        let capacity = (3600 / XVB_TIME_ALGO) as usize;
+        let capacity = (3600 / (XVB_TIME_ALGO / 1000)) as usize;
         let mut vec = BoundedVecDeque::new(capacity);
         for _ in 0..capacity {
             vec.push_back(0.0f32);
@@ -930,7 +930,7 @@ fn update_indicator_algo(
     is_algo_finished: bool,
     process: &Arc<Mutex<Process>>,
     pub_api: &Arc<Mutex<PubXvbApi>>,
-    time_donated: u32,
+    time_donated: u64,
     last_algorithm: &Arc<Mutex<Instant>>,
 ) {
     if is_algo_started_once
@@ -943,20 +943,25 @@ fn update_indicator_algo(
                 // algo is mining on p2pool but will switch to XvB after
                 // show time remaining on p2pool
                 // todo: debug and fix brief 0s
-                pub_api.lock().unwrap().stats_priv.time_switch_pool = XVB_TIME_ALGO
-                    .checked_sub(last_algorithm.lock().unwrap().elapsed().as_secs() as u32)
+                // We want to show in seconds as we do not refresh the UI fast enough for milis for performance reasons
+                pub_api.lock().unwrap().stats_priv.time_switch_pool = (XVB_TIME_ALGO
+                    .checked_sub(last_algorithm.lock().unwrap().elapsed().as_millis() as u64)
                     .unwrap_or_default()
                     .checked_sub(time_donated)
-                    .unwrap_or_default();
+                    .unwrap_or_default()
+                    / 1000)
+                    as u32;
                 "time until switch to mining on XvB".to_string()
             }
             _ => {
                 // algo is mining on XvB or complelty mining on p2pool.
                 // show remaining time before next decision of algo
                 // because time of last algorithm could depass a little bit XVB_TIME_ALGO before next run, check the sub.
-                pub_api.lock().unwrap().stats_priv.time_switch_pool = XVB_TIME_ALGO
-                    .checked_sub(last_algorithm.lock().unwrap().elapsed().as_secs() as u32)
-                    .unwrap_or_default();
+                pub_api.lock().unwrap().stats_priv.time_switch_pool = (XVB_TIME_ALGO
+                    .checked_sub(last_algorithm.lock().unwrap().elapsed().as_millis() as u64)
+                    .unwrap_or_default()
+                    / 1000)
+                    as u32;
                 "time until next decision of algorithm".to_string()
             }
         };
