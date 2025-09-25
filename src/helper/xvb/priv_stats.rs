@@ -115,9 +115,7 @@ impl XvbPrivStats {
                     error!(
                         "XvB Watchdog | Data provided from private API is not deserializ-able.Error: {err}"
                     );
-                    bail!(
-                        "Data provided from private API is not deserializ-able.Error: {err}"
-                    );
+                    bail!("Data provided from private API is not deserializ-able.Error: {err}");
                 }
             },
             StatusCode::UNPROCESSABLE_ENTITY => {
