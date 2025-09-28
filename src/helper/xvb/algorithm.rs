@@ -644,7 +644,9 @@ impl<'a> Algorithm<'a> {
                     "Algorithm | There is a share in p2pool and XvB average is achieved. Sending  {} seconds to XvB!",
                     self.stats.needed_time_xvb as f32 / 1000.0
                 );
-                self.target_p2pool_node().await;
+                if self.stats.needed_time_xvb < XVB_TIME_ALGO {
+                    self.target_p2pool_node().await;
+                }
                 self.sleep_then_update_node_xmrig().await;
             }
             std::cmp::Ordering::Less => {
