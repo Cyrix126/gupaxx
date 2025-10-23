@@ -1,5 +1,5 @@
 #!/usr/bin/env bash 
-## to be executed once you get zip files containing binairies from github CI and put them in /tmp/gupaxx_*
+## to be executed once you get zip files containing binaries from github CI and put them in /tmp/gupaxx_*
 
 [[ -d skel ]]; check "skel"
 [[ -f linux.zip ]]; check "linux zip"
