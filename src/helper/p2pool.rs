@@ -410,7 +410,7 @@ impl Helper {
         let simple = state.submenu != SubmenuP2pool::Advanced;
         if simple {
             *helper.lock().unwrap().img_p2pool.lock().unwrap() = ImgP2pool {
-                chain: state.chain.to_string(),
+                chain: P2poolChain::Nano.to_string(),
                 address: Self::head_tail_of_monero_address(&state.address),
                 out_peers: "10".to_string(),
                 in_peers: "10".to_string(),
