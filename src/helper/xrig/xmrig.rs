@@ -642,9 +642,24 @@ impl Helper {
                 && status.success()
             {
                 info!("Xmrig | wmic command successful")
+            }
+            // Fallback to PowerShell (Windows 7+)
+            else if let Ok(mut child) = std::process::Command::new("powershell")
+                .creation_flags(0x08000000)
+                .args([
+                    "-NoProfile",
+                    "-NonInteractive",
+                    "-Command",
+                    "Get-Process -Name xmrig -ErrorAction SilentlyContinue | ForEach-Object { $_.PriorityClass = 'BelowNormal' }"
+                ])
+                .spawn()
+                && let Ok(status) = child.wait()
+                && status.success()
+            {
+                info!("Xmrig | PowerShell command successful");
             } else {
                 warn!(
-                    "Xmrig | wmic command unsuccessful, you might experience freeze with xmrig taking all the cpu time."
+                    "Xmrig | Unable to set priority. You might experience the GUI freezing with xmrig taking all the cpu time."
                 )
             }
         }
