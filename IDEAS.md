@@ -41,6 +41,8 @@ At first start, a mode is suggested for very noob users. It would only shows the
 ### Use remote node while syncing local node
 [Done](https://github.com/Cyrix126/gupaxx/commit/075beddea19b3f09e1e7b2327e235814fe588520)  
 To reduce the time to get the first shares. No need to wait for the monero node to be synced.
+### Notifications
+Alert the user of event, like a new payout or a disconnection, by desktop notification or email/push notifications
 
 ### Better UI
 #### Do not re-ask password if not needed
