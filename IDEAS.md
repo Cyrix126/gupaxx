@@ -86,7 +86,8 @@ Gupaxx could add support for Linux ARM64 since both P2Pool and XMRig can compile
 A simple script or a small binary could be made to reproduce the algorithm who would take args for every other needed programs.
 This script would need arguments to know how to control XMRig/XMRig-Proxy and where to watch P2Pool data plus the XvB token and XMR address.
 ### Web UI
-To be able to control and watch Gupaxx from another device, a daemon mode could be built with a web UI front-end.
+To be able to control and watch Gupaxx from another device, a daemon mode could be built with a web UI front-end. This web UI can also be a web app to be used on mobile, and send push notifications like the desktop notifications.
+Gupaxx on desktop can provide a qr code to give the address and authentication data.
 ### Refactor size of text
 [Done](https://github.com/Cyrix126/gupaxx/releases/tag/v1.6.0)  
 Gupaxx currently resize texts/widgets based on the window size. Instead, the text/widget size should be decided by the OS/config, scroll bar should be used when there is not enough space. It will allow to use Gupaxx on different ratio of screen.
