@@ -729,9 +729,8 @@ impl App {
 //---------------------------------------------------------------------------------------------------- [Tab] Enum + Impl
 // The tabs inside [App].
 #[derive(
-    Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, Display, EnumIter, EnumCount,
+    Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, Display, EnumIter, EnumCount, Default,
 )]
-#[derive(Default)]
 pub enum Tab {
     #[default]
     About,
@@ -745,7 +744,6 @@ pub enum Tab {
     XmrigProxy,
     Xvb,
 }
-
 
 impl Tab {
     pub fn linked_process(&self) -> Option<ProcessName> {

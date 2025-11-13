@@ -67,7 +67,6 @@ pub enum Hash {
     Giga,
 }
 
-
 impl Hash {
     pub fn convert_to_hash(f: f64, from: Self) -> f64 {
         match from {

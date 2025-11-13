@@ -221,14 +221,13 @@ impl Process {
 }
 
 //---------------------------------------------------------------------------------------------------- [Process*] Enum
-#[derive(Copy, Clone, Eq, PartialEq, Debug)]
-#[derive(Default)]
+#[derive(Copy, Clone, Eq, PartialEq, Debug, Default)]
 pub enum ProcessState {
-    Alive,   // Process is online, GREEN!
+    Alive, // Process is online, GREEN!
     #[default]
-    Dead,    // Process is dead, BLACK!
-    Failed,  // Process is dead AND exited with a bad code, RED!
-    Middle,  // Process is in the middle of something ([re]starting/stopping), YELLOW!
+    Dead, // Process is dead, BLACK!
+    Failed, // Process is dead AND exited with a bad code, RED!
+    Middle, // Process is in the middle of something ([re]starting/stopping), YELLOW!
     Waiting, // Process was successfully killed by a restart, and is ready to be started again, YELLOW!
 
     // Only for P2Pool and XvB, ORANGE.
@@ -242,9 +241,7 @@ pub enum ProcessState {
     OfflinePoolsAll,
 }
 
-
-#[derive(Clone, PartialEq, Debug)]
-#[derive(Default)]
+#[derive(Clone, PartialEq, Debug, Default)]
 pub enum ProcessSignal {
     #[default]
     None,
@@ -253,7 +250,6 @@ pub enum ProcessSignal {
     Restart,
     UpdatePools(Pool),
 }
-
 
 #[derive(
     Copy,
