@@ -332,6 +332,65 @@ impl Gupax {
                     })
                 });
             });
+            debug!("Gupaxx Tab | Rendering Notification checkbox");
+            ui.group(|ui| {
+                ui.vertical_centered(|ui| {
+                    ui.add(Label::new(
+                        RichText::new("Notifications").underline().color(LIGHT_GRAY),
+                    ))
+                    .on_hover_text(GUPAX_ADJUST);
+                    ui.separator();
+                    self.horizontal_flex_notifications(ui, Notification::iter().collect());
+                });
+            });
+        });
+    }
+    /// widget: AutoStart variant and selectable label (true) or checkbox (false)
+    pub fn horizontal_flex_notifications(&mut self, ui: &mut Ui, notifications: Vec<Notification>) {
+        let text_style = TextStyle::Button;
+        ui.style_mut().override_text_style = Some(text_style);
+        let spacing = 2.0;
+        ScrollArea::horizontal().id_salt("notif").show(ui, |ui| {
+            ui.with_layout(egui::Layout::left_to_right(egui::Align::Min), |ui| {
+                let width = (((ui.available_width()) / notifications.len() as f32)
+                    - ((ui.style().spacing.item_spacing.x * 2.0) + spacing))
+                    .max(0.0);
+                // TODO: calculate minimum width needed, if ui.available width is less, show items on two lines, then on 3 etc..
+                // checkbox padding + item spacing + text + separator
+
+                let size = [width, 0.0];
+                let len = notifications.iter().len();
+                for (count, notification) in notifications.iter().enumerate() {
+                    ui.horizontal(|ui| {
+                        ui.vertical(|ui| {
+                            ui.horizontal(|ui| {
+                                let mut is_checked = self.notifications.contains(notification);
+                                let widget =
+                                    Checkbox::new(&mut is_checked, notification.to_string());
+
+                                if ui
+                                    .add_sized(size, widget)
+                                    .on_hover_text(notification.help_msg())
+                                    .clicked()
+                                {
+                                    if is_checked {
+                                        self.notifications.push(*notification);
+                                        // reorganize in case the order was changed
+                                        self.notifications.sort_unstable();
+                                    } else {
+                                        self.notifications.retain(|n| n != notification);
+                                    }
+                                }
+                            });
+                            // add a space to prevent selectable button to be at the same line as the end of the top bar. Make it the same spacing as separators.
+                            ui.add_space(spacing * 4.0);
+                        });
+                        if count + 1 != len {
+                            ui.add(Separator::default().spacing(spacing).vertical());
+                        }
+                    });
+                }
+            });
         });
     }
     /// widget: AutoStart variant and selectable label (true) or checkbox (false)

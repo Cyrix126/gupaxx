@@ -1,7 +1,7 @@
 use anyhow::Result;
 use derive_more::Display;
 use rand::{Rng, distr::Alphanumeric, rng};
-use strum::{EnumCount, EnumIter};
+use strum::{EnumCount, EnumIter, IntoEnumIterator};
 
 use super::*;
 use crate::{
@@ -211,6 +211,43 @@ pub struct Gupax {
     pub tab: Tab,
     pub ratio: Ratio,
     pub show_processes: Vec<ProcessName>,
+    pub notifications: Vec<Notification>,
+}
+
+#[derive(
+    Clone, PartialEq, Debug, Deserialize, Serialize, EnumIter, PartialOrd, Display, Ord, Eq, Copy,
+)]
+pub enum Notification {
+    // A new payout occurred
+    Payout,
+    // Gupaxx found a share on p2pool for the first time
+    #[display("First P2Pool Share")]
+    FirstP2poolShare,
+    // A service is not in the green state anymore without a user intervention
+    #[display("Failed Service")]
+    FailedService,
+    // miner is disconnected from proxy
+    #[display("Disconnected Miner")]
+    DisconnectedMiner,
+}
+
+impl Notification {
+    pub fn help_msg(&self) -> &str {
+        match self {
+            Notification::Payout => {
+                "Send a notification when you receive a payout.\nA payout occurs when you have one share or more in the current PPLNS window (current shares) and your P2Pool sidechain finds a block"
+            }
+            Notification::FirstP2poolShare => {
+                "Send a notification when Gupaxx finds a share for the first time since P2Pool has been started."
+            }
+            Notification::FailedService => {
+                "Send a notification when one of the running service start to fail without the user intervention"
+            }
+            Notification::DisconnectedMiner => {
+                "Send a notification when one of the miner connected to the proxy does not send new hash"
+            }
+        }
+    }
 }
 
 #[derive(Clone, PartialEq, Debug, Deserialize, Serialize)]
@@ -630,6 +667,7 @@ impl Default for Gupax {
             ratio: Ratio::Width,
             tab: Tab::Xvb,
             show_processes: ProcessName::having_tab(),
+            notifications: Notification::iter().collect(),
         }
     }
 }

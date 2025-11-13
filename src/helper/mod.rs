@@ -35,6 +35,7 @@
 
 use crate::components::gupax::FileType;
 use crate::components::update::{NODE_BINARY, P2POOL_BINARY, XMRIG_BINARY, XMRIG_PROXY_BINARY};
+use crate::helper::notification::NotificationApi;
 use crate::helper::sys_info::Sys;
 //---------------------------------------------------------------------------------------------------- Import
 use crate::helper::xrig::xmrig_proxy::PubXmrigProxyApi;
@@ -53,7 +54,7 @@ use portable_pty::Child;
 use readable::up::Uptime;
 use serde::{Deserialize, Serialize};
 use std::collections::HashSet;
-use std::fmt::Write;
+use std::fmt::{Display, Write};
 use std::net::{IpAddr, Ipv4Addr};
 use std::path::Path;
 use std::{
@@ -69,6 +70,7 @@ use xrig::xmrig_proxy::ImgProxy;
 use self::xvb::{PubXvbApi, nodes::Pool};
 pub mod crawler;
 pub mod node;
+pub mod notification;
 pub mod p2pool;
 pub mod sys_info;
 pub mod tests;
@@ -118,6 +120,7 @@ pub struct Helper {
     // consider it true if it is Some
     pub ports_detected_local_node: Arc<Mutex<Option<(u16, u16)>>>,
     pub sys_info: Arc<Mutex<System>>,
+    pub notifications_api: Arc<Mutex<NotificationApi>>,
 }
 
 // The communication between the data here and the GUI thread goes as follows:
@@ -417,6 +420,7 @@ impl Helper {
         proxy_port_reachable: Arc<Mutex<bool>>,
         ports_detected_local_node: Arc<Mutex<Option<(u16, u16)>>>,
         sys_info: Arc<Mutex<System>>,
+        notifications_api: Arc<Mutex<NotificationApi>>,
     ) -> Self {
         Self {
             instant,
@@ -448,6 +452,7 @@ impl Helper {
             proxy_port_reachable,
             ports_detected_local_node,
             sys_info,
+            notifications_api,
         }
     }
 
@@ -635,6 +640,8 @@ impl Helper {
                     max_threads,
                 );
                 drop(sysinfo_lock);
+
+                // check for notifications
 
                 // 3. Drop... (almost) EVERYTHING... IN REVERSE!
                 drop(lock_pub_sys);
@@ -961,7 +968,7 @@ fn signal_end(
     }
     false
 }
-async fn sleep_end_loop(now: Instant, name: ProcessName) {
+async fn sleep_end_loop(now: Instant, name: impl Display) {
     // Sleep (only if 999ms hasn't passed)
     let elapsed = now.elapsed().as_millis();
     // Since logic goes off if less than 1000, casting should be safe

@@ -323,4 +323,6 @@ pub fn init_auto(app: &mut App) {
     } else {
         info!("Skipping auto-xvb...");
     }
+    // [Notifications Service]
+    Helper::start_notifications(&app.helper);
 }

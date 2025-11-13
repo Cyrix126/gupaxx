@@ -33,6 +33,7 @@ use crate::helper::ProcessName;
 use crate::helper::crawler::Crawler;
 use crate::helper::node::ImgNode;
 use crate::helper::node::PubNodeApi;
+use crate::helper::notification::NotificationApi;
 use crate::helper::p2pool::ImgP2pool;
 use crate::helper::p2pool::PubP2poolApi;
 use crate::helper::sys_info::Sys;
@@ -132,6 +133,7 @@ pub struct App {
     pub xmrig_api: Arc<Mutex<PubXmrigApi>>, // Public ready-to-print XMRig API made by the "helper" thread
     pub xmrig_proxy_api: Arc<Mutex<PubXmrigProxyApi>>, // Public ready-to-print XMRigProxy API made by the "helper" thread
     pub xvb_api: Arc<Mutex<PubXvbApi>>,                // Public XvB API
+    pub notifications_api: Arc<Mutex<NotificationApi>>, // Public XvB API
     pub p2pool_img: Arc<Mutex<ImgP2pool>>, // A one-time snapshot of what data P2Pool started with
     pub xmrig_img: Arc<Mutex<ImgXmrig>>,   // A one-time snapshot of what data XMRig started with
     pub ip_local: Arc<Mutex<Option<IpAddr>>>,
@@ -244,6 +246,9 @@ impl App {
         let ip_public = arc_mut!(None);
         let proxy_port_reachable = arc_mut!(false);
         let ports_detected_local_node = arc_mut!(None);
+        let notifications_api = Arc::new(Mutex::new(NotificationApi {
+            notifications: vec![],
+        }));
 
         info!("App Init | Sysinfo...");
         // We give this to the [Helper] thread.
@@ -322,7 +327,8 @@ impl App {
                 ip_public.clone(),
                 proxy_port_reachable.clone(),
                 ports_detected_local_node.clone(),
-                sysinfo.clone()
+                sysinfo.clone(),
+                notifications_api.clone()
             )),
             node,
             p2pool,
@@ -367,6 +373,7 @@ impl App {
             ip_local,
             ip_public,
             proxy_port_reachable,
+            notifications_api,
             #[cfg(target_os = "windows")]
             xmrig_outside_warning_acknowledge: false,
         };
@@ -667,6 +674,9 @@ impl App {
 
         // Set saved choice of use of sidechain HR
         app.xvb_api.lock().unwrap().use_p2pool_sidechain_hr = app.state.xvb.use_p2pool_sidechain_hr;
+
+        // Set saved choice for notifications
+        app.notifications_api.lock().unwrap().notifications = app.state.gupax.notifications.clone();
 
         // Set saved Hero mode to runtime.
         debug!("Setting runtime_mode & runtime_manual_amount");
