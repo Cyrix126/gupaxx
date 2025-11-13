@@ -731,7 +731,9 @@ impl App {
 #[derive(
     Clone, Copy, Debug, Eq, PartialEq, Serialize, Deserialize, Display, EnumIter, EnumCount,
 )]
+#[derive(Default)]
 pub enum Tab {
+    #[default]
     About,
     Status,
     #[display("Gupaxx")]
@@ -744,11 +746,6 @@ pub enum Tab {
     Xvb,
 }
 
-impl Default for Tab {
-    fn default() -> Self {
-        Self::About
-    }
-}
 
 impl Tab {
     pub fn linked_process(&self) -> Option<ProcessName> {

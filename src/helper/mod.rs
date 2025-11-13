@@ -222,8 +222,10 @@ impl Process {
 
 //---------------------------------------------------------------------------------------------------- [Process*] Enum
 #[derive(Copy, Clone, Eq, PartialEq, Debug)]
+#[derive(Default)]
 pub enum ProcessState {
     Alive,   // Process is online, GREEN!
+    #[default]
     Dead,    // Process is dead, BLACK!
     Failed,  // Process is dead AND exited with a bad code, RED!
     Middle,  // Process is in the middle of something ([re]starting/stopping), YELLOW!
@@ -240,14 +242,11 @@ pub enum ProcessState {
     OfflinePoolsAll,
 }
 
-impl Default for ProcessState {
-    fn default() -> Self {
-        Self::Dead
-    }
-}
 
 #[derive(Clone, PartialEq, Debug)]
+#[derive(Default)]
 pub enum ProcessSignal {
+    #[default]
     None,
     Start,
     Stop,
@@ -255,11 +254,6 @@ pub enum ProcessSignal {
     UpdatePools(Pool),
 }
 
-impl Default for ProcessSignal {
-    fn default() -> Self {
-        Self::None
-    }
-}
 
 #[derive(
     Copy,

@@ -58,18 +58,15 @@ impl Default for PayoutView {
 //---------------------------------------------------------------------------------------------------- [Hash] enum for [Status/P2Pool]
 #[derive(Clone, Copy, Eq, PartialEq, Debug, Deserialize, Serialize)]
 #[allow(clippy::enum_variant_names)]
+#[derive(Default)]
 pub enum Hash {
+    #[default]
     Hash,
     Kilo,
     Mega,
     Giga,
 }
 
-impl Default for Hash {
-    fn default() -> Self {
-        Self::Hash
-    }
-}
 
 impl Hash {
     pub fn convert_to_hash(f: f64, from: Self) -> f64 {
