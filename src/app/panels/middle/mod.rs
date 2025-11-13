@@ -87,6 +87,7 @@ impl crate::app::App {
                         ctx,
                         ui,
                         &mut self.must_resize,
+                        &self.notifications_api,
                     );
                 }
                 Tab::Node => {

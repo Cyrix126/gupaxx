@@ -5,6 +5,7 @@ use crate::components::gupax::*;
 use crate::components::update::Update;
 use crate::components::update::check_binary_path;
 use crate::disk::state::*;
+use crate::helper::notification::NotificationApi;
 use crate::miscs::height_txt_before_button;
 use common::state_edit_field::slider_state_field;
 use log::debug;
@@ -28,6 +29,7 @@ impl Gupax {
         _ctx: &egui::Context,
         ui: &mut egui::Ui,
         must_resize: &mut bool,
+        api_notification: &Arc<Mutex<NotificationApi>>,
     ) {
         // Update button + Progress bar
         debug!("Gupaxx Tab | Rendering [Update] button + progress bar");
@@ -340,13 +342,22 @@ impl Gupax {
                     ))
                     .on_hover_text(GUPAX_ADJUST);
                     ui.separator();
-                    self.horizontal_flex_notifications(ui, Notification::iter().collect());
+                    self.horizontal_flex_notifications(
+                        ui,
+                        Notification::iter().collect(),
+                        api_notification,
+                    );
                 });
             });
         });
     }
     /// widget: AutoStart variant and selectable label (true) or checkbox (false)
-    pub fn horizontal_flex_notifications(&mut self, ui: &mut Ui, notifications: Vec<Notification>) {
+    pub fn horizontal_flex_notifications(
+        &mut self,
+        ui: &mut Ui,
+        notifications: Vec<Notification>,
+        api_notification: &Arc<Mutex<NotificationApi>>,
+    ) {
         let text_style = TextStyle::Button;
         ui.style_mut().override_text_style = Some(text_style);
         let spacing = 2.0;
@@ -380,6 +391,9 @@ impl Gupax {
                                     } else {
                                         self.notifications.retain(|n| n != notification);
                                     }
+                                    // apply the settings immediately if they change
+                                    api_notification.lock().unwrap().notifications =
+                                        self.notifications.clone();
                                 }
                             });
                             // add a space to prevent selectable button to be at the same line as the end of the top bar. Make it the same spacing as separators.
