@@ -205,7 +205,7 @@ impl App {
 
     #[cold]
     #[inline(never)]
-    pub fn new(now: Instant, args: Cli) -> Self {
+    pub fn new(now: Instant, args: &Cli) -> Self {
         info!("Initializing App Struct...");
         info!("App Init | P2Pool & XMRig processes...");
         let p2pool = arc_mut!(Process::new(

@@ -98,6 +98,8 @@ futures = "0.3"
 listeners = "0.3"
 ## notifications
 notify-rust = "4.11"
+## handle Ctrl+C for daemon mode
+ctrlc = {version="3.5", features=["termination"]}
 # Unix dependencies
 [target.'cfg(unix)'.dependencies]
 tar = "0.4.44"

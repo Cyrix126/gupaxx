@@ -15,9 +15,6 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
-// Hide console in Windows
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
-
 // Only (windows|macos|linux) + (x64|arm64) are supported.
 #[cfg(not(target_pointer_width = "64"))]
 compile_error!("gupaxx is only compatible with 64-bit CPUs");
@@ -27,6 +24,7 @@ compile_error!("gupaxx is only built for windows/macos/linux");
 
 use crate::app::App;
 use crate::cli::Cli;
+use crate::daemon::start_daemon;
 //---------------------------------------------------------------------------------------------------- Imports
 use crate::constants::*;
 use crate::inits::{init_auto, init_logger, init_options};
@@ -36,11 +34,13 @@ use clap::Parser;
 use egui::Vec2;
 use log::info;
 use log::warn;
+use std::sync::Arc;
 use std::time::Instant;
 
 mod app;
 mod cli;
 mod components;
+mod daemon;
 mod disk;
 mod helper;
 mod inits;
@@ -61,45 +61,52 @@ fn main() {
 
     // Init logger.
     init_logger(now, args.logfile);
-    let mut app = App::new(now, args);
+    let mut app = App::new(now, &args);
     init_auto(&mut app);
-
-    // Init GUI stuff.
-    let selected_width = app.state.gupax.selected_width as f32;
-    let selected_height = app.state.gupax.selected_height as f32;
-    let initial_window_size = if selected_width > APP_MAX_WIDTH || selected_height > APP_MAX_HEIGHT
-    {
-        warn!(
-            "App | Set width or height was greater than the maximum! Starting with the default resolution..."
-        );
-        Some(Vec2::new(APP_DEFAULT_WIDTH, APP_DEFAULT_HEIGHT))
-    } else {
-        Some(Vec2::new(
-            app.state.gupax.selected_width as f32,
-            app.state.gupax.selected_height as f32,
-        ))
-    };
-    let options = init_options(initial_window_size);
-
     // Gupax folder cleanup.
     match clean_dir() {
         Ok(_) => info!("Temporary folder cleanup ... OK"),
         Err(e) => warn!("Could not cleanup [gupax_tmp] folders: {e}"),
     }
-
-    let resolution = Vec2::new(selected_width, selected_height);
-
-    // Run Gupax.
     info!(
         "/*************************************/ Init ... OK /*************************************/"
     );
-    eframe::run_native(
-        &app.name_version.clone(),
-        options,
-        Box::new(move |cc| {
-            egui_extras::install_image_loaders(&cc.egui_ctx);
-            Ok(Box::new(App::cc(cc, resolution, app)))
-        }),
-    )
-    .unwrap();
+
+    // if Gupaxx is started as a daemon, stay here and do not load the GUI
+    if args.daemon {
+        // if the app receives Ctrl+C, make sure to terminate all services
+        let app = Arc::new(app);
+        start_daemon(&app);
+    } else {
+        // Init GUI stuff.
+        let selected_width = app.state.gupax.selected_width as f32;
+        let selected_height = app.state.gupax.selected_height as f32;
+        let initial_window_size = if selected_width > APP_MAX_WIDTH
+            || selected_height > APP_MAX_HEIGHT
+        {
+            warn!(
+                "App | Set width or height was greater than the maximum! Starting with the default resolution..."
+            );
+            Some(Vec2::new(APP_DEFAULT_WIDTH, APP_DEFAULT_HEIGHT))
+        } else {
+            Some(Vec2::new(
+                app.state.gupax.selected_width as f32,
+                app.state.gupax.selected_height as f32,
+            ))
+        };
+        let options = init_options(initial_window_size);
+
+        let resolution = Vec2::new(selected_width, selected_height);
+
+        // Run Gupax.
+        eframe::run_native(
+            &app.name_version.clone(),
+            options,
+            Box::new(move |cc| {
+                egui_extras::install_image_loaders(&cc.egui_ctx);
+                Ok(Box::new(App::cc(cc, resolution, app)))
+            }),
+        )
+        .unwrap();
+    }
 }

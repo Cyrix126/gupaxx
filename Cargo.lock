@@ -1225,6 +1225,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "ctrlc"
+version = "3.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "73736a89c4aff73035ba2ed2e565061954da00d4970fc9ac25dcc85a2a20d790"
+dependencies = [
+ "dispatch2",
+ "nix 0.30.1",
+ "windows-sys 0.61.1",
+]
+
+[[package]]
 name = "cuprate-constants"
 version = "0.1.0"
 source = "git+https://github.com/Cuprate/cuprate#807bfafb35dd3e0ea8a6a76000e8d1cb95afb675"
@@ -2503,6 +2514,7 @@ dependencies = [
  "cfg-if",
  "chrono",
  "clap",
+ "ctrlc",
  "derive_more 2.0.1",
  "dirs",
  "eframe",
@@ -7078,6 +7090,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f2f500e4d28234f72040990ec9d39e3a6b950f9f22d3dba18416c35882612bcb"
 dependencies = [
  "windows-targets 0.53.3",
+]
+
+[[package]]
+name = "windows-sys"
+version = "0.61.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6f109e41dd4a3c848907eb83d5a42ea98b3769495597450cf6d153507b166f0f"
+dependencies = [
+ "windows-link 0.2.0",
 ]
 
 [[package]]

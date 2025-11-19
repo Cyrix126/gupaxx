@@ -30,6 +30,8 @@ pub struct Cli {
     pub info: Option<GupaxxData>,
     #[clap(long, short, action)]
     pub logfile: bool,
+    #[clap(long, action)]
+    pub daemon: bool,
 }
 
 #[derive(Subcommand)]
@@ -58,7 +60,7 @@ pub enum GupaxxData {
 }
 // #[cold]
 // #[inline(never)]
-pub fn parse_args<S: Into<String>>(mut app: App, args: Cli, panic: S) -> App {
+pub fn parse_args<S: Into<String>>(mut app: App, args: &Cli, panic: S) -> App {
     info!("Parsing CLI arguments...");
 
     // Abort on panic
@@ -67,7 +69,7 @@ pub fn parse_args<S: Into<String>>(mut app: App, args: Cli, panic: S) -> App {
         warn!("[Gupax error] {panic}");
         exit(1);
     }
-    if let Some(arg) = args.info {
+    if let Some(arg) = &args.info {
         match arg {
             GupaxxData::State => {
                 debug!("Printing state...");
