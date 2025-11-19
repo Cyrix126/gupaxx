@@ -121,14 +121,10 @@ pub fn column_process<R>(
 }
 
 fn gupax(ui: &mut Ui, sys: &Arc<Mutex<Sys>>) {
-    ui.label(
-        RichText::new("[Gupaxx]")
-            .color(LIGHT_GRAY)
-            .text_style(TextStyle::Heading),
-    )
-    .on_hover_text("Gupaxx is online");
+    ui.label(RichText::new("[Gupaxx]").text_style(TextStyle::Heading))
+        .on_hover_text("Gupaxx is online");
     let sys = sys.lock().unwrap();
-    ui.label(RichText::new("Uptime").underline().color(BONE))
+    ui.label(RichText::new("Uptime").underline())
         .on_hover_text(STATUS_GUPAX_UPTIME);
     // put some space for uptime so that when seconds appears every minutes, no label is moved.
     ui.add_sized(
@@ -138,19 +134,19 @@ fn gupax(ui: &mut Ui, sys: &Arc<Mutex<Sys>>) {
         ],
         Label::new(sys.gupax_uptime.to_string()),
     );
-    ui.label(RichText::new("Gupaxx CPU").underline().color(BONE))
+    ui.label(RichText::new("Gupaxx CPU").underline())
         .on_hover_text(STATUS_GUPAX_CPU_USAGE);
     ui.label(sys.gupax_cpu_usage.to_string());
-    ui.label(RichText::new("Gupaxx Memory").underline().color(BONE))
+    ui.label(RichText::new("Gupaxx Memory").underline())
         .on_hover_text(STATUS_GUPAX_MEMORY_USAGE);
     ui.label(sys.gupax_memory_used_mb.to_string());
-    ui.label(RichText::new("System CPU").underline().color(BONE))
+    ui.label(RichText::new("System CPU").underline())
         .on_hover_text(STATUS_GUPAX_SYSTEM_CPU_USAGE);
     ui.label(sys.system_cpu_usage.to_string());
-    ui.label(RichText::new("System Memory").underline().color(BONE))
+    ui.label(RichText::new("System Memory").underline())
         .on_hover_text(STATUS_GUPAX_SYSTEM_MEMORY);
     ui.label(sys.system_memory.to_string());
-    ui.label(RichText::new("System CPU Model").underline().color(BONE))
+    ui.label(RichText::new("System CPU Model").underline())
         .on_hover_text(STATUS_GUPAX_SYSTEM_CPU_MODEL);
     ui.style_mut().wrap_mode = Some(egui::TextWrapMode::Wrap);
     ui.label(sys.system_cpu_model.to_string());
@@ -164,16 +160,12 @@ fn p2pool(
     p2pool_img: &Arc<Mutex<ImgP2pool>>,
 ) {
     ui.add_enabled_ui(p2pool_alive, |ui| {
-        ui.label(
-            RichText::new("[P2Pool]")
-                .color(LIGHT_GRAY)
-                .text_style(TextStyle::Heading),
-        )
-        .on_hover_text("P2Pool is online")
-        .on_disabled_hover_text("P2Pool is offline");
+        ui.label(RichText::new("[P2Pool]").text_style(TextStyle::Heading))
+            .on_hover_text("P2Pool is online")
+            .on_disabled_hover_text("P2Pool is offline");
         ui.style_mut().override_text_style = Some(TextStyle::Small);
         let api = p2pool_api.lock().unwrap();
-        ui.label(RichText::new("Uptime").underline().color(BONE))
+        ui.label(RichText::new("Uptime").underline())
             .on_hover_text(STATUS_P2POOL_UPTIME);
         // put some space for uptime so that when seconds appears every minutes, no label is moved.
         ui.add_sized(
@@ -183,10 +175,10 @@ fn p2pool(
             ],
             Label::new(api.uptime.display(true)),
         );
-        ui.label(RichText::new("Current Shares").underline().color(BONE))
+        ui.label(RichText::new("Current Shares").underline())
             .on_hover_text(STATUS_P2POOL_CURRENT_SHARES);
         ui.label(api.sidechain_shares.to_string());
-        ui.label(RichText::new("Shares Found").underline().color(BONE))
+        ui.label(RichText::new("Shares Found").underline())
             .on_hover_text(STATUS_P2POOL_SHARES);
         ui.label(
             (if let Some(s) = api.shares_found {
@@ -196,38 +188,34 @@ fn p2pool(
             })
             .to_string(),
         );
-        ui.label(RichText::new("Payouts").underline().color(BONE))
+        ui.label(RichText::new("Payouts").underline())
             .on_hover_text(STATUS_P2POOL_PAYOUTS);
         ui.label(format!("Total: {}", api.payouts));
         ui.label(format!(
             "[{:.7}/hour]\n[{:.7}/day]\n[{:.7}/month]",
             api.payouts_hour, api.payouts_day, api.payouts_month
         ));
-        ui.label(RichText::new("XMR Mined").underline().color(BONE))
+        ui.label(RichText::new("XMR Mined").underline())
             .on_hover_text(STATUS_P2POOL_XMR);
         ui.label(format!("Total: {:.13} XMR", api.xmr));
         ui.label(format!(
             "[{:.7}/hour]\n[{:.7}/day]\n[{:.7}/month]",
             api.xmr_hour, api.xmr_day, api.xmr_month
         ));
-        ui.label(
-            RichText::new("Hashrate (15m/1h/24h)")
-                .underline()
-                .color(BONE),
-        )
-        .on_hover_text(STATUS_P2POOL_HASHRATE);
+        ui.label(RichText::new("Hashrate (15m/1h/24h)").underline())
+            .on_hover_text(STATUS_P2POOL_HASHRATE);
         ui.label(&api.hashrate);
-        ui.label(RichText::new("Miners Connected").underline().color(BONE))
+        ui.label(RichText::new("Miners Connected").underline())
             .on_hover_text(STATUS_P2POOL_CONNECTIONS);
         ui.label(format!("{}", api.connections));
-        ui.label(RichText::new("Effort").underline().color(BONE))
+        ui.label(RichText::new("Effort").underline())
             .on_hover_text(STATUS_P2POOL_EFFORT);
         ui.label(format!(
             "[Average: {}] [Current: {}]",
             api.average_effort, api.current_effort
         ));
         let img = p2pool_img.lock().unwrap();
-        ui.label(RichText::new("Monero Node").underline().color(BONE))
+        ui.label(RichText::new("Monero Node").underline())
             .on_hover_text(STATUS_P2POOL_MONERO_NODE);
         let text_node = if let Some(node) = &api.current_node {
             format!("IP: [{}]\n[RPC: {}] [ZMQ: {}]", node.ip, node.rpc, node.zmq)
@@ -235,10 +223,10 @@ fn p2pool(
             "Not connected to any node".to_string()
         };
         ui.label(text_node);
-        ui.label(RichText::new("Sidechain").underline().color(BONE))
+        ui.label(RichText::new("Sidechain").underline())
             .on_hover_text(STATUS_P2POOL_POOL);
         ui.label(&img.chain);
-        ui.label(RichText::new("Address").underline().color(BONE))
+        ui.label(RichText::new("Address").underline())
             .on_hover_text(STATUS_P2POOL_ADDRESS);
         ui.label(&img.address);
         drop(img);
@@ -252,15 +240,11 @@ fn xmrig_proxy(
     xmrig_proxy_api: &Arc<Mutex<PubXmrigProxyApi>>,
 ) {
     ui.add_enabled_ui(xmrig_proxy_alive, |ui| {
-        ui.label(
-            RichText::new("[XMRig-Proxy]")
-                .color(LIGHT_GRAY)
-                .text_style(TextStyle::Heading),
-        )
-        .on_hover_text("XMRig-Proxy is online")
-        .on_disabled_hover_text("XMRig-Proxy is offline");
+        ui.label(RichText::new("[XMRig-Proxy]").text_style(TextStyle::Heading))
+            .on_hover_text("XMRig-Proxy is online")
+            .on_disabled_hover_text("XMRig-Proxy is offline");
         let api = xmrig_proxy_api.lock().unwrap();
-        ui.label(RichText::new("Uptime").underline().color(BONE))
+        ui.label(RichText::new("Uptime").underline())
             .on_hover_text(STATUS_XMRIG_PROXY_UPTIME);
         // put some space for uptime so that when seconds appears every minutes, no label is moved.
         ui.add_sized(
@@ -270,22 +254,18 @@ fn xmrig_proxy(
             ],
             Label::new(api.uptime.display(true)),
         );
-        ui.label(
-            RichText::new("Hashrate\n(1m/10m/1h/12h/24h)")
-                .underline()
-                .color(BONE),
-        )
-        .on_hover_text(STATUS_XMRIG_PROXY_HASHRATE);
+        ui.label(RichText::new("Hashrate\n(1m/10m/1h/12h/24h)").underline())
+            .on_hover_text(STATUS_XMRIG_PROXY_HASHRATE);
         ui.label(&api.hashrate);
         ui.label(format!(
             "[Accepted: {}]\n[Rejected: {}]",
             api.accepted, api.rejected
         ));
-        ui.label(RichText::new("Miners Connected").underline().color(BONE))
+        ui.label(RichText::new("Miners Connected").underline())
             .on_hover_text(STATUS_PROXY_CONNECTIONS);
         ui.label(api.miners.to_string());
 
-        ui.label(RichText::new("Pool").underline().color(BONE))
+        ui.label(RichText::new("Pool").underline())
             .on_hover_text(STATUS_XMRIG_PROXY_POOL);
         ui.label(api.pool.as_ref().unwrap_or(&Pool::Unknown).to_string());
         drop(api);
@@ -304,13 +284,12 @@ fn xmrig(
         // ui.set_min_size(min_size);
         ui.label(
             RichText::new("[XMRig]")
-                .color(LIGHT_GRAY)
                 .text_style(TextStyle::Heading),
         )
         .on_hover_text("XMRig is online")
         .on_disabled_hover_text("XMRig is offline");
         let api = xmrig_api.lock().unwrap();
-        ui.label(RichText::new("Uptime").underline().color(BONE))
+        ui.label(RichText::new("Uptime").underline())
             .on_hover_text(STATUS_XMRIG_UPTIME);
         // put some space for uptime so that when seconds appears every minutes, no label is moved.
         ui.add_sized(
@@ -324,23 +303,23 @@ fn xmrig(
         ui.label(
             RichText::new("Hashrate\n(10s/1m/15m)")
                 .underline()
-                .color(BONE),
+                ,
         )
         .on_hover_text(STATUS_XMRIG_HASHRATE);
         ui.label(api.hashrate.to_string());
-        ui.label(RichText::new("Difficulty").underline().color(BONE))
+        ui.label(RichText::new("Difficulty").underline())
             .on_hover_text(STATUS_XMRIG_DIFFICULTY);
         ui.label(api.diff.to_string());
-        ui.label(RichText::new("Shares").underline().color(BONE))
+        ui.label(RichText::new("Shares").underline())
             .on_hover_text(STATUS_XMRIG_SHARES);
         ui.label(format!(
             "[Accepted: {}]\n[Rejected: {}]",
             api.accepted, api.rejected
         ));
-        ui.label(RichText::new("Pool").underline().color(BONE))
+        ui.label(RichText::new("Pool").underline())
             .on_hover_text(STATUS_XMRIG_POOL);
         ui.label(api.pool.as_ref().unwrap_or(&Pool::Unknown).to_string());
-        ui.label(RichText::new("Threads").underline().color(BONE))
+        ui.label(RichText::new("Threads").underline())
             .on_hover_text(STATUS_XMRIG_THREADS);
         ui.label(format!(
             "{}/{}",
@@ -360,58 +339,46 @@ fn xvb(ui: &mut Ui, xvb_alive: bool, xvb_api: &Arc<Mutex<PubXvbApi>>) {
     ui.add_enabled_ui(enabled, |ui| {
         // for now there is no API ping or /health, so we verify if the field reward_yearly is empty or not.
         // ui.set_min_size(min_size);
-        ui.label(
-            RichText::new("[XvB Raffle]")
-                .color(LIGHT_GRAY)
-                .text_style(TextStyle::Heading),
-        )
-        .on_hover_text("XvB API stats")
-        .on_disabled_hover_text("No data received from XvB API");
+        ui.label(RichText::new("[XvB Raffle]").text_style(TextStyle::Heading))
+            .on_hover_text("XvB API stats")
+            .on_disabled_hover_text("No data received from XvB API");
         // [Round Type]
-        ui.label(RichText::new("Round Type").underline().color(BONE))
+        ui.label(RichText::new("Round Type").underline())
             .on_hover_text(STATUS_XVB_ROUND_TYPE);
         ui.label(api.round_type.to_string());
         // [Time Remaining]
-        ui.label(
-            RichText::new("Round Time Remaining")
-                .underline()
-                .color(BONE),
-        )
-        .on_hover_text(STATUS_XVB_TIME_REMAIN);
+        ui.label(RichText::new("Round Time Remaining").underline())
+            .on_hover_text(STATUS_XVB_TIME_REMAIN);
         ui.label(format!("{} minutes", api.time_remain));
         // Donated Hashrate
-        ui.label(RichText::new("Bonus Hashrate").underline().color(BONE))
+        ui.label(RichText::new("Bonus Hashrate").underline())
             .on_hover_text(STATUS_XVB_DONATED_HR);
         ui.label(format!(
             "{}kH/s\n+\n{}kH/s\ndonated by\n{} donors\n with\n{} miners",
             api.bonus_hr, api.donate_hr, api.donate_miners, api.donate_workers
         ));
         // Players
-        ui.label(RichText::new("Players").underline().color(BONE))
+        ui.label(RichText::new("Players").underline())
             .on_hover_text(STATUS_XVB_PLAYERS);
         ui.label(format!(
             "[Registered: {}]\n[Playing: {}]",
             api.players, api.players_round
         ));
         // Winner
-        ui.label(RichText::new("Winner").underline().color(BONE))
+        ui.label(RichText::new("Winner").underline())
             .on_hover_text(STATUS_XVB_WINNER);
         ui.label(&api.winner);
         // Share effort
-        ui.label(RichText::new("Share Effort").underline().color(BONE))
+        ui.label(RichText::new("Share Effort").underline())
             .on_hover_text(STATUS_XVB_SHARE);
         ui.label(api.share_effort.to_string());
         // Block reward
-        ui.label(RichText::new("Block Reward").underline().color(BONE))
+        ui.label(RichText::new("Block Reward").underline())
             .on_hover_text(STATUS_XVB_BLOCK_REWARD);
         ui.label(api.block_reward.to_string());
         // reward yearly
-        ui.label(
-            RichText::new("Est. Reward (Yearly)")
-                .underline()
-                .color(BONE),
-        )
-        .on_hover_text(STATUS_XVB_YEARLY);
+        ui.label(RichText::new("Est. Reward (Yearly)").underline())
+            .on_hover_text(STATUS_XVB_YEARLY);
         if api.reward_yearly.is_empty() {
             ui.label("No information".to_string());
         } else {
@@ -430,15 +397,11 @@ fn xvb(ui: &mut Ui, xvb_alive: bool, xvb_api: &Arc<Mutex<PubXvbApi>>) {
 fn node(ui: &mut Ui, node_alive: bool, node_api: &Arc<Mutex<PubNodeApi>>) {
     debug!("Status Tab | Rendering [Node]");
     ui.add_enabled_ui(node_alive, |ui| {
-        ui.label(
-            RichText::new("[Node]")
-                .color(LIGHT_GRAY)
-                .text_style(TextStyle::Heading),
-        )
-        .on_hover_text("Node is online")
-        .on_disabled_hover_text("Node is offline");
+        ui.label(RichText::new("[Node]").text_style(TextStyle::Heading))
+            .on_hover_text("Node is online")
+            .on_disabled_hover_text("Node is offline");
         let api = node_api.lock().unwrap();
-        ui.label(RichText::new("Uptime").underline().color(BONE))
+        ui.label(RichText::new("Uptime").underline())
             .on_hover_text(STATUS_NODE_UPTIME);
         // put some space for uptime so that when seconds appears every minutes, no label is moved.
         ui.add_sized(
@@ -449,31 +412,31 @@ fn node(ui: &mut Ui, node_alive: bool, node_api: &Arc<Mutex<PubNodeApi>>) {
             Label::new(api.uptime.display(true)),
         );
 
-        ui.label(RichText::new("Block Height").underline().color(BONE))
+        ui.label(RichText::new("Block Height").underline())
             .on_hover_text(STATUS_NODE_BLOCK_HEIGHT);
         ui.label(api.blockheight.to_string());
-        ui.label(RichText::new("Network Difficulty").underline().color(BONE))
+        ui.label(RichText::new("Network Difficulty").underline())
             .on_hover_text(STATUS_NODE_DIFFICULTY);
         ui.label(api.difficulty.to_string());
-        ui.label(RichText::new("Database size").underline().color(BONE))
+        ui.label(RichText::new("Database size").underline())
             .on_hover_text(STATUS_NODE_DB_SIZE);
         ui.label(api.database_size.to_owned());
-        ui.label(RichText::new("Free space").underline().color(BONE))
+        ui.label(RichText::new("Free space").underline())
             .on_hover_text(STATUS_NODE_FREESPACE);
         ui.label(api.free_space.to_owned());
-        ui.label(RichText::new("Network Type").underline().color(BONE))
+        ui.label(RichText::new("Network Type").underline())
             .on_hover_text(STATUS_NODE_NETTYPE);
         ui.label(api.nettype.to_string());
-        ui.label(RichText::new("Outgoing peers").underline().color(BONE))
+        ui.label(RichText::new("Outgoing peers").underline())
             .on_hover_text(STATUS_NODE_OUT);
         ui.label(api.outgoing_connections.to_string());
-        ui.label(RichText::new("Incoming peers").underline().color(BONE))
+        ui.label(RichText::new("Incoming peers").underline())
             .on_hover_text(STATUS_NODE_IN);
         ui.label(api.incoming_connections.to_string());
-        ui.label(RichText::new("Synchronized").underline().color(BONE))
+        ui.label(RichText::new("Synchronized").underline())
             .on_hover_text(STATUS_NODE_SYNC);
         ui.label(api.synchronized.to_string());
-        ui.label(RichText::new("Status").underline().color(BONE))
+        ui.label(RichText::new("Status").underline())
             .on_hover_text(STATUS_NODE_STATUS);
         ui.label(api.status.to_string());
         drop(api);

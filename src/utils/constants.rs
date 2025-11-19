@@ -620,7 +620,7 @@ pub const ACCENT_COLOR: Color32 = Color32::from_rgb(200, 100, 100);
 pub const BG: Color32 = Color32::from_gray(20);
 
 // This is based off [`Visuals::dark()`].
-pub static VISUALS: Lazy<Visuals> = Lazy::new(|| {
+pub static VISUALS_GUPAXX_DARK: Lazy<Visuals> = Lazy::new(|| {
     let selection = Selection {
         bg_fill: ACCENT_COLOR,
         stroke: Stroke::new(1.0, Color32::from_gray(255)),
@@ -684,11 +684,78 @@ pub static VISUALS: Lazy<Visuals> = Lazy::new(|| {
         window_corner_radius: CornerRadius::same(6),
         window_shadow: Shadow::NONE,
         popup_shadow: Shadow::NONE,
+        override_text_color: Some(BONE),
+
         ..Visuals::dark()
     }
 });
 
-// CRAWL consts
+// Light mode version of [`Visuals::dark()`] → based on `Visuals::light()`
+pub static VISUALS_GUPAXX_LIGHT: Lazy<Visuals> = Lazy::new(|| {
+    let selection = Selection {
+        bg_fill: ACCENT_COLOR, // keep accent the same
+        stroke: Stroke::new(1.0, Color32::from_gray(200)),
+    };
+
+    // Adapted from default light() in egui 0.24.1
+    let widgets = Widgets {
+        noninteractive: WidgetVisuals {
+            bg_fill: Color32::WHITE,
+            bg_stroke: Stroke::new(1.0, Color32::from_gray(200)), // light separators
+            fg_stroke: Stroke::new(1.0, Color32::from_gray(80)),  // normal text
+            corner_radius: CornerRadius::same(10),
+            expansion: 0.0,
+            weak_bg_fill: Color32::WHITE,
+        },
+        inactive: WidgetVisuals {
+            bg_fill: Color32::from_gray(240),
+            bg_stroke: Default::default(),
+            fg_stroke: Stroke::new(1.0, Color32::from_gray(100)), // button text
+            corner_radius: CornerRadius::same(10),
+            expansion: 0.0,
+            weak_bg_fill: Color32::from_gray(240),
+        },
+        hovered: WidgetVisuals {
+            bg_fill: Color32::from_gray(225),
+            bg_stroke: Stroke::new(1.0, Color32::from_gray(150)),
+            fg_stroke: Stroke::new(1.5, Color32::from_gray(0)),
+            corner_radius: CornerRadius::same(10),
+            expansion: 1.0,
+            weak_bg_fill: Color32::from_gray(225),
+        },
+        active: WidgetVisuals {
+            bg_fill: Color32::from_gray(210),
+            bg_stroke: Stroke::new(1.0, Color32::from_gray(0)),
+            fg_stroke: Stroke::new(2.0, Color32::from_gray(0)),
+            corner_radius: CornerRadius::same(10),
+            expansion: 1.0,
+            weak_bg_fill: Color32::from_gray(180),
+        },
+        open: WidgetVisuals {
+            bg_fill: Color32::from_gray(245),
+            bg_stroke: Stroke::new(1.0, Color32::from_gray(200)),
+            fg_stroke: Stroke::new(1.0, Color32::from_gray(60)),
+            corner_radius: CornerRadius::same(10),
+            expansion: 0.0,
+            weak_bg_fill: Color32::from_gray(230),
+        },
+    };
+
+    Visuals {
+        widgets,
+        selection,
+        hyperlink_color: Color32::from_rgb(0, 102, 204), // deeper blue for contrast
+        faint_bg_color: Color32::from_additive_luminance(250), // barely off-white
+        extreme_bg_color: Color32::from_gray(245),       // e.g. TextEdit bg
+        code_bg_color: Color32::from_gray(230),
+        warn_fg_color: Color32::from_rgb(200, 100, 0), // muted orange
+        error_fg_color: Color32::from_rgb(200, 0, 0),  // muted red
+        window_corner_radius: CornerRadius::same(6),
+        window_shadow: Shadow::NONE,
+        popup_shadow: Shadow::NONE,
+        ..Visuals::light()
+    }
+}); // CRAWL consts
 
 pub const BUTTON_DISABLED_BY_EMPTY_LIST_NODES: &str =
     "disabled while no P2Pool compatible Nodes were found";

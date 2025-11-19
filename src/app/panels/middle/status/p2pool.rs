@@ -60,9 +60,7 @@ impl Status {
                         ui.add_sized(
                             [width, height],
                             Label::new(
-                                RichText::new(format!("Total Payouts: {}", api.payout))
-                                    .underline()
-                                    .color(LIGHT_GRAY),
+                                RichText::new(format!("Total Payouts: {}", api.payout)).underline(),
                             ),
                         )
                         .on_hover_text(STATUS_SUBMENU_PAYOUT);
@@ -70,9 +68,7 @@ impl Status {
                         ui.add_sized(
                             [width, height],
                             Label::new(
-                                RichText::new(format!("Total XMR: {}", api.xmr))
-                                    .underline()
-                                    .color(LIGHT_GRAY),
+                                RichText::new(format!("Total XMR: {}", api.xmr)).underline(),
                             ),
                         )
                         .on_hover_text(STATUS_SUBMENU_XMR);
@@ -205,20 +201,16 @@ impl Status {
                             ui.vertical_centered(|ui| {
                                 ui.add_space(height * 2.0);
                                 ui.set_min_height(min_height);
-                                ui.label(
-                                    RichText::new("Monero Difficulty").underline().color(BONE),
-                                )
-                                .on_hover_text(STATUS_SUBMENU_MONERO_DIFFICULTY);
+                                ui.label(RichText::new("Monero Difficulty").underline())
+                                    .on_hover_text(STATUS_SUBMENU_MONERO_DIFFICULTY);
                                 ui.label(api.monero_difficulty.as_str());
-                                ui.label(RichText::new("Monero Hashrate").underline().color(BONE))
+                                ui.label(RichText::new("Monero Hashrate").underline())
                                     .on_hover_text(STATUS_SUBMENU_MONERO_HASHRATE);
                                 ui.label(api.monero_hashrate.as_str());
-                                ui.label(
-                                    RichText::new("P2Pool Difficulty").underline().color(BONE),
-                                )
-                                .on_hover_text(STATUS_SUBMENU_P2POOL_DIFFICULTY);
+                                ui.label(RichText::new("P2Pool Difficulty").underline())
+                                    .on_hover_text(STATUS_SUBMENU_P2POOL_DIFFICULTY);
                                 ui.label(api.p2pool_difficulty.as_str());
-                                ui.label(RichText::new("P2Pool Hashrate").underline().color(BONE))
+                                ui.label(RichText::new("P2Pool Hashrate").underline())
                                     .on_hover_text(STATUS_SUBMENU_P2POOL_HASHRATE);
                                 ui.label(api.p2pool_hashrate.as_str());
                             })
@@ -242,56 +234,30 @@ impl Status {
                                             api.monero_difficulty_u64,
                                         );
                                     ui.label(
-                                        RichText::new("Manually Inputted Hashrate")
-                                            .underline()
-                                            .color(BONE),
+                                        RichText::new("Manually Inputted Hashrate").underline(),
                                     );
                                     ui.label(format!("{} H/s", Unsigned::from(hashrate)));
-                                    ui.label(
-                                        RichText::new("P2Pool Block Mean").underline().color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_P2POOL_BLOCK_MEAN);
+                                    ui.label(RichText::new("P2Pool Block Mean").underline())
+                                        .on_hover_text(STATUS_SUBMENU_P2POOL_BLOCK_MEAN);
                                     ui.label(api.p2pool_block_mean.display(false));
-                                    ui.label(
-                                        RichText::new("Your P2Pool Share Mean")
-                                            .underline()
-                                            .color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_P2POOL_SHARE_MEAN);
+                                    ui.label(RichText::new("Your P2Pool Share Mean").underline())
+                                        .on_hover_text(STATUS_SUBMENU_P2POOL_SHARE_MEAN);
                                     ui.label(p2pool_share_mean.display(false));
-                                    ui.label(
-                                        RichText::new("Your Solo Block Mean")
-                                            .underline()
-                                            .color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_SOLO_BLOCK_MEAN);
+                                    ui.label(RichText::new("Your Solo Block Mean").underline())
+                                        .on_hover_text(STATUS_SUBMENU_SOLO_BLOCK_MEAN);
                                     ui.label(solo_block_mean.display(false));
                                 } else {
-                                    ui.label(
-                                        RichText::new("Your P2Pool Hashrate")
-                                            .underline()
-                                            .color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_YOUR_P2POOL_HASHRATE);
+                                    ui.label(RichText::new("Your P2Pool Hashrate").underline())
+                                        .on_hover_text(STATUS_SUBMENU_YOUR_P2POOL_HASHRATE);
                                     ui.label(format!("{} H/s", api.hashrate_1h));
-                                    ui.label(
-                                        RichText::new("P2Pool Block Mean").underline().color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_P2POOL_BLOCK_MEAN);
+                                    ui.label(RichText::new("P2Pool Block Mean").underline())
+                                        .on_hover_text(STATUS_SUBMENU_P2POOL_BLOCK_MEAN);
                                     ui.label(api.p2pool_block_mean.display(false));
-                                    ui.label(
-                                        RichText::new("Your P2Pool Share Mean")
-                                            .underline()
-                                            .color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_P2POOL_SHARE_MEAN);
+                                    ui.label(RichText::new("Your P2Pool Share Mean").underline())
+                                        .on_hover_text(STATUS_SUBMENU_P2POOL_SHARE_MEAN);
                                     ui.label(api.p2pool_share_mean.display(false));
-                                    ui.label(
-                                        RichText::new("Your Solo Block Mean")
-                                            .underline()
-                                            .color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_SOLO_BLOCK_MEAN);
+                                    ui.label(RichText::new("Your Solo Block Mean").underline())
+                                        .on_hover_text(STATUS_SUBMENU_SOLO_BLOCK_MEAN);
                                     ui.label(api.solo_block_mean.display(false));
                                 }
                             })
@@ -312,54 +278,30 @@ impl Status {
                                         hashrate,
                                         api.monero_hashrate_u64,
                                     );
-                                    ui.label(
-                                        RichText::new("P2Pool Miners").underline().color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_P2POOL_MINERS);
+                                    ui.label(RichText::new("P2Pool Miners").underline())
+                                        .on_hover_text(STATUS_SUBMENU_P2POOL_MINERS);
                                     ui.label(api.miners.as_str());
-                                    ui.label(
-                                        RichText::new("P2Pool Dominance").underline().color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_P2POOL_DOMINANCE);
+                                    ui.label(RichText::new("P2Pool Dominance").underline())
+                                        .on_hover_text(STATUS_SUBMENU_P2POOL_DOMINANCE);
                                     ui.label(api.p2pool_percent.as_str());
-                                    ui.label(
-                                        RichText::new("Your P2Pool Dominance")
-                                            .underline()
-                                            .color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_YOUR_P2POOL_DOMINANCE);
+                                    ui.label(RichText::new("Your P2Pool Dominance").underline())
+                                        .on_hover_text(STATUS_SUBMENU_YOUR_P2POOL_DOMINANCE);
                                     ui.label(user_p2pool_percent.as_str());
-                                    ui.label(
-                                        RichText::new("Your Monero Dominance")
-                                            .underline()
-                                            .color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_YOUR_MONERO_DOMINANCE);
+                                    ui.label(RichText::new("Your Monero Dominance").underline())
+                                        .on_hover_text(STATUS_SUBMENU_YOUR_MONERO_DOMINANCE);
                                     ui.label(user_monero_percent.as_str());
                                 } else {
-                                    ui.label(
-                                        RichText::new("P2Pool Miners").underline().color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_P2POOL_MINERS);
+                                    ui.label(RichText::new("P2Pool Miners").underline())
+                                        .on_hover_text(STATUS_SUBMENU_P2POOL_MINERS);
                                     ui.label(api.miners.as_str());
-                                    ui.label(
-                                        RichText::new("P2Pool Dominance").underline().color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_P2POOL_DOMINANCE);
+                                    ui.label(RichText::new("P2Pool Dominance").underline())
+                                        .on_hover_text(STATUS_SUBMENU_P2POOL_DOMINANCE);
                                     ui.label(api.p2pool_percent.as_str());
-                                    ui.label(
-                                        RichText::new("Your P2Pool Dominance")
-                                            .underline()
-                                            .color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_YOUR_P2POOL_DOMINANCE);
+                                    ui.label(RichText::new("Your P2Pool Dominance").underline())
+                                        .on_hover_text(STATUS_SUBMENU_YOUR_P2POOL_DOMINANCE);
                                     ui.label(api.user_p2pool_percent.as_str());
-                                    ui.label(
-                                        RichText::new("Your Monero Dominance")
-                                            .underline()
-                                            .color(BONE),
-                                    )
-                                    .on_hover_text(STATUS_SUBMENU_YOUR_MONERO_DOMINANCE);
+                                    ui.label(RichText::new("Your Monero Dominance").underline())
+                                        .on_hover_text(STATUS_SUBMENU_YOUR_MONERO_DOMINANCE);
                                     ui.label(api.user_monero_percent.as_str());
                                 }
                             })

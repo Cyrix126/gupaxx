@@ -212,6 +212,31 @@ pub struct Gupax {
     pub ratio: Ratio,
     pub show_processes: Vec<ProcessName>,
     pub notifications: Vec<Notification>,
+    pub theme: GupaxxTheme,
+}
+
+#[derive(Default, Serialize, Deserialize, Clone, PartialEq, Debug)]
+pub enum GupaxxTheme {
+    // Dark theme of Gupaxx, default to give the app a style recognizable
+    #[default]
+    Dark,
+    Light,
+    // Theme given by the system
+    System,
+}
+
+impl GupaxxTheme {
+    pub fn helper(&self) -> &str {
+        match self {
+            GupaxxTheme::Dark => Self::HELPER_DARK,
+            GupaxxTheme::Light => Self::HELPER_LIGHT,
+            GupaxxTheme::System => Self::HELPER_SYSTEM,
+        }
+    }
+    const HELPER_DARK: &str = "Dark theme of Gupaxx";
+    const HELPER_LIGHT: &str = "Light theme of Gupaxx";
+    const HELPER_SYSTEM: &str =
+        "Theme of the System\nIf the system theme is not detected, the dark theme will be used";
 }
 
 #[derive(
@@ -668,6 +693,7 @@ impl Default for Gupax {
             tab: Tab::Xvb,
             show_processes: ProcessName::having_tab(),
             notifications: Notification::iter().collect(),
+            theme: GupaxxTheme::default(),
         }
     }
 }

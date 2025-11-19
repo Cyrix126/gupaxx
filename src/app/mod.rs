@@ -23,6 +23,7 @@ use crate::disk::get_gupax_data_path;
 use crate::disk::gupax_p2pool_api::GupaxP2poolApi;
 use crate::disk::node::Node;
 use crate::disk::pool::Pool;
+use crate::disk::state::GupaxxTheme;
 use crate::disk::state::State;
 use crate::errors::ErrorButtons;
 use crate::errors::ErrorFerris;
@@ -47,11 +48,13 @@ use crate::inits::init_text_styles;
 use crate::miscs::cmp_f64;
 use crate::miscs::get_exe;
 use crate::miscs::get_exe_dir;
-use crate::utils::constants::VISUALS;
+use crate::utils::constants::VISUALS_GUPAXX_DARK;
+use crate::utils::constants::VISUALS_GUPAXX_LIGHT;
 use crate::utils::macros::arc_mut;
 use crate::utils::sudo::SudoState;
 use derive_more::derive::Display;
 use eframe::CreationContext;
+use egui::Context;
 use egui::Vec2;
 use egui::vec2;
 use log::debug;
@@ -185,8 +188,22 @@ impl App {
             &cc.egui_ctx,
             crate::miscs::clamp_scale(app.state.gupax.selected_scale),
         );
-        cc.egui_ctx.set_visuals(VISUALS.clone());
+        app.set_theme(&cc.egui_ctx);
         Self { resolution, ..app }
+    }
+
+    pub fn set_theme(&self, ctx: &Context) {
+        match self.state.gupax.theme {
+            GupaxxTheme::Dark => ctx.set_visuals(VISUALS_GUPAXX_DARK.clone()),
+            GupaxxTheme::Light => ctx.set_visuals(VISUALS_GUPAXX_LIGHT.clone()),
+            GupaxxTheme::System => {
+                if let Some(system_theme) = ctx.system_theme() {
+                    ctx.set_theme(system_theme);
+                } else {
+                    ctx.set_visuals(VISUALS_GUPAXX_DARK.clone());
+                }
+            }
+        };
     }
 
     #[cold]

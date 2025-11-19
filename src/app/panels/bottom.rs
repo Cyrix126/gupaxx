@@ -5,7 +5,7 @@ use crate::app::submenu_enum::{Submenu, SubmenuP2pool, SubmenuStatus};
 use crate::app::{Restart, keys::KeyPressed};
 use crate::disk::node::Node;
 use crate::disk::pool::Pool;
-use crate::disk::state::{Gupax, State};
+use crate::disk::state::{Gupax, GupaxxTheme, State};
 use crate::helper::node::{CheckLocalOutsideNode, spawn_local_outside_checker};
 use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
 use crate::utils::constants::*;
@@ -62,6 +62,8 @@ impl crate::app::App {
                             self.version(ui, bar_height);
                             ui.add(Separator::default().grow(extra_separator));
                             self.os_show(ui);
+                            ui.add(Separator::default().grow(extra_separator));
+                            self.theme_show(ui, ctx);
                             // width of each status
                             let width_status = if !tiny_width {
                                 ((ui.available_width()
@@ -137,6 +139,30 @@ impl crate::app::App {
         }
         #[cfg(target_family = "unix")]
         ui.label(self.os);
+    }
+
+    fn theme_show(&mut self, ui: &mut Ui, ctx: &egui::Context) {
+        let icon = match self.state.gupax.theme {
+            GupaxxTheme::Dark => "🌙",
+            GupaxxTheme::Light => "🌞",
+            GupaxxTheme::System => "🔳",
+        };
+        if ui
+            .add(Button::new(icon))
+            .on_hover_text_at_pointer(self.state.gupax.theme.helper())
+            .clicked()
+        {
+            self.toggle_theme(ctx);
+        }
+    }
+    fn toggle_theme(&mut self, ctx: &egui::Context) {
+        self.state.gupax.theme = match self.state.gupax.theme {
+            GupaxxTheme::Dark => GupaxxTheme::Light,
+            GupaxxTheme::Light => GupaxxTheme::System,
+            GupaxxTheme::System => GupaxxTheme::Dark,
+        };
+
+        self.set_theme(ctx);
     }
     fn status_process(process: &ProcessStateGui, ui: &mut Ui, width: f32) {
         let color;

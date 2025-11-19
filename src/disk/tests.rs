@@ -53,6 +53,7 @@ mod test {
 			bundled = false
             show_processes = ["Node", "P2pool", "Xmrig", "XmrigProxy", "Xvb"]
             notifications = ["Payout", "FirstP2poolShare", "FailedService", "DisconnectedMiner"]
+            theme = "Dark"
 
 			[gupax.auto]
             update = false
