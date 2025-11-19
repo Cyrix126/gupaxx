@@ -125,7 +125,7 @@ impl P2pool {
                     .color(selected_node.ping_color());
                 ui.style_mut().override_text_valign = Some(Align::Center);
                 ui.vertical_centered(|ui| {
-                    let screen_size = ui.ctx().screen_rect().size();
+                    let screen_size = ui.ctx().content_rect().size();
                     // ui.set_max_size(screen_size);
                     ui.set_max_height(screen_size.y);
                     let width = ui.available_width();
