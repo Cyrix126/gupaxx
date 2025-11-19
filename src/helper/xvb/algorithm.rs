@@ -349,24 +349,11 @@ impl<'a> Algorithm<'a> {
         let pool = self.gui_api_xvb.lock().unwrap().stats_priv.pool.clone();
 
         info!(
-            "Algorithm | request {} to mine on XvB",
-            self.stats.msg_xmrig_or_xp
+            "Algorithm | request {} to mine on XvB on server: ({})",
+            self.stats.msg_xmrig_or_xp, pool
         );
 
-        if self.gui_api_xvb.lock().unwrap().current_pool.is_none()
-            || self
-                .gui_api_xvb
-                .lock()
-                .unwrap()
-                .current_pool
-                .as_ref()
-                .is_some_and(|n| {
-                    n == &Pool::P2pool(self.state_p2pool.current_port(
-                        self.p2pool_process.lock().unwrap().is_alive(),
-                        &self.p2pool_img.lock().unwrap(),
-                    ))
-                })
-        {
+        if self.gui_api_xvb.lock().unwrap().current_pool.as_ref() != Some(&pool) {
             if let Err(err) = update_xmrig_config(
                 self.client,
                 &self.stats.api_url,
