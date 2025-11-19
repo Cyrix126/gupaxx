@@ -70,55 +70,55 @@ rm xmrig-proxy-6.24.0-windows-x64.zip
 
 ## Download P2Pool Binaries
 # download p2pool into directory linux
-wget https://github.com/SChernykh/p2pool/releases/download/v4.11/p2pool-v4.11-linux-x64.tar.gz
-tar -xf p2pool-v4.11-linux-x64.tar.gz
-mv p2pool-v4.11-linux-x64/p2pool /tmp/${FOLDER}/skel/linux_b/p2pool/p2pool
-rm -r p2pool-v4.11-linux-x64
-rm p2pool-v4.11-linux-x64.tar.gz
+wget https://github.com/SChernykh/p2pool/releases/download/v4.12/p2pool-v4.12-linux-x64.tar.gz
+tar -xf p2pool-v4.12-linux-x64.tar.gz
+mv p2pool-v4.12-linux-x64/p2pool /tmp/${FOLDER}/skel/linux_b/p2pool/p2pool
+rm -r p2pool-v4.12-linux-x64
+rm p2pool-v4.12-linux-x64.tar.gz
 # download p2pool into directory macos-arm64
-wget https://github.com/SChernykh/p2pool/releases/download/v4.11/p2pool-v4.11-macos-aarch64.tar.gz
-tar -xf p2pool-v4.11-macos-aarch64.tar.gz
-mv p2pool-v4.11-macos-aarch64/p2pool /tmp/${FOLDER}/skel/macos-arm64_b/Gupaxx.app/Contents/MacOS/p2pool/p2pool
-rm -r p2pool-v4.11-macos-aarch64
-rm p2pool-v4.11-macos-aarch64.tar.gz
+wget https://github.com/SChernykh/p2pool/releases/download/v4.12/p2pool-v4.12-macos-aarch64.tar.gz
+tar -xf p2pool-v4.12-macos-aarch64.tar.gz
+mv p2pool-v4.12-macos-aarch64/p2pool /tmp/${FOLDER}/skel/macos-arm64_b/Gupaxx.app/Contents/MacOS/p2pool/p2pool
+rm -r p2pool-v4.12-macos-aarch64
+rm p2pool-v4.12-macos-aarch64.tar.gz
 # download p2pool into directory macos-x64
-wget https://github.com/SChernykh/p2pool/releases/download/v4.11/p2pool-v4.11-macos-x64.tar.gz
-tar -xf p2pool-v4.11-macos-x64.tar.gz
-mv p2pool-v4.11-macos-x64/p2pool /tmp/${FOLDER}/skel/macos-x64_b/Gupaxx.app/Contents/MacOS/p2pool/p2pool
-rm -r p2pool-v4.11-macos-x64
-rm p2pool-v4.11-macos-x64.tar.gz
+wget https://github.com/SChernykh/p2pool/releases/download/v4.12/p2pool-v4.12-macos-x64.tar.gz
+tar -xf p2pool-v4.12-macos-x64.tar.gz
+mv p2pool-v4.12-macos-x64/p2pool /tmp/${FOLDER}/skel/macos-x64_b/Gupaxx.app/Contents/MacOS/p2pool/p2pool
+rm -r p2pool-v4.12-macos-x64
+rm p2pool-v4.12-macos-x64.tar.gz
 # download p2pool into directory windows
-wget https://github.com/SChernykh/p2pool/releases/download/v4.11/p2pool-v4.11-windows-x64.zip
-unzip p2pool-v4.11-windows-x64.zip
-mv p2pool-v4.11-windows-x64/p2pool.exe /tmp/${FOLDER}/skel/windows_b/P2Pool/p2pool.exe
-rm -r p2pool-v4.11-windows-x64
-rm p2pool-v4.11-windows-x64.zip
+wget https://github.com/SChernykh/p2pool/releases/download/v4.12/p2pool-v4.12-windows-x64.zip
+unzip p2pool-v4.12-windows-x64.zip
+mv p2pool-v4.12-windows-x64/p2pool.exe /tmp/${FOLDER}/skel/windows_b/P2Pool/p2pool.exe
+rm -r p2pool-v4.12-windows-x64
+rm p2pool-v4.12-windows-x64.zip
 
 ## Download Monero Binaries
 # download monero into directory linux
-wget https://downloads.getmonero.org/cli/monero-linux-x64-v0.18.4.2.tar.bz2
-tar -xf monero-linux-x64-v0.18.4.2.tar.bz2
-mv monero-x86_64-linux-gnu-v0.18.4.2/monerod /tmp/${FOLDER}/skel/linux_b/node/monerod
-rm -r monero-x86_64-linux-gnu-v0.18.4.2
-rm monero-linux-x64-v0.18.4.2.tar.bz2
+wget https://downloads.getmonero.org/cli/monero-linux-x64-v0.18.4.4.tar.bz2
+tar -xf monero-linux-x64-v0.18.4.4.tar.bz2
+mv monero-x86_64-linux-gnu-v0.18.4.4/monerod /tmp/${FOLDER}/skel/linux_b/node/monerod
+rm -r monero-x86_64-linux-gnu-v0.18.4.4
+rm monero-linux-x64-v0.18.4.4.tar.bz2
 # download monero into directory macos-arm64
-wget https://downloads.getmonero.org/cli/monero-mac-armv8-v0.18.4.2.tar.bz2
-tar -xf monero-mac-armv8-v0.18.4.2.tar.bz2
-mv monero-aarch64-apple-darwin11-v0.18.4.2/monerod /tmp/${FOLDER}/skel/macos-arm64_b/Gupaxx.app/Contents/MacOS/node/monerod
-rm -r monero-aarch64-apple-darwin11-v0.18.4.2
-rm monero-mac-armv8-v0.18.4.2.tar.bz2
+wget https://downloads.getmonero.org/cli/monero-mac-armv8-v0.18.4.4.tar.bz2
+tar -xf monero-mac-armv8-v0.18.4.4.tar.bz2
+mv monero-aarch64-apple-darwin11-v0.18.4.4/monerod /tmp/${FOLDER}/skel/macos-arm64_b/Gupaxx.app/Contents/MacOS/node/monerod
+rm -r monero-aarch64-apple-darwin11-v0.18.4.4
+rm monero-mac-armv8-v0.18.4.4.tar.bz2
 # download monero into directory macos-x64
-wget https://downloads.getmonero.org/cli/monero-mac-x64-v0.18.4.2.tar.bz2
-tar -xf monero-mac-x64-v0.18.4.2.tar.bz2
-mv monero-x86_64-apple-darwin11-v0.18.4.2/monerod /tmp/${FOLDER}/skel/macos-x64_b/Gupaxx.app/Contents/MacOS/node/monerod
-rm -r monero-x86_64-apple-darwin11-v0.18.4.2
-rm monero-mac-x64-v0.18.4.2.tar.bz2
+wget https://downloads.getmonero.org/cli/monero-mac-x64-v0.18.4.4.tar.bz2
+tar -xf monero-mac-x64-v0.18.4.4.tar.bz2
+mv monero-x86_64-apple-darwin11-v0.18.4.4/monerod /tmp/${FOLDER}/skel/macos-x64_b/Gupaxx.app/Contents/MacOS/node/monerod
+rm -r monero-x86_64-apple-darwin11-v0.18.4.4
+rm monero-mac-x64-v0.18.4.4.tar.bz2
 # download monero into directory windows
-wget https://downloads.getmonero.org/cli/monero-win-x64-v0.18.4.2.zip
-unzip monero-win-x64-v0.18.4.2.zip
-mv monero-x86_64-w64-mingw32-v0.18.4.2/monerod.exe /tmp/${FOLDER}/skel/windows_b/Node/monerod.exe
-rm -r monero-x86_64-w64-mingw32-v0.18.4.2
-rm monero-win-x64-v0.18.4.2.zip
+wget https://downloads.getmonero.org/cli/monero-win-x64-v0.18.4.4.zip
+unzip monero-win-x64-v0.18.4.4.zip
+mv monero-x86_64-w64-mingw32-v0.18.4.4/monerod.exe /tmp/${FOLDER}/skel/windows_b/Node/monerod.exe
+rm -r monero-x86_64-w64-mingw32-v0.18.4.4
+rm monero-win-x64-v0.18.4.4.zip
 
 set +ex
 
