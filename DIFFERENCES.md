@@ -44,5 +44,9 @@ The fonts size has been rethinked to enable you to use Gupaxx on different size 
 
 Tabs and column from the Status tab can be hidden, to let you see only what you use in Gupaxx.  
 
+### Daemon mode
+
+Gupaxx can be started in CLI only environment without a GUI. You can do so by starting it with the argument: `--daemon`
+
 ## Security
 Gupaxx is updated frequently and there is a CI action to check for known vulnerabilities (cargo audit). 

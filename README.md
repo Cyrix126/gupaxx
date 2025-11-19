@@ -21,6 +21,7 @@ It is intended for end users and offers a friendly and easy user experience.
 	- [Console](#console-of-xvb) 
 	- [Account stats](#account-stats) 
 * [XvB Raffle](#xvb-raffle-status) 
+* [Daemon mode](#daemon-mode) 
 * [Other changes](#other-changes) 
 * [License](#license) 
 
@@ -69,6 +70,20 @@ It is refreshed every minute.
 This column will be active if the XvB process is started even partially.
 
 ![XvB raffle stats](assets/images/xvb_raffle_stats.png)
+
+## Daemon mode
+Gupaxx can be started as a daemon, without any GUI (intended for CLI only environement).  
+To do so, start the executable with the argument `--daemon`.  
+The daemon is configurable by the same configuration file that is used by the normal GUI mode that you can find in the following path depending on your OS  
+|            |                                              |                                                 |
+| ---------- | -------------------------------------------- | ------------------------------------------------|
+| Linux      | $XDG_DATA_HOME or $HOME/.local/share/gupaxx  | /home/alice/.local/state/gupaxx                 |  
+| macOS      | $HOME/Library/Application Support/Gupaxx     | /Users/Alice/Library/Application Support/Gupaxx |
+| Windows    | {FOLDERID_RoamingAppData}\Gupaxx             | C:\Users\Alice\AppData\Roaming\Gupaxx           |
+
+
+  		
+Once started, you can enter the key 's' to print the status of started processes.
 
 
 ## Other changes
