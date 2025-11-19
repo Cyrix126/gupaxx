@@ -452,6 +452,7 @@ impl crate::app::App {
                         }
                     }
                 });
+                    ui.add(Separator::default().grow(0.0));
                 ui.add_enabled_ui(false, |ui| {
                     ui.add_sized(size, Button::new("⏹"))
                         .on_disabled_hover_text(stop_msg);
