@@ -124,7 +124,9 @@ wgpu = {version = "27.0.1", features=["angle"]}
 zip = "6.0.0"
 is_elevated = "0.1.2"
 ## portable-pty upgrade on 0.9 will break terminals on windows 
-portable-pty = "0.9.0"
+## it should always be at 0.8.1
+# portable-pty = "0.8.1"
+portable-pty = "0.8.1"
 
 # For Windows build (icon)
 [target.'cfg(windows)'.build-dependencies]
