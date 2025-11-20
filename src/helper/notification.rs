@@ -218,9 +218,9 @@ pub fn notif(body: &str) {
     // we do not unwrap in case the desktop environment doesn't support notifications
     // We don't need a handle to the notification anyway
     let _ = Notif::new()
-        .summary("Category:Mining")
+        .summary("Gupaxx event")
         .body(body)
-        .icon("Gupaxx")
+        .icon("gupaxx")
         .appname("Gupaxx")
         .show();
 }
