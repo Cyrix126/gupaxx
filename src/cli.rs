@@ -24,7 +24,6 @@ use crate::resets::reset_state;
 #[command(version = crate_version!())]
 #[command(about = crate_description!(), long_about = None)]
 #[command(next_line_help = true)]
-#[group(required = false, multiple = false)]
 pub struct Cli {
     #[command(subcommand)]
     pub info: Option<GupaxxData>,
@@ -32,6 +31,8 @@ pub struct Cli {
     pub logfile: bool,
     #[clap(long, action)]
     pub daemon: bool,
+    #[clap(long,action,requires = "daemon")]
+    pub non_interactive: bool,
 }
 
 #[derive(Subcommand)]

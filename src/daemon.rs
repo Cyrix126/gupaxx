@@ -1,11 +1,11 @@
-use std::{io, process::exit, sync::Arc};
+use std::{io, process::exit, sync::Arc, time::Duration, thread};
 
 use crate::{
     app::App,
     helper::{Helper, xvb::nodes::Pool},
 };
 
-pub fn start_daemon(app: &Arc<App>) {
+pub fn start_daemon(app: &Arc<App>, non_interactive: bool) {
     // if the app receives Ctrl+C, make sure to terminate all services
     let app_ctrlc = app.clone();
     ctrlc::set_handler(move || {
@@ -17,7 +17,12 @@ pub fn start_daemon(app: &Arc<App>) {
         exit(0);
     })
     .expect("Error setting Ctrl-C handler");
+    let five_seconds = Duration::new(5, 0);
     loop {
+        if non_interactive {
+            thread::sleep(five_seconds);
+            continue;
+        }
         let mut input = String::new();
         let status = io::stdin().read_line(&mut input);
         if status.is_err() {

@@ -76,7 +76,7 @@ fn main() {
     if args.daemon {
         // if the app receives Ctrl+C, make sure to terminate all services
         let app = Arc::new(app);
-        start_daemon(&app);
+        start_daemon(&app, args.non_interactive);
     } else {
         // Init GUI stuff.
         let selected_width = app.state.gupax.selected_width as f32;
