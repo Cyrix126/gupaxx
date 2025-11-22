@@ -1,4 +1,4 @@
-use std::{io, process::exit, sync::Arc};
+use std::{io, process::exit, sync::Arc, thread::sleep, time::Duration};
 
 use crate::{
     app::App,
@@ -19,15 +19,19 @@ pub fn start_daemon(app: &Arc<App>) {
     .expect("Error setting Ctrl-C handler");
     loop {
         let mut input = String::new();
-        let status = io::stdin().read_line(&mut input);
-        if status.is_err() {
-            eprintln!("Could not understand input");
-            println!("Press s then Enter to print the Status of started services");
-        }
-        if input.contains("s") {
-            print_all_services(app);
-        } else {
-            println!("Press s then Enter to print the Status of started services");
+        match io::stdin().read_line(&mut input) {
+            Ok(0) => sleep(Duration::from_secs(10)),
+            Ok(_) => {
+                if input.contains("s") {
+                    print_all_services(app);
+                } else {
+                    println!("Press s then Enter to print the Status of started services");
+                }
+            }
+            Err(e) => {
+                eprintln!("Could not understand input: {e}");
+                println!("Press s then Enter to print the Status of started services");
+            }
         }
     }
 }
