@@ -86,7 +86,6 @@ const GUI_OUTPUT_LEEWAY: usize = MAX_GUI_OUTPUT_BYTES - 1000;
 
 // Some constants for generating hashrate/difficulty.
 const MONERO_BLOCK_TIME_IN_SECONDS: u64 = 120;
-const P2POOL_BLOCK_TIME_IN_SECONDS: u64 = 10;
 
 //---------------------------------------------------------------------------------------------------- [Helper] Struct
 // A meta struct holding all the data that gets processed in this thread

@@ -47,12 +47,8 @@ use crate::utils::regex::contains_window_nb_blocks;
 use crate::utils::regex::p2pool_monero_node;
 use crate::utils::regex::pplns_window_nb_blocks;
 use crate::{
-    constants::*,
-    disk::gupax_p2pool_api::GupaxP2poolApi,
-    helper::{MONERO_BLOCK_TIME_IN_SECONDS, P2POOL_BLOCK_TIME_IN_SECONDS},
-    human::*,
-    macros::*,
-    xmr::*,
+    constants::*, disk::gupax_p2pool_api::GupaxP2poolApi, helper::MONERO_BLOCK_TIME_IN_SECONDS,
+    human::*, macros::*, xmr::*,
 };
 use enclose::enc;
 use log::*;
@@ -1228,7 +1224,7 @@ impl PubP2poolApi {
         let monero_difficulty = net.difficulty;
         let monero_hashrate = monero_difficulty / MONERO_BLOCK_TIME_IN_SECONDS;
         let p2pool_hashrate = pool.pool_statistics.hashRate;
-        let p2pool_difficulty = p2pool_hashrate * P2POOL_BLOCK_TIME_IN_SECONDS;
+        let p2pool_difficulty = pool.pool_statistics.sidechainDifficulty;
         // These [0] checks prevent dividing by 0 (it [panic!()]s)
         let p2pool_block_mean;
         let user_p2pool_percent;
@@ -1449,6 +1445,7 @@ pub(super) struct PoolStatistics {
     pub hashRate: u64,
     pub miners: u32,
     pub sidechainHeight: u32,
+    pub sidechainDifficulty: u64,
 }
 impl Default for PoolStatistics {
     fn default() -> Self {
@@ -1461,6 +1458,7 @@ impl PoolStatistics {
             hashRate: 0,
             miners: 0,
             sidechainHeight: 0,
+            sidechainDifficulty: 0,
         }
     }
 }

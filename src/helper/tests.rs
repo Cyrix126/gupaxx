@@ -211,6 +211,7 @@ Uptime         = 0h 2m 4s
                 hashRate: 1_000_000, // 1 MH/s
                 miners: 1_000,
                 sidechainHeight: 10_000_000,
+                sidechainDifficulty: 10_000_000,
             },
         };
         // Update Local
@@ -381,7 +382,8 @@ Uptime         = 0h 2m 4s
 					"lastBlockFoundTime": 1670453228,
 					"lastBlockFound": 2756570,
 					"totalBlocksFound": 4,
-					"sidechainHeight": 9000000
+					"sidechainHeight": 9000000,
+					"sidechainDifficulty": 102257720
 				}
 			}"#;
         let priv_api = crate::helper::p2pool::PrivP2poolPoolApi::from_str(data).unwrap();
@@ -391,7 +393,8 @@ Uptime         = 0h 2m 4s
   "pool_statistics": {
     "hashRate": 10225772,
     "miners": 713,
-    "sidechainHeight": 9000000
+    "sidechainHeight": 9000000,
+    "sidechainDifficulty": 102257720
   }
 }"#;
         assert_eq!(data_after_ser, json)
