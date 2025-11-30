@@ -216,8 +216,7 @@ impl Helper {
                 let bind_url = format!("{ip}:{port}"); // Combine IP:Port into one string
                 args.push("--user".to_string());
                 args.push(state.address.clone()); // Wallet
-                args.push("--rig-id".to_string());
-                args.push(state.rig.to_string()); // Rig ID
+                args.push(format!("--rig-id={}", state.rig)); // Rig ID
                 args.push("-o".to_string());
                 args.push(p2pool_url.clone()); // IP/Port
                 args.push("-b".to_string());

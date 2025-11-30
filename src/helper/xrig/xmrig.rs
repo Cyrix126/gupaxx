@@ -438,8 +438,7 @@ impl Helper {
                 let url = format!("{}:{}", ip, state.port); // Combine IP:Port into one string
                 args.push("--user".to_string());
                 args.push(state.address.clone()); // Wallet
-                args.push("--rig-id".to_string());
-                args.push(state.rig.to_string()); // Rig ID
+                args.push(format!("--rig-id={}", state.rig)); // Rig ID
                 args.push("--url".to_string());
                 args.push(url.clone()); // IP/Port
                 args.push("--http-host".to_string());
