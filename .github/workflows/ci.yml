@@ -13,7 +13,7 @@ jobs:
 
     strategy:
       matrix:
-        os: [macos-13, ubuntu-22.04]
+        os: [windows-2022, macos-13, ubuntu-22.04]
 
     steps:
     - name: Checkout
@@ -61,20 +61,35 @@ jobs:
           cargo build --release --target x86_64-unknown-linux-gnu --features=bundle
           mv target/x86_64-unknown-linux-gnu/release/gupaxx gupaxx_b
           tar -cf linux.tar gupaxx gupaxx_b
-          cargo build --release --target x86_64-pc-windows-gnu
-          mv target/x86_64-pc-windows-gnu/release/gupaxx.exe .
-          cargo build --release --target x86_64-pc-windows-gnu --features=bundle
-          mv target/x86_64-pc-windows-gnu/release/gupaxx.exe gupaxx_b.exe
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          # For very old cpu
+          cargo build --release
+          mv target/release/gupaxx.exe .
+          cargo build --release --features=bundle
+          mv target/release/gupaxx.exe gupaxx_b.exe
+          tar -cf windows_old_cpu.tar gupaxx.exe gupaxx_b.exe
+          # For normal cpu
+          cargo build --release --features=wgpu
+          mv target/release/gupaxx.exe .
+          cargo build --release --features=bundle
+          mv target/release/gupaxx.exe gupaxx_b.exe
           tar -cf windows.tar gupaxx.exe gupaxx_b.exe
         fi
       shell: bash
 
     - name: Archive (Windows)
-      if: ${{ runner.os == 'Linux' }}
+      if: ${{ runner.os == 'Windows' }}
       uses: actions/upload-artifact@v4
       with:
         name: windows
         path: windows.tar
+
+    - name: Archive (Windows) Old CPU
+      if: ${{ runner.os == 'Windows' }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows_old_cpu
+        path: windows_old_cpu.tar
 
     - name: Archive
       if: ${{ runner.os == 'macOS' }}

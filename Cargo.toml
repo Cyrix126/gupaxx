@@ -24,6 +24,7 @@ default = []
 bundle = []
 distro = []
 log=[]
+wgpu=["dep:wgpu", "eframe/wgpu"]
 
 [dependencies]
 clap = {version="4.5", features=["cargo", "derive"]}
@@ -33,19 +34,7 @@ bytes = "1.11.0"
 dirs = "6.0.0"
 #--------------------------------------------------------------------------------
 egui = "0.33"
-# egui = {git="https://github.com/emilk/egui"}
 egui_extras = {version="0.33", features = ["image"] }
-# egui_extras = {git="https://github.com/emilk/egui", features = ["image"] }
-
-## 2023-12-28: https://github.com/hinto-janai/gupax/issues/68
-##
-## 2024-03-18: Both `glow` and `wgpu` seem to crash:
-## <https://github.com/hinto-janai/gupax/issues/84>
-## `wgpu` seems to crash on less computers though so...
-
-## 2023-02-06: The below gets fixed by using the [wgpu] backend instead of [glow]
-## It also fixes crashes on CPU-based graphics. Only used for Windows.
-## Using [wgpu] actually crashes macOS (fixed in 0.20.x though).
 
 #--------------------------------------------------------------------------------
 env_logger = "0.11.8"
@@ -63,7 +52,6 @@ rfd = "0.15.4"
 serde = { version = "1.0.228", features = ["rc", "derive"] }
 serde_json = "1.0.145"
 sysinfo = { version = "0.37", default-features = false, features=["system"] }
-# tls-api = "0.9.0"
 tokio = { version = "1.48.0", features = ["rt", "time", "macros", "process", "rt-multi-thread"] }
 toml = { version = "0.9.8", features = ["preserve_order"] }
 walkdir = "2.5.0"
@@ -78,8 +66,7 @@ enclose = "1.2.1"
 bounded-vec-deque = {version="0.1.1", default-features=false}
 cfg-if = "1.0"
 flexi_logger = "0.31"
-eframe = {version="0.33", features=["wgpu"]}
-# eframe = {git="https://github.com/emilk/egui", features=["wgpu"]}
+eframe = "0.33"
 strum = {version="0.27", features=["derive"]}
 ## force version of ring to prevent https://rustsec.org/advisories/RUSTSEC-2025-0009
 ring = "0.17.14"
@@ -103,24 +90,18 @@ ctrlc = {version="3.5", features=["termination"]}
 tar = "0.4.44"
 flate2 = "1.1"
 sudo = "0.6.0"
-# https://github.com/emilk/egui/releases/tag/0.30.0 see breaking change
-eframe = {version="0.33", features=["x11", "wayland"]}
 portable-pty = "0.9.0"
 # macOS
 [target.'cfg(target_os = "macos")'.dependencies]
 [dev-dependencies]
 egui = {version="0.33", features=["callstack"]}
-# egui = {git="https://github.com/emilk/egui", features=["callstack"]}
-
-# [target.'cfg(not(target_os = "macos"))'.dependencies]
-# tls-api-native-tls = "0.9.0"
 
 # Windows dependencies
 [target.'cfg(windows)'.dependencies]
 # glow start on windows but not wgpu
 # need the same version that eframe is using with egui_wgpu
 # feature angle to enable support for old cpu on Windows
-wgpu = {version = "27.0.1", features=["angle"]}
+wgpu = {version = "27.0.1", features=["angle"], optional=true}
 zip = "6.0.0"
 is_elevated = "0.1.2"
 ## portable-pty upgrade on 0.9 will break terminals on windows 
