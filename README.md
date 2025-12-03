@@ -10,7 +10,7 @@ It is intended for end users and offers a friendly and easy user experience.
 ## System requirements
 `Gupaxx` may not run on machines with:
 - A deprecated OS (Windows 7, Ubuntu 18.04, etc)
-- CPU whithout support for OpenGL 3.1 (<2010)
+- CPU without support for OpenGL 3.1 (<2010)
 
 [![CI](https://github.com/cyrix126/gupaxx/actions/workflows/ci.yml/badge.svg)](https://github.com/cyrix126/gupaxx/actions/workflows/ci.yml)
 
