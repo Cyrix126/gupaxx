@@ -37,7 +37,7 @@ pub fn start_daemon(app: &Arc<App>) {
 }
 
 fn print_all_services(app: &Arc<App>) {
-    println!("{}", status_gupaxx(app));
+    println!("{}", status_gupax(app));
     if app.node.lock().unwrap().is_alive()
         && app
             .state
@@ -86,14 +86,14 @@ fn print_all_services(app: &Arc<App>) {
     }
 }
 
-fn status_gupaxx(app: &Arc<App>) -> String {
+fn status_gupax(app: &Arc<App>) -> String {
     let sys = app.pub_sys.lock().unwrap();
     format!(
         "
-[Gupaxx]
+[Gupax]
 Uptime:        {}
-Gupaxx CPU:    {}
-Gupaxx Memory: {}
+Gupax CPU:    {}
+Gupax Memory: {}
 System CPU:    {}
 System Memory: {}
 CPU model:     {}

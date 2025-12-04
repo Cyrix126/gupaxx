@@ -32,7 +32,7 @@ impl Gupax {
         api_notification: &Arc<Mutex<NotificationApi>>,
     ) {
         // Update button + Progress bar
-        debug!("Gupaxx Tab | Rendering [Update] button + progress bar");
+        debug!("Gupax Tab | Rendering [Update] button + progress bar");
         let height_font = ui.text_style_height(&TextStyle::Body);
         egui::ScrollArea::vertical().show(ui, |ui| {
             ui.style_mut().spacing.item_spacing = [height_font, height_font].into();
@@ -91,7 +91,7 @@ impl Gupax {
                 });
             });
 
-            // debug!("Gupaxx Tab | Rendering bool buttons");
+            // debug!("Gupax Tab | Rendering bool buttons");
             ui.group(|ui| {
                 ui.vertical_centered(|ui| {
                     ui.add(Label::new(
@@ -107,7 +107,7 @@ impl Gupax {
             .on_hover_text(
                 "Show(checked) elements (Tab/Status column/bottom status) related to a process",
             );
-            // debug!("Gupaxx Tab | Rendering bool buttons");
+            // debug!("Gupax Tab | Rendering bool buttons");
             ui.group(|ui| {
                 ui.vertical_centered(|ui| {
                     ui.add(Label::new(
@@ -123,7 +123,7 @@ impl Gupax {
                 return;
             }
 
-            debug!("Gupaxx Tab | Rendering Node/P2Pool/XMRig/XMRig-Proxy path selection");
+            debug!("Gupax Tab | Rendering Node/P2Pool/XMRig/XMRig-Proxy path selection");
             // need to clone bool so file_window is not locked across a thread
             let window_busy = file_window.lock().unwrap().thread.to_owned();
             ui.group(|ui| {
@@ -134,7 +134,7 @@ impl Gupax {
                                 .underline()
                                 .color(LIGHT_GRAY),
                         ))
-                        .on_hover_text("Gupaxx is online");
+                        .on_hover_text("Gupax is online");
                     });
                     ui.separator();
                     ScrollArea::horizontal().show(ui, |ui| {
@@ -171,7 +171,7 @@ impl Gupax {
                 drop(guard);
             });
             // Saved [Tab]
-            debug!("Gupaxx Tab | Rendering [Tab] selector");
+            debug!("Gupax Tab | Rendering [Tab] selector");
             ui.group(|ui| {
                 ui.vertical_centered(|ui| {
                     ui.add(Label::new(
@@ -210,7 +210,7 @@ impl Gupax {
             });
 
             // Gupax App resolution sliders
-            debug!("Gupaxx Tab | Rendering resolution sliders");
+            debug!("Gupax Tab | Rendering resolution sliders");
             ui.group(|ui| {
                 ui.vertical_centered(|ui| {
                     ui.add(Label::new(
@@ -334,7 +334,7 @@ impl Gupax {
                     })
                 });
             });
-            debug!("Gupaxx Tab | Rendering Notification checkbox");
+            debug!("Gupax Tab | Rendering Notification checkbox");
             ui.group(|ui| {
                 ui.vertical_centered(|ui| {
                     ui.add(Label::new(

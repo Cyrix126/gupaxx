@@ -121,8 +121,8 @@ pub fn column_process<R>(
 }
 
 fn gupax(ui: &mut Ui, sys: &Arc<Mutex<Sys>>) {
-    ui.label(RichText::new("[Gupaxx]").text_style(TextStyle::Heading))
-        .on_hover_text("Gupaxx is online");
+    ui.label(RichText::new("[Gupax]").text_style(TextStyle::Heading))
+        .on_hover_text("Gupax is online");
     let sys = sys.lock().unwrap();
     ui.label(RichText::new("Uptime").underline())
         .on_hover_text(STATUS_GUPAX_UPTIME);
@@ -134,10 +134,10 @@ fn gupax(ui: &mut Ui, sys: &Arc<Mutex<Sys>>) {
         ],
         Label::new(sys.gupax_uptime.to_string()),
     );
-    ui.label(RichText::new("Gupaxx CPU").underline())
+    ui.label(RichText::new("Gupax CPU").underline())
         .on_hover_text(STATUS_GUPAX_CPU_USAGE);
     ui.label(sys.gupax_cpu_usage.to_string());
-    ui.label(RichText::new("Gupaxx Memory").underline())
+    ui.label(RichText::new("Gupax Memory").underline())
         .on_hover_text(STATUS_GUPAX_MEMORY_USAGE);
     ui.label(sys.gupax_memory_used_mb.to_string());
     ui.label(RichText::new("System CPU").underline())

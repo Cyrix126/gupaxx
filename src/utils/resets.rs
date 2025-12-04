@@ -110,8 +110,8 @@ pub fn reset(
         Err(_) => code = 1,
     }
     match code {
-        0 => println!("\nGupaxx reset ... OK"),
-        _ => eprintln!("\nGupaxx reset ... FAIL"),
+        0 => println!("\nGupax reset ... OK"),
+        _ => eprintln!("\nGupax reset ... FAIL"),
     }
     exit(code);
 }

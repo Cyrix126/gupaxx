@@ -5,7 +5,7 @@ use crate::app::submenu_enum::{Submenu, SubmenuP2pool, SubmenuStatus};
 use crate::app::{Restart, keys::KeyPressed};
 use crate::disk::node::Node;
 use crate::disk::pool::Pool;
-use crate::disk::state::{Gupax, GupaxxTheme, State};
+use crate::disk::state::{Gupax, GupaxTheme, State};
 use crate::helper::node::{CheckLocalOutsideNode, spawn_local_outside_checker};
 use crate::helper::{Helper, ProcessName, ProcessSignal, ProcessState};
 use crate::utils::constants::*;
@@ -143,9 +143,9 @@ impl crate::app::App {
 
     fn theme_show(&mut self, ui: &mut Ui, ctx: &egui::Context) {
         let icon = match self.state.gupax.theme {
-            GupaxxTheme::Dark => "🌙",
-            GupaxxTheme::Light => "🌞",
-            GupaxxTheme::System => "🔳",
+            GupaxTheme::Dark => "🌙",
+            GupaxTheme::Light => "🌞",
+            GupaxTheme::System => "🔳",
         };
         if ui
             .add(Button::new(icon))
@@ -157,9 +157,9 @@ impl crate::app::App {
     }
     fn toggle_theme(&mut self, ctx: &egui::Context) {
         self.state.gupax.theme = match self.state.gupax.theme {
-            GupaxxTheme::Dark => GupaxxTheme::Light,
-            GupaxxTheme::Light => GupaxxTheme::System,
-            GupaxxTheme::System => GupaxxTheme::Dark,
+            GupaxTheme::Dark => GupaxTheme::Light,
+            GupaxTheme::Light => GupaxTheme::System,
+            GupaxTheme::System => GupaxTheme::Dark,
         };
 
         self.set_theme(ctx);
@@ -343,7 +343,7 @@ impl crate::app::App {
                             .on_disabled_hover_text(text_err)
                             .clicked()
                     {
-                        // check if process is running outside of Gupaxx, warn about it and do not start it.
+                        // check if process is running outside of Gupax, warn about it and do not start it.
                         // Except for Node which will be treated differently.
                         if name != ProcessName::Node && name.is_process_running(&mut self.helper.lock().unwrap().sys_info.lock().unwrap())   {
                             error!("Process already running outside: {name}");
@@ -359,7 +359,7 @@ impl crate::app::App {
                         // start process
                         match process.name {
                             ProcessName::Node => {
-                            // check if a local node is running outside of gupaxx. If that's the case, check if it's compatible with p2pool. If that's the case, offer the choice to the user to use it.
+                            // check if a local node is running outside of gupax. If that's the case, check if it's compatible with p2pool. If that's the case, offer the choice to the user to use it.
                             // The scanning of nodes should take less than 100ms since it's local
                             // the checking can take a bit of time, specially if a node is running with opened ports but not responding as expected.
                             // The check needs to run in another thread.
@@ -377,15 +377,15 @@ impl crate::app::App {
                             if let Some(check) = check_local_outside.get() {
                                 match check {
                                     CheckLocalOutsideNode::Valid(rpc_port, zmq_port) => {
-                                        // show window prompt to ask the user if they want to use the Node outside Gupaxx.
+                                        // show window prompt to ask the user if they want to use the Node outside Gupax.
                                         // But the prompt will only come with the next refresh of frames.
-                                        warn!("A monero Node is already running outside of Gupaxx and can be used for p2pool");
+                                        warn!("A monero Node is already running outside of Gupax and can be used for p2pool");
                                         self.error_state.set(NODE_START_DETECT_VALID,ErrorFerris::Cute,ErrorButtons::UseDetectedLocalNode((*rpc_port, *zmq_port)));
                                         // the start will start from the prompt
                                     }
                                     CheckLocalOutsideNode::NonValid => {
                                         // show window with error explaining a node is running but can be used
-                                        error!("A monero Node is already running outside of Gupaxx and can not be used for p2pool");
+                                        error!("A monero Node is already running outside of Gupax and can not be used for p2pool");
                                         self.error_state.set(NODE_START_DETECT_NON_VALID,ErrorFerris::Oops,ErrorButtons::Okay);
                                     }
                                     CheckLocalOutsideNode::None => {
@@ -493,7 +493,7 @@ impl crate::app::App {
     fn submenu(&mut self, ui: &mut Ui) {
         match self.tab {
             Tab::About => {}
-            Tab::Gupax => self.gupaxx_submenu(ui),
+            Tab::Gupax => self.gupax_submenu(ui),
             Tab::Status => Self::status_submenu(&mut self.state.status.submenu, ui),
             Tab::Node => self.node_submenu(ui),
             Tab::P2pool => Self::p2pool_submenu(&mut self.state.p2pool.submenu, ui),
@@ -502,7 +502,7 @@ impl crate::app::App {
             Tab::Xvb => self.xvb_submenu(ui),
         }
     }
-    fn gupaxx_submenu(&mut self, ui: &mut Ui) {
+    fn gupax_submenu(&mut self, ui: &mut Ui) {
         Self::simple_advanced_submenu(
             ui,
             &mut self.state.gupax.simple,

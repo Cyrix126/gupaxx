@@ -32,20 +32,20 @@ impl eframe::App for App {
         // might as well check only once here to save
         // on a bunch of [.lock().unwrap()]s.
         let mut process_states = ProcessStatesGui::new(self);
-        // resize window and fonts if button "set" has been clicked in Gupaxx tab
+        // resize window and fonts if button "set" has been clicked in Gupax tab
         if self.must_resize {
             init_text_styles(ctx, self.state.gupax.selected_scale);
             self.must_resize = false;
         }
-        // check for windows that a local instance of xmrig is not running outside of Gupaxx. Important because it could lead to crashes on this platform.
-        // Warn only once per restart of Gupaxx.
+        // check for windows that a local instance of xmrig is not running outside of Gupax. Important because it could lead to crashes on this platform.
+        // Warn only once per restart of Gupax.
         #[cfg(target_os = "windows")]
         if !self.xmrig_outside_warning_acknowledge
             && ProcessName::Xmrig
                 .is_process_running(&mut self.helper.lock().unwrap().sys_info.lock().unwrap())
             && !process_states.find(ProcessName::Xmrig).alive
         {
-            self.error_state.set("An instance of xmrig is running outside of Gupaxx.\nThis is not supported and could lead to crashes on this platform.\nPlease stop your local instance and start xmrig from Gupaxx Xmrig tab.", ErrorFerris::Error, ErrorButtons::Okay);
+            self.error_state.set("An instance of xmrig is running outside of Gupax.\nThis is not supported and could lead to crashes on this platform.\nPlease stop your local instance and start xmrig from Gupax Xmrig tab.", ErrorFerris::Error, ErrorButtons::Okay);
             self.xmrig_outside_warning_acknowledge = true;
         }
         // If there's an error, display [ErrorState] on the whole screen until user responds

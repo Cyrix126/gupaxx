@@ -1,4 +1,4 @@
-// Gupaxx - Fork of Gupax
+// Gupax
 //
 // Copyright (c) 2024-2025 Cyrix126
 //
@@ -35,7 +35,7 @@ mod test {
     #[test]
     fn get_current_shares() {
         let stdout = "
-statusfromgupaxx
+statusfromgupax
 2024-03-25 21:31:21.7919 SideChain status
 Monero node               = node2.monerodevs.org:18089:ZMQ:18084 (37.187.74.171)
 Main chain height         = 3113042
@@ -65,9 +65,9 @@ Uptime         = 0h 2m 4s
         let mut shares = 1;
         let mut status_output = false;
         for line in stdout {
-            // if command status is sent by gupaxx process and not the user, forward it only to update_from_status method.
+            // if command status is sent by gupax process and not the user, forward it only to update_from_status method.
             // 25 lines after the command are the result of status, with last line finishing by update.
-            if line.contains("statusfromgupaxx") {
+            if line.contains("statusfromgupax") {
                 status_output = true;
                 continue;
             }
@@ -852,7 +852,7 @@ Uptime         = 0h 2m 4s
     #[test]
     fn custom_args_p2pool() {
         // check that custom args are parsed correctly.
-        let arguments = "--wallet 4A5Dwt2qKwKEQrZfo4aBkSNtvDDAzSFbAJcyFkdW5RwDh9U4WgeZrgKT4hUoE2gv8h6NmsNMTyjsEL8eSLMbABds5rYFWnw --host node2.monerodevs.org --rpc-port 18089 --zmq-port 18084 --data-api /home/lm/Téléchargements/gupaxx-v1.5.4-rc3-linux-x64-bundle/p2pool --local-api --no-color --mini --light-mode".to_string();
+        let arguments = "--wallet 4A5Dwt2qKwKEQrZfo4aBkSNtvDDAzSFbAJcyFkdW5RwDh9U4WgeZrgKT4hUoE2gv8h6NmsNMTyjsEL8eSLMbABds5rYFWnw --host node2.monerodevs.org --rpc-port 18089 --zmq-port 18084 --data-api /home/lm/Téléchargements/gupax-v1.5.4-rc3-linux-x64-bundle/p2pool --local-api --no-color --mini --light-mode".to_string();
         let state = P2pool {
             submenu: SubmenuP2pool::Advanced,
             arguments: arguments.clone(),

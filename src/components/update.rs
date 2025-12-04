@@ -1,4 +1,4 @@
-// Gupaxx - Fork of Gupax
+// Gupax
 //
 // Copyright (c) 2024-2025 Cyrix126
 //
@@ -56,11 +56,11 @@ use zip::ZipArchive;
 // Example: https://github.com/hinto-janai/gupax/releases/download/v0.0.1/gupax-v0.0.1-linux-standalone-x64.tar.gz
 //
 
-const GUPAX_METADATA: &str = "https://api.github.com/repos/Cyrix126/gupaxx/releases/latest";
+const GUPAX_METADATA: &str = "https://api.github.com/repos/Cyrix126/gupax/releases/latest";
 
 cfg_if::cfg_if! {
      if #[cfg(target_family = "unix")] {
-    pub const GUPAX_BINARY: &str = "gupaxx";
+    pub const GUPAX_BINARY: &str = "gupax";
     pub const P2POOL_BINARY: &str = "p2pool";
     pub const NODE_BINARY: &str = "monerod";
     pub const XMRIG_BINARY: &str = "xmrig";
@@ -71,7 +71,7 @@ cfg_if::cfg_if! {
      if #[cfg(target_os = "windows")] {
     pub(super) const OS_TARGET: &str = "windows";
     pub(super) const ARCHIVE_EXT: &str = "zip";
-    pub const GUPAX_BINARY: &str = "Gupaxx.exe";
+    pub const GUPAX_BINARY: &str = "Gupax.exe";
     pub const P2POOL_BINARY: &str = "p2pool.exe";
     pub const NODE_BINARY: &str = "monerod.exe";
     pub const XMRIG_BINARY: &str = "xmrig.exe";
@@ -130,7 +130,7 @@ const MSG_DOWNLOAD: &str = "Downloading packages";
 const MSG_EXTRACT: &str = "Extracting packages";
 const MSG_UPGRADE: &str = "Upgrading packages";
 pub const MSG_FAILED: &str = "Update failed";
-pub const MSG_FAILED_HELP: &str = "Consider manually replacing your executable from github releases: https://github.com/Cyrix126/gupaxx/releases";
+pub const MSG_FAILED_HELP: &str = "Consider manually replacing your executable from github releases: https://github.com/Cyrix126/gupax/releases";
 const INIT: &str = "------------------- Init -------------------";
 const METADATA: &str = "----------------- Metadata -----------------";
 const COMPARE: &str = "----------------- Compare ------------------";
@@ -211,9 +211,9 @@ impl Update {
             .collect();
         let base = get_exe_dir()?;
         #[cfg(target_os = "windows")]
-        let tmp_dir = format!("{}{}{}{}", base, r"\gupaxx_update_", rand_string, r"\");
+        let tmp_dir = format!("{}{}{}{}", base, r"\gupax_update_", rand_string, r"\");
         #[cfg(target_family = "unix")]
-        let tmp_dir = format!("{}{}{}{}", base, "/gupaxx_update_", rand_string, "/");
+        let tmp_dir = format!("{}{}{}{}", base, "/gupax_update_", rand_string, "/");
         info!("Update | Temporary directory ... {tmp_dir}");
         Ok(tmp_dir)
     }
@@ -360,10 +360,10 @@ impl Update {
         restart: Arc<Mutex<Restart>>,
     ) -> Result<(), anyhow::Error> {
         #[cfg(feature = "distro")]
-        error!("Update | This is the [Linux distro] version of Gupaxx, updates are disabled");
+        error!("Update | This is the [Linux distro] version of Gupax, updates are disabled");
         #[cfg(feature = "distro")]
         return Err(anyhow!(
-            "This is the [Linux distro] version of Gupaxx, updates are disabled"
+            "This is the [Linux distro] version of Gupax, updates are disabled"
         ));
 
         //---------------------------------------------------------------------------------------------------- Init
@@ -416,14 +416,14 @@ impl Update {
         };
 
         *update.lock().unwrap().prog.lock().unwrap() += 10.0;
-        info!("Update | Gupaxx {new_ver} ... OK");
+        info!("Update | Gupax {new_ver} ... OK");
 
         //---------------------------------------------------------------------------------------------------- Compare
         *update.lock().unwrap().msg.lock().unwrap() = MSG_COMPARE.to_string();
         info!("Update | {COMPARE}");
         let diff = GUPAX_VERSION != new_ver;
         if diff {
-            info!("Update | Gupaxx {GUPAX_VERSION} != {new_ver} ... ADDING");
+            info!("Update | Gupax {GUPAX_VERSION} != {new_ver} ... ADDING");
         } else {
             info!("Update | All packages up-to-date ... RETURNING");
             *update.lock().unwrap().prog.lock().unwrap() = 100.0;
@@ -440,15 +440,15 @@ impl Update {
         // Get amount of packages to divide up the percentage increases
 
         //---------------------------------------------------------------------------------------------------- Download
-        *update.lock().unwrap().msg.lock().unwrap() = format!("{MSG_DOWNLOAD} Gupaxx");
+        *update.lock().unwrap().msg.lock().unwrap() = format!("{MSG_DOWNLOAD} Gupax");
         info!("Update | {DOWNLOAD}");
         // Clone data before async
         let version = new_ver;
         // Download link = PREFIX + Version (found at runtime) + SUFFIX + Version + EXT
-        // Example: https://github.com/Cyrix126/gupaxx/releases/download/v1.0.0/gupaxx-v1.0.0-linux-x64-standalone.tar.gz
-        // prefix: https://github.com/Cyrix126/gupaxx/releases/download
+        // Example: https://github.com/Cyrix126/gupax/releases/download/v1.0.0/gupax-v1.0.0-linux-x64-standalone.tar.gz
+        // prefix: https://github.com/Cyrix126/gupax/releases/download
         // version: v1.0.0
-        // suffix: gupaxx
+        // suffix: gupax
         // version: v1.0.0
         // os
         // arch
@@ -460,9 +460,9 @@ impl Update {
             "standalone"
         };
         let link = [
-            "https://github.com/Cyrix126/gupaxx/releases/download/",
+            "https://github.com/Cyrix126/gupax/releases/download/",
             &version,
-            "/gupaxx-",
+            "/gupax-",
             &version,
             "-",
             OS_TARGET,
@@ -474,7 +474,7 @@ impl Update {
             ARCHIVE_EXT,
         ]
         .concat();
-        info!("Update | Gupaxx ... {link}");
+        info!("Update | Gupax ... {link}");
         let bytes = if let Ok(bytes) = get_bytes(&client, link, user_agent).await {
             bytes
         } else {
@@ -482,14 +482,14 @@ impl Update {
             return Err(anyhow!("Download failed"));
         };
         *update.lock().unwrap().prog.lock().unwrap() += 30.0;
-        info!("Update | Gupaxx ... OK");
+        info!("Update | Gupax ... OK");
         info!(
             "Update | Download ... OK ... {}%",
             *update.lock().unwrap().prog.lock().unwrap()
         );
 
         //---------------------------------------------------------------------------------------------------- Extract
-        *update.lock().unwrap().msg.lock().unwrap() = format!("{MSG_EXTRACT} Gupaxx");
+        *update.lock().unwrap().msg.lock().unwrap() = format!("{MSG_EXTRACT} Gupax");
         info!("Update | {EXTRACT}");
         let tmp = tmp_dir.to_owned();
         #[cfg(target_os = "windows")]
@@ -500,7 +500,7 @@ impl Update {
         #[cfg(target_family = "unix")]
         tar::Archive::new(flate2::read::GzDecoder::new(bytes.as_ref())).unpack(tmp)?;
         *update.lock().unwrap().prog.lock().unwrap() += 5.0;
-        info!("Update | Gupaxx ... OK");
+        info!("Update | Gupax ... OK");
         info!(
             "Update | Extract ... OK ... {}%",
             *update.lock().unwrap().prog.lock().unwrap()
@@ -508,12 +508,12 @@ impl Update {
 
         //---------------------------------------------------------------------------------------------------- Upgrade
         // if bundled, directories p2pool, xmrig and xmrig-proxy will exist.
-        // if not, only gupaxx binary will be present.
+        // if not, only gupax binary will be present.
         // 1. Walk directories
         //
         // 3. Rename tmp path into current path
         // 4. Update [State/Version]
-        *update.lock().unwrap().msg.lock().unwrap() = format!("Gupaxx {MSG_UPGRADE}");
+        *update.lock().unwrap().msg.lock().unwrap() = format!("Gupax {MSG_UPGRADE}");
         info!("Update | {UPGRADE}");
         // If this bool doesn't get set, something has gone wrong because
         // we _didn't_ find a binary even though we downloaded it.
@@ -546,7 +546,7 @@ impl Update {
             #[cfg(target_os = "windows")]
             if path.exists() {
                 let tmp_windows = match name {
-                    GUPAX_BINARY => tmp_dir.clone() + "gupaxx_old.exe",
+                    GUPAX_BINARY => tmp_dir.clone() + "gupax_old.exe",
                     P2POOL_BINARY => tmp_dir.clone() + "p2pool_old.exe",
                     XMRIG_BINARY => tmp_dir.clone() + "xmrig_old.exe",
                     XMRIG_PROXY_BINARY => tmp_dir.clone() + "xmrig-proxy_old.exe",
@@ -596,7 +596,7 @@ impl Update {
         let seconds = now.elapsed().as_secs();
         info!("Update | Seconds elapsed ... [{seconds}s]");
         *update.lock().unwrap().msg.lock().unwrap() =
-            format!("Updated from {GUPAX_VERSION} to {version}\nYou need to restart Gupaxx.");
+            format!("Updated from {GUPAX_VERSION} to {version}\nYou need to restart Gupax.");
         *update.lock().unwrap().prog.lock().unwrap() = 100.0;
         Ok(())
     }

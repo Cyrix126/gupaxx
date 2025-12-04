@@ -4,7 +4,7 @@ use crate::app::submenu_enum::SubmenuP2pool;
 use crate::disk::state::{P2pool, StartOptionsMode, State};
 use crate::helper::crawler::Crawler;
 use crate::helper::p2pool::PubP2poolApi;
-// Gupaxx - Fork of Gupax
+// Gupax
 //
 // Copyright (c) 2024-2025 Cyrix126
 //

@@ -16,14 +16,17 @@ use crate::components::gupax::FileWindow;
 use crate::components::node::Ping;
 use crate::components::node::RemoteNodes;
 use crate::components::update::Update;
+use crate::disk::consts::GUPAX_P2POOL_API_DIRECTORY;
 use crate::disk::consts::NODE_TOML;
 use crate::disk::consts::POOL_TOML;
 use crate::disk::consts::STATE_TOML;
+use crate::disk::create_gupax_dir;
+use crate::disk::create_gupax_p2pool_dir;
 use crate::disk::get_gupax_data_path;
 use crate::disk::gupax_p2pool_api::GupaxP2poolApi;
 use crate::disk::node::Node;
 use crate::disk::pool::Pool;
-use crate::disk::state::GupaxxTheme;
+use crate::disk::state::GupaxTheme;
 use crate::disk::state::State;
 use crate::errors::ErrorButtons;
 use crate::errors::ErrorFerris;
@@ -48,10 +51,11 @@ use crate::inits::init_text_styles;
 use crate::miscs::cmp_f64;
 use crate::miscs::get_exe;
 use crate::miscs::get_exe_dir;
-use crate::utils::constants::VISUALS_GUPAXX_DARK;
-use crate::utils::constants::VISUALS_GUPAXX_LIGHT;
+use crate::utils::constants::VISUALS_GUPAX_DARK;
+use crate::utils::constants::VISUALS_GUPAX_LIGHT;
 use crate::utils::macros::arc_mut;
 use crate::utils::sudo::SudoState;
+use copy_dir::copy_dir;
 use derive_more::derive::Display;
 use eframe::CreationContext;
 use egui::Context;
@@ -64,6 +68,7 @@ use log::warn;
 use panels::middle::common::list_poolnode::PoolNode;
 use serde::Deserialize;
 use serde::Serialize;
+use std::fs::remove_dir_all;
 use std::net::IpAddr;
 use std::net::Ipv4Addr;
 use std::path::PathBuf;
@@ -71,6 +76,7 @@ use std::process::exit;
 use std::sync::Arc;
 use std::sync::Mutex;
 use std::time::Instant;
+use std::time::SystemTime;
 use strum::EnumCount;
 use strum::EnumIter;
 
@@ -194,13 +200,13 @@ impl App {
 
     pub fn set_theme(&self, ctx: &Context) {
         match self.state.gupax.theme {
-            GupaxxTheme::Dark => ctx.set_visuals(VISUALS_GUPAXX_DARK.clone()),
-            GupaxxTheme::Light => ctx.set_visuals(VISUALS_GUPAXX_LIGHT.clone()),
-            GupaxxTheme::System => {
+            GupaxTheme::Dark => ctx.set_visuals(VISUALS_GUPAX_DARK.clone()),
+            GupaxTheme::Light => ctx.set_visuals(VISUALS_GUPAX_LIGHT.clone()),
+            GupaxTheme::System => {
                 if let Some(system_theme) = ctx.system_theme() {
                     ctx.set_theme(system_theme);
                 } else {
-                    ctx.set_visuals(VISUALS_GUPAXX_DARK.clone());
+                    ctx.set_visuals(VISUALS_GUPAX_DARK.clone());
                 }
             }
         };
@@ -386,7 +392,7 @@ impl App {
             pool_path: PathBuf::new(),
             backup_hosts: Arc::new(Mutex::new(vec![])),
             version: GUPAX_VERSION,
-            name_version: format!("Gupaxx {GUPAX_VERSION}"),
+            name_version: format!("Gupax {GUPAX_VERSION}"),
             ip_local,
             ip_public,
             proxy_port_reachable,
@@ -450,11 +456,27 @@ impl App {
         let mut app = parse_args(app, args, panic);
 
         use crate::disk::errors::TomlError::*;
+
+        // need to upgrade old Gupax state file that is still using a node by the name.
+        app.migrate_gupaxx_gupax();
+        // if none exist, create:
+        if !app.os_data_path.exists() {
+            if let Err(e) = create_gupax_dir(&app.os_data_path) {
+                panic = format!("get_os_data_path(): {e}");
+                app.error_state
+                    .set(panic.clone(), ErrorFerris::Panic, ErrorButtons::Quit);
+            }
+            let mut gupax_p2pool_dir = app.os_data_path.to_path_buf();
+            gupax_p2pool_dir.push(GUPAX_P2POOL_API_DIRECTORY);
+            if let Err(e) = create_gupax_p2pool_dir(&gupax_p2pool_dir) {
+                panic = format!("get_os_data_path(): {e}");
+                app.error_state
+                    .set(panic.clone(), ErrorFerris::Panic, ErrorButtons::Quit);
+            }
+        }
+
         // Read disk state
         info!("App Init | Reading disk state...");
-
-        // need to upgrade old Gupaxx state file that is still using a node by the name.
-
         app.state = match State::get(&app.state_path) {
             Ok(toml) => toml,
             Err(err) => {
@@ -475,6 +497,7 @@ impl App {
                 State::new()
             }
         };
+
         // Clamp window resolution scaling values.
         app.state.gupax.selected_scale = crate::miscs::clamp_scale(app.state.gupax.selected_scale);
 
@@ -540,7 +563,7 @@ impl App {
                     Merge(e) => (e.to_string(), ErrorFerris::Error, ErrorButtons::ResetState),
                     Parse(e) => (e.to_string(), ErrorFerris::Panic, ErrorButtons::Quit),
                 };
-                app.error_state.set(format!("Gupaxx P2Pool Stats: {}\n\nTry deleting: {}\n\n(Warning: this will delete your P2Pool payout history...!)\n\n", e, app.gupax_p2pool_api_path.display()), ferris, button);
+                app.error_state.set(format!("Gupax P2Pool Stats: {}\n\nTry deleting: {}\n\n(Warning: this will delete your P2Pool payout history...!)\n\n", e, app.gupax_p2pool_api_path.display()), ferris, button);
             }
         }
         info!("App Init | Reading Gupax-P2Pool API files...");
@@ -562,7 +585,7 @@ impl App {
                     Merge(e) => (e.to_string(), ErrorFerris::Error, ErrorButtons::ResetState),
                     Parse(e) => (e.to_string(), ErrorFerris::Panic, ErrorButtons::Quit),
                 };
-                app.error_state.set(format!("Gupaxx P2Pool Stats: {}\n\nTry deleting: {}\n\n(Warning: this will delete your P2Pool payout history...!)\n\n", e, app.gupax_p2pool_api_path.display()), ferris, button);
+                app.error_state.set(format!("Gupax P2Pool Stats: {}\n\nTry deleting: {}\n\n(Warning: this will delete your P2Pool payout history...!)\n\n", e, app.gupax_p2pool_api_path.display()), ferris, button);
             }
         };
         drop(gupax_p2pool_api);
@@ -722,13 +745,13 @@ impl App {
             app.admin = true;
         } else {
             error!("Windows | Admin user not detected!");
-            app.error_state.set("Gupaxx was not launched as Administrator!\nBe warned, XMRig might have less hashrate!".to_string(), ErrorFerris::Sudo, ErrorButtons::WindowsAdmin);
+            app.error_state.set("Gupax was not launched as Administrator!\nBe warned, XMRig might have less hashrate!".to_string(), ErrorFerris::Sudo, ErrorButtons::WindowsAdmin);
         }
         #[cfg(target_family = "unix")]
         if sudo_check::check() != sudo_check::RunningAs::User {
             let id = sudo_check::check();
             error!("Unix | Regular user not detected: [{id:?}]");
-            app.error_state.set(format!("Gupaxx was launched as: [{id:?}]\nPlease launch Gupax with regular user permissions."), ErrorFerris::Panic, ErrorButtons::Quit);
+            app.error_state.set(format!("Gupax was launched as: [{id:?}]\nPlease launch Gupax with regular user permissions."), ErrorFerris::Panic, ErrorButtons::Quit);
         }
         // macOS re-locates "dangerous" applications into some read-only "/private" directory.
         // It _seems_ to be fixed by moving [Gupax.app] into "/Applications".
@@ -740,7 +763,117 @@ impl App {
 
         info!("App ... OK");
 
+        // Save the new version in the state file
+        if let Err(e) = State::save(&mut app.state, &app.state_path) {
+            error!("State file: {e}");
+        }
         app
+    }
+    fn migrate_gupaxx_gupax(&mut self) {
+        // check if gupax and gupaxx state path both exist
+        let mut gupaxx_path = self.os_data_path.to_path_buf();
+        gupaxx_path.pop();
+        gupaxx_path.push("gupaxx");
+        let mut gupaxx_state_path = gupaxx_path.to_path_buf();
+        gupaxx_state_path.push(STATE_TOML);
+        if gupaxx_state_path.exists() {
+            if self.os_data_path.exists() {
+                // check which one was used last
+                // Some peoples may have installed gupaxx but for some reason keep to use gupax
+                // We need to still use the settings from gupax in these case
+
+                // We compare the last time gupax/gupaxx was used. If gupax is used more recently than gupaxx, we keep the settings of gupax.
+                // accessed metadata is better but it's not a certain value. modified is used in backup.
+                // Must be done before anything read the state file, else the result would be useless
+                let mut time_modified_gupax = SystemTime::now();
+                let mut time_accessed_gupax = None;
+                if let Ok(metadata) = std::fs::metadata(&self.state_path) {
+                    if let Ok(time) = metadata.accessed() {
+                        time_accessed_gupax = Some(time)
+                    }
+                    if let Ok(time) = metadata.modified() {
+                        time_modified_gupax = time
+                    }
+                }
+                let mut time_modified_gupaxx = SystemTime::now();
+                let mut time_accessed_gupaxx = None;
+                if let Ok(metadata) = std::fs::metadata(&gupaxx_state_path) {
+                    if let Ok(time) = metadata.accessed() {
+                        time_accessed_gupaxx = Some(time)
+                    }
+                    if let Ok(time) = metadata.modified() {
+                        time_modified_gupaxx = time
+                    }
+                }
+                // do not migrate if gupax is already at v2
+                let gupax_version = State::get_major_version(&self.state_path).unwrap_or_default();
+                if gupax_version >= 2 {
+                    return;
+                }
+
+                // if gupax state is not yet upgraded and gupaxx was accessed more recently, backup gupax and move gupaxx to gupax.
+                let gupaxx_more_recent_access = if let Some(accessed_time_gupax) =
+                    time_accessed_gupax
+                    && let Some(accessed_time_gupaxx) = time_accessed_gupaxx
+                    && let Ok(gupax_accessed) = accessed_time_gupax.elapsed()
+                    && let Ok(gupaxx_accessed) = accessed_time_gupaxx.elapsed()
+                    && gupax_accessed > gupaxx_accessed
+                {
+                    true
+                } else {
+                    false
+                };
+                let gupaxx_more_recent_modification = if let Ok(gupax_modified) =
+                    time_modified_gupax.elapsed()
+                    && let Ok(gupaxx_modified) = time_modified_gupaxx.elapsed()
+                    && gupax_modified > gupaxx_modified
+                {
+                    true
+                } else {
+                    false
+                };
+
+                if gupaxx_more_recent_access || gupaxx_more_recent_modification {
+                    info!(" App Init | Migration of gupaxx local data to replace gupax");
+                    // backup gupax local data
+                    let mut backup_path = self.os_data_path.to_path_buf();
+                    backup_path.pop();
+                    backup_path.push("gupax_v1");
+                    if backup_path.exists() {
+                        warn!(
+                            "backup path of gupax exists, but this is a new migration. Replacing backup."
+                        );
+                        if let Err(e) = remove_dir_all(&backup_path) {
+                            warn!("error while removing backup path: {e}")
+                        }
+                    }
+
+                    if let Err(e) = copy_dir(&self.os_data_path, backup_path) {
+                        warn!(
+                            "Gupax local data was attempted to be backup to gupax_v1, but this error occurred: {e}"
+                        );
+                    }
+                    // copy gupaxx local data to gupax
+                    if let Err(e) = remove_dir_all(&self.os_data_path) {
+                        warn!("error while removing gupax path: {e}")
+                    }
+                    if let Err(e) = copy_dir(gupaxx_path, &self.os_data_path) {
+                        warn!(
+                            "Gupaxx local data was attempted to be moved to gupax, but this error occurred: {e}"
+                        );
+                    }
+                }
+            } else {
+                // gupax does not exist but gupaxx is
+                // copy gupaxx local data to gupax
+                info!(" App Init | Migration of gupaxx local data to gupax");
+                if let Err(e) = copy_dir(gupaxx_path, &self.os_data_path) {
+                    warn!(
+                        "Gupaxx local data was attempted to be moved to gupax, but this error occurred: {e}"
+                    );
+                }
+            }
+        }
     }
 }
 //---------------------------------------------------------------------------------------------------- [Tab] Enum + Impl
@@ -752,7 +885,7 @@ pub enum Tab {
     #[default]
     About,
     Status,
-    #[display("Gupaxx")]
+    #[display("Gupax")]
     Gupax,
     Node,
     P2pool,

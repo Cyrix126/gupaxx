@@ -1,4 +1,4 @@
-// Gupaxx - Fork of Gupax
+// Gupax
 //
 // Copyright (c) 2024-2025 Cyrix126
 //
@@ -761,8 +761,8 @@ fn check_died(
     false
 }
 
-// Allow to check if a process outside of Gupaxx is still alive, without having a pty to it
-// Used when using a detected local node instead of one started by Gupaxx
+// Allow to check if a process outside of Gupax is still alive, without having a pty to it
+// Used when using a detected local node instead of one started by Gupax
 pub fn check_died_process(
     process: &mut Process,
     start: &Instant,
@@ -824,7 +824,7 @@ fn check_user_input(process: &Arc<Mutex<Process>>, stdin: &mut Box<dyn std::io::
         }
     }
 }
-/// If the process is not started by Gupaxx, we use a pid kill instead of the terminal.
+/// If the process is not started by Gupax, we use a pid kill instead of the terminal.
 /// Won't work with xmrig as admin unless we resask for sudo but we don't manage an external xmrig miner, only possibly a local node.
 fn signal_end(
     process: &mut Process,
@@ -909,7 +909,7 @@ fn signal_end(
         debug!("{} Watchdog | Stop SIGNAL done, breaking", process.name,);
         return true;
     // Check RESTART
-    // Restart are only for process started by Gupaxx
+    // Restart are only for process started by Gupax
     } else if process.signal == ProcessSignal::Restart
         && let Some(child) = child_pty
     {

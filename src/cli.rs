@@ -27,7 +27,7 @@ use crate::resets::reset_state;
 #[group(required = false, multiple = false)]
 pub struct Cli {
     #[command(subcommand)]
-    pub info: Option<GupaxxData>,
+    pub info: Option<GupaxData>,
     #[clap(long, short, action)]
     pub logfile: bool,
     #[clap(long, action)]
@@ -35,14 +35,14 @@ pub struct Cli {
 }
 
 #[derive(Subcommand)]
-pub enum GupaxxData {
-    #[command(about = "Print Gupaxx state")]
+pub enum GupaxData {
+    #[command(about = "Print Gupax state")]
     State,
     #[command(about = "Print the manual node list")]
     Nodes,
     #[command(about = "Print the P2Pool payout log, payout count, and total XMR mined")]
     Payouts,
-    #[command(about = "Reset all Gupaxxstate (your settings)")]
+    #[command(about = "Reset all Gupaxstate (your settings)")]
     ResetState,
     #[command(about = "Reset the manual node list in the [P2Pool] tab")]
     ResetNodes,
@@ -50,7 +50,7 @@ pub enum GupaxxData {
     ResetPools,
     #[command(about = "Reset the permanent P2Pool stats that appear in the [Status] tab")]
     ResetPayouts,
-    #[command(about = "Reset all Gupaxx state (your settings)")]
+    #[command(about = "Reset all Gupax state (your settings)")]
     ResetAll,
     #[command(
         about = "Disable all auto-startup settings for this instance (auto-update, auto-ping, etc)",
@@ -71,22 +71,22 @@ pub fn parse_args<S: Into<String>>(mut app: App, args: &Cli, panic: S) -> App {
     }
     if let Some(arg) = &args.info {
         match arg {
-            GupaxxData::State => {
+            GupaxData::State => {
                 debug!("Printing state...");
                 print_disk_file(&app.state_path);
                 exit(0);
             }
-            GupaxxData::Nodes => {
+            GupaxData::Nodes => {
                 debug!("Printing node list...");
                 print_disk_file(&app.node_path);
                 exit(0);
             }
-            GupaxxData::Payouts => {
+            GupaxData::Payouts => {
                 debug!("Printing payouts...\n");
                 print_gupax_p2pool_api(&app.gupax_p2pool_api);
                 exit(0);
             }
-            GupaxxData::ResetState => {
+            GupaxData::ResetState => {
                 if let Ok(()) = reset_state(&app.state_path) {
                     println!("\nState reset ... OK");
                     exit(0);
@@ -95,7 +95,7 @@ pub fn parse_args<S: Into<String>>(mut app: App, args: &Cli, panic: S) -> App {
                     exit(1)
                 }
             }
-            GupaxxData::ResetNodes => {
+            GupaxData::ResetNodes => {
                 if let Ok(()) = reset_nodes(&app.node_path) {
                     println!("\nNode reset ... OK");
                     exit(0)
@@ -104,7 +104,7 @@ pub fn parse_args<S: Into<String>>(mut app: App, args: &Cli, panic: S) -> App {
                     exit(1)
                 }
             }
-            GupaxxData::ResetPools => {
+            GupaxData::ResetPools => {
                 if let Ok(()) = reset_pools(&app.pool_path) {
                     println!("\nPool reset ... OK");
                     exit(0)
@@ -113,7 +113,7 @@ pub fn parse_args<S: Into<String>>(mut app: App, args: &Cli, panic: S) -> App {
                     exit(1)
                 }
             }
-            GupaxxData::ResetPayouts => {
+            GupaxData::ResetPayouts => {
                 if let Ok(()) = reset_gupax_p2pool_api(&app.gupax_p2pool_api_path) {
                     println!("\nGupaxP2poolApi reset ... OK");
                     exit(0)
@@ -122,14 +122,14 @@ pub fn parse_args<S: Into<String>>(mut app: App, args: &Cli, panic: S) -> App {
                     exit(1)
                 }
             }
-            GupaxxData::ResetAll => reset(
+            GupaxData::ResetAll => reset(
                 &app.os_data_path,
                 &app.state_path,
                 &app.node_path,
                 &app.pool_path,
                 &app.gupax_p2pool_api_path,
             ),
-            GupaxxData::Nostartup => app.no_startup = true,
+            GupaxData::Nostartup => app.no_startup = true,
         }
     }
     app

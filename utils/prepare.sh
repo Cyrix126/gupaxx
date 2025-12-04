@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# prepare new [gupaxx] version in:
+# prepare new [gupax] version in:
 # 1. README.md
 # 2. CHANGELOG.md
 # 3. Cargo.toml
@@ -9,7 +9,7 @@
 set -ex
 sudo -v
 [[ $1 = v* ]]
-[[ $PWD = */gupaxx ]]
+[[ $PWD = */gupax ]]
 
 # get old GUPAX_VER
 OLD_VER="v$(grep -m1 "version" Cargo.toml | grep -o "[0-9].[0-9].[0-9]")"

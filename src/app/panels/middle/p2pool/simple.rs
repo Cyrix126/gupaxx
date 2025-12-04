@@ -1,4 +1,4 @@
-// Gupaxx - Fork of Gupax
+// Gupax
 //
 // Copyright (c) 2024-2025 Cyrix126
 //
@@ -34,7 +34,7 @@ impl P2pool {
     ) {
         ui.vertical_centered(|ui|{
             ui.add_space(SPACE);
-            ui.checkbox(&mut self.local_node, P2POOL_USE_LOCAL_NODE_BUTTON).on_hover_text("If checked (recommended), p2pool will start trying to use the local node.\nThe local node can be started from or without Gupaxx, as long as it is p2pool capable.\nCheck the Node tab to start a local node.\n\nIf unchecked (default), p2pool will attempt to find and use a remote node by crawling the network.");
+            ui.checkbox(&mut self.local_node, P2POOL_USE_LOCAL_NODE_BUTTON).on_hover_text("If checked (recommended), p2pool will start trying to use the local node.\nThe local node can be started from or without Gupax, as long as it is p2pool capable.\nCheck the Node tab to start a local node.\n\nIf unchecked (default), p2pool will attempt to find and use a remote node by crawling the network.");
         });
 
         ui.add_space(SPACE * 2.0);
