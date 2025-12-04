@@ -84,34 +84,45 @@ Each service tab can be hidden in the settings (Gupax tab). Only the `P2Pool` an
 Each services offers a simple sub-menu (accessible on the bottom bar). The simple mode will start the service with default working out of the box settings. The advanced mode allows powerful users to configure each services to correspond to their needs.
 ### About
 The About tab will show you a brief description of Gupax, along with the available shortcuts.
+![About Tab](assets/images/tabs/about.png)
 ### Status
 This tab has three sub-menus. By default the `Processes` sub-menu will appear.
 #### Processes
 Monitoring of every services, as well as displaying resources usage of the system. You can hide the column of a service by checking the Gupax tab.
-#### P2Pool
+![Processes Tab](assets/images/tabs/processes.png)
+#### Payouts
 You can see rewards that you were paid. You also have a tool to calculate rewards based on your hashrate. The calculator needs P2Pool to be synced so it has the needed data up to date.
+![Payouts Tab](assets/images/tabs/payouts.png)
 #### Benchmarks
 You can compare your CPU hashrate to the other CPUs of the same model, or even to other models.
+![P2Pool Tab](assets/images/tabs/benchmarks.png)
 ### Gupax
 This tab is the settings tab, where you can update Gupax, set where are the binaries for each services, change startup options, the UI scaling, which tabs are hidden and more.
+![Gupax Tab](assets/images/tabs/gupax.png)
 ### Node
 Hidden by default. 
 You can start a local Monero Node in Gupax, or let it detect and use (if compatible with P2Pool) an already existing local node.
+![Node Tab](assets/images/tabs/node.png)
 ### P2Pool
 This is where you set your XMR addresse on which you will receive your rewards. The simple mode will allow you to choose between using a local node or a remote node.
 Remote nodes are found by crawling the network. Gupax will do it automatically on startup, so you don't have to wait to start P2Pool. If the Node service is synced, P2Pool will switch to it by default.
+![P2Pool Tab](assets/images/tabs/p2pool.png)
 #### Crawler
 The crawler tab will allow you to tweak the filter of selected remote nodes to connect with P2Pool. For example, you can try to find nodes with a lower latency at the cost of a longer search.
+![Crawler Tab](assets/images/tabs/crawler.png)
 ### XMRig
 The service that will start the mining locally. You can set a number of threads if you don't want all the power of your CPU to be dedicated to mining.
+![XMRig Tab](assets/images/tabs/xmrig.png)
 ### Proxy
 Hidden by default. 
 Use this tab if you want to connect external miners to this instance of Gupax. In case you are participating in the XvB raffle, it will redirect all the hashrate at the decision of the XvB algorithm.
+![Proxy Tab](assets/images/tabs/proxy.png)
 ### XvB
 Hidden by default. 
 Use this tab to easily split your hashrate between P2Pool and XMRvsBeast, increasing your chances of winning in the raffle while also supporting the Monero network via decentralizing the mining using using p2pool.
 [Register](https://xmrvsbeast.com/cgi-bin/p2pool_bonus_submit.cgi) the same XMR address that you use in the P2Pool tab to participate. 
 The simple mode will calculate which round you can access based on your current hashrate. The advanced tab allows you to have more manual controls.
+![XvB Tab](assets/images/tabs/xvb.png)
 
 ## Daemon mode
 Gupax can be started as a daemon, without any GUI (intended for CLI only environment).  
