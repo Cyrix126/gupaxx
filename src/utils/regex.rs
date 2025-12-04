@@ -1,4 +1,4 @@
-// Gupaxx - Fork of Gupax
+// Gupax
 //
 // Copyright (c) 2024-2025 Cyrix126
 //
@@ -275,7 +275,7 @@ pub fn contains_usepool(l: &str) -> bool {
     LINE_SHARE.is_match(l)
 }
 pub fn contains_statuscommand(l: &str) -> bool {
-    static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^statusfromgupaxx").unwrap());
+    static LINE_SHARE: Lazy<Regex> = Lazy::new(|| Regex::new(r"^statusfromgupax").unwrap());
     LINE_SHARE.is_match(l)
 }
 pub fn contains_yourshare(l: &str) -> bool {

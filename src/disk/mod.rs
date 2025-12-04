@@ -1,4 +1,4 @@
-// Gupaxx - Fork of Gupax
+// Gupax
 //
 // Copyright (c) 2024-2025 Cyrix126
 //
@@ -66,17 +66,13 @@ pub mod tests;
 
 pub fn get_gupax_data_path() -> Result<PathBuf, TomlError> {
     // Get OS data folder
-    // Linux   | $XDG_DATA_HOME or $HOME/.local/share/gupaxx  | /home/alice/.local/state/gupaxx
-    // macOS   | $HOME/Library/Application Support/Gupaxx     | /Users/Alice/Library/Application Support/Gupaxx
-    // Windows | {FOLDERID_RoamingAppData}\Gupaxx             | C:\Users\Alice\AppData\Roaming\Gupaxx
+    // Linux   | $XDG_DATA_HOME or $HOME/.local/share/gupax  | /home/alice/.local/state/gupax
+    // macOS   | $HOME/Library/Application Support/Gupax     | /Users/Alice/Library/Application Support/Gupax
+    // Windows | {FOLDERID_RoamingAppData}\Gupax             | C:\Users\Alice\AppData\Roaming\Gupax
     match dirs::data_dir() {
         Some(mut path) => {
             path.push(DIRECTORY);
             info!("OS | Data path ... {}", path.display());
-            create_gupax_dir(&path)?;
-            let mut gupax_p2pool_dir = path.clone();
-            gupax_p2pool_dir.push(GUPAX_P2POOL_API_DIRECTORY);
-            create_gupax_p2pool_dir(&gupax_p2pool_dir)?;
             Ok(path)
         }
         None => {

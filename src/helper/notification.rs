@@ -42,7 +42,7 @@ impl Helper {
         });
     }
 
-    // This service will live as long as Gupaxx is open, so there is no need for a restart/stop method
+    // This service will live as long as Gupax is open, so there is no need for a restart/stop method
     #[allow(clippy::too_many_arguments)]
     #[tokio::main]
     async fn spawn_notifications_service(
@@ -73,7 +73,7 @@ impl Helper {
                         Notification::FirstP2poolShare => {
                             // only check if the p2pool node is alive
                             if process_p2pool.lock().unwrap().state == ProcessState::Alive {
-                                // Gupaxx will send a notification if it's instance find a first share, even if the address already have some in the current PPLNS window.
+                                // Gupax will send a notification if it's instance find a first share, even if the address already have some in the current PPLNS window.
                                 // It's wanted because it will inform the user that this instance works well.
                                 if !first_share_found
                                     && api_p2pool
@@ -83,7 +83,7 @@ impl Helper {
                                         .is_some_and(|s| s == 1)
                                 {
                                     first_share_found = true;
-                                    notif("Gupaxx just found it's first P2Pool share !");
+                                    notif("Gupax just found it's first P2Pool share !");
                                 }
                             }
                         }
@@ -191,7 +191,7 @@ impl Helper {
                             }
                             if xvb_alive && process_xvb_status == ProcessState::OfflinePoolsAll {
                                 notif(
-                                    "XvB process is disconnected from all XvB Pool.It might be an issue with XvB server and not from Gupaxx",
+                                    "XvB process is disconnected from all XvB Pool.It might be an issue with XvB server and not from Gupax",
                                 );
                                 xvb_alive = false;
                             }
@@ -218,9 +218,9 @@ pub fn notif(body: &str) {
     // we do not unwrap in case the desktop environment doesn't support notifications
     // We don't need a handle to the notification anyway
     let _ = Notif::new()
-        .summary("Gupaxx event")
+        .summary("Gupax event")
         .body(body)
-        .icon("gupaxx")
-        .appname("Gupaxx")
+        .icon("gupax")
+        .appname("Gupax")
         .show();
 }

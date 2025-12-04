@@ -1,4 +1,4 @@
-// Gupaxx - Fork of Gupax
+// Gupax
 //
 // Copyright (c) 2024-2025 Cyrix126
 //
@@ -154,7 +154,7 @@ impl crate::app::App {
                                 Label::new("--- Gupax has encountered an unrecoverable error! ---"),
                             ),
                             Happy => ui.add_sized([width, height], Label::new("--- Success! ---")),
-                            Cute => ui.add_sized([width, height], Label::new("--- Gupaxx needs your Attention ! ---")),
+                            Cute => ui.add_sized([width, height], Label::new("--- Gupax needs your Attention ! ---")),
                             _ => ui.add_sized(
                                 [width, height],
                                 Label::new("--- Gupax has encountered an error! ---"),
@@ -165,7 +165,7 @@ impl crate::app::App {
                         if cfg!(windows) && self.error_state.buttons == ErrorButtons::WindowsAdmin {
                             ui.add_sized([width, height], Hyperlink::from_label_and_url(
 								"[Why does Gupax need to be Admin? (on Windows)]",
-								"https://github.com/Cyrix126/gupaxx/tree/main/src#why-does-gupax-need-to-be-admin-on-windows"
+								"https://github.com/Cyrix126/gupax/tree/main/src#why-does-gupax-need-to-be-admin-on-windows"
 							));
                             ui.add_sized([width, height], Label::new(&self.error_state.msg))
                         } else {

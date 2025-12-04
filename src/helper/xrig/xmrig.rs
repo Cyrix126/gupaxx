@@ -621,7 +621,7 @@ impl Helper {
         pub_api.lock().unwrap().pool = None;
         // 5. Loop as watchdog
         info!("XMRig | Entering watchdog mode... woof!");
-        // needs xmrig to be in belownormal priority or else Gupaxx will be in trouble if it does not have enough cpu time.
+        // needs xmrig to be in belownormal priority or else Gupax will be in trouble if it does not have enough cpu time.
         #[cfg(target_os = "windows")]
         {
             use std::os::windows::process::CommandExt;

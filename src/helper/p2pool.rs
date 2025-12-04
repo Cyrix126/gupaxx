@@ -1,4 +1,4 @@
-// Gupaxx - Fork of Gupax
+// Gupax
 //
 // Copyright (c) 2024-2025 Cyrix126
 //
@@ -119,7 +119,7 @@ impl Helper {
                     );
                 }
             }
-            // if command status is sent by gupaxx process and not the user, forward it only to update_from_status method.
+            // if command status is sent by gupax process and not the user, forward it only to update_from_status method.
             // 25 lines after the command are the result of status, with last line finishing by update.
             if contains_statuscommand(&line) {
                 status_output = true;
@@ -301,8 +301,8 @@ impl Helper {
         let node_process = Arc::clone(&helper.lock().unwrap().node);
         let img_node = Arc::clone(&helper.lock().unwrap().img_node);
         // img_node must have been updated when the node process started.
-        // If the node was started from gupaxx, it was from the state values.
-        // If the node process detected a local node started without gupaxx, it will be from the detected nodes.
+        // If the node was started from gupax, it was from the state values.
+        // If the node process detected a local node started without gupax, it will be from the detected nodes.
         let (local_node_rpc, local_node_zmq) = state_node.current_ports(
             node_process.lock().unwrap().is_alive(),
             &img_node.lock().unwrap(),
@@ -429,7 +429,7 @@ impl Helper {
                         chain = P2poolChain::Nano;
                         p2pool_image.chain = chain.to_string();
                     }
-                    // used for nano chain, Gupaxx will not recognize another custom chain
+                    // used for nano chain, Gupax will not recognize another custom chain
                     "--sidechain-config" => {
                         chain = P2poolChain::Nano;
                         p2pool_image.chain = chain.to_string();
@@ -832,11 +832,11 @@ impl Helper {
                 {
                     debug!("P2Pool Watchdog | Reading status output of p2pool node");
                     #[cfg(target_os = "windows")]
-                    if let Err(e) = write!(stdin, "statusfromgupaxx\r\n") {
+                    if let Err(e) = write!(stdin, "statusfromgupax\r\n") {
                         error!("P2Pool Watchdog | STDIN error: {e}");
                     }
                     #[cfg(target_family = "unix")]
-                    if let Err(e) = writeln!(stdin, "statusfromgupaxx") {
+                    if let Err(e) = writeln!(stdin, "statusfromgupax") {
                         error!("P2Pool Watchdog | STDIN error: {e}");
                     }
                     // Flush.

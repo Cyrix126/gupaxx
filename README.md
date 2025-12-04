@@ -1,124 +1,204 @@
-![Gupaxx logo](assets/images/banner.png)
+![Gupax logo](assets/images/banner.png)
+
 
 ## Development Status
-This fork has a stable release. 
-It is intended for end users and offers a friendly and easy user experience.
 
-## Gupaxx
-`Gupaxx` is a fork of [**Gupax**](https://github.com/hinto-janai/gupax) integrating the [XMRvsBeast Raffle](https://xmrvsbeast.com), it is also a maintained software. Designed to simplify mining on [P2Pool](https://www.getmonero.org/2021/10/05/p2pool-released.html) while optionally participating (but you will want to 😉) in the XMRvsBeast raffle. 
+[![CI](https://github.com/gupax-io/gupax/actions/workflows/rust.yml/badge.svg)](https://github.com/gupax-io/gupax/actions/workflows/rust.yml) [![Audit](https://github.com/gupax-io/gupax/actions/workflows/rust.yml/badge.svg)](https://github.com/gupax-io/gupax/actions/workflows/audit.yml) 
 
-## System requirements
-`Gupaxx` may not run on machines with:
-- A deprecated OS (Windows 7, Ubuntu 18.04, etc)
-- CPU whithout support for OpenGL 3.1 (<2010)
+This repository has a stable release. 
+It is intended for end users and offers a friendly and easy user experience, while allowing advanced users to use it for more complex setup.
 
-[![CI](https://github.com/cyrix126/gupaxx/actions/workflows/ci.yml/badge.svg)](https://github.com/cyrix126/gupaxx/actions/workflows/ci.yml)
+## Gupax
 
-## Contents
-* [What is Gupaxx/XMRvsBeast?](#what-is-gupaxxxmrvsbeast)  
-* [Guide](#guide) 
-* [XvB Tab](#xvb-tab) 
-	- [Console](#console-of-xvb) 
-	- [Account stats](#account-stats) 
-* [XvB Raffle](#xvb-raffle-status) 
-* [Daemon mode](#daemon-mode) 
-* [Other changes](#other-changes) 
-* [License](#license) 
-
-## What is Gupaxx/XMRvsBeast?
-[**`Gupaxx`**](https://getmonero.org) is a fork of [*Gupax*](https://github.com/hinto-janai/gupax) that integrates the [XMRvsBeast raffle](https://xmrvsbeast.com).
-
-With this fork, you can easily split your hashrate between P2Pool and XMRvsBeast, increasing your chances of winning in the raffle while also supporting the Monero network via decentralizing the mining using using p2pool.
-
-For a detailed explanation of Gupax, see the [README](https://github.com/hinto-janai/gupax) of upstream.
+`Gupax` is a GUI for mining [**Monero**](https://github.com/monero-project/monero) on a decentralized pool using [**P2Pool**](https://github.com/SChernykh/p2pool) and [**XMRig**](https://github.com/xmrig/xmrig). It also brings multiple features like running your own monero node, connecting your miners to a proxy  and optionally participating (but you will want to 😉) in the [XMRvsBeast raffle](https://xmrvsbeast.com). 
 
 
-## Guide
-1. [Download the bundled version of Gupaxx](https://github.com/Cyrix126/gupaxx/releases)
-2. Extract
-3. Launch Gupaxx
 
-Next steps can be seen in this video tutorial:
 
-https://github.com/Cyrix126/gupaxx/assets/58007246/610cbfea-fd97-4150-95ed-9c8a7ef5ba94
-
-Or watch this video by Anti MoonBoy: https://www.youtube.com/watch?v=8_MOQHYRE1c
-
-4. Input your Monero address in the `P2Pool` tab
-5. Register the same address on [XMRvsBeast](https://xmrvsbeast.com)
-6. Start `P2Pool`
-7. Start `XMRig`
-8. Start `XvB`
-
-Gupaxx will distribute your hashrate between P2Pool and XMRvsBeast as defined by [this algorithm](NOTES_ALGORITHM.md).
-
-The algorithm will decide which quantity of HR that will be directed to P2Pool and to XMRvsBeast, so that you still keep a share in the [PPLNS Window](https://github.com/SChernykh/p2pool#how-payouts-work-in-p2pool). 
-It will by default send just enough to get to the highest round or, if hero mode is enabled, everything minus the minimum required to still have a share in the PPLNS Window.
+[![CI](https://github.com/gupax-io/gupax/actions/workflows/rust.yml/badge.svg)](https://github.com/gupax-io/gupax/actions/workflows/rust.yml) [![Audit](https://github.com/gupax-io/gupax/actions/workflows/rust.yml/badge.svg)](https://github.com/gupax-io/gupax/actions/workflows/audit.yml) 
 </div>
 
-## XvB Tab
-![CI](assets/images/xvb_tab.png)
-### Console of XvB
-The output of the console will show useful information on the status of the XvB process and the decision of the algorithm for every 10 minutes.
-### Account stats
-Account stats about your address on XMRvsBeast can be found here after the process is started.
+## Contents
+* [Guide](#Guide)
+	- [System requirements](#system-requirements)
+	- [Basic setup](#Basic-Setup)
+	- [Documentation](#documentation)
+* [Tabs](#Tabs)
+	- [Simple/Advanced](#simple-advanced)
+	- [About](#About)
+	- [Status](#Status)
+		- [Processes](#Processes)
+		- [P2pool](#P2Pool-1)
+		- [Benchmarks](#Benchmarks)
+	- [Gupax](#Gupax)
+	- [Node](#Node)
+	- [P2Pool](#P2Pool)
+		- [Crawler](#Crawler)
+	- [Proxy](#Proxy)
+	- [XvB](#XvB)
+* [Daemon mode](#daemon-mode)
+* [Troubleshooting](#troubleshooting)
+	- [Windows](#windows)
+	- [Mac OSX](#mac-osx)
+* [FAQ](#FAQ)
+* [License](#license) 
+* [Mirror](#mirror) 
+* [Donations](#donation) 
+
+## Guide
+### System requirements
+- OS: Any [LTS version](https://wikipedia.org/wiki/Long-term_support) of: Windows, Linux, Mac OS  
+- CPU that support for OpenGL 3.0+/Vulkan/Metal/DX12 (not needed for daemon mode)
+- Architecture: x86_64 for all, arm for macos, linux arm from compilation
 
 
-## XvB Raffle Status
-Gupaxx adds a new column called **XvB Raffle** on the Status Tab in the Process submenu. It displays public statistics of XMRvsBeast, which are available [here](https://xmrvsbeast.com/p2pool).  
-It is refreshed every minute.
-This column will be active if the XvB process is started even partially.
+### Video guide
+See a 3-minute video guide on how to set-up Gupax
+https://user-images.githubusercontent.com/101352116/207978455-6ffdc0cc-204c-4594-9a2f-e10c505745bc.mp4
 
-![XvB raffle stats](assets/images/xvb_raffle_stats.png)
+More recent video by Anti MoonBoy:
+https://www.youtube.com/watch?v=8_MOQHYRE1c
+
+
+### Basic setup:
+
+1. [Download the bundled version of Gupax](https://github.com/gupax-io/gupax/releases)
+2. Extract
+3. Add exception from anti-virus (Windows/Max)
+3. Launch Gupax
+4. Input your Monero address in the `P2Pool` tab
+6. Start P2Pool
+7. Start XMRig
+
+You are now mining to your own instance of P2Pool, welcome to the world of decentralized peer-to-peer mining!
+
+### Documentation
+
+A more detailed documentation for advanced users and developers
+
+To come !
+
+## Tabs
+Each service tab can be hidden in the settings (Gupax tab). Only the `P2Pool` and `XMRig` tabs are enabled by default to make Gupax more simple to new users.
+### Simple/Advanced
+Each services offers a simple sub-menu (accessible on the bottom bar). The simple mode will start the service with default working out of the box settings. The advanced mode allows powerful users to configure each services to correspond to their needs.
+### About
+The About tab will show you a brief description of Gupax, along with the available shortcuts.
+### Status
+This tab has three sub-menus. By default the `Processes` sub-menu will appear.
+#### Processes
+Monitoring of every services, as well as displaying resources usage of the system. You can hide the column of a service by checking the Gupax tab.
+#### P2Pool
+You can see rewards that you were paid. You also have a tool to calculate rewards based on your hashrate. The calculator needs P2Pool to be synced so it has the needed data up to date.
+#### Benchmarks
+You can compare your CPU hashrate to the other CPUs of the same model, or even to other models.
+### Gupax
+This tab is the settings tab, where you can update Gupax, set where are the binaries for each services, change startup options, the UI scaling, which tabs are hidden and more.
+### Node
+Hidden by default. 
+You can start a local Monero Node in Gupax, or let it detect and use (if compatible with P2Pool) an already existing local node.
+### P2Pool
+This is where you set your XMR addresse on which you will receive your rewards. The simple mode will allow you to choose between using a local node or a remote node.
+Remote nodes are found by crawling the network. Gupax will do it automatically on startup, so you don't have to wait to start P2Pool. If the Node service is synced, P2Pool will switch to it by default.
+#### Crawler
+The crawler tab will allow you to tweak the filter of selected remote nodes to connect with P2Pool. For example, you can try to find nodes with a lower latency at the cost of a longer search.
+### XMRig
+The service that will start the mining locally. You can set a number of threads if you don't want all the power of your CPU to be dedicated to mining.
+### Proxy
+Hidden by default. 
+Use this tab if you want to connect external miners to this instance of Gupax. In case you are participating in the XvB raffle, it will redirect all the hashrate at the decision of the XvB algorithm.
+### XvB
+Hidden by default. 
+Use this tab to easily split your hashrate between P2Pool and XMRvsBeast, increasing your chances of winning in the raffle while also supporting the Monero network via decentralizing the mining using using p2pool.
+[Register](https://xmrvsbeast.com/cgi-bin/p2pool_bonus_submit.cgi) the same XMR address that you use in the P2Pool tab to participate. 
+The simple mode will calculate which round you can access based on your current hashrate. The advanced tab allows you to have more manual controls.
 
 ## Daemon mode
-Gupaxx can be started as a daemon, without any GUI (intended for CLI only environement).  
+Gupax can be started as a daemon, without any GUI (intended for CLI only environment).  
 To do so, start the executable with the argument `--daemon`.  
 The daemon is configurable by the same configuration file that is used by the normal GUI mode that you can find in the following path depending on your OS  
 |            |                                              |                                                 |
 | ---------- | -------------------------------------------- | ------------------------------------------------|
-| Linux      | $XDG_DATA_HOME or $HOME/.local/share/gupaxx  | /home/alice/.local/state/gupaxx                 |  
-| macOS      | $HOME/Library/Application Support/Gupaxx     | /Users/Alice/Library/Application Support/Gupaxx |
-| Windows    | {FOLDERID_RoamingAppData}\Gupaxx             | C:\Users\Alice\AppData\Roaming\Gupaxx           |
+| Linux      | $XDG_DATA_HOME or $HOME/.local/share/gupax  | /home/alice/.local/state/gupax                 |  
+| macOS      | $HOME/Library/Application Support/Gupax     | /Users/Alice/Library/Application Support/Gupax |
+| Windows    | {FOLDERID_RoamingAppData}\Gupax             | C:\Users\Alice\AppData\Roaming\Gupax           |
 
 
-  		
 Once started, you can enter the key 's' to print the status of started processes.
 
 
-## Other changes
-This fork brings upgrades of dependence and some bugfixes about visual, performance and security that you can find in [DIFFERENCES](DIFFERENCES.md).  
-~~I will eventually (meaning when I'll have time) create pull requests for upstream about these differences.~~  
-**Edit**:  
-There is currently no plan to upstream the changes as the owner of Gupax said he won't have time to review the PR.
-
-
 ## Troubleshooting
-If you have any issue, feel free to ask for support in the [xmrvsbeast matrix room](#xmrvsbeast:monero.social) [![Chat on Matrix](https://matrix.to/img/matrix-badge.svg)](https://matrix.to/#/#xmrvsbeast:monero.social) or you can also just [open an issue](https://github.com/Cyrix126/gupaxx/issues/new/choose) in this repo. You can also contact me through [email](mailto:gupaxx@baermail.fr).
+If you have any issue, feel free to ask for support in the [xmrvsbeast matrix room](#xmrvsbeast:monero.social) [![Chat on Matrix](https://matrix.to/img/matrix-badge.svg)](https://matrix.to/#/#xmrvsbeast:monero.social) or you can also just [open an issue](https://github.com/Cyrix126/gupax/issues/new/choose) in this repo. You can also contact me through [email](mailto:gupax@baermail.fr).
 ### Windows
-You must add an exception to your antivirus for the directory where Gupaxx is executed. Follow the step for Windows Only, that starts at 30 seconds in this [video](https://user-images.githubusercontent.com/101352116/207978455-6ffdc0cc-204c-4594-9a2f-e10c505745bc.mp4).
+You must add an exception to your antivirus for the directory where Gupax is executed. Follow the step for Windows only, that starts at 30 seconds in this [video](https://user-images.githubusercontent.com/101352116/207978455-6ffdc0cc-204c-4594-9a2f-e10c505745bc.mp4).
 ### Mac OSX
-You must remove Gupaxx app from quarantine with following command:  
-*If you have put Gupaxx.app in your Applications*  
-`xattr -d com.apple.quarantine /Applications/Gupaxx.app`
-See this [issue](https://github.com/hinto-janai/gupax/issues/51).
+You must remove Gupax app from quarantine with following command:  
+*If you have put Gupax.app in your Applications*  
+`xattr -d com.apple.quarantine /Applications/Gupax.app`
+### P2Pool connection errors
+**TL;DR: Run & use your own Monero node.**
 
+If you are using the [default P2Pool settings](#P2Pool) then you are using a [Remote Monero node](#remote-monero-nodes) that was found by crawling. Using a remote node is convenient but comes at the cost of privacy and reliability. You may encounter connections issues with theses nodes that look like this:
+```
+2023-01-05 12:27:37.7962 P2PServer peer 23.233.96.72:37888 is ahead on mainchain (height 2792939, your height 2792936). Is your monerod stuck or lagging?
+```
+
+```
+P2Pool get_info RPC request to host 157.173.123.245:RPC 18089:ZMQ 18084 failed: Error (empty response), trying again in 1 second
+```
+
+P2Pool should switch to a backup node in these case, but if all the backup nodes fails, P2Pool will also fail.
+
+To fix this you can start your own local node by using the [Node](#node) tab.
+
+Running and using your own local Monero node improves privacy and ensures your connection is as stable as your own internet connection. This comes at the cost of downloading and syncing Monero's blockchain yourself (currently 100GB pruned). If you have the disk space, consider using the [Node](#node) tab and connecting to your own Monero node.
+See this [issue](https://github.com/gupax-io/gupax/issues/51).
+
+## FAQ
+
+
+### Where are updates downloaded from?
+The latest versions are downloaded using GitHub's API.
+* Gupax [`https://github.com/gupax-io/gupax`](https://github.com/gupax-io/gupax)
+### Can I quit mid-update?
+If you started an update, you should let it finish. If the update has been stuck for a *long* time, quitting Gupax is probably okay. The worst that can happen is that your `Gupax/Node/P2Pool/XMRig/Proxy` binaries may be moved/deleted. Those can be easily redownloaded. Your actual `Gupax` user data (settings, custom nodes, pools, etc) is never touched.
+
+Although Gupax uses a temporary folder (`gupax_update_[A-Za-z0-9]`) to store temporary downloaded files, there aren't measures in place to revert an upgrade once the file swapping has actually started. If you quit Gupax anytime before the `Upgrading packages` phase (after metadata, download, extraction), you will technically be safe but this is not recommended as it is risky, especially since these updates can be very fast.
+
+### Bundled vs Standalone
+`Bundled` Gupax comes with the latest version of Node/P2Pool/XMRig/Proxy already in the `zip/tar`.
+
+`Standalone` only contains the Gupax executable.
+
+### How much memory/cpu does Gupax use?
+#### Memory
+It is using about 10 megabytes of memory on x86_64 
+
+#### CPU
+On a Thinkpad T440 with a i5-4300U (2013), it uses about 0.5% of the CPU when unfocused.
+When interacted (mouse moving over the window), it will uses about 4.5% CPU (because of [immediate mode](wikipedia.org/wiki/Immediate_mode_(computer_graphics)) which allows a very fast reaction).
+
+### How is sudo handled? (on macOS/Linux)
+[See here for more info.](./SUDO.md)
+
+### Why does Gupax need to be Admin? (on Windows)
+[See here for more info.](./ADMIN.md)
 
 ## License
 
 ![GPL v3](assets/images/gplv3-with-text-136x68.png)
 
-[Gupaxx](https://github.com/cyrix126/gupax/blob/master/LICENSE), [P2Pool](https://github.com/SChernykh/p2pool/blob/master/LICENSE), [XMRig](https://github.com/xmrig/xmrig/blob/master/LICENSE) and [XMRig-Proxy](https://github.com/xmrig/xmrig-proxy/blob/master/LICENSE) are licensed under the GNU General Public License v3.0.
+[Gupax](./LICENSE), [P2Pool](https://github.com/SChernykh/p2pool/blob/master/LICENSE), [XMRig](https://github.com/xmrig/xmrig/blob/master/LICENSE) and [XMRig-Proxy](https://github.com/xmrig/xmrig-proxy/blob/master/LICENSE) are licensed under the GNU General Public License v3.0.
 
 [Monerod](https://github.com/monero-project/monero) [licence](https://github.com/monero-project/monero?tab=License-1-ov-file)
 
-[See the licenses of various dependencies.](https://github.com/Cyrix126/gupaxx/blob/master/Cargo.toml)
+[See the licenses of various dependencies.](./Cargo.toml)
 
 ## Mirror
 In case Github repository is down, you can still find the source code at [librejo](https://librejo.monerodevs.org/Ecosystem/gupaxx)
 
 ## Donations
-If you'd like to thank me for the development of Gupaxx and/or motivate me to improve it you're welcome to send any amount of XMR to the following address:
+If you'd like to thank me for the development of Gupax and/or motivate me to improve it you're welcome to send any amount of XMR to the following address:
 
 ![QR CODE DONATION ADDRESS](assets/donation_qr.png)
 ```
@@ -129,8 +209,8 @@ Every donations will be converted to hours of work !
 
 ### Donation transparency
 
-A Kuno page exist so you can easly keep track of the amount funded in this project.  
-[Gupaxx Kuno](https://kuno.anne.media/fundraiser/dsrr/)  
+A Kuno page exist so you can easily keep track of the amount funded in this project.  
+[Gupax Kuno](https://kuno.anne.media/fundraiser/dsrr/)  
 In case you don't want to rely on the kuno website, the secret view key is:  
 
 ```

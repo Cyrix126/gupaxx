@@ -1,4 +1,4 @@
-// Gupaxx - Fork of Gupax
+// Gupax
 //
 // Copyright (c) 2024-2025 Cyrix126
 //
@@ -194,7 +194,7 @@ impl Helper {
             crate::disk::print_dash(&format!(
                 "Node | Starting the Process to watch a detected local Node with ports:\nrpc: {rpc_port}\nzmq: {zmq_port}"
             ));
-            // Need to reset the detected ports value so that the next time we are here to start from Gupaxx it will not take the old values.
+            // Need to reset the detected ports value so that the next time we are here to start from Gupax it will not take the old values.
             *helper
                 .lock()
                 .unwrap()
@@ -255,7 +255,7 @@ impl Helper {
         img: ImgNode,
     ) {
         process.lock().unwrap().start = Instant::now();
-        // spawn pty if we are starting it from gupaxx
+        // spawn pty if we are starting it from gupax
         debug!("Node | Creating PTY...");
         let mut child_pty = None;
         let mut stdin = None;

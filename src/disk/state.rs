@@ -1,4 +1,3 @@
-use anyhow::Result;
 use derive_more::Display;
 use rand::{Rng, distr::Alphanumeric, rng};
 use strum::{EnumCount, EnumIter, IntoEnumIterator};
@@ -109,6 +108,24 @@ impl State {
             }
         }
     }
+    // To migrate from <v2 to v2, we need to get the version of
+    // the current state without generating a new state if it failed
+    // to serialize
+    pub fn get_major_version(path: &PathBuf) -> Result<u8, TomlError> {
+        let file = File::State;
+        Ok(Self::from_str(&read_to_string(file, path)?)?
+            .version
+            .lock()
+            .unwrap()
+            .gupax
+            .clone()
+            .chars()
+            .nth(1)
+            .unwrap_or_default()
+            .to_string()
+            .parse::<u8>()
+            .unwrap_or_default())
+    }
 
     // Completely overwrite current [state.toml]
     // with a new default version, and return [Self].
@@ -212,12 +229,12 @@ pub struct Gupax {
     pub ratio: Ratio,
     pub show_processes: Vec<ProcessName>,
     pub notifications: Vec<Notification>,
-    pub theme: GupaxxTheme,
+    pub theme: GupaxTheme,
 }
 
 #[derive(Default, Serialize, Deserialize, Clone, PartialEq, Debug)]
-pub enum GupaxxTheme {
-    // Dark theme of Gupaxx, default to give the app a style recognizable
+pub enum GupaxTheme {
+    // Dark theme of Gupax, default to give the app a style recognizable
     #[default]
     Dark,
     Light,
@@ -225,16 +242,16 @@ pub enum GupaxxTheme {
     System,
 }
 
-impl GupaxxTheme {
+impl GupaxTheme {
     pub fn helper(&self) -> &str {
         match self {
-            GupaxxTheme::Dark => Self::HELPER_DARK,
-            GupaxxTheme::Light => Self::HELPER_LIGHT,
-            GupaxxTheme::System => Self::HELPER_SYSTEM,
+            GupaxTheme::Dark => Self::HELPER_DARK,
+            GupaxTheme::Light => Self::HELPER_LIGHT,
+            GupaxTheme::System => Self::HELPER_SYSTEM,
         }
     }
-    const HELPER_DARK: &str = "Dark theme of Gupaxx";
-    const HELPER_LIGHT: &str = "Light theme of Gupaxx";
+    const HELPER_DARK: &str = "Dark theme of Gupax";
+    const HELPER_LIGHT: &str = "Light theme of Gupax";
     const HELPER_SYSTEM: &str =
         "Theme of the System\nIf the system theme is not detected, the dark theme will be used";
 }
@@ -245,7 +262,7 @@ impl GupaxxTheme {
 pub enum Notification {
     // A new payout occurred
     Payout,
-    // Gupaxx found a share on p2pool for the first time
+    // Gupax found a share on p2pool for the first time
     #[display("First P2Pool Share")]
     FirstP2poolShare,
     // A service is not in the green state anymore without a user intervention
@@ -263,7 +280,7 @@ impl Notification {
                 "Send a notification when you receive a payout.\nA payout occurs when you have one share or more in the current PPLNS window (current shares) and your P2Pool sidechain finds a block"
             }
             Notification::FirstP2poolShare => {
-                "Send a notification when Gupaxx finds a share for the first time since P2Pool has been started."
+                "Send a notification when Gupax finds a share for the first time since P2Pool has been started."
             }
             Notification::FailedService => {
                 "Send a notification when one of the running service start to fail without the user intervention"
@@ -500,7 +517,7 @@ impl Gupax {
     }
 }
 
-// do not include process that are from Gupaxx
+// do not include process that are from Gupax
 #[derive(EnumIter)]
 pub enum BundledProcess {
     Node,
@@ -693,7 +710,7 @@ impl Default for Gupax {
             tab: Tab::Xvb,
             show_processes: ProcessName::having_tab(),
             notifications: Notification::iter().collect(),
-            theme: GupaxxTheme::default(),
+            theme: GupaxTheme::default(),
         }
     }
 }

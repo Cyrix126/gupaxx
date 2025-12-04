@@ -1104,6 +1104,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
 
 [[package]]
+name = "copy_dir"
+version = "0.1.3"
+source = "git+https://github.com/decathorpe/copy_dir?rev=7541d89#7541d89d5aa3b2adabc47e55a91bea6601251944"
+dependencies = [
+ "walkdir",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.9.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2558,8 +2566,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "gupaxx"
-version = "1.12.0"
+name = "gupax"
+version = "2.0.0"
 dependencies = [
  "anyhow",
  "benri",
@@ -2568,6 +2576,7 @@ dependencies = [
  "cfg-if",
  "chrono",
  "clap",
+ "copy_dir",
  "ctrlc",
  "derive_more 2.0.1",
  "dirs",

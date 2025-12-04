@@ -1,10 +1,10 @@
 cargo-features = ["profile-rustflags", "codegen-backend"]
 [package]
-name = "gupaxx"
-version = "1.12.0"
-authors = ["cyrix126 <gupaxx@baermail.fr>"]
-description = "Fork of Gupax integrating the XMRvsBeast Raffle "
-documentation = "https://github.com/cyrix126/gupaxx"
+name = "gupax"
+version = "2.0.0"
+authors = ["cyrix126 <gupax@baermail.fr>"]
+description = "GUI uniting P2Pool and XMRig"
+documentation = "https://github.com/cyrix126/gupax"
 edition = "2024"
 
 [profile.release]
@@ -67,6 +67,7 @@ sysinfo = { version = "0.37", default-features = false, features=["system"] }
 tokio = { version = "1.48.0", features = ["rt", "time", "macros", "process", "rt-multi-thread"] }
 toml = { version = "0.9.8", features = ["preserve_order"] }
 walkdir = "2.5.0"
+copy_dir = {git="https://github.com/decathorpe/copy_dir", rev="7541d89"}
 zeroize = "1.8.2"
 strsim = "0.11.1"
 strip-ansi-escapes = "0.2.1"
@@ -135,8 +136,8 @@ static_vcruntime = "2.0"
 
 # For macOS build (cargo-bundle)
 [package.metadata.bundle]
-name = "Gupaxx"
-identifier = "com.github.cyrix126.gupaxx"
+name = "Gupax"
+identifier = "com.github.cyrix126.gupax"
 icon = ["images/icons/icon@2x.png"]
 category = "public.app-category.utilities"
 

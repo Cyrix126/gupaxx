@@ -116,7 +116,7 @@ path_xmr: {:#?}\n
             let space = SPACE * 2.0;
             ui.style_mut().override_text_style = Some(TextStyle::Heading);
             // ui.set_max_height(max_height);
-            // Display [Gupaxx] banner
+            // Display [Gupax] banner
             // let link_width = width / 14.0;
             ui.add_sized(
                 Vec2::new(ui.text_style_height(&TextStyle::Heading) * 20.0, 226.0),
@@ -142,12 +142,12 @@ path_xmr: {:#?}\n
 
             if cfg!(debug_assertions) {
                 ui.label(format!(
-                    "Gupaxx is running in debug mode - {}",
+                    "Gupax is running in debug mode - {}",
                     self.now.elapsed().as_secs_f64()
                 ));
             }
             ui.label(format!(
-                "Gupaxx has been running for\n{}",
+                "Gupax has been running for\n{}",
                 self.pub_sys.lock().unwrap().gupax_uptime
             ));
         });

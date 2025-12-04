@@ -130,8 +130,8 @@ pub fn init_auto(app: &mut App) {
     } else {
         info!("Starting init_auto()...");
     }
-    // update the absolute path, or gupaxx will crash if it's not valid and p2pool is enabled since it only verify the relative path.
-    // it could be the case if gupaxx was manually installed, the relative path stay the same but absolute path will also still stay on the old path that maybe is deleted. SO the check with the absolute path would be valid but when launched with the other old/wrong path from absolute, it would panic.
+    // update the absolute path, or gupax will crash if it's not valid and p2pool is enabled since it only verify the relative path.
+    // it could be the case if gupax was manually installed, the relative path stay the same but absolute path will also still stay on the old path that maybe is deleted. SO the check with the absolute path would be valid but when launched with the other old/wrong path from absolute, it would panic.
     // this change is non breaking and will fix the issue if it was occurring.
     app.state
         .update_absolute_path()
@@ -183,14 +183,14 @@ pub fn init_auto(app: &mut App) {
         .is_enabled(&AutoStart::Process(ProcessName::Node))
     {
         if !Gupax::path_is_file(&app.state.gupax.node_path) {
-            warn!("Gupaxx | Node path is not a file! Skipping auto-node...");
+            warn!("Gupax | Node path is not a file! Skipping auto-node...");
         } else if !check_binary_path(&app.state.gupax.node_path, ProcessName::Node) {
-            warn!("Gupaxx | Node path is not valid! Skipping auto-node...");
+            warn!("Gupax | Node path is not valid! Skipping auto-node...");
         } else if ProcessName::Node
             .is_process_running(&mut app.helper.lock().unwrap().sys_info.lock().unwrap())
         {
             warn!(
-                "Gupaxx | Node instance is already running outside of Gupaxx ! Skipping auto-node..."
+                "Gupax | Node instance is already running outside of Gupax ! Skipping auto-node..."
             );
         } else {
             // enable hugepage on linux
@@ -215,20 +215,20 @@ pub fn init_auto(app: &mut App) {
         .is_enabled(&AutoStart::Process(ProcessName::P2pool))
     {
         if !Regexes::addr_ok(&app.state.p2pool.address) {
-            warn!("Gupaxx | P2Pool address is not valid! Skipping auto-p2pool...");
+            warn!("Gupax | P2Pool address is not valid! Skipping auto-p2pool...");
         } else if !Gupax::path_is_file(&app.state.gupax.p2pool_path) {
-            warn!("Gupaxx | P2Pool path is not a file! Skipping auto-p2pool...");
+            warn!("Gupax | P2Pool path is not a file! Skipping auto-p2pool...");
         } else if !check_binary_path(&app.state.gupax.p2pool_path, ProcessName::P2pool) {
-            warn!("Gupaxx | P2Pool path is not valid! Skipping auto-p2pool...");
+            warn!("Gupax | P2Pool path is not valid! Skipping auto-p2pool...");
         } else if crate::helper::ProcessName::P2pool
             .is_process_running(&mut app.helper.lock().unwrap().sys_info.lock().unwrap())
         {
             warn!(
-                "Gupaxx | P2pool instance is already running outside of Gupaxx ! Skipping auto-node..."
+                "Gupax | P2pool instance is already running outside of Gupax ! Skipping auto-node..."
             );
         } else if app.state.p2pool.selected_remote_node.is_none() {
             warn!(
-                "Gupaxx | P2pool can start because there is no discovered nodes yet ! Skipping auto-node..."
+                "Gupax | P2pool can start because there is no discovered nodes yet ! Skipping auto-node..."
             );
         } else {
             Helper::start_p2pool(
@@ -253,14 +253,14 @@ pub fn init_auto(app: &mut App) {
         .is_enabled(&AutoStart::Process(ProcessName::XmrigProxy))
     {
         if !Gupax::path_is_file(&app.state.gupax.xmrig_proxy_path) {
-            warn!("Gupaxx | Xmrig-Proxy path is not a file! Skipping auto-xmrig_proxy...");
+            warn!("Gupax | Xmrig-Proxy path is not a file! Skipping auto-xmrig_proxy...");
         } else if !check_binary_path(&app.state.gupax.xmrig_proxy_path, ProcessName::XmrigProxy) {
-            warn!("Gupaxx | Xmrig-Proxy path is not valid! Skipping auto-xmrig_proxy...");
+            warn!("Gupax | Xmrig-Proxy path is not valid! Skipping auto-xmrig_proxy...");
         } else if crate::helper::ProcessName::XmrigProxy
             .is_process_running(&mut app.helper.lock().unwrap().sys_info.lock().unwrap())
         {
             warn!(
-                "Gupaxx | Xmrig-Proxy instance is already running outside of Gupaxx ! Skipping auto-node..."
+                "Gupax | Xmrig-Proxy instance is already running outside of Gupax ! Skipping auto-node..."
             );
         } else {
             Helper::start_xp(
@@ -281,14 +281,14 @@ pub fn init_auto(app: &mut App) {
         .is_enabled(&AutoStart::Process(ProcessName::Xmrig))
     {
         if !Gupax::path_is_file(&app.state.gupax.xmrig_path) {
-            warn!("Gupaxx | XMRig path is not an executable! Skipping auto-xmrig...");
+            warn!("Gupax | XMRig path is not an executable! Skipping auto-xmrig...");
         } else if !check_binary_path(&app.state.gupax.xmrig_path, ProcessName::Xmrig) {
-            warn!("Gupaxx | XMRig path is not valid! Skipping auto-xmrig...");
+            warn!("Gupax | XMRig path is not valid! Skipping auto-xmrig...");
         } else if crate::helper::ProcessName::Xmrig
             .is_process_running(&mut app.helper.lock().unwrap().sys_info.lock().unwrap())
         {
             warn!(
-                "Gupaxx | Xmrig instance is already running outside of Gupaxx ! Skipping auto-node..."
+                "Gupax | Xmrig instance is already running outside of Gupax ! Skipping auto-node..."
             );
         } else if cfg!(windows) || !Helper::password_needed() {
             Helper::start_xmrig(

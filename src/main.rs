@@ -1,4 +1,4 @@
-// Gupaxx - Fork of Gupax
+// Gupax
 //
 // Copyright (c) 2024-2025 Cyrix126
 //
@@ -17,10 +17,10 @@
 
 // Only (windows|macos|linux) + (x64|arm64) are supported.
 #[cfg(not(target_pointer_width = "64"))]
-compile_error!("gupaxx is only compatible with 64-bit CPUs");
+compile_error!("gupax is only compatible with 64-bit CPUs");
 
 #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux",)))]
-compile_error!("gupaxx is only built for windows/macos/linux");
+compile_error!("gupax is only built for windows/macos/linux");
 
 use crate::app::App;
 use crate::cli::Cli;
@@ -72,7 +72,7 @@ fn main() {
         "/*************************************/ Init ... OK /*************************************/"
     );
 
-    // if Gupaxx is started as a daemon, stay here and do not load the GUI
+    // if Gupax is started as a daemon, stay here and do not load the GUI
     if args.daemon {
         // if the app receives Ctrl+C, make sure to terminate all services
         let app = Arc::new(app);

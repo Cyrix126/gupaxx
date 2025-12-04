@@ -1,4 +1,4 @@
-// Gupaxx - Fork of Gupax
+// Gupax
 //
 // Copyright (c) 2024-2025 Cyrix126
 //
@@ -40,7 +40,7 @@ info:
    OS          | {OS_NAME}
    args        | {args:?}
    commit      | {COMMIT}
-   gupaxx      | {GUPAX_VERSION}
+   gupax      | {GUPAX_VERSION}
    monerod     | {NODE_VERSION} (bundled) 
    p2pool      | {P2POOL_VERSION} (bundled)
    xmrig       | {XMRIG_VERSION} (bundled)
