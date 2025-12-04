@@ -1,6 +1,8 @@
 //---------------------------------------------------------------------------------------------------- TESTS
 #[cfg(test)]
 mod test {
+    use crate::disk::consts::GUPAX_P2POOL_API_DIRECTORY;
+    use crate::disk::create_gupax_dir;
     use crate::disk::node::Node;
     use crate::disk::pool::Pool;
     use crate::disk::state::State;
@@ -349,6 +351,10 @@ mod test {
         // Get API dir, fill paths.
         let mut api = GupaxP2poolApi::new();
         let mut path = crate::disk::get_gupax_data_path().unwrap();
+        create_gupax_dir(&path).unwrap();
+        let mut gupax_p2pool_dir = path.to_path_buf();
+        gupax_p2pool_dir.push(GUPAX_P2POOL_API_DIRECTORY);
+        crate::disk::create_gupax_p2pool_dir(&gupax_p2pool_dir).unwrap();
         path.push(crate::disk::GUPAX_P2POOL_API_DIRECTORY);
         GupaxP2poolApi::fill_paths(&mut api, &path);
         println!("{:#?}", api);
