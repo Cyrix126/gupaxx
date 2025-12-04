@@ -708,7 +708,8 @@ impl Default for Gupax {
             selected_scale: APP_DEFAULT_SCALE,
             ratio: Ratio::Width,
             tab: Tab::Xvb,
-            show_processes: ProcessName::having_tab(),
+            // show minimal services that are required to mine on p2pool, to remove complexity to new users
+            show_processes: vec![ProcessName::P2pool, ProcessName::Xmrig],
             notifications: Notification::iter().collect(),
             theme: GupaxTheme::default(),
         }
