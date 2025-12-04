@@ -43,7 +43,7 @@ The `Administrator` in this context is a legacy account, not meant to be touched
 ---
 
 ### PowerShell's Start-Process
-Window's `PowerShell` has a nice built-in called [`Start-Process`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/start-process?view=powershell-7.3). This allows PowerShell to start... processes. In particular, I was intrigued by the all-in-one flag: `-Verb RunAs`, which runs the provided process with elevated permissions after a **UAC prompt.** That sounds perfect... except if you click that link you'll see 2 sets of syntax. IF you are escalating privilege, Microsoft puts a lot more retrictions on what you can do with this built-in, in particular:
+Window's `PowerShell` has a nice built-in called [`Start-Process`](https://learn.microsoft.com/en-us/powershell/module/microsoft.powershell.management/start-process?view=powershell-7.3). This allows PowerShell to start... processes. In particular, I was intrigued by the all-in-one flag: `-Verb RunAs`, which runs the provided process with elevated permissions after a **UAC prompt.** That sounds perfect... except if you click that link you'll see 2 sets of syntax. IF you are escalating privilege, Microsoft puts a lot more restrictions on what you can do with this built-in, in particular:
 - You CANNOT redirect STDOUT/STDERR/STDIN
 - You CANNOT run the process in the current shell (a new PowerShell window will always open!)
 
