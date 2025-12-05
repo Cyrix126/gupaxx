@@ -71,7 +71,7 @@ jobs:
           # For normal cpu
           cargo build --release --features=wgpu
           mv target/release/gupaxx.exe .
-          cargo build --release --features=bundle
+          cargo build --release --features=bundle,wgpu
           mv target/release/gupaxx.exe gupaxx_b.exe
           tar -cf windows.tar gupaxx.exe gupaxx_b.exe
         fi
