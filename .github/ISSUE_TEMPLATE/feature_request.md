@@ -7,8 +7,6 @@ assignees: ''
 
 ---
 
-**Feature request**
-Describe the feature you're requesting.
+## Please create the feature request to https://github.com/gupax-io/gupax/issues
 
-**Additional context**
-Add any other context or screenshots about the feature request.
+See [context](https://github.com/gupax-io/gupax/issues/137)
