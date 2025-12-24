@@ -122,6 +122,7 @@ const FAKE_USER_AGENT: [&str; 25] = [
 const MSG_NONE: &str = "No update in progress";
 const MSG_START: &str = "Starting update";
 const MSG_TMP: &str = "Creating temporary directory";
+const MSG_TMP_REMOVE: &str = "Removing temporary directory";
 const MSG_HTTPS: &str = "Creating HTTPS client";
 const MSG_METADATA: &str = "Fetching package metadata";
 const MSG_COMPARE: &str = "Compare package versions";
@@ -152,6 +153,13 @@ pub fn check_binary_path(path: &str, process: ProcessName) -> bool {
         }
     };
     filename == process.binary_name()
+}
+
+fn remove_tmp_dir(tmp_dir: &str) {
+    info!("Update | {MSG_TMP_REMOVE} ... {tmp_dir}");
+    if let Err(e) = std::fs::remove_dir_all(tmp_dir) {
+        warn!("Update | Failed to remove temporary directory: {e}");
+    }
 }
 
 //---------------------------------------------------------------------------------------------------- Update struct/impl
@@ -412,6 +420,8 @@ impl Update {
             new_ver
         } else {
             error!("Update | Metadata ... FAIL");
+            // Attempt to remove temporary directory on failure to avoid leaving cruft
+            remove_tmp_dir(&tmp_dir);
             return Err(anyhow!("Metadata fetch failed"));
         };
 
@@ -428,6 +438,8 @@ impl Update {
             info!("Update | All packages up-to-date ... RETURNING");
             *update.lock().unwrap().prog.lock().unwrap() = 100.0;
             *update.lock().unwrap().msg.lock().unwrap() = MSG_UP_TO_DATE.to_string();
+            // Clean up temporary directory since no update is required
+            remove_tmp_dir(&tmp_dir);
             return Ok(());
         }
         *update.lock().unwrap().prog.lock().unwrap() += 5.0;
@@ -589,9 +601,7 @@ impl Update {
 
         // Remove tmp dir (on Unix)
         #[cfg(target_family = "unix")]
-        info!("Update | Removing temporary directory ... {tmp_dir}");
-        #[cfg(target_family = "unix")]
-        std::fs::remove_dir_all(&tmp_dir)?;
+        remove_tmp_dir(&tmp_dir);
 
         let seconds = now.elapsed().as_secs();
         info!("Update | Seconds elapsed ... [{seconds}s]");
